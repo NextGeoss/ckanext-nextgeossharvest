@@ -48,7 +48,6 @@ class ESAHarvester(SentinalHarvester, SingletonPlugin):
 
         try:
             config_obj = json.loads(config)
-            print config_obj
             # user and password
             if not 'username' in config_obj:
                 raise ValueError('provide username in the harvester configuration')
@@ -61,7 +60,6 @@ class ESAHarvester(SentinalHarvester, SingletonPlugin):
         return config
 
 
-
     def gather_stage(self, harvest_job):
         log = logging.getLogger(__name__ + '.ESASentinel.gather')
         log.debug('ESASentinelHarvester gather_stage for job: %r', harvest_job)
@@ -71,9 +69,10 @@ class ESAHarvester(SentinalHarvester, SingletonPlugin):
         # Get source URL
         source_url = harvest_job.source.url
 
-        config = self._set_source_config(harvest_job.source.config)
+        self._set_source_config(harvest_job.source.config)
 
         ## TODO: try to ping server
+
 
         # get current objects out of db
         query = model.Session.query(HarvestObject.guid, HarvestObject.package_id). \
@@ -92,8 +91,7 @@ class ESAHarvester(SentinalHarvester, SingletonPlugin):
         try:
             ids = []
 
-            sentinel = SentinelMetadataExtractor()
-            new_id = sentinel.extractMetadataFromAPIForToday(self.config, source_url)
+            new_id = self._get_harvest_ids(source_url)
 
             log.debug('Starting gathering for %s' % source_url)
             guids_in_harvest = set(new_id)
@@ -104,12 +102,10 @@ class ESAHarvester(SentinalHarvester, SingletonPlugin):
 
 
             for guid in new:
-                obj = HarvestObject(guid=guid, job=harvest_job,
-                                    extras=[HOExtra(key='status', value='new')])
-                obj.save()
 
-                total_results = self.get_total_datasets(config)
-                ids.append(self.parse_save_entry_data(config, source_url, obj, total_results))
+                total_datasets = self._get_total_datasets(config, source_url)
+
+                ids = self.parse_save_entry_data(config, source_url, guid, harvest_job, total_datasets)
 
             for guid in change:
                 # obj = HarvestObject(guid=guid, job=harvest_job,
@@ -130,7 +126,7 @@ class ESAHarvester(SentinalHarvester, SingletonPlugin):
                 pass
 
             if len(ids) == 0:
-                self._save_gather_error('No records received from SciHub', harvest_job)
+                self._save_gather_error('No records received from the SCIHub server', harvest_job)
                 return None
             return ids
 
@@ -166,8 +162,6 @@ class ESAHarvester(SentinalHarvester, SingletonPlugin):
         ###### FINISHED ADD EXTRAS
         # Build the package dict
 
-        print status
-
         if status == 'new':
             package_schema = logic.schema.default_create_package_schema()
             tag_schema = logic.schema.default_tags_schema()
@@ -178,21 +172,34 @@ class ESAHarvester(SentinalHarvester, SingletonPlugin):
             context['schema'] = package_schema
             package_dict = {}
 
+            # We need to explicitly provide a package ID, otherwise ckanext-spatial
+            # won't be be able to link the extent to the package.
             import uuid
             package_dict['id'] = unicode(uuid.uuid4())
             package_schema['id'] = [unicode]
+
+            # # Save reference to the package on the object
+            # harvest_object.package_id = package_dict['id']
+            # harvest_object.add()
+            # # Defer constraints and flush so the dataset can be indexed with
+            # # the harvest object id (on the after_show hook from the harvester
+            # # plugin)
 
             source_dataset = model.Package.get(harvest_object.source.id)
             if source_dataset.owner_org:
                 package_dict['owner_org'] = source_dataset.owner_org
 
-            package_dict['name'] = uuid.uuid4()
+            package_dict['name'] =  uuid.uuid4()
             package_dict['title'] = self._get_object_extra(harvest_object, 'title')
+            package_dict['notes'] = self._get_object_extra(harvest_object, 'notes')
             package_dict['extras'] = self._get_all_extras(harvest_object)
 
             log.info('Package with GUID %s does not exist, let\'s create it' % harvest_object.guid)
             harvest_object.current = True
             harvest_object.package_id = package_dict['id']
+            # Defer constraints and flush so the dataset can be indexed with
+            # the harvest object id (on the after_show hook from the harvester
+            # plugin)
             harvest_object.add()
 
             model.Session.execute('SET CONSTRAINTS harvest_object_package_id_fkey DEFERRED')
@@ -202,6 +209,7 @@ class ESAHarvester(SentinalHarvester, SingletonPlugin):
             log.info('Created new package %s with guid %s', package_id, harvest_object.guid)
         else:
             pass
+
 
         model.Session.commit()
 
@@ -216,7 +224,7 @@ class ESAHarvester(SentinalHarvester, SingletonPlugin):
         result = []
 
         for extra in harvest_object.extras:
-            if extra.key not in ('id', 'title', 'status'):
+            if extra.key not in ('id', 'title', 'status', 'notes'):
                 result.append({'key': extra.key, 'value': extra.value})
 
         return result
