@@ -98,6 +98,10 @@ class SentinalHarvester(SpatialHarvester):
 
             for k, v in item.items():
                 obj.extras.append(HOExtra(key=k, value=v))
+
+            tags = self._add_tags_to_dataset(item)
+            obj.extras.append(HOExtra(key='tags_', value=str(tags)))
+
             ids.append(obj.id)
             #start += 1
 
@@ -153,3 +157,19 @@ class SentinalHarvester(SpatialHarvester):
         result['notes'] = notes
 
         return result
+
+
+    def _add_tags_to_dataset(self, item):
+        '''
+        Creates tags from entry data
+        :param item (list of values from the entry)
+        :return: tags
+        '''
+        tags = []
+        defined_tags = ('processinglevel', 'platformname', 'instrumentname',
+                        'platformserialidentifier', 'producttype', 'processinglevel')
+
+        for key, value in item.items():
+            if key in defined_tags:
+                tags.append({'name': value})
+        return  tags

@@ -193,6 +193,8 @@ class ESAHarvester(SentinalHarvester, SingletonPlugin):
             package_dict['title'] = self._get_object_extra(harvest_object, 'title')
             package_dict['notes'] = self._get_object_extra(harvest_object, 'notes')
             package_dict['extras'] = self._get_all_extras(harvest_object)
+            import ast
+            package_dict['tags'] = self._get_tags_extra(harvest_object)
 
             log.info('Package with GUID %s does not exist, let\'s create it' % harvest_object.guid)
             harvest_object.current = True
@@ -224,10 +226,20 @@ class ESAHarvester(SentinalHarvester, SingletonPlugin):
         result = []
 
         for extra in harvest_object.extras:
-            if extra.key not in ('id', 'title', 'status', 'notes'):
+            if extra.key not in ('id', 'title', 'tags', 'status', 'notes'):
                 result.append({'key': extra.key, 'value': extra.value})
 
         return result
+
+
+    def _get_tags_extra(self, harvest_object):
+        import ast
+        tags = []
+
+        for extra in harvest_object.extras:
+            if extra.key == 'tags':
+                tags = ast.literal_eval(extra.value)
+        return  tags
 
 
     def _get_user_name(self):
