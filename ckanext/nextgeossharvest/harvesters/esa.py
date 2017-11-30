@@ -12,7 +12,7 @@ import logging
 import ckan.plugins as plugins
 from ckan import plugins as p
 
-from ckanext.nextgeossharvest.lib.esa_base_new import SentinalHarvester
+from ckanext.nextgeossharvest.lib.esa_base import SentinalHarvester
 from ckan import model
 from ckan.lib.navl.validators import not_empty
 from ckan import logic
@@ -29,7 +29,7 @@ from pylons import config
 
 
 
-class ESAHarvester1(SentinalHarvester, SingletonPlugin):
+class ESAHarvester(SentinalHarvester, SingletonPlugin):
     '''
     A Harvester for ESA Sentinel Products.
     '''
@@ -74,7 +74,6 @@ class ESAHarvester1(SentinalHarvester, SingletonPlugin):
         config = self._set_source_config(harvest_job.source.config)
 
         ## TODO: try to ping server
-
 
         # get current objects out of db
         query = model.Session.query(HarvestObject.guid, HarvestObject.package_id). \

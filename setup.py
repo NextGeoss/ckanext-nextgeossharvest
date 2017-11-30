@@ -83,7 +83,6 @@ setup(
         nextgeossharvest=ckanext.nextgeossharvest.plugin:NextgeossharvestPlugin
         esa=ckanext.nextgeossharvest.harvesters:ESAHarvester
         vito=ckanext.nextgeossharvest.harvesters:VitoHarvester
-        esa_new=ckanext.nextgeossharvest.harvesters:ESAHarvester1                                
 
         [babel.extractors]
         ckan = ckan.lib.extract:extract_ckan

@@ -1,3 +1,2 @@
 from ckanext.nextgeossharvest.harvesters.esa import ESAHarvester
-from ckanext.nextgeossharvest.harvesters.esa_new import ESAHarvester1
 from ckanext.nextgeossharvest.harvesters.vito import VitoHarvester
