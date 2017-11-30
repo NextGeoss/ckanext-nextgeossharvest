@@ -92,7 +92,7 @@ class SentinalHarvester(SpatialHarvester):
                       item['id'])
 
             if item['producttype']:
-                collection_name = self._set_dataset_name(item['producttype'])
+                collection_name = self._set_dataset_name(item['producttype'], item['summary'])
                 item['title'] = collection_name['dataset_name']
                 item['notes'] = collection_name['notes']
 
@@ -130,7 +130,7 @@ class SentinalHarvester(SpatialHarvester):
         return uuids
 
 
-    def _set_dataset_name(self, producttype):
+    def _set_dataset_name(self, producttype, summary):
         '''
         Adds a name for the dataset like collection name.
         Example:  Sentinel-2 Level-1C
@@ -154,7 +154,7 @@ class SentinalHarvester(SpatialHarvester):
             notes = "The Sentinel-1 Level-2 OCN products include components for Ocean Swell spectra (OSW) providing continuity with ERS and ASAR WV and two new components: Ocean Wind Fields (OWI) and Surface Radial Velocities (RVL). The OSW is a two-dimensional ocean surface swell spectrum and includes an estimate of the wind speed and direction per swell spectrum. The OWI is a ground range gridded estimate of the surface wind speed and direction at 10 m above the surface derived from internally generated Level-1 GRD images of SM, IW or EW modes. The RVL is a ground range gridded difference between the measured Level-2 Doppler grid and the Level-1 calculated geometrical Doppler."
 
         result['dataset_name'] = dataset_name
-        result['notes'] = notes
+        result['notes'] = notes + summary
 
         return result
 
