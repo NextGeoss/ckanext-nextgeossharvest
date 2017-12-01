@@ -87,7 +87,6 @@ class ESAHarvester(SentinalHarvester, SingletonPlugin):
 
         guids_in_db = set(guid_to_package_id.keys())
 
-
         # Get contents
         try:
             ids = []
@@ -96,12 +95,10 @@ class ESAHarvester(SentinalHarvester, SingletonPlugin):
 
             log.debug('Starting gathering for %s' % source_url)
             guids_in_harvest = set(new_id)
-            print guids_in_harvest
 
             new = guids_in_harvest - guids_in_db
             delete = guids_in_db - guids_in_harvest
             change = guids_in_db & guids_in_harvest
-
 
             for guid in new:
 
@@ -110,7 +107,7 @@ class ESAHarvester(SentinalHarvester, SingletonPlugin):
 
                 # make request to the website
                 start = 0
-                r = requests.get('https://scihub.copernicus.eu/dhus/search?start='+str(start)+'&rows=100&q=*', auth=HTTPBasicAuth('nextgeoss', 'nextgeoss'), verify=False)
+                r = requests.get('https://scihub.copernicus.eu/dhus/search?q=*&rows=1', auth=HTTPBasicAuth('nextgeoss', 'nextgeoss'), verify=False)
                 if r.status_code != 200:
                     print
                     'Wrong authentication? status code != 200 - status ' + str(r.status_code)
@@ -132,22 +129,39 @@ class ESAHarvester(SentinalHarvester, SingletonPlugin):
                 ids.append(obj.id)
 
             for guid in change:
-                # obj = HarvestObject(guid=guid, job=harvest_job,
-                #                     package_id=guid_to_package_id[guid],
-                #                     extras=[HOExtra(key='status', value='change')])
-                # obj.save()
-                # ids.append(obj.id)
-                pass
-            for guid in delete:
-                # obj = HarvestObject(guid=guid, job=harvest_job,
-                #                     package_id=guid_to_package_id[guid],
-                #                     extras=[HOExtra(key='status', value='delete')])
-                # model.Session.query(HarvestObject). \
-                #     filter_by(guid=guid). \
-                #     update({'current': False}, False)
-                # obj.save()
-                # ids.append(obj.id)
-                pass
+                r = requests.get('https://scihub.copernicus.eu/dhus/search?q=*&rows=1', auth=HTTPBasicAuth('nextgeoss', 'nextgeoss'), verify=False)
+                if r.status_code != 200:
+                    print
+                    'Wrong authentication? status code != 200 - status ' + str(r.status_code)
+                    return None
+
+                obj = HarvestObject(guid=guid, job=harvest_job,
+                                    package_id=guid_to_package_id[guid],
+                                    extras=[HOExtra(key='status', value='change')])
+                obj.save()
+
+                item = self._get_entries_from_request(r)
+
+                for k, v in item.items():
+                    obj.extras.append(HOExtra(key=k, value=v))
+
+                tags = self._get_tags_for_dataset(item)
+                obj.extras.append(HOExtra(key='tags', value=str(tags)))
+
+                print obj.extras
+
+                ids.append(obj.id)
+
+            # for guid in delete:
+            #     # obj = HarvestObject(guid=guid, job=harvest_job,
+            #     #                     package_id=guid_to_package_id[guid],
+            #     #                     extras=[HOExtra(key='status', value='delete')])
+            #     # model.Session.query(HarvestObject). \
+            #     #     filter_by(guid=guid). \
+            #     #     update({'current': False}, False)
+            #     # obj.save()
+            #     # ids.append(obj.id)
+            #     pass
 
             if len(ids) == 0:
                 self._save_gather_error('No records received from the SCIHub server', harvest_job)
@@ -186,14 +200,16 @@ class ESAHarvester(SentinalHarvester, SingletonPlugin):
 
         ###### FINISHED ADD EXTRAS
         # Build the package dict
+        tag_schema = logic.schema.default_tags_schema()
+        tag_schema['name'] = [not_empty, unicode]
+        extras_schema = logic.schema.default_extras_schema()
 
         if status == 'new':
             package_schema = logic.schema.default_create_package_schema()
-            tag_schema = logic.schema.default_tags_schema()
-            tag_schema['name'] = [not_empty, unicode]
+
             package_schema['tags'] = tag_schema
-            extras_schema = logic.schema.default_extras_schema()
             package_schema['extras'] = extras_schema
+
             context['schema'] = package_schema
             package_dict = {}
 
@@ -212,6 +228,15 @@ class ESAHarvester(SentinalHarvester, SingletonPlugin):
             package_dict['extras'] = self._get_all_extras(harvest_object)
             package_dict['tags'] = self._get_tags_extra(harvest_object)
 
+            # resource
+            resource_url = self._get_object_extra(harvest_object, 'resource')
+            resources = [{
+                 'name': 'Product Download from SciHub',
+                 'description': 'Download the product from SciHub. NOTE: DOWNLOAD REQUIRES LOGIN',
+                 'url': resource_url
+            }]
+            package_dict['resources'] = resources
+
             log.info('Package with GUID %s does not exist, let\'s create it' % harvest_object.guid)
             harvest_object.current = True
             harvest_object.package_id = package_dict['id']
@@ -225,8 +250,49 @@ class ESAHarvester(SentinalHarvester, SingletonPlugin):
 
             package_id = p.toolkit.get_action('package_create')(context, package_dict)
             log.info('Created new package %s with guid %s', package_id, harvest_object.guid)
-        else:
-            pass
+
+
+        previous_object = model.Session.query(HarvestObject) \
+                          .filter(HarvestObject.guid==harvest_object.guid) \
+                          .filter(HarvestObject.current==True) \
+                          .first()
+
+        if status == 'change':
+            log.info('Package change')
+
+            # package_schema = logic.schema.default_update_package_schema()
+            # package_schema['tags'] = tag_schema
+            # package_schema['extras'] = extras_schema
+            # context['schema'] = package_schema
+            # package_dict = logic.get_action('package_show')(context,
+            #                                            {'id': harvest_object.package_id})
+            #
+            # print 'PACKAGEEEE DICT'
+            # print package_dict
+            #
+            # # We need to explicitly provide a package ID, otherwise ckanext-spatial
+            # # won't be be able to link the extent to the package.
+            # package_dict['id'] = harvest_object.package_id
+            #
+            # package_dict['title'] = self._get_object_extra(harvest_object, 'title')
+            # package_dict['notes'] = self._get_object_extra(harvest_object, 'notes')
+            # package_dict['extras'] = self._get_all_extras(harvest_object)
+            # print 'eCXTTAAAA'
+            # print harvest_object
+            # package_dict['tags'] = self._get_tags_extra(harvest_object)
+            #
+            # #resource
+            # resource_url = self._get_object_extra(harvest_object, 'resource')
+            # resources = [{
+            #     'name': 'Product Download from SciHub',
+            #     'description': 'Download the product from SciHub. NOTE: DOWNLOAD REQUIRES LOGIN',
+            #     'url': resource_url
+            # }]
+            # package_dict['resources'] = resources
+            #
+            # package_id = p.toolkit.get_action('package_update')(context, package_dict)
+            # log.info('Updated package %s with guid %s', package_id, harvest_object.guid)
+
 
         model.Session.commit()
 
@@ -241,14 +307,12 @@ class ESAHarvester(SentinalHarvester, SingletonPlugin):
         result = []
 
         for extra in harvest_object.extras:
-            if extra.key not in ('id', 'title', 'tags', 'status', 'notes'):
+            if extra.key not in ('id', 'title', 'tags', 'status', 'notes', 'resource'):
                 result.append({'key': extra.key, 'value': extra.value})
-
         return result
 
 
     def _get_tags_extra(self, harvest_object):
-        import ast
         tags = []
 
         for extra in harvest_object.extras:

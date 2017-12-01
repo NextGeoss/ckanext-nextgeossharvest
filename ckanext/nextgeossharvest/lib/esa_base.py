@@ -6,6 +6,7 @@ import requests
 import time
 import uuid
 import logging
+import shutil
 
 from lxml import etree
 from xml.dom import minidom
@@ -18,6 +19,7 @@ from ckanext.harvest.interfaces import IHarvester
 from ckanext.harvest.model import HarvestObject
 from ckanext.harvest.model import HarvestObjectExtra as HOExtra
 from ckanext.spatial.harvesters.base import SpatialHarvester
+from ckan.common import config
 
 from bs4 import BeautifulSoup as Soup
 
@@ -56,6 +58,7 @@ class SentinalHarvester(SpatialHarvester):
         item = {}
         soup_resp = Soup(request.content, 'xml')
         name_elements = ['str', 'int', 'date', 'double']
+        storage_path = config.get('ckan.storage_path')
 
         for item_node in soup_resp.find_all('entry'):
 
@@ -66,14 +69,27 @@ class SentinalHarvester(SpatialHarvester):
                     key = subitem_node['name']
                 item[key] = value
 
-                if subitem_node.name in 'link':
-                    key = subitem_node['href']
-                    continue
+            icon_url = item_node.find("link", rel="icon")
+            item['thumbnail'] = icon_url['href']
 
-            if item['producttype']:
-                collection_name = self._set_dataset_name(item['producttype'], item['summary'])
-                item['title'] = collection_name['dataset_name']
-                item['notes'] = collection_name['notes']
+            # download the thumbnail and save it in storage_path
+            response = requests.get(icon_url['href'],auth=HTTPBasicAuth('nextgeoss', 'nextgeoss'), verify=False, stream=True)
+            with open(storage_path+item['uuid']+'.jpg', 'wb') as out_file:
+                shutil.copyfileobj(response.raw, out_file)
+            del response
+
+            # rel alternative
+            alternative = item_node.find("link", rel="alternative")
+            item['alternative'] = alternative['href']
+
+            # resource from SciHub
+            resource = item_node.find("link")
+            item['resource'] = resource['href']
+
+            collection_name = self._set_dataset_name(item['producttype'], item['summary'],
+                                                     item['platformname'])
+            item['title'] = collection_name['dataset_name']
+            item['notes'] = collection_name['notes']
 
         return item
 
@@ -99,7 +115,7 @@ class SentinalHarvester(SpatialHarvester):
         return uuids
 
 
-    def _set_dataset_name(self, producttype, summary):
+    def _set_dataset_name(self, producttype, summary, platformname):
         '''
         Adds a name for the dataset like collection name.
         Example:  Sentinel-2 Level-1C
@@ -121,6 +137,13 @@ class SentinalHarvester(SpatialHarvester):
         elif producttype == "OCN":
             dataset_name = "Sentinel-1 Level-2 (OCN)"
             notes = "The Sentinel-1 Level-2 OCN products include components for Ocean Swell spectra (OSW) providing continuity with ERS and ASAR WV and two new components: Ocean Wind Fields (OWI) and Surface Radial Velocities (RVL). The OSW is a two-dimensional ocean surface swell spectrum and includes an estimate of the wind speed and direction per swell spectrum. The OWI is a ground range gridded estimate of the surface wind speed and direction at 10 m above the surface derived from internally generated Level-1 GRD images of SM, IW or EW modes. The RVL is a ground range gridded difference between the measured Level-2 Doppler grid and the Level-1 calculated geometrical Doppler."
+
+        if platformname == 'Sentinel-2':
+            dataset_name = "Sentinel-2 Level-1C"
+            notes = "The Sentinel-2 Level-1C products are Top-of-atmosphere reflectances in cartographic geometry. These products are systematically generated and the data volume is 500MB for each 100x100" + u"\u33A2" + "."
+        elif platformname == 'Sentinel-3':
+            dataset_name = "Sentinel-3"
+            notes = "SENTINEL-3 is the first Earth Observation Altimetry mission to provide 100% SAR altimetry coverage where LRM is maintained as a back-up operating mode."
 
         result['dataset_name'] = dataset_name
         result['notes'] = notes + summary
