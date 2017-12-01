@@ -5,6 +5,7 @@ import json
 import requests
 import datetime
 import uuid
+import ast
 import utils
 import uuid as uuid_gen
 import logging
@@ -95,6 +96,7 @@ class ESAHarvester(SentinalHarvester, SingletonPlugin):
 
             log.debug('Starting gathering for %s' % source_url)
             guids_in_harvest = set(new_id)
+            print guids_in_harvest
 
             new = guids_in_harvest - guids_in_db
             delete = guids_in_db - guids_in_harvest
@@ -104,8 +106,30 @@ class ESAHarvester(SentinalHarvester, SingletonPlugin):
             for guid in new:
 
                 total_datasets = self._get_total_datasets(config, source_url)
+                log.info('Found %s results', total_datasets)
 
-                ids = self.parse_save_entry_data(config, source_url, guid, harvest_job, total_datasets)
+                # make request to the website
+                start = 0
+                r = requests.get('https://scihub.copernicus.eu/dhus/search?start='+str(start)+'&rows=100&q=*', auth=HTTPBasicAuth('nextgeoss', 'nextgeoss'), verify=False)
+                if r.status_code != 200:
+                    print
+                    'Wrong authentication? status code != 200 - status ' + str(r.status_code)
+                    return None
+
+                # create harvest object
+                obj = HarvestObject(guid=guid, job=harvest_job,
+                                    extras=[HOExtra(key='status', value='new')])
+                obj.save()
+
+                item = self._get_entries_from_request(r)
+
+                for k, v in item.items():
+                    obj.extras.append(HOExtra(key=k, value=v))
+
+                tags = self._get_tags_for_dataset(item)
+                obj.extras.append(HOExtra(key='tags', value=str(tags)))
+
+                ids.append(obj.id)
 
             for guid in change:
                 # obj = HarvestObject(guid=guid, job=harvest_job,
@@ -139,6 +163,7 @@ class ESAHarvester(SentinalHarvester, SingletonPlugin):
             self._save_gather_error('Unable to get content for URL: %s: %r' % \
                                     (source_url, e), harvest_job)
             return None
+
 
     def import_stage(self, harvest_object):
         context = {
@@ -174,16 +199,8 @@ class ESAHarvester(SentinalHarvester, SingletonPlugin):
 
             # We need to explicitly provide a package ID, otherwise ckanext-spatial
             # won't be be able to link the extent to the package.
-            import uuid
             package_dict['id'] = unicode(uuid.uuid4())
             package_schema['id'] = [unicode]
-
-            # # Save reference to the package on the object
-            # harvest_object.package_id = package_dict['id']
-            # harvest_object.add()
-            # # Defer constraints and flush so the dataset can be indexed with
-            # # the harvest object id (on the after_show hook from the harvester
-            # # plugin)
 
             source_dataset = model.Package.get(harvest_object.source.id)
             if source_dataset.owner_org:
@@ -193,7 +210,6 @@ class ESAHarvester(SentinalHarvester, SingletonPlugin):
             package_dict['title'] = self._get_object_extra(harvest_object, 'title')
             package_dict['notes'] = self._get_object_extra(harvest_object, 'notes')
             package_dict['extras'] = self._get_all_extras(harvest_object)
-            import ast
             package_dict['tags'] = self._get_tags_extra(harvest_object)
 
             log.info('Package with GUID %s does not exist, let\'s create it' % harvest_object.guid)
@@ -211,7 +227,6 @@ class ESAHarvester(SentinalHarvester, SingletonPlugin):
             log.info('Created new package %s with guid %s', package_id, harvest_object.guid)
         else:
             pass
-
 
         model.Session.commit()
 

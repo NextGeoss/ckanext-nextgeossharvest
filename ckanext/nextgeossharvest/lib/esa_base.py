@@ -48,34 +48,16 @@ class SentinalHarvester(SpatialHarvester):
         return total_results
 
 
-    def parse_save_entry_data(self, config, source_url, guid, harvest_job, total_results):
+    def _get_entries_from_request(self, request):
         '''
-        This function gets the data from the feed and creates
-        a HarvestObject
+        Extract data from the feed
         :return: added id's
         '''
-        start = 0
-        user = 'nextgeoss'
-        password = 'nextgeoss'
-        ids = []
-
-        #if start < total_results:
-        r = requests.get(source_url, auth=HTTPBasicAuth(user, password), verify=False)
-        if r.status_code != 200:
-            print
-            'Wrong authentication? status code != 200 - status ' + str(r.status_code)
-            return None
-
-        soup_resp = Soup(r.content, 'xml')
-
+        item = {}
+        soup_resp = Soup(request.content, 'xml')
         name_elements = ['str', 'int', 'date', 'double']
 
         for item_node in soup_resp.find_all('entry'):
-            item = {}
-
-            obj = HarvestObject(guid=guid, job=harvest_job,
-                                extras=[HOExtra(key='status', value='new')])
-            obj.save()
 
             for subitem_node in item_node.findChildren():
                 key = subitem_node.name
@@ -88,25 +70,12 @@ class SentinalHarvester(SpatialHarvester):
                     key = subitem_node['href']
                     continue
 
-            log.debug('Create ESA HarvestObjectExtra for %s',
-                      item['id'])
-
             if item['producttype']:
                 collection_name = self._set_dataset_name(item['producttype'], item['summary'])
                 item['title'] = collection_name['dataset_name']
                 item['notes'] = collection_name['notes']
 
-            for k, v in item.items():
-                obj.extras.append(HOExtra(key=k, value=v))
-
-            tags = self._add_tags_to_dataset(item)
-            obj.extras.append(HOExtra(key='tags_', value=str(tags)))
-
-            ids.append(obj.id)
-            #start += 1
-
-        print 'Finished creating HarvestObjectExtras for ESAHarvest'
-        return ids
+        return item
 
 
     def _get_harvest_ids(self, source_url):
@@ -159,7 +128,7 @@ class SentinalHarvester(SpatialHarvester):
         return result
 
 
-    def _add_tags_to_dataset(self, item):
+    def _get_tags_for_dataset(self, item):
         '''
         Creates tags from entry data
         :param item (list of values from the entry)
@@ -172,4 +141,5 @@ class SentinalHarvester(SpatialHarvester):
         for key, value in item.items():
             if key in defined_tags:
                 tags.append({'name': value})
+
         return  tags
