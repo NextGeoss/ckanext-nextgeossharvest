@@ -74,7 +74,7 @@ class SentinalHarvester(SpatialHarvester):
 
             # download the thumbnail and save it in storage_path
             response = requests.get(icon_url['href'],auth=HTTPBasicAuth('nextgeoss', 'nextgeoss'), verify=False, stream=True)
-            with open(storage_path+item['uuid']+'.jpg', 'wb') as out_file:
+            with open(storage_path+'/'+item['uuid']+'.jpg', 'wb') as out_file:
                 shutil.copyfileobj(response.raw, out_file)
             del response
 
