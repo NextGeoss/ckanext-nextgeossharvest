@@ -67,7 +67,7 @@ class SentinalHarvester(SpatialHarvester):
         item = {}
         soup_resp = Soup(request.content, 'xml')
         name_elements = ['str', 'int', 'date', 'double']
-        storage_path = config.get('ckan.storage_path')
+        thumbnails_storage_path = config.get('ckan.thumbnails_storage_path')
 
         for item_node in soup_resp.find_all('entry'):
 
@@ -113,7 +113,7 @@ class SentinalHarvester(SpatialHarvester):
 
             # download the thumbnail and save it in storage_path
             response = requests.get(icon_url['href'],auth=HTTPBasicAuth(username, password), verify=False, stream=True)
-            with open(storage_path+'/'+item['uuid']+'.jpg', 'wb') as out_file:
+            with open(thumbnails_storage_path+'/'+item['uuid']+'.jpg', 'wb') as out_file:
                 shutil.copyfileobj(response.raw, out_file)
             del response
 
