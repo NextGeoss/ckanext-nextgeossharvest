@@ -90,17 +90,19 @@ class ESAHarvester(SentinalHarvester, SingletonPlugin):
         log.debug('Starting gathering for %s' % source_url)
 
         start = 0
+        username = config.get('ckanext.nextgeossharvest.nextgeoss_username')
+        password = config.get('ckanext.nextgeossharvest.nextgeoss_password')
+        print username
 
-        total_datasets = self._get_total_datasets(config, source_url+'?q=*')
+        total_datasets = self._get_total_datasets(source_url, username, password)
         log.info('Found %s results', total_datasets)
         ids = []
-        user = config.get('harvest_username')
-        password = config.get('harvest_password')
+
 
         while start <= total_datasets:
             # make request to the website
-            url='https://scihub.copernicus.eu/dhus/search?start='+str(start)+'&rows=1&q=*'
-            r = requests.get('https://scihub.copernicus.eu/dhus/search?start='+str(start)+'&rows=100&q=*',
+            url='https://scihub.copernicus.eu/dhus/search?start=1'+str(start)+'&rows=100&q=*'
+            r = requests.get(url,
                              auth=HTTPBasicAuth(username, password), verify=False)
             if r.status_code != 200:
                 print
@@ -148,7 +150,7 @@ class ESAHarvester(SentinalHarvester, SingletonPlugin):
 
                 ids.append(obj.id)
 
-            start = start + 1
+            start = start + 100
 
         if len(ids) == 0:
             self._save_gather_error('No records received from the SCIHub server', harvest_job)

@@ -33,16 +33,21 @@ class SentinalHarvester(SpatialHarvester):
     {"type": "Polygon", "coordinates": [[[$x0, $y0], [$x1, $y1], [$x2, $y2], [$x3, $y3], [$x4, $y4]]]}
     ''')
 
-    def _get_total_datasets(self, config, url):
+    def _get_total_datasets(self, url, username, password):
         '''
         Get the total number of datasets, in order to go to the next page
         and get the next entries in the feed
         :return: total number of datasets
         '''
-        user = config.get('harvest_username')
-        password = config.get('harvest_password')
+        # user = config.get('ckanext.nextgeossharvest.harvest_username')
+        # password = config.get('ckanext.nextgeossharvest.harvest_password')
+        #
+        # print user
+        # print password
+        url = str(url) + 'q=*'
 
-        r = requests.get(url, auth=HTTPBasicAuth(user, password), verify=False)
+        r = requests.get(url, auth=HTTPBasicAuth(username, password), verify=False)
+        print r
         if r.status_code != 200:
             print
             'Wrong authentication? status code != 200 - status ' + str(r.status_code)
@@ -100,8 +105,8 @@ class SentinalHarvester(SpatialHarvester):
             icon_url = item_node.find("link", rel="icon")
             item['thumbnail'] = icon_url['href']
 
-            user = config.get('harvest_username')
-            password = config.get('harvest_password')
+            username = config.get('ckanext.nextgeossharvest.nextgeoss_username')
+            password = config.get('ckanext.nextgeossharvest.harvest_password')
 
             # download the thumbnail and save it in storage_path
             response = requests.get(icon_url['href'],auth=HTTPBasicAuth(username, password), verify=False, stream=True)
@@ -126,10 +131,10 @@ class SentinalHarvester(SpatialHarvester):
 
 
     def _get_harvest_ids(self, source_url):
-        user = config.get('harvest_username')
-        password = config.get('harvest_password')
+        username = config.get('ckanext.nextgeossharvest.nextgeoss_username')
+        password = config.get('ckanext.nextgeossharvest.nextgeoss_password')
 
-        r = requests.get(source_url, auth=HTTPBasicAuth(user, password), verify=False)
+        r = requests.get(source_url, auth=HTTPBasicAuth(username, password), verify=False)
         if r.status_code != 200:
             print
             'Wrong authentication? status code != 200 - status ' + str(r.status_code)
