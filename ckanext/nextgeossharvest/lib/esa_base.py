@@ -84,22 +84,25 @@ class SentinalHarvester(SpatialHarvester):
 
             if matches:
                 lst = [tuple(map(float, m.split())) for m in matches]
-                x0 = lst[0][0]
-                y0 = lst[0][1]
-                x1 = lst[1][0]
-                y1 = lst[1][1]
-                x2 = lst[2][0]
-                y2 = lst[2][1]
-                x3 = lst[3][0]
-                y3 = lst[3][1]
-                x4 = lst[4][0]
-                y4 = lst[4][1]
+                lstlen = len(lst)
 
-                coord_values = self.extent_template.substitute(
-                    x0=x0, y0=y0, x1=x1, y1=y1, x2=x2, y2=y2, x3=x3, y3=y3, x4=x4, y4=y4
-                )
+                if lstlen == 5:
+                    x0 = lst[0][0]
+                    y0 = lst[0][1]
+                    x1 = lst[1][0]
+                    y1 = lst[1][1]
+                    x2 = lst[2][0]
+                    y2 = lst[2][1]
+                    x3 = lst[3][0]
+                    y3 = lst[3][1]
+                    x4 = lst[4][0]
+                    y4 = lst[4][1]
 
-            item['spatial'] = coord_values.strip()
+                    coord_values = self.extent_template.substitute(
+                        x0=x0, y0=y0, x1=x1, y1=y1, x2=x2, y2=y2, x3=x3, y3=y3, x4=x4, y4=y4
+                    )
+
+                    item['spatial'] = coord_values.strip()
 
 
             icon_url = item_node.find("link", rel="icon")
