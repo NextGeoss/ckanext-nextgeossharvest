@@ -97,6 +97,7 @@ class ESAHarvester(SentinalHarvester, SingletonPlugin):
         total_datasets = self._get_total_datasets(source_url, username, password)
         log.info('Found %s results', total_datasets)
         ids = []
+        total_datasets = 100
 
 
         while start <= total_datasets:
