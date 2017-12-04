@@ -87,32 +87,36 @@ class ESAHarvester(SentinalHarvester, SingletonPlugin):
 
         guids_in_db = set(guid_to_package_id.keys())
 
-        # Get contents
-        try:
-            ids = []
+        log.debug('Starting gathering for %s' % source_url)
 
-            new_id = self._get_harvest_ids(source_url)
+        start = 0
 
-            log.debug('Starting gathering for %s' % source_url)
+        total_datasets = self._get_total_datasets(config, source_url+'?q=*')
+        log.info('Found %s results', total_datasets)
+        ids = []
+        user = config.get('harvest_username')
+        password = config.get('harvest_password')
+
+        while start <= total_datasets:
+            # make request to the website
+            url='https://scihub.copernicus.eu/dhus/search?start='+str(start)+'&rows=1&q=*'
+            r = requests.get('https://scihub.copernicus.eu/dhus/search?start='+str(start)+'&rows=100&q=*',
+                             auth=HTTPBasicAuth(username, password), verify=False)
+            if r.status_code != 200:
+                print
+                'Wrong authentication? status code != 200 - status ' + str(r.status_code)
+                return None
+
+            # Get contents
+            new_id = self._get_harvest_ids(url)
             guids_in_harvest = set(new_id)
 
             new = guids_in_harvest - guids_in_db
             delete = guids_in_db - guids_in_harvest
             change = guids_in_db & guids_in_harvest
+            print change
 
             for guid in new:
-
-                total_datasets = self._get_total_datasets(config, source_url)
-                log.info('Found %s results', total_datasets)
-
-                # make request to the website
-                start = 0
-                r = requests.get('https://scihub.copernicus.eu/dhus/search?q=*&rows=1', auth=HTTPBasicAuth('nextgeoss', 'nextgeoss'), verify=False)
-                if r.status_code != 200:
-                    print
-                    'Wrong authentication? status code != 200 - status ' + str(r.status_code)
-                    return None
-
                 # create harvest object
                 obj = HarvestObject(guid=guid, job=harvest_job,
                                     extras=[HOExtra(key='status', value='new')])
@@ -129,12 +133,6 @@ class ESAHarvester(SentinalHarvester, SingletonPlugin):
                 ids.append(obj.id)
 
             for guid in change:
-                r = requests.get('https://scihub.copernicus.eu/dhus/search?q=*&rows=1', auth=HTTPBasicAuth('nextgeoss', 'nextgeoss'), verify=False)
-                if r.status_code != 200:
-                    print
-                    'Wrong authentication? status code != 200 - status ' + str(r.status_code)
-                    return None
-
                 obj = HarvestObject(guid=guid, job=harvest_job,
                                     package_id=guid_to_package_id[guid],
                                     extras=[HOExtra(key='status', value='change')])
@@ -148,35 +146,24 @@ class ESAHarvester(SentinalHarvester, SingletonPlugin):
                 tags = self._get_tags_for_dataset(item)
                 obj.extras.append(HOExtra(key='tags', value=str(tags)))
 
-                print obj.extras
-
                 ids.append(obj.id)
 
-            # for guid in delete:
-            #     # obj = HarvestObject(guid=guid, job=harvest_job,
-            #     #                     package_id=guid_to_package_id[guid],
-            #     #                     extras=[HOExtra(key='status', value='delete')])
-            #     # model.Session.query(HarvestObject). \
-            #     #     filter_by(guid=guid). \
-            #     #     update({'current': False}, False)
-            #     # obj.save()
-            #     # ids.append(obj.id)
-            #     pass
+            start = start + 1
 
-            if len(ids) == 0:
-                self._save_gather_error('No records received from the SCIHub server', harvest_job)
-                return None
-            return ids
-
-        except Exception, e:
-            import traceback
-            traceback.print_exc()
-            log.debug("Some error")
-            log.info('MESSAGE' + str(e.args))
-            log.info(e.message)
-            self._save_gather_error('Unable to get content for URL: %s: %r' % \
-                                    (source_url, e), harvest_job)
+        if len(ids) == 0:
+            self._save_gather_error('No records received from the SCIHub server', harvest_job)
             return None
+        return ids
+
+        # except Exception, e:
+        #     import traceback
+        #     traceback.print_exc()
+        #     log.debug("Some error")
+        #     log.info('MESSAGE' + str(e.args))
+        #     log.info(e.message)
+        #     self._save_gather_error('Unable to get content for URL: %s: %r' % \
+        #                             (source_url, e), harvest_job)
+        #     return None
 
 
     def import_stage(self, harvest_object):
@@ -218,6 +205,8 @@ class ESAHarvester(SentinalHarvester, SingletonPlugin):
             package_dict['id'] = unicode(uuid.uuid4())
             package_schema['id'] = [unicode]
 
+            print harvest_object
+
             source_dataset = model.Package.get(harvest_object.source.id)
             if source_dataset.owner_org:
                 package_dict['owner_org'] = source_dataset.owner_org
@@ -247,7 +236,7 @@ class ESAHarvester(SentinalHarvester, SingletonPlugin):
 
             model.Session.execute('SET CONSTRAINTS harvest_object_package_id_fkey DEFERRED')
             model.Session.flush()
-
+            print package_dict
             package_id = p.toolkit.get_action('package_create')(context, package_dict)
             log.info('Created new package %s with guid %s', package_id, harvest_object.guid)
 
@@ -260,38 +249,38 @@ class ESAHarvester(SentinalHarvester, SingletonPlugin):
         if status == 'change':
             log.info('Package change')
 
-            # package_schema = logic.schema.default_update_package_schema()
-            # package_schema['tags'] = tag_schema
-            # package_schema['extras'] = extras_schema
-            # context['schema'] = package_schema
-            # package_dict = logic.get_action('package_show')(context,
-            #                                            {'id': harvest_object.package_id})
-            #
-            # print 'PACKAGEEEE DICT'
-            # print package_dict
-            #
-            # # We need to explicitly provide a package ID, otherwise ckanext-spatial
-            # # won't be be able to link the extent to the package.
-            # package_dict['id'] = harvest_object.package_id
-            #
-            # package_dict['title'] = self._get_object_extra(harvest_object, 'title')
-            # package_dict['notes'] = self._get_object_extra(harvest_object, 'notes')
-            # package_dict['extras'] = self._get_all_extras(harvest_object)
-            # print 'eCXTTAAAA'
-            # print harvest_object
-            # package_dict['tags'] = self._get_tags_extra(harvest_object)
-            #
-            # #resource
-            # resource_url = self._get_object_extra(harvest_object, 'resource')
-            # resources = [{
-            #     'name': 'Product Download from SciHub',
-            #     'description': 'Download the product from SciHub. NOTE: DOWNLOAD REQUIRES LOGIN',
-            #     'url': resource_url
-            # }]
-            # package_dict['resources'] = resources
-            #
-            # package_id = p.toolkit.get_action('package_update')(context, package_dict)
-            # log.info('Updated package %s with guid %s', package_id, harvest_object.guid)
+            package_schema = logic.schema.default_update_package_schema()
+            package_schema['tags'] = tag_schema
+            package_schema['extras'] = extras_schema
+            context['schema'] = package_schema
+            package_dict = logic.get_action('package_show')(context,
+                                                       {'id': harvest_object.package_id})
+
+            print 'PACKAGEEEE DICT'
+            print package_dict
+
+            # We need to explicitly provide a package ID, otherwise ckanext-spatial
+            # won't be be able to link the extent to the package.
+            package_dict['id'] = harvest_object.package_id
+
+            package_dict['title'] = self._get_object_extra(harvest_object, 'title')
+            package_dict['notes'] = self._get_object_extra(harvest_object, 'notes')
+            package_dict['extras'] = self._get_all_extras(harvest_object)
+            print 'eCXTTAAAA'
+            print harvest_object
+            package_dict['tags'] = self._get_tags_extra(harvest_object)
+
+            #resource
+            resource_url = self._get_object_extra(harvest_object, 'resource')
+            resources = [{
+                'name': 'Product Download from SciHub',
+                'description': 'Download the product from SciHub. NOTE: DOWNLOAD REQUIRES LOGIN',
+                'url': resource_url
+            }]
+            package_dict['resources'] = resources
+
+            package_id = p.toolkit.get_action('package_update')(context, package_dict)
+            log.info('Updated package %s with guid %s', package_id, harvest_object.guid)
 
 
         model.Session.commit()

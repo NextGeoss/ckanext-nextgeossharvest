@@ -11,6 +11,7 @@ import shutil
 from lxml import etree
 from xml.dom import minidom
 from requests.auth import HTTPBasicAuth
+from string import Template
 from datetime import date, timedelta
 from datetime import datetime
 from bs4 import BeautifulSoup
@@ -20,6 +21,7 @@ from ckanext.harvest.model import HarvestObject
 from ckanext.harvest.model import HarvestObjectExtra as HOExtra
 from ckanext.spatial.harvesters.base import SpatialHarvester
 from ckan.common import config
+from ckan.lib.helpers import json
 
 from bs4 import BeautifulSoup as Soup
 
@@ -27,16 +29,18 @@ log = logging.getLogger(__name__)
 
 
 class SentinalHarvester(SpatialHarvester):
+    extent_template = Template('''
+    {"type": "Polygon", "coordinates": [[[$x0, $y0], [$x1, $y1], [$x2, $y2], [$x3, $y3], [$x4, $y4]]]}
+    ''')
+
     def _get_total_datasets(self, config, url):
         '''
         Get the total number of datasets, in order to go to the next page
         and get the next entries in the feed
         :return: total number of datasets
         '''
-        #user = config.get('username')
-        #password = config.get('password')
-        user = 'nextgeoss'
-        password = 'nextgeoss'
+        user = config.get('harvest_username')
+        password = config.get('harvest_password')
 
         r = requests.get(url, auth=HTTPBasicAuth(user, password), verify=False)
         if r.status_code != 200:
@@ -69,11 +73,38 @@ class SentinalHarvester(SpatialHarvester):
                     key = subitem_node['name']
                 item[key] = value
 
+            coordinates_tmp = item['footprint']
+            pat = re.compile(r'''(-*\d+\.\d+ -*\d+\.\d+);*''')
+            matches = pat.findall(coordinates_tmp)
+
+            if matches:
+                lst = [tuple(map(float, m.split())) for m in matches]
+                x0 = lst[0][0]
+                y0 = lst[0][1]
+                x1 = lst[1][0]
+                y1 = lst[1][1]
+                x2 = lst[2][0]
+                y2 = lst[2][1]
+                x3 = lst[3][0]
+                y3 = lst[3][1]
+                x4 = lst[4][0]
+                y4 = lst[4][1]
+
+                coord_values = self.extent_template.substitute(
+                    x0=x0, y0=y0, x1=x1, y1=y1, x2=x2, y2=y2, x3=x3, y3=y3, x4=x4, y4=y4
+                )
+
+            item['spatial'] = coord_values.strip()
+
+
             icon_url = item_node.find("link", rel="icon")
             item['thumbnail'] = icon_url['href']
 
+            user = config.get('harvest_username')
+            password = config.get('harvest_password')
+
             # download the thumbnail and save it in storage_path
-            response = requests.get(icon_url['href'],auth=HTTPBasicAuth('nextgeoss', 'nextgeoss'), verify=False, stream=True)
+            response = requests.get(icon_url['href'],auth=HTTPBasicAuth(username, password), verify=False, stream=True)
             with open(storage_path+'/'+item['uuid']+'.jpg', 'wb') as out_file:
                 shutil.copyfileobj(response.raw, out_file)
             del response
@@ -95,8 +126,9 @@ class SentinalHarvester(SpatialHarvester):
 
 
     def _get_harvest_ids(self, source_url):
-        user = 'nextgeoss'
-        password = 'nextgeoss'
+        user = config.get('harvest_username')
+        password = config.get('harvest_password')
+
         r = requests.get(source_url, auth=HTTPBasicAuth(user, password), verify=False)
         if r.status_code != 200:
             print
@@ -108,7 +140,6 @@ class SentinalHarvester(SpatialHarvester):
         uuids = []
 
         for item_node in soup_resp.find_all('entry'):
-            item = {}
             for subitem_node in item_node.findChildren('id'):
                 uuids.append(subitem_node.text)
 
