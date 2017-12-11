@@ -97,12 +97,12 @@ class ESAHarvester(SentinalHarvester, SingletonPlugin):
         total_datasets = self._get_total_datasets(source_url, username, password)
         log.info('Found %s results', total_datasets)
         ids = []
-        total_datasets = 100
+        total_datasets = 20
 
 
         while start <= total_datasets:
             # make request to the website
-            url='https://scihub.copernicus.eu/dhus/search?start=1'+str(start)+'&rows=100&q=*'
+            url='https://scihub.copernicus.eu/dhus/search?start=0'+str(start)+'&rows=10&q=*'
             r = requests.get(url,
                              auth=HTTPBasicAuth(username, password), verify=False)
             if r.status_code != 200:
@@ -151,7 +151,7 @@ class ESAHarvester(SentinalHarvester, SingletonPlugin):
 
                 ids.append(obj.id)
 
-            start = start + 100
+            start = start + 10
 
         if len(ids) == 0:
             self._save_gather_error('No records received from the SCIHub server', harvest_job)
