@@ -109,7 +109,7 @@ class SentinalHarvester(SpatialHarvester):
             item['thumbnail'] = icon_url['href']
 
             username = config.get('ckanext.nextgeossharvest.nextgeoss_username')
-            password = config.get('ckanext.nextgeossharvest.harvest_password')
+            password = config.get('ckanext.nextgeossharvest.nextgeoss_password')
 
             # download the thumbnail and save it in storage_path
             response = requests.get(icon_url['href'],auth=HTTPBasicAuth(username, password), verify=False, stream=True)
@@ -129,7 +129,7 @@ class SentinalHarvester(SpatialHarvester):
                                                      item['platformname'])
             item['title'] = collection_name['dataset_name']
             item['notes'] = collection_name['notes']
-
+        print item
         return item
 
 
