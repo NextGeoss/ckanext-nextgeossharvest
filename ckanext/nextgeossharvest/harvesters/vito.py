@@ -250,22 +250,18 @@ class VitoHarvester(VitoProbaVHarvester, SingletonPlugin):
                     item = self._get_entries_from_request(request)
                     title = platform_name + ' ' + collection['title']
                     item['title'] = title.rstrip()
-                    print item['productType']
 
-                    description = self._get_dataset_description(item['productType'])
+                    description = self._get_dataset_description(item['producttype'])
                     notes = str(description) + " " + str(collection['summary']) + " " + str(item['summary'])
-                    print notes
 
                     obj.extras.append(HOExtra(key='notes', value=str(notes)))
 
                     tags = self._get_tags_for_dataset(item)
-                    print tags
                     obj.extras.append(HOExtra(key='tags', value=str(tags)))
 
                     for k, v in item.items():
                         obj.extras.append(HOExtra(key=k, value=v))
 
-                    print obj
                     ids.append(obj.id)
 
                 log.info("Collected %s datasets for collection %s", str(datasets_for_collection), str(collection))
@@ -354,8 +350,8 @@ class VitoHarvester(VitoProbaVHarvester, SingletonPlugin):
         result = []
 
         for extra in harvest_object.extras:
-            if extra.key not in ('id', 'title', 'tags', 'status', 'notes', 'resource', 'Platform',
-                                 'Polygon', 'Sensor', 'Instrument', 'surfaceMembers', 'Point', 'type'):
+            if extra.key not in ('id', 'title', 'tags', 'status', 'notes', 'resource', 'platform',
+                                 'polygon', 'sensor', 'instrument', 'surfacemembers', 'point', 'type'):
                 result.append({'key': extra.key, 'value': extra.value})
         return result
 
@@ -366,5 +362,5 @@ class VitoHarvester(VitoProbaVHarvester, SingletonPlugin):
         for extra in harvest_object.extras:
             if extra.key == 'tags':
                 tags = ast.literal_eval(extra.value)
-        print tags
+
         return  tags

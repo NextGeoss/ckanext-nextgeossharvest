@@ -320,7 +320,7 @@ class VitoProbaVHarvester(SpatialHarvester):
         for key, value in item.items():
             if key in defined_tags:
                 tags.append({'name': value})
-            if key == 'productType':
+            if key == 'producttype':
                 value_tmp = value.split("_")
                 for val in value_tmp:
                     tags.append({"name": val})
