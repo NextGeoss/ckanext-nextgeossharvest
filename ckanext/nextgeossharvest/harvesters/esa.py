@@ -269,8 +269,6 @@ class ESAHarvester(SentinalHarvester, SingletonPlugin):
             package_dict['title'] = self._get_object_extra(harvest_object, 'title')
             package_dict['notes'] = self._get_object_extra(harvest_object, 'notes')
             package_dict['extras'] = self._get_all_extras(harvest_object)
-            print 'eCXTTAAAA'
-            print harvest_object
             package_dict['tags'] = self._get_tags_extra(harvest_object)
 
             #resource
