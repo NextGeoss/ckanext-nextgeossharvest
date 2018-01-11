@@ -183,7 +183,7 @@ class VitoHarvester(VitoProbaVHarvester, SingletonPlugin):
 
             total_datasets = self._get_total_datasets(source_url_tmp)
             log.info('Found %s results', total_datasets)
-            total_datasets = 10
+            total_datasets = 100
 
             '''
                 if the total number of datasets is greater then max_datasets,
