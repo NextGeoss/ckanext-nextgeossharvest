@@ -168,17 +168,12 @@ class VitoProbaVHarvester(SpatialHarvester):
                         item[key.lower()] = value
 
             coordinates_tmp = item['polygon']
-            print coordinates_tmp
             pat = re.compile(r'''(-*\d+\.\d+ -*\d+\.\d+);*''')
-            print pat
             matches = pat.findall(coordinates_tmp)
-            print matches
 
             if matches:
                 lst = [tuple(map(float, m.split())) for m in matches]
-                print lst
                 lstlen = len(lst)
-                print lstlen
 
                 x0 = lst[0][0]
                 y0 = lst[0][1]
@@ -212,7 +207,7 @@ class VitoProbaVHarvester(SpatialHarvester):
                 resource_tmp = item_node.find("link", type="application/octet-stream")
 
             item['resource'] = resource_tmp['href']
-            item['collection_name'] = item['parentIdentifier']
+            item['collection_name'] = item['parentidentifier']
 
         return item
 
