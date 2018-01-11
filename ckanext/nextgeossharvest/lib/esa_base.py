@@ -129,6 +129,10 @@ class SentinalHarvester(SpatialHarvester):
                                                      item['platformname'])
             item['title'] = collection_name['dataset_name']
             item['notes'] = collection_name['notes']
+
+            # add collection_name field for searching/grouping by collection
+            item['collection_name'] = collection_name['dataset_name']
+
         print item
         return item
 
