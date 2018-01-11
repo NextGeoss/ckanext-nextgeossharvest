@@ -212,6 +212,7 @@ class VitoProbaVHarvester(SpatialHarvester):
                 resource_tmp = item_node.find("link", type="application/octet-stream")
 
             item['resource'] = resource_tmp['href']
+            item['collection_name'] = item['parentIdentifier']
 
         return item
 
