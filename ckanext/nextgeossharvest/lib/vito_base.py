@@ -165,7 +165,7 @@ class VitoProbaVHarvester(SpatialHarvester):
                     if subitem_node.key is not None:
                         value = subitem_node.key.text
                     if key not in item:
-                        item[key] = value
+                        item[key.lower()] = value
 
             coordinates_tmp = item['polygon']
             print coordinates_tmp
