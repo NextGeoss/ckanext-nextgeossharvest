@@ -193,7 +193,7 @@ class VitoProbaVHarvester(SpatialHarvester):
                 item['spatial'] = coord_values.strip()
 
             icon_url = item_node.find("content", type="image/png")
-            item['thumbanil'] = icon_url['url']
+            item['thumbnail'] = icon_url['url']
 
             # download the thumbnail and save it in storage_path
             response = requests.get(icon_url['url'], stream=True)
