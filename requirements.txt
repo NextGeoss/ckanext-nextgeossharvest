@@ -1,1 +1,6 @@
 bs4
+utils
+jmespath
+requests
+sqlalchemy
+shapely

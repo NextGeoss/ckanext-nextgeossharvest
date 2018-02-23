@@ -6,32 +6,31 @@ from datetime import datetime
 from sqlalchemy import desc
 from sqlalchemy.sql import update, bindparam
 
-from ckan.common import config
 from ckan.model import Session
 from ckan.plugins.core import implements
 
 from ckanext.harvest.model import HarvestJob
 from ckanext.harvest.interfaces import IHarvester
 
-from ckanext.nextgeossharvest.lib.esa_base import SentinelHarvester
 from ckanext.nextgeossharvest.lib.opensearch_base import OpenSearchHarvester
 from ckanext.nextgeossharvest.lib.nextgeoss_base import NextGEOSSHarvester
+from ckanext.nextgeossharvest.lib.codede_base import CODEDEBase
 
 
-class ESAHarvester(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
-    """A Harvester for ESA Sentinel Products."""
+class CODEDEHarvester(CODEDEBase, OpenSearchHarvester, NextGEOSSHarvester):
+    """A Harvester for ESA Sentinel products available on CODE-DE."""
     implements(IHarvester)
 
     def info(self):
         return {
-            'name': 'esasentinel',
-            'title': 'ESA Sentinel Harvester New',
-            'description': 'A Harvester for ESA Sentinel Products'
+            'name': 'code-de',
+            'title': 'CODE-DE Harvester',
+            'description': 'A Harvester for Sentinel Products on CODE-DE'
         }
 
     def gather_stage(self, harvest_job):
-        log = logging.getLogger(__name__ + '.ESASentinel.gather')
-        log.debug('ESASentinelHarvester gather_stage for job: %r', harvest_job)
+        log = logging.getLogger(__name__ + '.CODEDE.gather')
+        log.debug('CODEDEHarvester gather_stage for job: %r', harvest_job)
 
         # Save a reference
         self.job = harvest_job
@@ -54,30 +53,28 @@ class ESAHarvester(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
 
         start_date = self.source_config.get('start_date', last_date)
         end_date = self.source_config.get('end_date', 'NOW')
-        date_range = '[{} TO {}]'.format(start_date, end_date)
 
-        # Get the base_url
-        source = self.source_config.get('source')
-        if source == 'scihub':
-            base_url = 'https://scihub.copernicus.eu'
-            self.os_id_name = 'str',
-            self.os_id_attr = {'name': 'identifier'}
-            self.os_guid_name = 'str'
-            self.os_guid_attr = {'name': 'uuid'}
-        elif source == 'noa':
-            base_url = 'https://sentinels.space.noa.gr'
-            self.os_id_name = 'str',
-            self.os_id_attr = {'name': 'identifier'}
-            self.os_guid_name = 'str'
-            self.os_guid_attr = {'name': 'uuid'}
-        harvest_url = '{}/dhus/search?q=ingestiondate:{}&orderby=ingestiondate asc&start=0&rows=100'.format(base_url, date_range)  # noqa: E501
+        # Get the harvest_urls
+        template = 'https://catalog.code-de.org/opensearch/request/?httpAccept=application/atom%2Bxml&parentIdentifier={}&startDate={}&endDate={}&maximumRecords=100'  # noqa: E501
+        parent_identifiers = ['EOP:CODE-DE:S1_SAR_L1_GRD',
+                              'EOP:CODE-DE:S1_SAR_L1_SLC',
+                              'EOP:CODE-DE:S1_SAR_L2_OCN',
+                              'EOP:CODE-DE:S2_MSI_L1C']
+        harvest_urls = []
+        for parent_identifier in parent_identifiers:
+            harvest_urls.append(template.format(parent_identifier, start_date,
+                                                end_date))
 
-        username = config.get('ckanext.nextgeossharvest.nextgeoss_username')
-        password = config.get('ckanext.nextgeossharvest.nextgeoss_password')
+        self.os_id_name = 'dc:identifier',
+        self.os_id_attr = {}
+        self.os_id_mod = self.normalize_identifier
+        self.os_guid_name = 'dc:identifier'
+        self.os_guid_attr = {}
+        self.os_guid_mod = self.normalize_identifier
 
-        # This can be a hook
-        ids = self._crawl_results(harvest_url, username, password)
-        # This can be a hook
+        ids = []
+        for harvest_url in harvest_urls:
+            ids += self._crawl_results(harvest_url)
 
         return ids
 

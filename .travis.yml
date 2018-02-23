@@ -1,11 +1,21 @@
 language: python
-sudo: required
 python:
     - "2.7"
-env: PGVERSION=9.1
+env: PGVERSION=9.2
+dist: trusty
+sudo: required
+cache: pip
+env:
+    - CKANVERSION=2.7
+services:
+    - redis-server
+    - postgresql
 install:
+    - pip install --no-cache-dir git+https://github.com/ViderumGlobal/ckanext-spatial.git@ckan-2.7#egg=ckanext-spatial
+    - pip install --no-cache-dir -r https://raw.githubusercontent.com/ViderumGlobal/ckanext-spatial/v0.0.1/pip-requirements.txt
     - bash bin/travis-build.bash
-    - pip install coveralls
-script: sh bin/travis-run.sh
-after_success:
-    - coveralls
+    - pip install flake8
+script:
+    - sh bin/travis-run.sh
+    - flake8 ./ckanext-nextgeossharvest --exclude ./build,./ckanext/nextgeossharvest/commands/harvester.py,./ckanext/nextgeossharvest/commands/__init__.py --ignore E127,E128
+
