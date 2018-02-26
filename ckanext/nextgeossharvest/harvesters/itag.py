@@ -38,7 +38,7 @@ class ITagEnricher(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
             'description': 'A metadata enricher that uses iTag to obtain additional metadata'  # noqa: E501
         }
 
-def validate_config(self, config):
+    def validate_config(self, config):
         if not config:
             return config
 
@@ -49,9 +49,9 @@ def validate_config(self, config):
                 raise ValueError('base_url is required')
             else:
                 base_url = config_obj['base_url']
-                if not base_url.startswith('http://')
-                    or base_url.startswith('https://'):
+                if not base_url.startswith('http://') or base_url.startswith('https://'):  # noqa: E501
                     raise ValueError('base_url must be a valid URL.')
+
         except ValueError as e:
             raise e
 
@@ -68,7 +68,7 @@ def validate_config(self, config):
 
         self.base_url = self.source_config.get('base_url')
         if self.base_url[-1] == '/':
-            self.base_url = base_url[:-1]
+            self.base_url = self.base_url[:-1]
 
         context = {'model': model,
                    'session': model.Session,
