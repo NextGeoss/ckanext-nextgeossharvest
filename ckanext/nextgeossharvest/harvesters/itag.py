@@ -38,12 +38,37 @@ class ITagEnricher(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
             'description': 'A metadata enricher that uses iTag to obtain additional metadata'  # noqa: E501
         }
 
+def validate_config(self, config):
+        if not config:
+            return config
+
+        try:
+            config_obj = json.loads(config)
+
+            if 'base_url' not in config_obj:
+                raise ValueError('base_url is required')
+            else:
+                base_url = config_obj['base_url']
+                if not base_url.startswith('http://')
+                    or base_url.startswith('https://'):
+                    raise ValueError('base_url must be a valid URL.')
+        except ValueError as e:
+            raise e
+
+        return config
+
     def gather_stage(self, harvest_job):
         log = logging.getLogger(__name__ + '.ITagEnricher.gather')
         log.debug('ITagEnricher gather_stage for job: %r', harvest_job)
 
         # Save a reference
         self.job = harvest_job
+
+        self._set_source_config(self.job.source.config)
+
+        self.base_url = self.source_config.get('base_url')
+        if self.base_url[-1] == '/':
+            self.base_url = base_url[:-1]
 
         context = {'model': model,
                    'session': model.Session,
@@ -91,7 +116,7 @@ class ITagEnricher(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
         start_request = time.time()
 
         template = '{}/?taggers={}&_pretty=true&footprint={}'
-        base_url = 'http://itag-nextgeoss.deimos.pt/itag'
+        base_url = self.base_url
         taggers = 'Political,Geology,Hydrology,LandCover2009'
         spatial = json.loads(self._get_object_extra(harvest_object, 'spatial'))
         coords = Polygon([(x[0], x[1]) for x in spatial['coordinates'][0]]).wkt
