@@ -16,6 +16,9 @@ This extension contains harvester plugins for harvesting from sources used by Ne
         2. [fetch_stage](#fetch_stage)
         3. [import_stage](#import_stage)
 5. [iTag](#itag)
+    1. [How ITageEnricher works](#itagprocess)
+    2. [Setting up ITagEnricher](#setupitag)
+    3. [Handling iTag errors](#handlingitagerrors)
 6. [A note on tests](#tests)
 
 ## <a name="repo"></a>What's in the repository
@@ -154,7 +157,30 @@ During the import stage, the `import_stage()` method will be called for each har
 The purpose of the import stage is to parse the content and use it, as well as any additional context or information provided by the harvest object extras, to create or update a dataset.
 
 ## <a name="itag"></a>iTag
-WORK IN PROGRESS
+The iTag "harvester (`ITageEnricher`) is better described as a metaharvester. It uses the harvester infrastructure to add new tags and metadata to existing datasets. It is completely separate from the other harvesters, meaning: if you want to harvest Sentinel products, you'll use one of the Sentinel harvesters. If you want to enrich Sentinel datasets, you'll use an instance of `ITagEnricher`. But you'll use them separately, and they won't interact with eachother at all.
+
+### <a name="itagprocess"></a>How ITageEnricher works
+During the gather stage, it queries the CKAN instance itself to get a list of existing datasets that 1) have the `spatial` extra and 2) have not yet been updated by the ITageEnricher. Based on this list, it then creates harvest objects. This stage might be described as self-harvesting.
+
+During the fetch stage, it queries an iTag instance using the coordinates from each dataset's `spatial` extra and then stores the response from iTag as `.content`, which will be used in the import stage. As long as iTag returns a valid response, the dataset moves on to the import stage—in other words, all that matters is that the query succeeded, not whether the iTag was able to find tags for a particular footprint. See below for an explanation.
+
+During the import stage, it parses the iTag response to extract any additional tags and/or metadata. Regardless of whether any additional tags or metadata are found, the extra ` itag: tagged` will be added to the dataset. This extra is used in the gather stage to filter out datasets for which successful iTag queries have been made.
+
+### <a name="setupitag"></a> Setting up ITagEnricher
+To set it up, create a new harvester source (we'll call ours "iTag Enricher" for the sake of example). No configuration is necessary. Select `manual` for the update frequency. Select an organization (currently required—the metaharvester will only act on datasets that belong to that organization).
+
+Once you've created the harvester source, create the cron job below, using the name or ID of the source you just created:
+`* * * * * paster --plugin=ckanext-harvest harvester job {name or id of harvest source} -c {path to CKAN config}`
+The cron job will continually attempt to create a new harvest job. If there already is a running job for the source, the attempt will simply fail (this is the intended behaviour). If there is no running job, then a new job will be created, which will then be run by the `harvester run` cron job that you should already have set up. The metaharvester will then make a list of all the datasets that should be enriched with iTag, but which have not yet been enriched, and then try to enrich them.
+
+### <a name="handlingitagerrors"></a>Handling iTag errors
+If a query to iTag fails, 1) it will be reported in the error report for the respective job and 2) the metaharvester will automatically try to enrich that dataset the next time it runs. No additional logs or tracking are required--as long as a dataset hasn't been tagged, and should be tagged, it will be added to the list each time a job is created. Once a dataset has been tagged (or it has been determined that there are no tags that can be added to it), it will no longer appear on the list of datasets that should be tagged.
+
+Currently, ITagEnricher only creates a list of max. 1,000 datasets for each job. This limit is intended to speed up the rate at which jobs are completed (and feedback on performance is available). Since a new job will be created as soon as the current one is marked `Finished`, this behaviour does not slow down the pace of tagging.
+
+Sentinel-3 datasets have complex polygons that seem to cause iTag to timeout more often than it does when processesing requests related to other datasets, so Sentinel-3 datasets are currently filtered out of the list of datasets that need to be tagged.
+
+In general, requests to iTag seem to timeout rather often, so it may be necessary to experiment with rate limiting. It may also be necessary to set up a more robust infrastructure for the iTag instance.
 
 ## <a name="tests"></a>A note on tests
 The current tests need to be updated and additional tests are necessary for maintaining consitency across all harvesters.
