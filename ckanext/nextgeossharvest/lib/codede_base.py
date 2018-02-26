@@ -82,9 +82,12 @@ class CODEDEBase(SentinelHarvester, HarvesterBase):
         # Thumbnail, alternative and enclosure
         enclosure = soup.find('link', rel='enclosure')['href']
         alternative = soup.find('link', rel='alternate')['href']
-        thumbnail = soup.find('link', rel='icon')
-        if thumbnail:
-            thumbnail_link = thumbnail['href']
+        if self.include_thumbnails:
+            thumbnail = soup.find('link', rel='icon')
+            if thumbnail:
+                thumbnail_link = thumbnail['href']
+        else:
+            thumbnail = None
         item['codede_download_url'] = enclosure
         item['codede_product_url'] = alternative
         item['codede_thumbnail'] = thumbnail_link

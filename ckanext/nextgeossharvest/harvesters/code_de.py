@@ -37,6 +37,11 @@ class CODEDEHarvester(CODEDEBase, OpenSearchHarvester, NextGEOSSHarvester):
 
         self._set_source_config(self.job.source.config)
 
+        # The CODE-DE results include rel="icon" links, but it seems like they
+        # do not work. This setting lets us skip them now and grab them later.
+        self.include_thumbnails = self.source_config('include_thumbnails',
+                                                     False)
+
         self.update_all = self.source_config.get('update_all', False)
 
         # Used created rather than finished in case the most recent job
