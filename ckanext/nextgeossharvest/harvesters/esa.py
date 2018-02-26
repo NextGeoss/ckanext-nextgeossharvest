@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import logging
+import json
 from datetime import datetime
 
 from sqlalchemy import desc
@@ -28,6 +29,37 @@ class ESAHarvester(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
             'title': 'ESA Sentinel Harvester New',
             'description': 'A Harvester for ESA Sentinel Products'
         }
+
+    def validate_config(self, config):
+        if not config:
+            return config
+
+        try:
+            config_obj = json.loads(config)
+
+            if config_obj.get('source') not in {'scihub', 'noa'}:
+                raise ValueError('source is required and must be either scihub or noa')  # noqa: E501
+            if 'start_date' in config_obj:
+                try:
+                    datetime.strptime(config_obj['start_date'],
+                                      '%Y-%m-%dT%H:%M:%S.%fZ')
+                except ValueError:
+                    raise ValueError('start_date format must be 2018-01-01T00:00:00.000Z')  # noqa: E501
+            if 'end_date' in config_obj:
+                try:
+                    datetime.strptime(config_obj['end_date'],
+                                      '%Y-%m-%dT%H:%M:%S.%fZ')
+                except ValueError:
+                    raise ValueError('end_date format must be 2018-01-01T00:00:00.000Z')  # noqa: E501
+            for key in ('update_all'):
+                if key in config_obj:
+                    if not isinstance(config_obj[key], bool):
+                        raise ValueError('{} must be boolean'.format(key))
+
+        except ValueError as e:
+            raise e
+
+        return config
 
     def gather_stage(self, harvest_job):
         log = logging.getLogger(__name__ + '.ESASentinel.gather')
