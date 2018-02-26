@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import logging
+import json
 from datetime import datetime
 
 from sqlalchemy import desc
@@ -28,7 +29,7 @@ class CODEDEHarvester(CODEDEBase, OpenSearchHarvester, NextGEOSSHarvester):
             'description': 'A Harvester for Sentinel Products on CODE-DE'
         }
 
-def validate_config(self, config):
+    def validate_config(self, config):
         if not config:
             return config
 
@@ -37,13 +38,13 @@ def validate_config(self, config):
 
             if 'start_date' in config_obj:
                 try:
-                    datetime.strptime(conf_obj['start_date'],
+                    datetime.strptime(config_obj['start_date'],
                                       '%Y-%m-%dT%H:%M:%S.%fZ')
                 except ValueError:
                     raise ValueError('start_date format must be 2018-01-01T00:00:00.000Z')  # noqa: E501
             if 'end_date' in config_obj:
                 try:
-                    datetime.strptime(conf_obj['end_date'],
+                    datetime.strptime(config_obj['end_date'],
                                       '%Y-%m-%dT%H:%M:%S.%fZ')
                 except ValueError:
                     raise ValueError('end_date format must be 2018-01-01T00:00:00.000Z')  # noqa: E501
