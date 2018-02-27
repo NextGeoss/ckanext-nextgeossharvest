@@ -306,7 +306,7 @@ class SentinelHarvester(HarvesterBase):
             _type = 'noa_product'
         elif item.get('codede_download_url'):
             name = 'Product Download from CODE-DE'
-            description = 'Download the product from CODE-DE.'  # noqa: E501
+            description = 'Download the product from CODE-DE. NOTE: DOWNLOAD REQUIRES LOGIN'  # noqa: E501
             url = item['codede_download_url']
             order = 3
             _type = 'codede_product'
