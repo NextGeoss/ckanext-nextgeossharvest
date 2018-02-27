@@ -263,3 +263,19 @@ class NextGEOSSHarvester(HarvesterBase):
                 old_tags.append(tag)
 
         return old_tags
+
+    def _update_extras(self, old_extras, new_extras):
+        """
+        Add new extras from the harvester, but preserve existing extras
+        so that we don't lose any from iTag.
+
+        In the future, we should restrict the filter to only extras from iTag
+        so that we can update metadata names more easily. We don't know what
+        we'll get from iTag, though, so that's off the table for now.
+        """
+        old_extra_keys = {old_extra['key'] for old_extra in old_extras}
+        for new_extra in new_extras:
+            if new_extra['key'] not in old_extra_keys:
+                old_extras.append(new_extra)
+
+        return old_extras
