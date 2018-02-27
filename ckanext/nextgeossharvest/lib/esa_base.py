@@ -207,18 +207,6 @@ class SentinelHarvester(HarvesterBase):
 
         return item
 
-    def _update_tags(self, old_tags, new_tags):
-        """
-        Add any new tags from the harvester, but preserve existing tags
-        so that we don't lose tags from iTag or from other harvesters.
-        """
-        old_tag_names = {tag['name'] for tag in old_tags}
-        for tag in new_tags:
-            if tag['name'] not in old_tag_names:
-                old_tags.append(tag)
-
-        return old_tags
-
     def _update_extras(self, old_extras, new_extras):
         """
         Add new extras from the harvester, but preserve existing extras
