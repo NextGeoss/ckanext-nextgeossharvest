@@ -32,7 +32,11 @@ class OpenSearchHarvester(HarvesterBase):
             # The lowercase identifier will serve as the dataset's name,
             # so we need the lowercase version for the lookup in the next step.
             identifier = entry.find(self.os_id_name, self.os_id_attr).text.lower()  # noqa: E501
+            if hasattr(self, 'os_id_mod'):
+                identifier = self.os_id_mod(identifier)
             guid = entry.find(self.os_guid_name, self.os_guid_attr).text
+            if hasattr(self, 'os_id_mod'):
+                guid = self.os_id_mod(guid)
             entries.append({'content': content, 'identifier': identifier,
                            'guid': guid})
 
