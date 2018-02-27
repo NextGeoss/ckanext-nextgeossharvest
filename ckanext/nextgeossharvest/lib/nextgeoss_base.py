@@ -2,12 +2,16 @@
 
 import json
 import logging
+import uuid
 
 from sqlalchemy.sql import update, bindparam
 
+from ckan import plugins as p
 from ckan import model
-from ckan import logic
 from ckan.model import Session
+from ckan.model import Package
+from ckan import logic
+from ckan.lib.navl.validators import not_empty
 
 from ckanext.harvest.harvesters.base import HarvesterBase
 
@@ -88,3 +92,94 @@ class NextGEOSSHarvester(HarvesterBase):
         harvest_object.current = True
 
         harvest_object.save()
+
+    def _create_or_update_dataset(self, harvest_object, status):
+        """
+        Create a data dictionary and then creating or update a dataset.
+
+        We may want to move this to the NextGEOSSHarvester base class."""
+        parsed_content = self._parse_content(harvest_object.content)
+        package_dict = {}
+        package_dict['name'] = parsed_content['name']
+        package_dict['title'] = parsed_content['title']
+        package_dict['notes'] = parsed_content['notes']
+        package_dict['tags'] = parsed_content['tags']
+        package_dict['extras'] = self._get_extras(parsed_content)
+        package_dict['extras'].append({
+            'key': 'harvest_source_id',
+            'value': harvest_object.harvest_source_id})
+        package_dict['resources'] = self._get_resources(parsed_content)
+
+        # Add the harvester ID to the extras so that CKAN can find the
+        # harvested datasets in searches for stats, etc.
+
+        # We need to explicitly provide a package ID, otherwise
+        # ckanext-spatial won't be be able to link the extent
+        # to the package.
+
+        # When updating, never change the iTag tags. Never change the iTag
+        # extras. Do not change resources from other harvesters unless forced.
+        if status == 'change':
+            log.debug('Updating {}'.format(package_dict['name']))
+            old_dataset = harvest_object.package
+            old_pkg_dict = self._get_package_dict(old_dataset)
+            package_dict['id'] = old_dataset.id
+            package_dict['owner_org'] = old_dataset.owner_org
+            package_dict['tags'] = self._update_tags(old_pkg_dict.get('tags', []),  # noqa: E501
+                                                     package_dict['tags'])
+            package_dict['extras'] = self._update_extras(old_pkg_dict.get('extras', []),  # noqa: E501
+                                                         package_dict['extras'])  # noqa: E501
+            package_schema = logic.schema.default_update_package_schema()
+            action = 'package_update'
+        elif status == 'new':
+            log.debug('Creating new dataset for {}'
+                      .format(package_dict['name']))
+            # Tags, extras, and resources are all new, so we add whatever we
+            # get from the parsed content.
+            package_dict['id'] = unicode(uuid.uuid4())
+            package_dict['owner_org'] = model.Package.get(harvest_object.source.id).owner_org  # noqa: E501
+            package_schema = logic.schema.default_create_package_schema()
+            package_schema['id'] = [unicode]
+            action = 'package_create'
+
+        # Create context after establishing if we're updating or creating
+        context = {
+            'model': model,
+            'session': model.Session,
+            'user': self._get_user_name(),
+        }
+        tag_schema = logic.schema.default_tags_schema()
+        tag_schema['name'] = [not_empty, unicode]
+        extras_schema = logic.schema.default_extras_schema()
+        package_schema['tags'] = tag_schema
+        package_schema['extras'] = extras_schema
+        context['schema'] = package_schema
+
+        try:
+            package = p.toolkit.get_action(action)(context, package_dict)
+        # IMPROVE: I think ckan.logic.ValidationError is the only Exception we
+        # really need to worry about. #########################################
+        except Exception as e:
+            # Name/URL already in use may just mean that another harvester
+            # created the dataset in the meantime. Retry with status 'change'.
+            if status == 'new':
+                # Check if there's an existing package now
+                old_package = Session.query(Package) \
+                    .filter(Package.name == package_dict['name']).first()
+                if old_package:
+                    harvest_object.package = old_package
+                    harvest_object.save()
+                    return self._create_or_update_dataset(harvest_object,
+                                                          'change')
+                else:
+                    self._save_object_error('Creation error for {}: {}'
+                                            .format(package_dict['name'], e.message),  # noqa: E501
+                                            harvest_object, 'Import')
+                    return None
+            else:
+                self._save_object_error('Error updating {}: {}'
+                                        .format(package_dict['name'], e.message),  # noqa: E501
+                                        harvest_object, 'Import')
+                return None
+
+        return package
