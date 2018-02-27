@@ -1,11 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import logging
-from string import Template
 
 from bs4 import BeautifulSoup as Soup
-import shapely.wkt
-from shapely.errors import ReadingError, WKTReadingError
 
 from ckanext.harvest.harvesters.base import HarvesterBase
 
@@ -61,34 +58,6 @@ class SentinelHarvester(HarvesterBase):
                     item[key] = value
 
         return item
-
-    def _convert_to_geojson(self, spatial):
-        """
-        Return a GeoJSON polygon if the spatial coordinates are valid.
-
-        Return None if not.
-        """
-        try:
-            coords = shapely.wkt.loads(spatial)
-        except (ReadingError, WKTReadingError):
-            return None
-
-        coords_type = coords.type.upper()
-        if coords_type != 'POLYGON':
-            return None
-
-        # Remove double coordinates -- they are not valid GeoJSON and Solr
-        # will reject them.
-        coords_list = [list(coords.exterior.coords[0])]
-        for i in coords.exterior.coords[1:]:
-            new_coord = list(i)
-            if new_coord != coords_list[-1]:
-                coords_list.append(new_coord)
-
-        template = Template('''{"type": "Polygon", "coordinates": [$coords_list]}''')  # noqa: E501
-        geojson = template.substitute(coords_list=coords_list)
-
-        return geojson
 
     def _add_collection(self, item):
         """Return the item with collection ID, name, and description."""

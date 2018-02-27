@@ -3,8 +3,11 @@
 import json
 import logging
 import uuid
+from string import Template
 
 from sqlalchemy.sql import update, bindparam
+import shapely.wkt
+from shapely.errors import ReadingError, WKTReadingError
 
 from ckan import plugins as p
 from ckan import model
@@ -183,3 +186,31 @@ class NextGEOSSHarvester(HarvesterBase):
                 return None
 
         return package
+
+    def _convert_to_geojson(self, spatial):
+        """
+        Return a GeoJSON polygon if the spatial coordinates are valid.
+
+        Return None if not.
+        """
+        try:
+            coords = shapely.wkt.loads(spatial)
+        except (ReadingError, WKTReadingError):
+            return None
+
+        coords_type = coords.type.upper()
+        if coords_type != 'POLYGON':
+            return None
+
+        # Remove double coordinates -- they are not valid GeoJSON and Solr
+        # will reject them.
+        coords_list = [list(coords.exterior.coords[0])]
+        for i in coords.exterior.coords[1:]:
+            new_coord = list(i)
+            if new_coord != coords_list[-1]:
+                coords_list.append(new_coord)
+
+        template = Template('''{"type": "Polygon", "coordinates": [$coords_list]}''')  # noqa: E501
+        geojson = template.substitute(coords_list=coords_list)
+
+        return geojson
