@@ -3,8 +3,11 @@
 import json
 import logging
 
+from sqlalchemy.sql import update, bindparam
+
 from ckan import model
 from ckan import logic
+from ckan.model import Session
 
 from ckanext.harvest.harvesters.base import HarvesterBase
 
@@ -54,3 +57,34 @@ class NextGEOSSHarvester(HarvesterBase):
         }
 
         return logic.get_action('package_show')(context, {'id': package.id})
+
+    def _refresh_harvest_objects(self, harvest_object, package_id):
+        """
+        Perform harvester housekeeping:
+            - Flag the other objects of the source as not current
+            - Set a refernce to the package in the harvest object
+            - Flag it as current
+            - And save the changes
+        """
+        # Flag the other objects of this source as not current
+        from ckanext.harvest.model import harvest_object_table
+        u = update(harvest_object_table) \
+            .where(harvest_object_table.c.package_id == bindparam('pkg_id')) \
+            .values(current=False)
+        Session.execute(u, params={'pkg_id': package_id})
+        Session.commit()
+
+        # Refresh current object from session, otherwise the
+        # import paster command fails
+        # (Copied from the Gemini harvester--not sure if necessary)
+        Session.remove()
+        Session.add(harvest_object)
+        Session.refresh(harvest_object)
+
+        # Set reference to package in the HarvestObject and flag it as
+        # the current one
+        if not harvest_object.package_id:
+            harvest_object.package_id = package_id
+        harvest_object.current = True
+
+        harvest_object.save()

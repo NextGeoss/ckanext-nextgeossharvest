@@ -5,7 +5,6 @@ import json
 from datetime import datetime
 
 from sqlalchemy import desc
-from sqlalchemy.sql import update, bindparam
 
 from ckan.model import Session
 from ckan.plugins.core import implements
@@ -69,8 +68,8 @@ class CODEDEHarvester(CODEDEBase, OpenSearchHarvester, NextGEOSSHarvester):
 
         # The CODE-DE results include rel="icon" links, but it seems like they
         # do not work. This setting lets us skip them now and grab them later.
-        self.include_thumbnails = self.source_config('include_thumbnails',
-                                                     False)
+        self.include_thumbnails = self.source_config.get('include_thumbnails',
+                                                         False)
 
         self.update_all = self.source_config.get('update_all', False)
 
@@ -122,7 +121,7 @@ class CODEDEHarvester(CODEDEBase, OpenSearchHarvester, NextGEOSSHarvester):
         log.debug('Import stage for harvest object with GUID {}'
                   .format(harvest_object.id))
 
-        # Save a reference
+        # Save a reference (review the utility of this)
         self.obj = harvest_object
 
         if harvest_object.content is None:
@@ -142,30 +141,10 @@ class CODEDEHarvester(CODEDEBase, OpenSearchHarvester, NextGEOSSHarvester):
                 return False
             package_id = package['id']
         else:
-            package_id = self.obj.package.id
+            package_id = harvest_object.package.id
 
-        # Flag the other objects of this source as not current anymore
-        from ckanext.harvest.model import harvest_object_table
-        u = update(harvest_object_table) \
-            .where(harvest_object_table.c.package_id == bindparam('pkg_id')) \
-            .values(current=False)
-        Session.execute(u, params={'pkg_id': package_id})
-        Session.commit()
-        # Refresh current object from session, otherwise the
-        # import paster command fails
-        # (Copied from the Gemini harvester--not sure if necessary)
-        self.obj.content = str(self.obj.content)
-        Session.remove()
-        Session.add(self.obj)
-        Session.refresh(self.obj)
-
-        # Set reference to package in the HarvestObject and flag it as
-        # the current one
-        if not self.obj.package_id:
-            self.obj.package_id = package['id']
-
-        self.obj.current = True
-        self.obj.save()
+        # Perform the necessary harvester housekeeping
+        self._refresh_harvest_objects(harvest_object, package_id)
 
         if status == 'unchanged':
             return 'unchanged'

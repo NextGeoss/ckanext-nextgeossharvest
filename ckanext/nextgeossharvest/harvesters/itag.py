@@ -8,7 +8,6 @@ from shapely.geometry import Polygon
 import requests
 from requests.exceptions import Timeout
 import jmespath
-from sqlalchemy.sql import update, bindparam
 
 from ckan import model
 from ckan import logic
@@ -174,7 +173,6 @@ class ITagEnricher(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
         log.debug('Import stage for package {}'
                   .format(harvest_object.id))
 
-        self.obj = harvest_object  # Remove later
         if harvest_object.content is None:
             self._save_object_error('Empty content for object {}'
                                     .format(harvest_object.id),
@@ -216,28 +214,8 @@ class ITagEnricher(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
                                     harvest_object, 'Import')
             return False
 
-        # Flag the other objects of this source as not current anymore
-        from ckanext.harvest.model import harvest_object_table
-        u = update(harvest_object_table) \
-            .where(harvest_object_table.c.package_id == bindparam('pkg_id')) \
-            .values(current=False)
-        model.Session.execute(u, params={'pkg_id': package['id']})
-        model.Session.commit()
-        # Refresh current object from session, otherwise the
-        # import paster command fails
-        # (Copied from the Gemini harvester--not sure if necessary)
-        self.obj.content = str(self.obj.content)
-        model.Session.remove()
-        model.Session.add(self.obj)
-        model.Session.refresh(self.obj)
-
-        # Set reference to package in the HarvestObject and flag it as
-        # the current one
-        if not self.obj.package_id:
-            self.obj.package_id = package['id']
-
-        self.obj.current = True
-        self.obj.save()
+        # Perform the necessary harvester housekeeping
+        self._refresh_harvest_objects(harvest_object, package['id'])
 
         return True
 
