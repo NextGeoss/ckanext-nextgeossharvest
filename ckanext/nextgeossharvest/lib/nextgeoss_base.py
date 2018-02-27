@@ -243,3 +243,11 @@ class NextGEOSSHarvester(HarvesterBase):
             resources.sort(key=lambda x: x['order'])
 
         return resources
+
+    def _get_extras(self, parsed_content):
+        """Return a list of CKAN extras."""
+        skip = {'id', 'title', 'tags', 'status', 'notes', 'name', 'resource'}
+        extras = [{'key': key, 'value': value}
+                  for key, value in parsed_content.items()
+                  if key not in skip]
+        return extras

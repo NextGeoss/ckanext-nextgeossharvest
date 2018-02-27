@@ -154,14 +154,6 @@ class SentinelHarvester(HarvesterBase):
 
         return tags
 
-    def _get_extras(self, parsed_content):
-        """Return a list of CKAN extras."""
-        skip = {'id', 'title', 'tags', 'status', 'notes', 'name', 'resource'}
-        extras = [{'key': key, 'value': value}
-                  for key, value in parsed_content.items()
-                  if key not in skip]
-        return extras
-
     def _parse_content(self, content):
         """
         Parse the entry content and return a dictionary using our standard
