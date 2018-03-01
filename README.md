@@ -7,9 +7,10 @@ This extension contains harvester plugins for harvesting from sources used by Ne
 3. [Harvesting Sentinel products](#harvesting)
     1. [Harvesting from SciHub](#scihub)
     2. [Harvesting from NOA](#noa)
-    3. [Harvesting from CODE-DE](#codede)
-    4. [Harvesting from more than one Sentinel source](#multi)
-    5. [How the three Sentinel harvesters work together](#alltogether)
+    3. [SciHub & NOA settings](#generalsettings)
+    4. [Harvesting from CODE-DE](#codede)
+    5. [Harvesting from more than one Sentinel source](#multi)
+    6. [How the three Sentinel harvesters work together](#alltogether)
 4. [Developing new harvesters](#develop)
     1. [The basic harvester workflow](#basicworkflow)
         1. [gather_stage](#gather_stage)
@@ -48,20 +49,7 @@ To harvest Sentinel products, activate one or more of the following plugins:
 ### <a name="scihub"></a>Harvesting from SciHub
 Create a new harvest source and select `ESA Sentinel Harvester New`. The URL does not matter—the harvester only harvests from SciHub or NOA, depending on the configuration below.
 
-In the configuration, place the following:
-```
-{
-  "source": "scihub",
-  "update_all": true,
-  "start_date": "2018-01-16T10:30:00.000Z",
-  "end_date": "2018-01-16T11:00:00.000Z"
-}
-```
-`"source": "scihub"` instructs the harvester to harvest from SciHub (it could harvest from NOA instead).
-
-If you will be running more than one Sentinel harvester, `"update_all"` must be `true` in order for this harvester to update datasets produced by the other harvester(s).
-
-If you are developing or testing, `"start_date"` and `"end_date"` should also be included so that you can limit the harvester to specific time periods. Full datetimes are required (and are very useful, as you can choose to harvest only half an hour's worth of products, for example, in order to verify that the harvester works as expected without waiting for it to churn through an entire day's worth of products ).
+To harvest from SciHub, `source` must be set to `"scihub"` in the configuration. See [SciHub & NOA settings](#generalsettings) for a complete description of the settings.
 
 Note: you must place your username and password in the `.ini` file as described above.
 
@@ -70,49 +58,54 @@ After saving the configuration, you can click Reharvest and the job will begin (
 ### <a name="noa"></a>Harvesting from NOA
 Create a new harvest source and select `ESA Sentinel Harvester New`. The URL does not matter—the harvester only harvests from SciHub or NOA, depending on the configuration below.
 
-In the configuration, place the following:
-```
-{
-  "source": "noa",
-  "update_all": true,
-  "start_date": "2018-01-16T10:30:00.000Z",
-  "end_date": "2018-01-16T11:00:00.000Z"
-}
-```
-`"source": "scihub"` instructs the harvester to harvest from NOA (it could harvest from SciHub instead).
-
-If you will be running more than one Sentinel harvester, `"update_all"` must be `true` in order for this harvester to update datasets produced by the other harvester(s).
-
-If you are developing or testing, `"start_date"` and `"end_date"` should also be included so that you can limit the harvester to specific time periods. Full datetimes are required (and are very useful, as you can choose to harvest only half an hour's worth of products, for example, in order to verify that the harvester works as expected without waiting for it to churn through an entire day's worth of products ).
+To harvest from NOA, `source` must be set to `"noa"` in the configuration. See [SciHub & NOA settings](#generalsettings) for a complete description of the settings.
 
 Note: you must place your username and password in the `.ini` file as described above.
 
 After saving the configuration, you can click Reharvest and the job will begin (assuming you have a cronjob like the one described above). Alternatively, you can use the paster command `run_test` described in the `ckanext-harvest` documentation to run the harvester without setting up the the gather consumer, etc.
 
+### <a name="generalsettings"></a>SciHub & NOA settings
+1. `source`: **(required, string)** determines whether the harvester harvests from SciHub or NOA. To harvest from SciHub, use `"source": "scihub"`. To harvest from NOA, use `"source": "noa"`.
+2. `update_all`: (optional, boolean, default is `false`) determines whether or not the harvester updates datasets that already have metadadata from _this_ source. For example: if we have `"update_all": true`, and dataset Foo has already been created or updated by harvesting from SciHub, then it will be updated again when the harvester runs. If we have `"update_all": false` and Foo has already been created or updated by harvesting from SciHub, then the dataset will _not_ be updated when the harvester runs. And regardless of whether `update_all` is `true` or `false`, if a dataset has _not_ been created or updated with metadata from SciHub (it's new, or it was created via NOA or CODE-DE and has no SciHub metadata), then it will be updated with the additional SciHub metadata.
+3. `start_date`: (optional, datetime string, default is "any" or "from the earliest date onwards" if the harvester is new, or from the ingestion date of the most recently harvested product if it has been run before) determines the end of the date range for harvester queries. Example: "start_date": "2018-01-16T10:30:00.000Z". Note that the entire datetime string is required. `2018-01-01` is not valid. Using full datetimes is especially useful when testing, as it is possible to restrict the number of possible results by searching only within a small time span, like 20 minutes. 
+4. `end_date`: (optional, datetime string, default is "now" or "to the latest possible date") determines the end of the date range for harvester queries. Example: "end_date": "2018-01-16T11:00:00.000Z". Note that the entire datetime string is required. `2018-01-01` is not valid. Using full datetimes is especially useful when testing, as it is possible to restrict the number of possible results by searching only within a small time span, like 20 minutes.
+5. `datasets_per_job`: (optional, integer, defaults to 1000) determines the maximum number of products that will be harvested during each job. If a query returns 2,501 results, only the first 1000 will be harvested if you're using the default. This is useful for running the harvester via recurring jobs intended to harvest products incrementally (i.e., you want to start from the beginning and harvest all available products). The harvester will harvest products in groups of 1000, rather than attmepting to harvest all x-hundred-thousand at once. You'll get feedback after each job, so you'll know if there are errors without waiting for the whole job to run. And the harvester will automatically resume from the harvested dataset if you're running it via a recurring cron job.
+6. `timeout`: (optional, integer, defaults to 4) determines the number of seconds to wait before timing out a request.
+
+Example configuration with all variables present:
+```
+{
+  "source": "scihub",
+  "update_all": false,
+  "start_date": "2018-01-16T10:30:00.000Z",
+  "end_date": "2018-01-16T11:00:00.000Z",
+  "datasets_per_job": 1000,
+  "timeout": 4
+}
+```
+Note: you must place your username and password in the `.ini` file as described above.
+
 ### <a name="codede"></a>Harvesting from CODE-DE
 Create a new harvest source and select `CODE-DE Harvester`. The URL does not matter—the harvester only harvests from CODE-DE.
 
-In the configuration, place the following:
-```
-{
-  "update_all": true,
-  "start_date": "2018-01-16T10:30:00.000Z",
-  "end_date": "2018-01-16T11:00:00.000Z"
-}
-```
-If you will be running more than one Sentinel harvester, `"update_all"` must be `true` in order for this harvester to update datasets produced by the other harvester(s).
-
-If you are developing or testing, `"start_date"` and `"end_date"` should also be included so that you can limit the harvester to specific time periods. Full datetimes are required (and are very useful, as you can choose to harvest only half an hour's worth of products, for example, in order to verify that the harvester works as expected without waiting for it to churn through an entire day's worth of products ).
+The CODE-DE harvester accepts the following configuration variables:
+1. `update_all`: (optional, boolean, default is `false`) determines whether or not the harvester updates datasets that already have metadadata from _this_ source. For example: if we have `"update_all": true`, and dataset Foo has already been created or updated by harvesting from SciHub, then it will be updated again when the harvester runs. If we have `"update_all": false` and Foo has already been created or updated by harvesting from SciHub, then the dataset will _not_ be updated when the harvester runs. And regardless of whether `update_all` is `true` or `false`, if a dataset has _not_ been created or updated with metadata from CODE-DE (it's new, or it was created via NOA or CODE-DE and has no CODE-DE metadata), then it will be updated with the additional CODE-DE metadata.
+2. `start_date`: (optional, datetime string, default is "any" or "from the earliest date onwards" if the harvester is new, or from the ingestion date of the most recently harvested product if it has been run before) determines the end of the date range for harvester queries. Example: "start_date": "2018-01-16T10:30:00.000Z". Note that the entire datetime string is required. `2018-01-01` is not valid. Using full datetimes is especially useful when testing, as it is possible to restrict the number of possible results by searching only within a small time span, like 20 minutes. 
+3. `end_date`: (optional, datetime string, default is "now" or "to the latest possible date") determines the end of the date range for harvester queries. Example: "end_date": "2018-01-16T11:00:00.000Z". Note that the entire datetime string is required. `2018-01-01` is not valid. Using full datetimes is especially useful when testing, as it is possible to restrict the number of possible results by searching only within a small time span, like 20 minutes.
+4. `datasets_per_job`: (optional, integer, defaults to 1000) determines the maximum number of products that will be harvested during each job. If a query returns 2,501 results, only the first 1000 will be harvested if you're using the default. This is useful for running the harvester via recurring jobs intended to harvest products incrementally (i.e., you want to start from the beginning and harvest all available products). The harvester will harvest products in groups of 1000, rather than attmepting to harvest all x-hundred-thousand at once. You'll get feedback after each job, so you'll know if there are errors without waiting for the whole job to run. And the harvester will automatically resume from the harvested dataset if you're running it via a recurring cron job.
+5. `timeout`: (optional, integer, defaults to 4) determines the number of seconds to wait before timing out a request.
 
 After saving the configuration, you can click Reharvest and the job will begin (assuming you have a cronjob like the one described above). Alternatively, you can use the paster command `run_test` described in the `ckanext-harvest` documentation to run the harvester without setting up the the gather consumer, etc.
 
 ### <a name="multi"></a>Harvesting from more than one Sentinel source
-To harvest from more than one Sentinel source, just create a harvester source for each Sentinel source and make sure that `"update_all"` is `"true"` in each configuration. For example, to harvest from all three sources:
-1. Create a harvest source called (just a suggestion) "SciHub Harvester", select `ESA Sentinel Harvester New`, make sure that the configuration contains `"source": "scihub"` and `"update_all": true`, and (highly advised) enter a start and end time.
-1. Create a harvest source called (just a suggestion) "NOA Harvester", select `ESA Sentinel Harvester New`, make sure that the configuration contains `"source": "noa"` and `"update_all": true`, and (highly advised) enter a start and end time.
-1. Create a harvest source called (just a suggestion) "CODE-DE Harvester", select `CODE-DE Harvester`, make sure that the configuration contains `"update_all": true`, and (highly advised) enter a start and end time.
+To harvest from more than one Sentinel source, just create a harvester source for each Sentinel source.For example, to harvest from all three sources:
+1. Create a harvest source called (just a suggestion) "SciHub Harvester", select `ESA Sentinel Harvester New` and make sure that the configuration contains `"source": "scihub"`.
+2. Create a harvest source called (just a suggestion) "NOA Harvester", select `ESA Sentinel Harvester New` and make sure that the configuration contains `"source": "noa"`.
+3. Create a harvest source called (just a suggestion) "CODE-DE Harvester", select `CODE-DE Harvester`.
 
-Then just run each of the harvesters. You can run them all at the same time. If a product has already been harvested by another harvester, then the other harvesters will only update the existing dataset, adding additional resources and metadata, but not overwriting the resources and metadata that already exist.
+You'll probably want to specify start and end times as well as the number of datasets per job for each harvester. If you don't, don't worry—the default number of datasets per job is 1000, so you won't be flooded with datasets.
+
+Then just run each of the harvesters. You can run them all at the same time. If a product has already been harvested by another harvester, then the other harvesters will only update the existing dataset and add additional resources and metadata. They will not overwrite the resources and metadata that already exist (e.g., the SciHub harvester won't replace resources from CODE-DE with resources from SciHub, it will just add SciHub resources to the dataset alongside the existing CODE-DE resources.
 
 ## <a name="alltogether"></a>How the three Sentinel harvesters work together
 The three (really, two) Sentinel harvesters all inherit from the same base harvester classes. As mentioned above, the SciHub and NOA harvesters are the same. The `"source"` configuration is a switch that 1) causes the harvester to use a different base URL for querying the OpenSearch service and 2) changes the labels added to the resources. The CODE-DE harvester is a separate plugin because the OpenSearch service is different, but the only difference between it and the ESA plugin is the way the OpenSearch results are parsed. In all cases, the same methods are used for creating/updating the datasets.
