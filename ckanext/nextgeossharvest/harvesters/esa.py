@@ -54,6 +54,10 @@ class ESAHarvester(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
                 limit = config_obj['datasets_per_job']
                 if not isinstance(limit, int) and not limit > 0:
                     raise ValueError('datasets_per_job must be a positive integer')  # noqa: E501
+            if 'timeout' in config_obj:
+                timeout = config_obj['timeout']
+                if not isinstance(timeout, int) and not timeout > 0:
+                    raise ValueError('timeout must be a positive integer')
             for key in ('update_all'):
                 if key in config_obj:
                     if not isinstance(config_obj[key], bool):
@@ -126,9 +130,11 @@ class ESAHarvester(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
         # range at once and the harvester will pickup from the last gathered
         # date each time it runs.
         limit = self.source_config.get('datasets_per_job', 1000)
+        timeout = self.source_config.get('timeout', 4)
 
         # This can be a hook
-        ids = self._crawl_results(harvest_url, limit, username, password)
+        ids = self._crawl_results(harvest_url, limit, timeout, username,
+                                  password)
         # This can be a hook
 
         return ids

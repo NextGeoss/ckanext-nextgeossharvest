@@ -59,7 +59,7 @@ class OpenSearchHarvester(HarvesterBase):
         else:
             return None
 
-    def _crawl_results(self, harvest_url, limit, username=None, password=None):
+    def _crawl_results(self, harvest_url, limit, timeout, username=None, password=None):  # noqa: E501
         """
         Iterate through the results, create harvest objects,
         and return the ids.
@@ -74,7 +74,7 @@ class OpenSearchHarvester(HarvesterBase):
             try:
                 r = requests.get(harvest_url,
                                  auth=HTTPBasicAuth(username, password),
-                                 verify=False, timeout=3)
+                                 verify=False, timeout=timeout)
             except Timeout as e:
                 self._save_gather_error('Request timed out: {}'.format(e), self.job)  # noqa: E501
                 return ids
