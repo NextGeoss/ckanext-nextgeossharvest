@@ -37,8 +37,13 @@ class OpenSearchHarvester(HarvesterBase):
             guid = entry.find(self.os_guid_name, self.os_guid_attr).text
             if hasattr(self, 'os_id_mod'):
                 guid = self.os_id_mod(guid)
+            restart_date = entry.find(self.os_restart_date_name, self.os_restart_date_attr).text  # noqa: E501
+            if hasattr(self, 'os_restart_date_mod'):
+                restart_date = self.os_restart_date_mod(restart_date)
+            restart_filter = self.os_restart_filter
             entries.append({'content': content, 'identifier': identifier,
-                           'guid': guid})
+                            'guid': guid, 'restart_date': restart_date,
+                            'restart_filter': restart_filter})
 
         return entries
 
@@ -54,14 +59,14 @@ class OpenSearchHarvester(HarvesterBase):
         else:
             return None
 
-    def _crawl_results(self, harvest_url, username=None, password=None):
+    def _crawl_results(self, harvest_url, limit, username=None, password=None):
         """
         Iterate through the results, create harvest objects,
         and return the ids.
         """
         ids = []
 
-        while harvest_url:
+        while len(ids) < limit and harvest_url:
             # We'll limit ourselves to one request per second
             start_request = time.time()
 
@@ -89,6 +94,8 @@ class OpenSearchHarvester(HarvesterBase):
             for entry in entries:
                 entry_guid = entry['guid']
                 entry_name = entry['identifier']
+                entry_restart_date = entry['restart_date']
+                entry_restart_filter = entry['restart_filter']
 
                 package = Session.query(Package) \
                     .filter(Package.name == entry_name).first()
@@ -113,7 +120,11 @@ class OpenSearchHarvester(HarvesterBase):
 
                     obj = HarvestObject(guid=entry_guid, job=self.job,
                                         extras=[HOExtra(key='status',
-                                                value=status)])
+                                                value=status),
+                                                HOExtra(key='restart_date',
+                                                value=entry_restart_date),
+                                                HOExtra(key='restart_filter',
+                                                value=entry_restart_filter)])
                     obj.content = entry['content']
                     obj.package = package
                     obj.save()
@@ -123,7 +134,11 @@ class OpenSearchHarvester(HarvesterBase):
                     log.debug('{} has not been harvested before. Creating a new harvest object.'.format(entry_name))  # noqa: E501
                     obj = HarvestObject(guid=entry_guid, job=self.job,
                                         extras=[HOExtra(key='status',
-                                                value='new')])
+                                                value='new'),
+                                                HOExtra(key='restart_date',
+                                                value=entry_restart_date),
+                                                HOExtra(key='restart_filter',
+                                                value=entry_restart_filter)])
                     obj.content = entry['content']
                     obj.package = None
                     obj.save()

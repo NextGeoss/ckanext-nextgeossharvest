@@ -106,3 +106,7 @@ class CODEDEBase(SentinelHarvester, HarvesterBase):
     def normalize_identifier(self, code_de_ident):
         """Return the real identifier without the extra CODE-DE cruft."""
         return code_de_ident.split('/')[1]
+
+    def _get_end_date(self, dates):
+        """Return the end time from a dc:date element."""
+        return dates.split('/')[0]
