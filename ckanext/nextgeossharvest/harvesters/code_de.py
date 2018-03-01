@@ -126,6 +126,7 @@ class CODEDEHarvester(CODEDEBase, OpenSearchHarvester, NextGEOSSHarvester):
         self.os_restart_date_name = 'dc:date'
         self.os_restart_date_attr = {}
         self.os_restart_date_mod = self._get_end_date
+        self.flagged_extra = 'codede_download_url'
 
         ids = []
 

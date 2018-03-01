@@ -31,11 +31,20 @@ class NextGEOSSHarvester(HarvesterBase):
 
     def _get_object_extra(self, harvest_object, key, default=None):
         """
-        Helper function for retrieving the value from a harvest object extra.
+        Helper method for retrieving the value from a harvest object extra.
         """
         for extra in harvest_object.extras:
             if extra.key == key:
                 return extra.value
+        return default
+
+    def _get_package_extra(self, package_dict, flagged_extra, default=None):
+        """
+        Helper method for retrieving the value from a package's extras list.
+        """
+        for key, value in package_dict['extras'].items():
+            if key == flagged_extra:
+                return value
         return default
 
     def _set_source_config(self, config_str):

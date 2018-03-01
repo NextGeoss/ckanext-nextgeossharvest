@@ -102,7 +102,7 @@ class OpenSearchHarvester(HarvesterBase):
 
                 if package:
                     # Meaning we've previously harvested this,
-                    # but we want to reharvest it now.
+                    # but we may want to reharvest it now.
                     previous_obj = model.Session.query(HarvestObject) \
                         .filter(HarvestObject.guid == entry_guid) \
                         .filter(HarvestObject.current == True) \
@@ -113,6 +113,11 @@ class OpenSearchHarvester(HarvesterBase):
 
                     if self.update_all:
                         log.debug('{} already exists and will be updated.'.format(entry_name))  # noqa: E501
+                        status = 'change'
+                    # E.g., a Sentinel dataset exists,
+                    # but doesn't have a NOA resource yet.
+                    elif self.flagged_extra and not self._get_package_extra(package.as_dict(), self.flagged_extra):  # noqa: E501
+                        log.debug('{} already exists and will be extended.'.format(entry_name))  # noqa: E501
                         status = 'change'
                     else:
                         log.debug('{} will not be updated.'.format(entry_name))  # noqa: E501

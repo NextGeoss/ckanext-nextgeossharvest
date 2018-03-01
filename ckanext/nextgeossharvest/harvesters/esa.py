@@ -110,6 +110,7 @@ class ESAHarvester(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
             self.os_restart_date_name = 'date'
             self.os_restart_date_attr = {'name': 'ingestiondate'}
             self.os_restart_filter = None
+            self.flagged_extra = 'scihub_download_url'
         elif source == 'noa':
             base_url = 'https://sentinels.space.noa.gr'
             self.os_id_name = 'str',
@@ -119,6 +120,7 @@ class ESAHarvester(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
             self.os_restart_date_name = 'date'
             self.os_restart_date_attr = {'name': 'ingestiondate'}
             self.os_restart_filter = None
+            self.flagged_extra = 'noa_download_url'
         harvest_url = '{}/dhus/search?q=ingestiondate:{}&orderby=ingestiondate asc&start=0&rows=100'.format(base_url, date_range)  # noqa: E501
 
         username = config.get('ckanext.nextgeossharvest.nextgeoss_username')
