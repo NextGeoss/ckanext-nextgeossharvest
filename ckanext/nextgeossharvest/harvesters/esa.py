@@ -128,7 +128,7 @@ class ESAHarvester(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
             skip_raw = ''
 
         harvest_url = '{base_url}/dhus/search?q=ingestiondate:{date_range}{skip_raw}&orderby=ingestiondate asc&start=0&rows=100'.format(base_url=base_url, date_range=date_range, skip_raw=skip_raw)  # noqa: E501
-
+        log.debug('Harvest URL is {}'.format(harvest_url))
         username = config.get('ckanext.nextgeossharvest.nextgeoss_username')
         password = config.get('ckanext.nextgeossharvest.nextgeoss_password')
 
