@@ -61,7 +61,7 @@ class CODEDEBase(SentinelHarvester, HarvesterBase):
         item['StartTime'] = times[0]
         item['StopTime'] = times[1]
         identifier = self.normalize_identifier(soup.find('dc:identifier').text)
-        item['Identifier'] = identifier
+        item['identifier'] = identifier
         item['name'] = identifier.lower()
 
         # TODO: This reformatting process should be a method ##################

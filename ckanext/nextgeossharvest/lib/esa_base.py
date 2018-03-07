@@ -44,7 +44,7 @@ class SentinelHarvester(HarvesterBase):
             'swathidentifier': 'Swath',
             'cloudcoverpercentage': 'CloudCoverage',
             'uuid': 'uuid',
-            'identifier': 'Identifier',
+            'identifier': 'identifier',
             'size': 'size',
         }
         item = {}
@@ -61,7 +61,7 @@ class SentinelHarvester(HarvesterBase):
 
     def _add_collection(self, item):
         """Return the item with collection ID, name, and description."""
-        identifier = item['Identifier'].lower()
+        identifier = item['identifier'].lower()
         if identifier.startswith('s3'):
             if 'cal' in identifier:
                 item['collection_id'] = 'SENTINEL3_SRAL_L1_CAL'
@@ -117,7 +117,7 @@ class SentinelHarvester(HarvesterBase):
 
     def _get_tags_for_dataset(self, item):
         """Creates a list of tag dictionaries based on a product's metadata."""
-        identifier = item['Identifier'].lower()
+        identifier = item['identifier'].lower()
         if identifier.startswith('s1'):
             tags = [{'name': 'Sentinel-1'}]
             if 'slc' in identifier:
@@ -170,7 +170,7 @@ class SentinelHarvester(HarvesterBase):
         if geojson:
             item['spatial'] = geojson
 
-        item['name'] = item['Identifier'].lower()
+        item['name'] = item['identifier'].lower()
 
         # Thumbnail, alternative and enclosure
         enclosure = soup.find('link', rel=None)['href']
