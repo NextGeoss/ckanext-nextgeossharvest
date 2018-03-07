@@ -17,7 +17,7 @@ This extension contains harvester plugins for harvesting from sources used by Ne
         2. [fetch_stage](#fetch_stage)
         3. [import_stage](#import_stage)
 5. [iTag](#itag)
-    1. [How ITageEnricher works](#itagprocess)
+    1. [How ITagEnricher works](#itagprocess)
     2. [Setting up ITagEnricher](#setupitag)
     3. [Handling iTag errors](#handlingitagerrors)
 6. [A note on tests](#tests)
@@ -71,6 +71,7 @@ After saving the configuration, you can click Reharvest and the job will begin (
 4. `end_date`: (optional, datetime string, default is "now" or "to the latest possible date") determines the end of the date range for harvester queries. Example: "end_date": "2018-01-16T11:00:00.000Z". Note that the entire datetime string is required. `2018-01-01` is not valid. Using full datetimes is especially useful when testing, as it is possible to restrict the number of possible results by searching only within a small time span, like 20 minutes.
 5. `datasets_per_job`: (optional, integer, defaults to 1000) determines the maximum number of products that will be harvested during each job. If a query returns 2,501 results, only the first 1000 will be harvested if you're using the default. This is useful for running the harvester via recurring jobs intended to harvest products incrementally (i.e., you want to start from the beginning and harvest all available products). The harvester will harvest products in groups of 1000, rather than attmepting to harvest all x-hundred-thousand at once. You'll get feedback after each job, so you'll know if there are errors without waiting for the whole job to run. And the harvester will automatically resume from the harvested dataset if you're running it via a recurring cron job.
 6. `timeout`: (optional, integer, defaults to 4) determines the number of seconds to wait before timing out a request.
+7. `skip_raw`: (optional, boolean, defaults to false) determines whether RAW products are skipped or included in the harvest.
 
 Example configuration with all variables present:
 ```
@@ -80,7 +81,8 @@ Example configuration with all variables present:
   "start_date": "2018-01-16T10:30:00.000Z",
   "end_date": "2018-01-16T11:00:00.000Z",
   "datasets_per_job": 1000,
-  "timeout": 4
+  "timeout": 4,
+  "skip_raw": true
 }
 ```
 Note: you must place your username and password in the `.ini` file as described above.

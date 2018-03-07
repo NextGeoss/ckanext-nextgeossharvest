@@ -58,7 +58,7 @@ class ESAHarvester(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
                 timeout = config_obj['timeout']
                 if not isinstance(timeout, int) and not timeout > 0:
                     raise ValueError('timeout must be a positive integer')
-            for key in ('update_all'):
+            for key in ['update_all', 'skip_raw']:
                 if key in config_obj:
                     if not isinstance(config_obj[key], bool):
                         raise ValueError('{} must be boolean'.format(key))
@@ -121,7 +121,13 @@ class ESAHarvester(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
             self.os_restart_date_attr = {'name': 'ingestiondate'}
             self.os_restart_filter = None
             self.flagged_extra = 'noa_download_url'
-        harvest_url = '{}/dhus/search?q=ingestiondate:{}&orderby=ingestiondate asc&start=0&rows=100'.format(base_url, date_range)  # noqa: E501
+
+        if self.source_config.get('skip_raw'):
+            skip_raw = ' AND NOT producttype:RAW'
+        else:
+            skip_raw = ''
+
+        harvest_url = '{base_url}/dhus/search?q=ingestiondate:{date_range}{skip_raw}&orderby=ingestiondate asc&start=0&rows=100'.format(base_url=base_url, date_range=date_range, skip_raw=skip_raw)  # noqa: E501
 
         username = config.get('ckanext.nextgeossharvest.nextgeoss_username')
         password = config.get('ckanext.nextgeossharvest.nextgeoss_password')
@@ -129,7 +135,7 @@ class ESAHarvester(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
         # Set the limit for the maximum number of results per job.
         # Since the new harvester jobs will be created on a rolling basis
         # via cron jobs, we don't need to grab all the results from a date
-        # range at once and the harvester will pickup from the last gathered
+        # range at once and the harvester will resume from the last gathered
         # date each time it runs.
         limit = self.source_config.get('datasets_per_job', 1000)
         timeout = self.source_config.get('timeout', 4)
