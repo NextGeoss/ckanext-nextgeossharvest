@@ -101,6 +101,13 @@ class CODEDEBase(SentinelHarvester, HarvesterBase):
         # Add some tags automatically
         item['tags'] = self._get_tags_for_dataset(item)
 
+        # Add time range metadata that's not tied to product-specific fields
+        # like StartTime so that we can filter by a dataset's time range
+        # without having to cram other kinds of temporal data into StartTime
+        # and StopTime fields, etc.
+        item['timerange_start'] = item['StartTime']
+        item['timerange_end'] = item['StopTime']
+
         return item
 
     def normalize_identifier(self, code_de_ident):
