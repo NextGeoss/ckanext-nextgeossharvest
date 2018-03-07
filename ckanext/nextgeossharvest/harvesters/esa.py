@@ -87,10 +87,13 @@ class ESAHarvester(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
         last_object = Session.query(HarvestObject). \
             filter(HarvestObject.harvest_source_id == self.job.source_id). \
             order_by(desc(HarvestObject.gathered)).limit(1)
-        if len(last_object):
-            last_object = last_object[0]
-            restart_date = self._get_object_extra(last_object,
-                                                  'restart_date', '*')
+        if last_object:
+            try:
+                last_object = last_object[0]
+                restart_date = self._get_object_extra(last_object,
+                                                      'restart_date', '*')
+            except IndexError:
+                restart_date = '*'
         else:
             restart_date = '*'
         log.debug('Restart date is {}'.format(restart_date))
