@@ -143,7 +143,8 @@ class ESAHarvester(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
         limit = self.source_config.get('datasets_per_job', 1000)
         timeout = self.source_config.get('timeout', 4)
 
-        self.provider_logger = self.make_provider_logger()
+        if not hasattr(self, 'provider_logger'):
+            self.provider_logger = self.make_provider_logger()
         self.provider = source
 
         # This can be a hook
