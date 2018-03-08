@@ -36,7 +36,7 @@ class ESAHarvester(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
         try:
             config_obj = json.loads(config)
 
-            if config_obj.get('source') not in {'esa_scihub', 'esa_noa'}:
+            if config_obj.get('source') not in {'esa_scihub', 'esa_noa', 'esa_code'}:  # noqa: E501
                 raise ValueError('source is required and must be either scihub or noa')  # noqa: E501
             if 'start_date' in config_obj:
                 try:
@@ -124,6 +124,16 @@ class ESAHarvester(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
             self.os_restart_date_attr = {'name': 'ingestiondate'}
             self.os_restart_filter = None
             self.flagged_extra = 'noa_download_url'
+        elif source == 'esa_code':
+            base_url = 'https://code-de.org'
+            self.os_id_name = 'str',
+            self.os_id_attr = {'name': 'identifier'}
+            self.os_guid_name = 'str'
+            self.os_guid_attr = {'name': 'uuid'}
+            self.os_restart_date_name = 'date'
+            self.os_restart_date_attr = {'name': 'ingestiondate'}
+            self.os_restart_filter = None
+            self.flagged_extra = 'code_download_url'
 
         if self.source_config.get('skip_raw'):
             skip_raw = ' AND NOT producttype:RAW'

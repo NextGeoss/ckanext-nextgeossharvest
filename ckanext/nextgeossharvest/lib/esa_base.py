@@ -188,7 +188,13 @@ class SentinelHarvester(HarvesterBase):
             item['noa_manifest_url'] = self._make_manifest_url(item)
             if thumbnail:
                 item['noa_thumbnail'] = thumbnail['href']
-        item['thumbnail'] = item.get('scihub_thumbnail') or item.get('noa_thumbnail')  # noqa: E501
+        elif enclosure.startswith('https://code-de'):
+            item['code_download_url'] = enclosure
+            item['code_product_url'] = alternative
+            item['code_manifest_url'] = self._make_manifest_url(item)
+            if thumbnail:
+                item['code_thumbnail'] = thumbnail['href']
+        item['thumbnail'] = item.get('scihub_thumbnail') or item.get('noa_thumbnail') or item.get('code_thumbnail') # noqa: E501
 
         # Convert size (298.74 MB to an integer representing bytes)
         item['size'] = int(float(item['size'].split(' ')[0]) * 1000000)
@@ -215,7 +221,7 @@ class SentinelHarvester(HarvesterBase):
         return item
 
     def _make_manifest_url(self, item):
-        """Create the URL for manifests on SciHub or NOA."""
+        """Create the URL for manifests on SciHub, NOA, or CODE-DE."""
         if item['name'].startswith('s3'):
             manifest_file = 'xfdumanifest.xml'
         else:
@@ -224,6 +230,8 @@ class SentinelHarvester(HarvesterBase):
             base_url = 'https://scihub.copernicus.eu/apihub/'
         elif item.get('noa_product_url'):
             base_url = 'https://sentinels.space.noa.gr/dhus/'
+        elif item.get('code_product_url'):
+            base_url = 'https://code-de.org/dhus/'
 
         manifest_url = "{}odata/v1/Products('{}')/Nodes('{}')/Nodes('{}')/$value".format(base_url, item['uuid'], item['Filename'], manifest_file)  # noqa: E501
 
@@ -245,10 +253,12 @@ class SentinelHarvester(HarvesterBase):
             url = item['noa_manifest_url']
             order = 5
             _type = 'noa_manifest'
-        else:
-            return None
-            # It's not clear where the CODE-DE manifests are, so return None
-            # for now. We can update later.
+        elif item.get('code_manifest_url'):
+            name = 'Metadata Download from CODE-DE'
+            description = 'Download the metadata manifest from CODE-DE. NOTE: DOWNLOAD REQUIRES LOGIN'  # noqa: E501
+            url = item['code_manifest_url']
+            order = 6
+            _type = 'code_manifest'
 
         manifest = {'name': name,
                     'description': description,
@@ -276,12 +286,12 @@ class SentinelHarvester(HarvesterBase):
             url = item['noa_thumbnail']
             order = 8
             _type = 'noa_thumbnail'
-        elif item.get('codede_thumbnail'):
+        elif item.get('code_thumbnail'):
             name = 'Thumbnail Download from CODE-DE'
             description = 'Download the thumbnail from CODE-DE.'  # noqa: E501
-            url = item['codede_thumbnail']
+            url = item['code_thumbnail']
             order = 9
-            _type = 'codede_thumbnail'
+            _type = 'code_thumbnail'
         else:
             return None
 
@@ -311,12 +321,12 @@ class SentinelHarvester(HarvesterBase):
             url = item['noa_download_url']
             order = 2
             _type = 'noa_product'
-        elif item.get('codede_download_url'):
+        elif item.get('code_download_url'):
             name = 'Product Download from CODE-DE'
             description = 'Download the product from CODE-DE. NOTE: DOWNLOAD REQUIRES LOGIN'  # noqa: E501
-            url = item['codede_download_url']
+            url = item['code_download_url']
             order = 3
-            _type = 'codede_product'
+            _type = 'code_product'
         size = item['size']
 
         product = {'name': name,
