@@ -11,6 +11,7 @@ from shapely.errors import ReadingError, WKTReadingError
 
 from ckan import plugins as p
 from ckan import model
+from ckan.common import config
 from ckan.model import Session
 from ckan.model import Package
 from ckan import logic
@@ -288,3 +289,18 @@ class NextGEOSSHarvester(HarvesterBase):
                 old_extras.append(new_extra)
 
         return old_extras
+
+    def make_provider_logger(self):
+        """Create a logger just for provider uptimes."""
+        log_file = config.get('ckanext.nextgeossharvest.provider_log_file')
+        if log_file:
+            handler = logging.FileHandler(log_file)
+            handler.setFormatter(logging.Formatter('%(levelname)s | %(message)s'))  # noqa: E501
+            logger = logging.getLogger('provider_logger')
+            logger.setLevel(logging.INFO)
+            logger.addHandler(handler)
+
+            return logger
+
+        else:
+            return None

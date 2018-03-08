@@ -38,6 +38,7 @@ The repository contains four plugins:
 1. You will want to configure `ckanext-spatial` to use `solr-spatial-field` for the spatial search backend. Instructions can be found here: http://docs.ckan.org/projects/ckanext-spatial/en/latest/spatial-search.html. You cannot use `solr` as the spatial search backend because `solr` only supports  footprints that are effectively bounding boxes (polygons composed of five points), while the footprints of the datasets harvested by these plugins can be considerably more complex. Using `postgis` as the spatial search backend is strongly discouraged, as it will choke on the large numbers of datasets that these harvesters will pull down.
 2. Add the harvester and spatial plugins to the list of plugins in your `.ini` file, as well as `nextgeossharvest` and any of the NextGEOSS harvester plugins that you want to use.
 3. If you will be harvesting from SciHub or NOA, add your username and password to `ckanext.nextgeossharvest.nextgeoss_username=` and `ckanext.nextgeossharvest.nextgeoss_password=` in your `.ini` file. The credentials are stored here rather than in the source config partly for security reasons and partly because of the way the extension is deployed. (It may make sense to move them to the source config in the future.)
+4. If you want to log the response times and status codes of requests to harvest sources, you must include `ckanext.nextgeossharvest.provider_log_file=/path/to/your/log.file` in your `.ini` file.`The log entries will look like this: `INFO | esa_scihub   | 2018-03-08 14:17:04.474262 | 200 | 2.885231s` (the second field will always be 12 characters and will be padded if necessary).
 4. Create a cron job like the following so that your harvest jobs will be marked `Finished` when complete:
  `0 * * * * paster --plugin=ckanext-harvest harvester run -c /srv/app/production.ini >> /var/log/cron.log 2>&1`
 
@@ -49,7 +50,7 @@ To harvest Sentinel products, activate one or more of the following plugins:
 ### <a name="scihub"></a>Harvesting from SciHub
 Create a new harvest source and select `ESA Sentinel Harvester New`. The URL does not matter—the harvester only harvests from SciHub or NOA, depending on the configuration below.
 
-To harvest from SciHub, `source` must be set to `"scihub"` in the configuration. See [SciHub & NOA settings](#generalsettings) for a complete description of the settings.
+To harvest from SciHub, `source` must be set to `"esa_scihub"` in the configuration. See [SciHub & NOA settings](#generalsettings) for a complete description of the settings.
 
 Note: you must place your username and password in the `.ini` file as described above.
 
@@ -58,14 +59,14 @@ After saving the configuration, you can click Reharvest and the job will begin (
 ### <a name="noa"></a>Harvesting from NOA
 Create a new harvest source and select `ESA Sentinel Harvester New`. The URL does not matter—the harvester only harvests from SciHub or NOA, depending on the configuration below.
 
-To harvest from NOA, `source` must be set to `"noa"` in the configuration. See [SciHub & NOA settings](#generalsettings) for a complete description of the settings.
+To harvest from NOA, `source` must be set to `"esa_noa"` in the configuration. See [SciHub & NOA settings](#generalsettings) for a complete description of the settings.
 
 Note: you must place your username and password in the `.ini` file as described above.
 
 After saving the configuration, you can click Reharvest and the job will begin (assuming you have a cronjob like the one described above). Alternatively, you can use the paster command `run_test` described in the `ckanext-harvest` documentation to run the harvester without setting up the the gather consumer, etc.
 
 ### <a name="generalsettings"></a>SciHub & NOA settings
-1. `source`: **(required, string)** determines whether the harvester harvests from SciHub or NOA. To harvest from SciHub, use `"source": "scihub"`. To harvest from NOA, use `"source": "noa"`.
+1. `source`: **(required, string)** determines whether the harvester harvests from SciHub or NOA. To harvest from SciHub, use `"source": "esa_scihub"`. To harvest from NOA, use `"source": "esa_noa"`.
 2. `update_all`: (optional, boolean, default is `false`) determines whether or not the harvester updates datasets that already have metadadata from _this_ source. For example: if we have `"update_all": true`, and dataset Foo has already been created or updated by harvesting from SciHub, then it will be updated again when the harvester runs. If we have `"update_all": false` and Foo has already been created or updated by harvesting from SciHub, then the dataset will _not_ be updated when the harvester runs. And regardless of whether `update_all` is `true` or `false`, if a dataset has _not_ been created or updated with metadata from SciHub (it's new, or it was created via NOA or CODE-DE and has no SciHub metadata), then it will be updated with the additional SciHub metadata.
 3. `start_date`: (optional, datetime string, default is "any" or "from the earliest date onwards" if the harvester is new, or from the ingestion date of the most recently harvested product if it has been run before) determines the end of the date range for harvester queries. Example: "start_date": "2018-01-16T10:30:00.000Z". Note that the entire datetime string is required. `2018-01-01` is not valid. Using full datetimes is especially useful when testing, as it is possible to restrict the number of possible results by searching only within a small time span, like 20 minutes. 
 4. `end_date`: (optional, datetime string, default is "now" or "to the latest possible date") determines the end of the date range for harvester queries. Example: "end_date": "2018-01-16T11:00:00.000Z". Note that the entire datetime string is required. `2018-01-01` is not valid. Using full datetimes is especially useful when testing, as it is possible to restrict the number of possible results by searching only within a small time span, like 20 minutes.
@@ -76,7 +77,7 @@ After saving the configuration, you can click Reharvest and the job will begin (
 Example configuration with all variables present:
 ```
 {
-  "source": "scihub",
+  "source": "esa_scihub",
   "update_all": false,
   "start_date": "2018-01-16T10:30:00.000Z",
   "end_date": "2018-01-16T11:00:00.000Z",

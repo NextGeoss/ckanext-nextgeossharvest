@@ -2,6 +2,7 @@
 
 import logging
 import time
+from datetime import datetime
 
 import requests
 from requests.auth import HTTPBasicAuth
@@ -59,7 +60,7 @@ class OpenSearchHarvester(HarvesterBase):
         else:
             return None
 
-    def _crawl_results(self, harvest_url, limit, timeout, username=None, password=None):  # noqa: E501
+    def _crawl_results(self, harvest_url, limit, timeout, username=None, password=None, provider=None):  # noqa: E501
         """
         Iterate through the results, create harvest objects,
         and return the ids.
@@ -71,16 +72,31 @@ class OpenSearchHarvester(HarvesterBase):
             start_request = time.time()
 
             # Make a request to the website
+            timestamp = str(datetime.utcnow())
+            log_message = '{:<12} | {} | {} | {}s'
             try:
                 r = requests.get(harvest_url,
                                  auth=HTTPBasicAuth(username, password),
                                  verify=False, timeout=timeout)
             except Timeout as e:
                 self._save_gather_error('Request timed out: {}'.format(e), self.job)  # noqa: E501
+                status_code = 408
+                elapsed = 9999
+                if hasattr(self, 'provider_logger'):
+                    self.provider_logger.info(log_message.format(self.provider,
+                        timestamp, status_code, timeout))  # noqa: E128
                 return ids
             if r.status_code != 200:
                 self._save_gather_error('{} error: {}'.format(r.status_code, r.text), self.job)  # noqa: E501
+                elapsed = 9999
+                if hasattr(self, 'provider_logger'):
+                    self.provider_logger.info(log_message.format(self.provider,
+                        timestamp, r.status_code, elapsed))  # noqa: E128
                 return ids
+
+            if hasattr(self, 'provider_logger'):
+                self.provider_logger.info(log_message.format(self.provider,
+                    timestamp, r.status_code, r.elapsed.total_seconds()))  # noqa: E128
 
             soup = Soup(r.content, 'lxml')
 

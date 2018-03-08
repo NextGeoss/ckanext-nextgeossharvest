@@ -36,7 +36,7 @@ class ESAHarvester(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
         try:
             config_obj = json.loads(config)
 
-            if config_obj.get('source') not in {'scihub', 'noa'}:
+            if config_obj.get('source') not in {'esa_scihub', 'esa_noa'}:
                 raise ValueError('source is required and must be either scihub or noa')  # noqa: E501
             if 'start_date' in config_obj:
                 try:
@@ -104,7 +104,7 @@ class ESAHarvester(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
 
         # Get the base_url
         source = self.source_config.get('source')
-        if source == 'scihub':
+        if source == 'esa_scihub':
             base_url = 'https://scihub.copernicus.eu'
             self.os_id_name = 'str',
             self.os_id_attr = {'name': 'identifier'}
@@ -114,7 +114,7 @@ class ESAHarvester(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
             self.os_restart_date_attr = {'name': 'ingestiondate'}
             self.os_restart_filter = None
             self.flagged_extra = 'scihub_download_url'
-        elif source == 'noa':
+        elif source == 'esa_noa':
             base_url = 'https://sentinels.space.noa.gr'
             self.os_id_name = 'str',
             self.os_id_attr = {'name': 'identifier'}
@@ -142,6 +142,9 @@ class ESAHarvester(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
         # date each time it runs.
         limit = self.source_config.get('datasets_per_job', 1000)
         timeout = self.source_config.get('timeout', 4)
+
+        self.provider_logger = self.make_provider_logger()
+        self.provider = source
 
         # This can be a hook
         ids = self._crawl_results(harvest_url, limit, timeout, username,
