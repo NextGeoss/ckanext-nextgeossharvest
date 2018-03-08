@@ -2,6 +2,7 @@
 
 import json
 import logging
+import os
 import uuid
 from string import Template
 
@@ -292,9 +293,11 @@ class NextGEOSSHarvester(HarvesterBase):
 
     def make_provider_logger(self):
         """Create a logger just for provider uptimes."""
-        log_file = config.get('ckanext.nextgeossharvest.provider_log_file')
-        if log_file:
-            handler = logging.FileHandler(log_file)
+        log_dir = config.get('ckanext.nextgeossharvest.provider_log_dir')
+        if log_dir:
+            if not os.path.exists(log_dir):
+                os.makedirs(log_dir)
+            handler = logging.FileHandler('{}/dataproviders_info.log'.format(log_dir))  # noqa: E501
             handler.setFormatter(logging.Formatter('%(levelname)s | %(message)s'))  # noqa: E501
             logger = logging.getLogger('provider_logger')
             logger.setLevel(logging.INFO)
