@@ -115,6 +115,7 @@ class ITagEnricher(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
         start_request = time.time()
 
         template = '{}/?taggers={}&_pretty=true&footprint={}'
+        self._set_source_config(harvest_object.job.source.config)
         base_url = self.source_config.get('base_url')
         if base_url[-1] == '/':
             base_url = base_url[:-1]
