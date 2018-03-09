@@ -227,7 +227,7 @@ class SentinelHarvester(HarvesterBase):
         else:
             manifest_file = 'manifest.safe'
         if item.get('scihub_product_url'):
-            base_url = 'https://scihub.copernicus.eu/apihub/'
+            base_url = 'https://scihub.copernicus.eu/dhus/'
         elif item.get('noa_product_url'):
             base_url = 'https://sentinels.space.noa.gr/dhus/'
         elif item.get('code_product_url'):
