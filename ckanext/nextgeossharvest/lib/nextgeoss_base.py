@@ -291,13 +291,13 @@ class NextGEOSSHarvester(HarvesterBase):
 
         return old_extras
 
-    def make_provider_logger(self):
+    def make_provider_logger(self, filename='dataproviders_info.log'):
         """Create a logger just for provider uptimes."""
         log_dir = config.get('ckanext.nextgeossharvest.provider_log_dir')
         if log_dir:
             if not os.path.exists(log_dir):
                 os.makedirs(log_dir)
-            handler = logging.FileHandler('{}/dataproviders_info.log'.format(log_dir))  # noqa: E501
+            handler = logging.FileHandler('{}/{}'.format(log_dir, filename))
             handler.setFormatter(logging.Formatter('%(levelname)s | %(message)s'))  # noqa: E501
             logger = logging.getLogger('provider_logger')
             logger.setLevel(logging.INFO)

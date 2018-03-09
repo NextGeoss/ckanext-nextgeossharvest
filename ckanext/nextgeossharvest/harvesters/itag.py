@@ -3,6 +3,7 @@
 import logging
 import json
 import time
+from datetime import datetime
 
 from shapely.geometry import Polygon
 import requests
@@ -22,6 +23,8 @@ from ckanext.harvest.interfaces import IHarvester
 from ckanext.nextgeossharvest.lib.esa_base import SentinelHarvester
 from ckanext.nextgeossharvest.lib.opensearch_base import OpenSearchHarvester
 from ckanext.nextgeossharvest.lib.nextgeoss_base import NextGEOSSHarvester
+
+service_logger = NextGEOSSHarvester().make_provider_logger('itag_uptime.log')
 
 
 class ITagEnricher(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
@@ -128,6 +131,8 @@ class ITagEnricher(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
         coords = Polygon([(x[0], x[1]) for x in spatial['coordinates'][0]]).wkt
         query = template.format(base_url, taggers, coords)
         timeout = self.source_config.get('timeout', 5)
+        timestamp = str(datetime.utcnow())
+        log_message = '{:<12} | {} | {} | {}s'
         try:
             r = requests.get(query, timeout=timeout)
             assert r.status_code == 200
@@ -136,6 +141,10 @@ class ITagEnricher(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
             self._save_object_error('{} error on request: {}'
                                     .format(r.status_code, r.text),
                                     harvest_object, 'Fetch')
+            elapsed = 9999
+            if service_logger:
+                service_logger.info(log_message.format('itag',
+                                    timestamp, r.status_code, elapsed))
             # TODO: There should be a way to limit the fetch process itself
             # to one request per second or similar. ###########################
             end_request = time.time()
@@ -148,6 +157,10 @@ class ITagEnricher(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
             self._save_object_error('Request timed out: {}'
                                     .format(e),
                                     harvest_object, 'Fetch')
+            status_code = 408
+            if service_logger:
+                service_logger.info(log_message.format('itag',
+                                    timestamp, status_code, timeout))
             end_request = time.time()
             request_time = end_request - start_request
             if request_time < 1.0:
@@ -165,6 +178,10 @@ class ITagEnricher(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
             if request_time < 1.0:
                 time.sleep(1 - request_time)
             return False
+        if service_logger:
+            service_logger.info(log_message.format('itag',
+                                timestamp, r.status_code,
+                                r.elapsed.total_seconds()))
 
         harvest_object.content = response
         harvest_object.save()

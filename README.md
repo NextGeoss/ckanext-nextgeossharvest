@@ -22,6 +22,7 @@ This extension contains harvester plugins for harvesting from sources used by Ne
     3. [Handling iTag errors](#handlingitagerrors)
 6. [A note on tests](#tests)
 7. [Suggested cron jobs](#cron)
+8. [Logs](#logs)
 
 ## <a name="repo"></a>What's in the repository
 The repository contains three plugins:
@@ -190,3 +191,8 @@ The current tests need to be updated and additional tests are necessary for main
 * * * * * paster --plugin=ckanext-harvest harvester job noa-sentinel -c /srv/app/production.ini >> /var/log/cron.log 2>&1
 * * * * * paster --plugin=ckanext-harvest harvester job scihub-sentinel -c /srv/app/production.ini >> /var/log/cron.log 2>&1
 ```
+
+## <a name="logs"></a>Logs
+Both the ESA harvester and the iTag metadata harvester can optionally log the status codes and response times of the sources or services that they query. If you want to log the response times and status codes of requests to harvest sources and/or your iTag service, you must include `ckanext.nextgeossharvest.provider_log_dir=/path/to/your/logs` in your `.ini` file. The log entries will look like this: `INFO | esa_scihub   | 2018-03-08 14:17:04.474262 | 200 | 2.885231s` (the second field will always be 12 characters and will be padded if necessary).
+
+The data provider log file is called `dataproviders_info.log`. The iTag service provider log is called `itag_uptime.log`.
