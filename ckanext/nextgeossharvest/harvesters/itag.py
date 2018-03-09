@@ -65,10 +65,6 @@ class ITagEnricher(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
 
         self._set_source_config(self.job.source.config)
 
-        self.base_url = self.source_config.get('base_url')
-        if self.base_url[-1] == '/':
-            self.base_url = self.base_url[:-1]
-
         context = {'model': model,
                    'session': model.Session,
                    'user': self._get_user_name()}
@@ -115,7 +111,9 @@ class ITagEnricher(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
         start_request = time.time()
 
         template = '{}/?taggers={}&_pretty=true&footprint={}'
-        base_url = self.base_url
+        base_url = self.source_config.get('base_url')
+        if base_url[-1] == '/':
+            base_url = base_url[:-1]
         taggers = 'Political,Geology,Hydrology,LandCover2009'
         spatial = json.loads(self._get_object_extra(harvest_object, 'spatial'))
         coords = Polygon([(x[0], x[1]) for x in spatial['coordinates'][0]]).wkt
