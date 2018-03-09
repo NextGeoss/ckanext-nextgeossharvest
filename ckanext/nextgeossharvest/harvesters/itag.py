@@ -54,6 +54,10 @@ class ITagEnricher(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
                 timeout = config_obj['timeout']
                 if not isinstance(timeout, int) and not timeout > 0:
                     raise ValueError('timeout must be a positive integer')
+            if 'datasets_per_job' in config_obj:
+                datasets_per_job = config_obj['datasets_per_job']
+                if not isinstance(datasets_per_job, int) and not datasets_per_job > 0:  # noqa: E501
+                    raise ValueError('datasets_per_job must be a positive integer')  # noqa: E501
 
         except ValueError as e:
             raise e
@@ -82,10 +86,10 @@ class ITagEnricher(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
 
         ids = []
 
-        # We'll limit this to 100 datasets per job so that results appear
+        # We'll limit this to 10 datasets per job so that results appear
         # faster
         start = 0
-        rows = 100
+        rows = self.source_config.get('datasets_per_job', 10)
         untagged = logic.get_action('package_search')(context,
                                                       {'fq': filter_query,
                                                        'rows': rows,
