@@ -158,7 +158,11 @@ During the fetch stage, it queries an iTag instance using the coordinates from e
 During the import stage, it parses the iTag response to extract any additional tags and/or metadata. Regardless of whether any additional tags or metadata are found, the extra `itag: tagged` will be added to the dataset. This extra is used in the gather stage to filter out datasets for which successful iTag queries have been made.
 
 ### <a name="setupitag"></a> Setting up ITagEnricher
-To set it up, create a new harvester source (we'll call ours "iTag Enricher" for the sake of example). No configuration is necessary. Select `manual` for the update frequency. Select an organization (currently required—the metaharvester will only act on datasets that belong to that organization).
+To set it up, create a new harvester source (we'll call ours "iTag Enricher" for the sake of example). Select `manual` for the update frequency. Select an organization (currently required—the metaharvester will only act on datasets that belong to that organization).
+
+There are two configuration options:
+1. `base_url`: **(required, string)** determines the base URL to use when querying your iTag instance.
+2. `timeout`: (integer, defaults to 5) determines the number of seconds before a request times out.
 
 Once you've created the harvester source, create the cron job below, using the name or ID of the source you just created:
 `* * * * * paster --plugin=ckanext-harvest harvester job {name or id of harvest source} -c {path to CKAN config}`
