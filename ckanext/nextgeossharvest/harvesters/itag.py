@@ -50,6 +50,10 @@ class ITagEnricher(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
                 base_url = config_obj['base_url']
                 if not base_url.startswith('http://') or base_url.startswith('https://'):  # noqa: E501
                     raise ValueError('base_url must be a valid URL.')
+            if 'timeout' in config_obj:
+                timeout = config_obj['timeout']
+                if not isinstance(timeout, int) and not timeout > 0:
+                    raise ValueError('timeout must be a positive integer')
 
         except ValueError as e:
             raise e
@@ -118,8 +122,9 @@ class ITagEnricher(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
         spatial = json.loads(self._get_object_extra(harvest_object, 'spatial'))
         coords = Polygon([(x[0], x[1]) for x in spatial['coordinates'][0]]).wkt
         query = template.format(base_url, taggers, coords)
+        timeout = self.source_config.get('timeout', 5)
         try:
-            r = requests.get(query, timeout=6)
+            r = requests.get(query, timeout=timeout)
             assert r.status_code == 200
             response = r.text
         except AssertionError as e:
