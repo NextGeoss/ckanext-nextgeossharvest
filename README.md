@@ -21,6 +21,7 @@ This extension contains harvester plugins for harvesting from sources used by Ne
     2. [Setting up ITagEnricher](#setupitag)
     3. [Handling iTag errors](#handlingitagerrors)
 6. [A note on tests](#tests)
+7. [Suggested cron jobs](#cron)
 
 ## <a name="repo"></a>What's in the repository
 The repository contains three plugins:
@@ -174,3 +175,13 @@ In general, requests to iTag seem to timeout rather often, so it may be necessar
 
 ## <a name="tests"></a>A note on tests
 The current tests need to be updated and additional tests are necessary for maintaining consitency across all harvesters.
+
+
+## <a name="cron"></a>Suggested cron jobs
+```
+* * * * * paster --plugin=ckanext-harvest harvester run -c /srv/app/production.ini >> /var/log/cron.log 2>&1
+* * * * * paster --plugin=ckanext-harvest harvester job itag-sentinel -c /srv/app/production.ini >> /var/log/cron.log 2>&1
+* * * * * paster --plugin=ckanext-harvest harvester job code-de-sentinel -c /srv/app/production.ini >> /var/log/cron.log 2>&1
+* * * * * paster --plugin=ckanext-harvest harvester job noa-sentinel -c /srv/app/production.ini >> /var/log/cron.log 2>&1
+* * * * * paster --plugin=ckanext-harvest harvester job scihub-sentinel -c /srv/app/production.ini >> /var/log/cron.log 2>&1
+```
