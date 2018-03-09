@@ -7,8 +7,8 @@ This extension contains harvester plugins for harvesting from sources used by Ne
 3. [Harvesting Sentinel products](#harvesting)
     1. [Harvesting from SciHub](#scihub)
     2. [Harvesting from NOA](#noa)
-    3. [SciHub & NOA settings](#generalsettings)
-    4. [Harvesting from CODE-DE](#codede)
+    3. [Harvesting from CODE-DE](#code-de)
+    4. [Sentinel settings (SciHub, NOA & CODE-DE)](#generalsettings)
     5. [Harvesting from more than one Sentinel source](#multi)
     6. [How the three Sentinel harvesters work together](#alltogether)
 4. [Developing new harvesters](#develop)
@@ -23,11 +23,10 @@ This extension contains harvester plugins for harvesting from sources used by Ne
 6. [A note on tests](#tests)
 
 ## <a name="repo"></a>What's in the repository
-The repository contains four plugins:
+The repository contains three plugins:
 1. `nextgeossharvest`, the base CKAN plugin
-2. `esa`, a harvester plugin for harvesting Sentinel datasets from SciHub or NOA
-3. `code_de`, a harvester plugin for harvesting Sentinel datasets from CODE-DE
-4. `itag` a harvester plugin for adding additional tags and metadata to datasets that have already been harvested (more on this later)
+2. `esa`, a harvester plugin for harvesting Sentinel datasets from SciHub, NOA, and CODE-DE via their DHuS interfaces
+3. `itag` a harvester plugin for adding additional tags and metadata to datasets that have already been harvested (more on this later)
 
 ## <a name="usage"></a>Basic usage
 1. Run `python setup.py develop` in the `ckanext-nextgeossharvest` directory.
@@ -37,36 +36,43 @@ The repository contains four plugins:
     2. `ckanext-spatial`
 1. You will want to configure `ckanext-spatial` to use `solr-spatial-field` for the spatial search backend. Instructions can be found here: http://docs.ckan.org/projects/ckanext-spatial/en/latest/spatial-search.html. You cannot use `solr` as the spatial search backend because `solr` only supports  footprints that are effectively bounding boxes (polygons composed of five points), while the footprints of the datasets harvested by these plugins can be considerably more complex. Using `postgis` as the spatial search backend is strongly discouraged, as it will choke on the large numbers of datasets that these harvesters will pull down.
 2. Add the harvester and spatial plugins to the list of plugins in your `.ini` file, as well as `nextgeossharvest` and any of the NextGEOSS harvester plugins that you want to use.
-3. If you will be harvesting from SciHub or NOA, add your username and password to `ckanext.nextgeossharvest.nextgeoss_username=` and `ckanext.nextgeossharvest.nextgeoss_password=` in your `.ini` file. The credentials are stored here rather than in the source config partly for security reasons and partly because of the way the extension is deployed. (It may make sense to move them to the source config in the future.)
-4. If you want to log the response times and status codes of requests to harvest sources, you must include `ckanext.nextgeossharvest.provider_log_file=/path/to/your/log.file` in your `.ini` file.`The log entries will look like this: `INFO | esa_scihub   | 2018-03-08 14:17:04.474262 | 200 | 2.885231s` (the second field will always be 12 characters and will be padded if necessary).
+3. If you will be harvesting from SciHub, NOA or CODE-DE, add your username and password to `ckanext.nextgeossharvest.nextgeoss_username=` and `ckanext.nextgeossharvest.nextgeoss_password=` in your `.ini` file. The credentials are stored here rather than in the source config partly for security reasons and partly because of the way the extension is deployed. (It may make sense to move them to the source config in the future.)
+4. If you want to log the response times and status codes of requests to harvest sources, you must include `ckanext.nextgeossharvest.provider_log_dir=/path/to/your/logs` in your `.ini` file. The log entries will look like this: `INFO | esa_scihub   | 2018-03-08 14:17:04.474262 | 200 | 2.885231s` (the second field will always be 12 characters and will be padded if necessary).
 4. Create a cron job like the following so that your harvest jobs will be marked `Finished` when complete:
  `0 * * * * paster --plugin=ckanext-harvest harvester run -c /srv/app/production.ini >> /var/log/cron.log 2>&1`
 
 ## <a name="harvesting"></a>Harvesting Sentinel products
-To harvest Sentinel products, activate one or more of the following plugins:
-1. `esa`, which creates harvesters that harvest from SciHub and NOA
-2. `code_de`, which creates harvesters that harvest from CODE-DE
+To harvest Sentinel products, activate the `esa` plugin, which you will use to create a harvester that harvest from SciHub, NOA or CODE-DE. To harvest from more than one of those sources, just create more than one harvester and point it at a different source.
 
 ### <a name="scihub"></a>Harvesting from SciHub
-Create a new harvest source and select `ESA Sentinel Harvester New`. The URL does not matter—the harvester only harvests from SciHub or NOA, depending on the configuration below.
+Create a new harvest source and select `ESA Sentinel Harvester New`. The URL does not matter—the harvester only harvests from SciHub, NOA, or CODE-DE, depending on the configuration below.
 
-To harvest from SciHub, `source` must be set to `"esa_scihub"` in the configuration. See [SciHub & NOA settings](#generalsettings) for a complete description of the settings.
+To harvest from SciHub, `source` must be set to `"esa_scihub"` in the configuration. See [Sentinel settings (SciHub, NOA & CODE-DE)](#generalsettings) for a complete description of the settings.
 
 Note: you must place your username and password in the `.ini` file as described above.
 
 After saving the configuration, you can click Reharvest and the job will begin (assuming you have a cronjob like the one described above). Alternatively, you can use the paster command `run_test` described in the `ckanext-harvest` documentation to run the harvester without setting up the the gather consumer, etc.
 
 ### <a name="noa"></a>Harvesting from NOA
-Create a new harvest source and select `ESA Sentinel Harvester New`. The URL does not matter—the harvester only harvests from SciHub or NOA, depending on the configuration below.
+Create a new harvest source and select `ESA Sentinel Harvester New`. The URL does not matter—the harvester only harvests from SciHub, NOA, or CODE-DE, depending on the configuration below.
 
-To harvest from NOA, `source` must be set to `"esa_noa"` in the configuration. See [SciHub & NOA settings](#generalsettings) for a complete description of the settings.
+To harvest from NOA, `source` must be set to `"esa_noa"` in the configuration. See [Sentinel settings (SciHub, NOA & CODE-DE)](#generalsettings) for a complete description of the settings.
 
 Note: you must place your username and password in the `.ini` file as described above.
 
 After saving the configuration, you can click Reharvest and the job will begin (assuming you have a cronjob like the one described above). Alternatively, you can use the paster command `run_test` described in the `ckanext-harvest` documentation to run the harvester without setting up the the gather consumer, etc.
 
-### <a name="generalsettings"></a>SciHub & NOA settings
-1. `source`: **(required, string)** determines whether the harvester harvests from SciHub or NOA. To harvest from SciHub, use `"source": "esa_scihub"`. To harvest from NOA, use `"source": "esa_noa"`.
+### <a name="code-de"></a>Harvesting from CODE-DE
+Create a new harvest source and select `ESA Sentinel Harvester New`. The URL does not matter—the harvester only harvests from SciHub, NOA, or CODE-DE, depending on the configuration below.
+
+To harvest from NOA, `source` must be set to `"esa_code"` in the configuration. See [Sentinel settings (SciHub, NOA & CODE-DE)](#generalsettings) for a complete description of the settings.
+
+Note: you must place your username and password in the `.ini` file as described above.
+
+After saving the configuration, you can click Reharvest and the job will begin (assuming you have a cronjob like the one described above). Alternatively, you can use the paster command `run_test` described in the `ckanext-harvest` documentation to run the harvester without setting up the the gather consumer, etc.
+
+### <a name="generalsettings"></a>Sentinel settings (SciHub, NOA and CODE-DE)
+1. `source`: **(required, string)** determines whether the harvester harvests from SciHub, NOA, or CODE-DE. To harvest from SciHub, use `"source": "esa_scihub"`. To harvest from NOA, use `"source": "esa_noa"`. To harvest from CODE-DE, use `"source": "esa_code"`.
 2. `update_all`: (optional, boolean, default is `false`) determines whether or not the harvester updates datasets that already have metadadata from _this_ source. For example: if we have `"update_all": true`, and dataset Foo has already been created or updated by harvesting from SciHub, then it will be updated again when the harvester runs. If we have `"update_all": false` and Foo has already been created or updated by harvesting from SciHub, then the dataset will _not_ be updated when the harvester runs. And regardless of whether `update_all` is `true` or `false`, if a dataset has _not_ been created or updated with metadata from SciHub (it's new, or it was created via NOA or CODE-DE and has no SciHub metadata), then it will be updated with the additional SciHub metadata.
 3. `start_date`: (optional, datetime string, default is "any" or "from the earliest date onwards" if the harvester is new, or from the ingestion date of the most recently harvested product if it has been run before) determines the end of the date range for harvester queries. Example: "start_date": "2018-01-16T10:30:00.000Z". Note that the entire datetime string is required. `2018-01-01` is not valid. Using full datetimes is especially useful when testing, as it is possible to restrict the number of possible results by searching only within a small time span, like 20 minutes. 
 4. `end_date`: (optional, datetime string, default is "now" or "to the latest possible date") determines the end of the date range for harvester queries. Example: "end_date": "2018-01-16T11:00:00.000Z". Note that the entire datetime string is required. `2018-01-01` is not valid. Using full datetimes is especially useful when testing, as it is possible to restrict the number of possible results by searching only within a small time span, like 20 minutes.
@@ -88,30 +94,18 @@ Example configuration with all variables present:
 ```
 Note: you must place your username and password in the `.ini` file as described above.
 
-### <a name="codede"></a>Harvesting from CODE-DE
-Create a new harvest source and select `CODE-DE Harvester`. The URL does not matter—the harvester only harvests from CODE-DE.
-
-The CODE-DE harvester accepts the following configuration variables:
-1. `update_all`: (optional, boolean, default is `false`) determines whether or not the harvester updates datasets that already have metadadata from _this_ source. For example: if we have `"update_all": true`, and dataset Foo has already been created or updated by harvesting from SciHub, then it will be updated again when the harvester runs. If we have `"update_all": false` and Foo has already been created or updated by harvesting from SciHub, then the dataset will _not_ be updated when the harvester runs. And regardless of whether `update_all` is `true` or `false`, if a dataset has _not_ been created or updated with metadata from CODE-DE (it's new, or it was created via NOA or CODE-DE and has no CODE-DE metadata), then it will be updated with the additional CODE-DE metadata.
-2. `start_date`: (optional, datetime string, default is "any" or "from the earliest date onwards" if the harvester is new, or from the ingestion date of the most recently harvested product if it has been run before) determines the end of the date range for harvester queries. Example: "start_date": "2018-01-16T10:30:00.000Z". Note that the entire datetime string is required. `2018-01-01` is not valid. Using full datetimes is especially useful when testing, as it is possible to restrict the number of possible results by searching only within a small time span, like 20 minutes. 
-3. `end_date`: (optional, datetime string, default is "now" or "to the latest possible date") determines the end of the date range for harvester queries. Example: "end_date": "2018-01-16T11:00:00.000Z". Note that the entire datetime string is required. `2018-01-01` is not valid. Using full datetimes is especially useful when testing, as it is possible to restrict the number of possible results by searching only within a small time span, like 20 minutes.
-4. `datasets_per_job`: (optional, integer, defaults to 1000) determines the maximum number of products that will be harvested during each job. If a query returns 2,501 results, only the first 1000 will be harvested if you're using the default. This is useful for running the harvester via recurring jobs intended to harvest products incrementally (i.e., you want to start from the beginning and harvest all available products). The harvester will harvest products in groups of 1000, rather than attmepting to harvest all x-hundred-thousand at once. You'll get feedback after each job, so you'll know if there are errors without waiting for the whole job to run. And the harvester will automatically resume from the harvested dataset if you're running it via a recurring cron job.
-5. `timeout`: (optional, integer, defaults to 4) determines the number of seconds to wait before timing out a request.
-
-After saving the configuration, you can click Reharvest and the job will begin (assuming you have a cronjob like the one described above). Alternatively, you can use the paster command `run_test` described in the `ckanext-harvest` documentation to run the harvester without setting up the the gather consumer, etc.
-
 ### <a name="multi"></a>Harvesting from more than one Sentinel source
 To harvest from more than one Sentinel source, just create a harvester source for each Sentinel source.For example, to harvest from all three sources:
-1. Create a harvest source called (just a suggestion) "SciHub Harvester", select `ESA Sentinel Harvester New` and make sure that the configuration contains `"source": "scihub"`.
-2. Create a harvest source called (just a suggestion) "NOA Harvester", select `ESA Sentinel Harvester New` and make sure that the configuration contains `"source": "noa"`.
-3. Create a harvest source called (just a suggestion) "CODE-DE Harvester", select `CODE-DE Harvester`.
+1. Create a harvest source called (just a suggestion) "SciHub Harvester", select `ESA Sentinel Harvester New` and make sure that the configuration contains `"source": "esa_scihub"`.
+2. Create a harvest source called (just a suggestion) "NOA Harvester", select `ESA Sentinel Harvester New` and make sure that the configuration contains `"source": "esa_noa"`.
+3. Create a harvest source called (just a suggestion) "CODE-DE Harvester", select `ESA Sentinel Harvester New` and make sure that the configuration contains `"source": "esa_code"`.
 
 You'll probably want to specify start and end times as well as the number of datasets per job for each harvester. If you don't, don't worry—the default number of datasets per job is 1000, so you won't be flooded with datasets.
 
 Then just run each of the harvesters. You can run them all at the same time. If a product has already been harvested by another harvester, then the other harvesters will only update the existing dataset and add additional resources and metadata. They will not overwrite the resources and metadata that already exist (e.g., the SciHub harvester won't replace resources from CODE-DE with resources from SciHub, it will just add SciHub resources to the dataset alongside the existing CODE-DE resources.
 
 ## <a name="alltogether"></a>How the three Sentinel harvesters work together
-The three (really, two) Sentinel harvesters all inherit from the same base harvester classes. As mentioned above, the SciHub and NOA harvesters are the same. The `"source"` configuration is a switch that 1) causes the harvester to use a different base URL for querying the OpenSearch service and 2) changes the labels added to the resources. The CODE-DE harvester is a separate plugin because the OpenSearch service is different, but the only difference between it and the ESA plugin is the way the OpenSearch results are parsed. In all cases, the same methods are used for creating/updating the datasets.
+The three (really, two) Sentinel harvesters all inherit from the same base harvester classes. As mentioned above, the SciHub, NOA and CODE-DE "harvesters" are all the same harvester with different configurations. The `"source"` configuration is a switch that 1) causes the harvester to use a different base URL for querying the OpenSearch service and 2) changes the labels added to the resources. In all cases, the same methods are used for creating/updating the datasets.
 
 The workflow for all the harvesters is:
 1. Gather: query the OpenSearch service for all products within the specified date range, then page through the results, creating harvest objects for each entry. Each harvest object contains the content of the entry, which will be parsed later, as well as a preliminary test of whether the product already exists in CKAN or not.
@@ -160,7 +154,7 @@ During the gather stage, it queries the CKAN instance itself to get a list of ex
 
 During the fetch stage, it queries an iTag instance using the coordinates from each dataset's `spatial` extra and then stores the response from iTag as `.content`, which will be used in the import stage. As long as iTag returns a valid response, the dataset moves on to the import stage—in other words, all that matters is that the query succeeded, not whether the iTag was able to find tags for a particular footprint. See below for an explanation.
 
-During the import stage, it parses the iTag response to extract any additional tags and/or metadata. Regardless of whether any additional tags or metadata are found, the extra ` itag: tagged` will be added to the dataset. This extra is used in the gather stage to filter out datasets for which successful iTag queries have been made.
+During the import stage, it parses the iTag response to extract any additional tags and/or metadata. Regardless of whether any additional tags or metadata are found, the extra `itag: tagged` will be added to the dataset. This extra is used in the gather stage to filter out datasets for which successful iTag queries have been made.
 
 ### <a name="setupitag"></a> Setting up ITagEnricher
 To set it up, create a new harvester source (we'll call ours "iTag Enricher" for the sake of example). No configuration is necessary. Select `manual` for the update frequency. Select an organization (currently required—the metaharvester will only act on datasets that belong to that organization).
