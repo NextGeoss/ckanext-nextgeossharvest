@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import logging
+import datetime
 
 from bs4 import BeautifulSoup as Soup
 
@@ -188,6 +189,12 @@ class SentinelHarvester(HarvesterBase):
             item['noa_manifest_url'] = self._make_manifest_url(item)
             if thumbnail:
                 item['noa_thumbnail'] = thumbnail['href']
+            ingestion_date = soup.find('date',
+                                       {'name': 'ingestiondate'}).text
+            ingestion_date = datetime.datetime.strptime(ingestion_date,
+                                                        '%Y-%m-%dT%H:%M:%S.%fZ')  # noqa: E501
+            expiration_date = ingestion_date + datetime.timedelta(days=30)
+            item['noa_expiration_date'] = datetime.datetime.strftime(expiration_date, '%Y-%m-%d')  # noqa: E501
         elif enclosure.startswith('https://code-de'):
             item['code_download_url'] = enclosure
             item['code_product_url'] = alternative
@@ -248,8 +255,8 @@ class SentinelHarvester(HarvesterBase):
             order = 4
             _type = 'scihub_manifest'
         elif item.get('noa_manifest_url'):
-            name = 'Metadata Download from NOA'
-            description = 'Download the metadata manifest from NOA. NOTE: DOWNLOAD REQUIRES LOGIN'  # noqa: E501
+            name = 'Metadata Download from NOA (valid until {})'.format(item['noa_expiration_date'])  # noqa: E501'
+            description = 'Download the metadata manifest from NOA (valid until {}). NOTE: DOWNLOAD REQUIRES LOGIN'.format(item['noa_expiration_date'])  # noqa: E501'
             url = item['noa_manifest_url']
             order = 5
             _type = 'noa_manifest'
@@ -281,8 +288,8 @@ class SentinelHarvester(HarvesterBase):
             order = 7
             _type = 'scihub_thumbnail'
         elif item.get('noa_thumbnail'):
-            name = 'Thumbnail Download from NOA'
-            description = 'Download the thumbnail from NOA. NOTE: DOWNLOAD REQUIRES LOGIN'  # noqa: E501
+            name = 'Thumbnail Download from NOA (valid until {})'.format(item['noa_expiration_date'])  # noqa: E501
+            description = 'Download the thumbnail from NOA (valid until {}). NOTE: DOWNLOAD REQUIRES LOGIN'.format(item['noa_expiration_date'])  # noqa: E501
             url = item['noa_thumbnail']
             order = 8
             _type = 'noa_thumbnail'
@@ -316,8 +323,8 @@ class SentinelHarvester(HarvesterBase):
             order = 1
             _type = 'scihub_product'
         elif item.get('noa_download_url'):
-            name = 'Product Download from NOA'
-            description = 'Download the product from NOA. NOTE: DOWNLOAD REQUIRES LOGIN'  # noqa: E501
+            name = 'Product Download from NOA (valid until {})'.format(item['noa_expiration_date'])  # noqa: E501'
+            description = 'Download the product from NOA (valid until {}). NOTE: DOWNLOAD REQUIRES LOGIN'.format(item['noa_expiration_date'])  # noqa: E501
             url = item['noa_download_url']
             order = 2
             _type = 'noa_product'
