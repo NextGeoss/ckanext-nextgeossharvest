@@ -85,8 +85,9 @@ class ESAHarvester(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
         # and then get its restart_date extra, and use that to restart
         # the queries
         last_object = Session.query(HarvestObject). \
-            filter(HarvestObject.harvest_source_id == self.job.source_id). \
-            order_by(desc(HarvestObject.gathered)).limit(1)
+            filter(HarvestObject.harvest_source_id == self.job.source_id,
+                   HarvestObject.import_finished != None). \
+            order_by(desc(HarvestObject.import_finished)).limit(1)
         if last_object:
             try:
                 last_object = last_object[0]
