@@ -2,6 +2,7 @@
 
 import logging
 import json
+import os
 import time
 from datetime import datetime
 
@@ -12,6 +13,7 @@ import jmespath
 
 from ckan import model
 from ckan import logic
+from ckan.common import config
 from ckan.logic import ValidationError
 from ckan.lib.navl.validators import not_empty
 from ckan.plugins.core import implements
@@ -24,7 +26,20 @@ from ckanext.nextgeossharvest.lib.esa_base import SentinelHarvester
 from ckanext.nextgeossharvest.lib.opensearch_base import OpenSearchHarvester
 from ckanext.nextgeossharvest.lib.nextgeoss_base import NextGEOSSHarvester
 
-service_logger = NextGEOSSHarvester().make_provider_logger('itag_uptime.log')
+
+log_dir = log_dir = config.get('ckanext.nextgeossharvest.itag_log_dir',
+                               '/tmp/storage/logs')
+if log_dir:
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
+    handler = logging.FileHandler('{}/{}'.format(log_dir,
+                                                 'itag_responses.log'))
+    handler.setFormatter(logging.Formatter('%(levelname)s | %(message)s'))
+    itag_logger = logging.getLogger('itag_logger')
+    itag_logger.setLevel(logging.INFO)
+    itag_logger.addHandler(handler)
+else:
+    itag_logger = None
 
 
 class ITagEnricher(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
@@ -142,9 +157,9 @@ class ITagEnricher(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
                                     .format(r.status_code, r.text),
                                     harvest_object, 'Fetch')
             elapsed = 9999
-            if service_logger:
-                service_logger.info(log_message.format('itag',
-                                    timestamp, r.status_code, elapsed))
+            if itag_logger:
+                itag_logger.info(log_message.format('itag',
+                                 timestamp, r.status_code, elapsed))
             # TODO: There should be a way to limit the fetch process itself
             # to one request per second or similar. ###########################
             end_request = time.time()
@@ -158,9 +173,10 @@ class ITagEnricher(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
                                     .format(e),
                                     harvest_object, 'Fetch')
             status_code = 408
-            if service_logger:
-                service_logger.info(log_message.format('itag',
-                                    timestamp, status_code, timeout))
+            if itag_logger:
+                log.debug('logging repsonse')
+                itag_logger.info(log_message.format('itag',
+                                 timestamp, status_code, timeout))
             end_request = time.time()
             request_time = end_request - start_request
             if request_time < 1.0:
@@ -178,10 +194,11 @@ class ITagEnricher(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
             if request_time < 1.0:
                 time.sleep(1 - request_time)
             return False
-        if service_logger:
-            service_logger.info(log_message.format('itag',
-                                timestamp, r.status_code,
-                                r.elapsed.total_seconds()))
+        if itag_logger:
+            log.debug('logging repsonse')
+            itag_logger.info(log_message.format('itag',
+                             timestamp, r.status_code,
+                             r.elapsed.total_seconds()))
 
         harvest_object.content = response
         harvest_object.save()
