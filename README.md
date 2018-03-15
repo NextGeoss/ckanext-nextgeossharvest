@@ -16,6 +16,7 @@ This extension contains harvester plugins for harvesting from sources used by Ne
         1. [gather_stage](#gather_stage)
         2. [fetch_stage](#fetch_stage)
         3. [import_stage](#import_stage)
+    2. [Example of an OpenSearch-based harvester](#opensearchexample)
 5. [iTag](#itag)
     1. [How ITagEnricher works](#itagprocess)
     2. [Setting up ITagEnricher](#setupitag)
@@ -147,6 +148,9 @@ The fetch stage is the time to make individual queries to the source. If that's 
 During the import stage, the `import_stage()` method will be called for each harvest object/dataset in the list created during the gather stage except for those that raised exceptions during the fetch stage. In other words, the `import_stage()` method is called for every harvest object/dataset that has `.content`.
 
 The purpose of the import stage is to parse the content and use it, as well as any additional context or information provided by the harvest object extras, to create or update a dataset.
+
+### <a name="opensearchexample"></a>Example of an OpenSearch-based harvester
+See the [OpenSearchExample harvester skeleton](https://github.com/NextGeoss/ckanext-nextgeossharvest/blob/master/ckanext/nextgeossharvest/harvesters/opensearch_example.py) for an example of how to use the libraries in this repository to build an OpenSearch-based harvester. There are detailed comments in the code, which can be copied as the starting point of a new harvester. If your harvester will not use an OpenSearch source, you'll also need to modify the `gather_stage` and possibly the `fetch_stage` methods, but the `import_stage` will remain the same.
 
 ## <a name="itag"></a>iTag
 The iTag "harvester (`ITageEnricher`) is better described as a metaharvester. It uses the harvester infrastructure to add new tags and metadata to existing datasets. It is completely separate from the other harvesters, meaning: if you want to harvest Sentinel products, you'll use one of the Sentinel harvesters. If you want to enrich Sentinel datasets, you'll use an instance of `ITagEnricher`. But you'll use them separately, and they won't interact with eachother at all.
