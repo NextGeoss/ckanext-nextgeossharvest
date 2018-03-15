@@ -5,6 +5,9 @@ import logging
 import os
 import uuid
 from string import Template
+from requests.exceptions import Timeout
+from datetime import datetime
+import requests
 
 from sqlalchemy.sql import update, bindparam
 import shapely.wkt
@@ -226,6 +229,35 @@ class NextGEOSSHarvester(HarvesterBase):
 
         return geojson
 
+    def _get_resources(self, parsed_content):
+        """Return a list of resource dicts."""
+        if self.obj.package and self.obj.package.resources:
+            old_resources = [x.as_dict() for x in self.obj.package.resources]
+        else:
+            old_resources = None
+
+        product = self._make_product_resource(parsed_content)
+        manifest = self._make_manifest_resource(parsed_content)
+        thumbnail = self._make_thumbnail_resource(parsed_content)
+
+        new_resources = [x for x in [product, manifest, thumbnail] if x]
+        if not old_resources:
+            resources = new_resources
+        else:
+            # Replace existing resources or add new ones
+            new_resource_types = {x['resource_type'] for x in new_resources}
+            resources = []
+            for old in old_resources:
+                old_type = old.get('resource_type')
+                order = old.get('order')
+                if old_type not in new_resource_types and order:
+                    resources.append(old)
+            resources += new_resources
+
+            resources.sort(key=lambda x: x['order'])
+
+        return resources
+
     def _get_extras(self, parsed_content):
         """Return a list of CKAN extras."""
         skip = {'id', 'title', 'tags', 'status', 'notes', 'name', 'resource'}
@@ -278,3 +310,34 @@ class NextGEOSSHarvester(HarvesterBase):
 
         else:
             return None
+
+    def _crawl_urls_simple(self, url, provider):
+        
+        timeout = self.source_config['timeout']
+
+        # Make a request to the website
+        timestamp = str(datetime.utcnow())
+        log_message = '{:<12} | {} | {} | {}s'
+        try:
+            r = requests.get(url, timeout=timeout)
+        except Timeout as e:
+            self._save_gather_error('Request timed out: {}'.format(e), self.job)  # noqa: E501
+            status_code = 408
+            elapsed = 9999
+            if hasattr(self, 'provider_logger'):
+                self.provider_logger.info(log_message.format(provider,
+                    timestamp, status_code, timeout))  # noqa: E128
+            return 408
+
+        if r.status_code != 200:
+            self._save_gather_error('{} error: {}'.format(r.status_code, r.text), self.job)  # noqa: E501
+            elapsed = 9999
+            if hasattr(self, 'provider_logger'):
+                self.provider_logger.info(log_message.format(provider,
+                    timestamp, r.status_code, elapsed))  # noqa: E128
+            return r.status_code
+
+        if hasattr(self, 'provider_logger'):
+            self.provider_logger.info(log_message.format(provider,
+                timestamp, r.status_code, r.elapsed.total_seconds()))  # noqa: E128
+        return r.status_code
