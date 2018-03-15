@@ -346,3 +346,32 @@ class SentinelHarvester(HarvesterBase):
                    'order': order}
 
         return product
+
+    def _get_resources(self, parsed_content):
+        """Return a list of resource dicts."""
+        if self.obj.package and self.obj.package.resources:
+            old_resources = [x.as_dict() for x in self.obj.package.resources]
+        else:
+            old_resources = None
+
+        product = self._make_product_resource(parsed_content)
+        manifest = self._make_manifest_resource(parsed_content)
+        thumbnail = self._make_thumbnail_resource(parsed_content)
+
+        new_resources = [x for x in [product, manifest, thumbnail] if x]
+        if not old_resources:
+            resources = new_resources
+        else:
+            # Replace existing resources or add new ones
+            new_resource_types = {x['resource_type'] for x in new_resources}
+            resources = []
+            for old in old_resources:
+                old_type = old.get('resource_type')
+                order = old.get('order')
+                if old_type not in new_resource_types and order:
+                    resources.append(old)
+            resources += new_resources
+
+            resources.sort(key=lambda x: x['order'])
+
+        return resources
