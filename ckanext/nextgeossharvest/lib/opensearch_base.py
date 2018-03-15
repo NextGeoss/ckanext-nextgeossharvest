@@ -36,15 +36,13 @@ class OpenSearchHarvester(HarvesterBase):
             if hasattr(self, 'os_id_mod'):
                 identifier = self.os_id_mod(identifier)
             guid = entry.find(self.os_guid_name, self.os_guid_attr).text
-            if hasattr(self, 'os_id_mod'):
-                guid = self.os_id_mod(guid)
+            if hasattr(self, 'os_guid_mod'):
+                guid = self.os_guid_mod(guid)
             restart_date = entry.find(self.os_restart_date_name, self.os_restart_date_attr).text  # noqa: E501
             if hasattr(self, 'os_restart_date_mod'):
                 restart_date = self.os_restart_date_mod(restart_date)
-            restart_filter = self.os_restart_filter
             entries.append({'content': content, 'identifier': identifier,
-                            'guid': guid, 'restart_date': restart_date,
-                            'restart_filter': restart_filter})
+                            'guid': guid, 'restart_date': restart_date})
 
         return entries
 
@@ -60,7 +58,7 @@ class OpenSearchHarvester(HarvesterBase):
         else:
             return None
 
-    def _crawl_results(self, harvest_url, limit, timeout, username=None, password=None, provider=None):  # noqa: E501
+    def _crawl_results(self, harvest_url, limit=100, timeout=5, username=None, password=None, provider=None):  # noqa: E501
         """
         Iterate through the results, create harvest objects,
         and return the ids.
@@ -111,7 +109,6 @@ class OpenSearchHarvester(HarvesterBase):
                 entry_guid = entry['guid']
                 entry_name = entry['identifier']
                 entry_restart_date = entry['restart_date']
-                entry_restart_filter = entry['restart_filter']
 
                 package = Session.query(Package) \
                     .filter(Package.name == entry_name).first()
@@ -143,9 +140,7 @@ class OpenSearchHarvester(HarvesterBase):
                                         extras=[HOExtra(key='status',
                                                 value=status),
                                                 HOExtra(key='restart_date',
-                                                value=entry_restart_date),
-                                                HOExtra(key='restart_filter',
-                                                value=entry_restart_filter)])
+                                                value=entry_restart_date)])
                     obj.content = entry['content']
                     obj.package = package
                     obj.save()
@@ -157,9 +152,7 @@ class OpenSearchHarvester(HarvesterBase):
                                         extras=[HOExtra(key='status',
                                                 value='new'),
                                                 HOExtra(key='restart_date',
-                                                value=entry_restart_date),
-                                                HOExtra(key='restart_filter',
-                                                value=entry_restart_filter)])
+                                                value=entry_restart_date)])
                     obj.content = entry['content']
                     obj.package = None
                     obj.save()
