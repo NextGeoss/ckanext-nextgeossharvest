@@ -49,9 +49,9 @@ class CMEMSBase(HarvesterBase):
                     fyear = forecast[0].split('-')[0]
                     fmonth = forecast[0].split('-')[1]
                     fday = forecast[0].split('-')[2]
-                    metadata['datasetname'] = 'ARCTIC-' + fyear + fmonth + fday + '-FORECAST-PHYS-002-001-' + year + month + day
-                    metadata['collection_id'] = 'ARCTIC_ANALYSIS_FORECAST_PHYS_002_001'
-                    metadata['identifier'] = 'arctic-' + fyear + fmonth + fday + '-forecast-phys-002-001-' + year + month + day
+                    metadata['datasetname'] = 'arctic-forecast-' + fyear + fmonth + fday + '-phys-002-001-' + year + month + day
+                    metadata['collection_id'] = 'ARCTIC_ANALYSIS_FORECAST_PHYS_002_001_A'
+                    metadata['identifier'] = 'ARCTIC-FORECAST-' + fyear + fmonth + fday + '-PHYS-002-001-' + year + month + day
                     metadata['StartTime'] = str(start_date) + 'T00:00:00.000Z'
                     metadata['StopTime'] = str(end_date) + 'T00:00:00.000Z'
                     metadata['BulletinDate'] = str(start_date)
@@ -86,18 +86,18 @@ class CMEMSBase(HarvesterBase):
                     metadata = {}
 
                     if collection == sst_thumbnail:
-                        metadata['datasetname'] = 'SST-GLO-L4-DAILY-NRT-OBS-010-001-' + year + month + day
+                        metadata['datasetname'] = 'sst-glo-l4-daily-nrt-obs-010-001-' + year + month + day
                         metadata['collection_id'] = 'METOFFICE-GLO-SST-L4-NRT-OBS-SST-V2'
-                        metadata['identifier'] = 'sst-glo-l4-daily-nrt-obs-010-001-' + year + month + day
+                        metadata['identifier'] = 'SST-GLO-L4-DAILY-NRT-OBS-010-001-' + year + month + day
                         metadata['StartTime'] = str(start_date) + 'T00:00:00.000Z'
                         metadata['StopTime'] = str(end_date) + 'T00:00:00.000Z'
                         metadata['Coordinates'] = [[-180,90],[180,90],[180,-90],[-180,-90],[-180,90]]
                         metadata['downloadLink'] = "ftp://cmems.isac.cnr.it/Core/SST_GLO_SST_L4_NRT_OBSERVATIONS_010_001/METOFFICE-GLO-SST-L4-NRT-OBS-SST-V2/" + year + "/" + month + "/" + year + month + day + "120000-UKMO-L4_GHRSST-SSTfnd-OSTIA-GLOB-v02.0-fv02.0.nc"
                         metadata['thumbnail'] = sst_thumbnail
                     elif collection == sic_north_thumbnail:
-                        metadata['datasetname'] = 'SEAICE-NORTH-L4-DAILY-NRT-OBS-011-001-' + year + month + day
+                        metadata['datasetname'] = 'seaice-conc-north-l4-daily-nrt-obs-011-001-' + year + month + day
                         metadata['collection_id'] = 'METNO-GLO-SEAICE_CONC-NORTH-L4-NRT-OBS'
-                        metadata['identifier'] = 'seaice-north-l4-daily-nrt-obs-011-001-' + year + month + day
+                        metadata['identifier'] = 'SEAICE-CONC-NORTH-L4-DAILY-NRT-OBS-011-001-' + year + month + day
                         metadata['StartTime'] = str(start_date) + 'T00:00:00.000Z'
                         metadata['StopTime'] = str(end_date) + 'T00:00:00.000Z'
                         metadata['Coordinates'] = [[-180,90],[180,90],[180,0],[-180,0],[-180,90]]
@@ -105,9 +105,9 @@ class CMEMSBase(HarvesterBase):
                         metadata['downloadLinkPolstere'] = "ftp://mftp.cmems.met.no/Core/SEAICE_GLO_SEAICE_L4_NRT_OBSERVATIONS_011_001/METNO-GLO-SEAICE_CONC-NORTH-L4-NRT-OBS/" + year + "/" + month + "/" + "ice_conc_nh_polstere-100_multi_" + year + month + day + "1200.nc"
                         metadata['thumbnail'] = sic_north_thumbnail
                     elif collection == sic_south_thumbnail:
-                        metadata['datasetname'] = 'SEAICE-SOUTH-L4-DAILY-NRT-OBS-011-001-' + year + month + day
+                        metadata['datasetname'] = 'seaice-conc-south-l4-daily-nrt-obs-011-001-' + year + month + day
                         metadata['collection_id'] = 'METNO-GLO-SEAICE_CONC-SOUTH-L4-NRT-OBS'
-                        metadata['identifier'] = 'seaice-south-l4-daily-nrt-obs-011-001-' + year + month + day
+                        metadata['identifier'] = 'SEAICE-CONC-SOUTH-L4-DAILY-NRT-OBS-011-001-' + year + month + day
                         metadata['StartTime'] = str(start_date) + 'T00:00:00.000Z'
                         metadata['StopTime'] = str(end_date) + 'T00:00:00.000Z'
                         metadata['Coordinates'] = [[-180,0],[180,0],[180,-90],[-180,-90],[-180,0]]
@@ -433,13 +433,9 @@ class CMEMSBase(HarvesterBase):
             elif tag.get('name') == "forecast":
                 dataset_name = "Arctic Ocean Physics Analysis and Forecast"
                 notes = "Daily Arctic Ocean physics analysis to provide 10 days of forecast of the 3D physical ocean, including temperature, salinity, sea ice concentration, sea ice thickness, sea ice velocity and sea ice type."
-            
-
-        uuid = self._get_object_extra(harvest_object, 'uuid')
 
         iso_values = metadata
 
-        
         if 'tags' in iso_values:
             for tag in iso_values['tags']:
                 tag = tag[:50] if len(tag) > 50 else tag
@@ -461,29 +457,18 @@ class CMEMSBase(HarvesterBase):
 
 
         # We need to get the owner organization (if any) from the harvest
-        # source dataset
+
         source_dataset = model.Package.get(harvest_object.source.id)
         if source_dataset.owner_org:
             package_dict['owner_org'] = source_dataset.owner_org
 
-        # Package name
-        package = harvest_object.package
-        if package is None or package.title != dataset_name:
-            name = self._gen_new_name(dataset_name)
-            if not name:
-                name = self._gen_new_name(str(uuid))
-            if not name:
-                raise Exception('Could not generate a unique name from the title or the GUID. Please choose a more unique title.')
-            package_dict['name'] = name
-        else:
-            package_dict['name'] = package.name
+        package_dict['name'] = metadata['datasetname']
 
         extras = {
             'guid': harvest_object.guid,
             'spatial_harvester': True,
         }
 
-    
         # Add default_extras from config
         default_extras = self.source_config.get('default_extras',{})
         if default_extras:
@@ -520,4 +505,3 @@ class CMEMSBase(HarvesterBase):
             if key != 'Coordinates' and key != 'metadataLink' and key != 'downloadLink' and key != 'thumbnail' and key != 'spatial':
                 extras_dict += [{"value": value,"key": key}]
         return extras_dict
-
