@@ -109,9 +109,8 @@ class NextGEOSSHarvester(HarvesterBase):
 
     def _create_or_update_dataset(self, harvest_object, status):
         """
-        Create a data dictionary and then creating or update a dataset.
-
-        We may want to move this to the NextGEOSSHarvester base class."""
+        Create a data dictionary and then create or update a dataset.
+        """
         parsed_content = self._parse_content(harvest_object.content)
         package_dict = {}
         package_dict['name'] = parsed_content['name']
@@ -119,9 +118,6 @@ class NextGEOSSHarvester(HarvesterBase):
         package_dict['notes'] = parsed_content['notes']
         package_dict['tags'] = parsed_content['tags']
         package_dict['extras'] = self._get_extras(parsed_content)
-        package_dict['extras'].append({
-            'key': 'harvest_source_id',
-            'value': harvest_object.harvest_source_id})
         package_dict['resources'] = self._get_resources(parsed_content)
 
         # Add the harvester ID to the extras so that CKAN can find the
