@@ -107,11 +107,13 @@ class NextGEOSSHarvester(HarvesterBase):
 
         harvest_object.save()
 
-    def _create_or_update_dataset(self, harvest_object, status):
+    def _create_package_dict(self, parsed_content):
         """
-        Create a data dictionary and then create or update a dataset.
+        Create a package dictionary using the parsed content.
+
+        The id and owner org will be added later as they are not derived from
+        the content.
         """
-        parsed_content = self._parse_content(harvest_object.content)
         package_dict = {}
         package_dict['name'] = parsed_content['name']
         package_dict['title'] = parsed_content['title']
@@ -119,6 +121,15 @@ class NextGEOSSHarvester(HarvesterBase):
         package_dict['tags'] = parsed_content['tags']
         package_dict['extras'] = self._get_extras(parsed_content)
         package_dict['resources'] = self._get_resources(parsed_content)
+
+        return package_dict
+
+    def _create_or_update_dataset(self, harvest_object, status):
+        """
+        Create a data dictionary and then create or update a dataset.
+        """
+        parsed_content = self._parse_content(harvest_object.content)
+        package_dict = self._create_package_dict(parsed_content)
 
         # Add the harvester ID to the extras so that CKAN can find the
         # harvested datasets in searches for stats, etc.
