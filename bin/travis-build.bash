@@ -45,6 +45,13 @@ cd ckan
 paster db init -c test-core.ini
 cd -
 
+echo "Adding PostGIS..."
+sudo apt-get install postgresql-9.2-postgis-2.3
+sudo -u postgres psql -d ckan_test -f /usr/share/postgresql/9.2/contrib/postgis-2.3/postgis.sql
+sudo -u postgres psql -d ckan_test -f /usr/share/postgresql/9.2/contrib/postgis-2.3/spatial_ref_sys.sql
+sudo -u postgres psql -d ckan_test -c 'ALTER VIEW geometry_columns OWNER TO ckan_default;'
+sudo -u postgres psql -d ckan_test -c 'ALTER TABLE spatial_ref_sys OWNER TO ckan_default;'
+
 echo "Install other libraries required..."
 sudo apt-get install python-dev libxml2-dev libxslt1-dev libgeos-c1 python-gdal gdal-bin libgdal-dev libgeos-dev
 export CPLUS_INCLUDE_PATH=/usr/include/gdal
