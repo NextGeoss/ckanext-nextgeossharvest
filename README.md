@@ -21,7 +21,7 @@ This extension contains harvester plugins for harvesting from sources used by Ne
     1. [How ITagEnricher works](#itagprocess)
     2. [Setting up ITagEnricher](#setupitag)
     3. [Handling iTag errors](#handlingitagerrors)
-6. [A note on tests](#tests)
+6. [Testing testing testing](#tests)
 7. [Suggested cron jobs](#cron)
 8. [Logs](#logs)
 
@@ -183,9 +183,16 @@ Sentinel-3 datasets have complex polygons that seem to cause iTag to timeout mor
 
 In general, requests to iTag seem to timeout rather often, so it may be necessary to experiment with rate limiting. It may also be necessary to set up a more robust infrastructure for the iTag instance.
 
-## <a name="tests"></a>A note on tests
-The current tests need to be updated and additional tests are necessary for maintaining consitency across all harvesters.
+## <a name="tests"></a>Testing testing testing
+All harvesters should have tests that actually run the harvester, from start to finish, more than once. Such tests verify that the harvester will work as intended in production. The `requests_mock` library allows us to easily mock the content returned by real requests to real URLs, so we can save the XML returned by OpenSearch interfaces, etc. and re-use it when testing. We can then write tests that verify 1) that the harvester starts, runs, finishes, and runs again (e.g., there are no errors that cause it to hang), 2) that it behaves as expected (e.g., it only updates datasets when a specific flag is set, or it restarts from a specific date following a failed request), and 3) that the datasets it creates or updates have exactly the metadata that we want them to have.
 
+See `TestESAHarvester().test_harvester()` for an example of how to run a harvester in a testing environment with mocked requests that return real XML.
+
+The test itself needs to be refined. Some of the blocks should be helper functions or fixtures. But the method itself contains all the necessary components of full test of harvester functionality: create a harvester with a given config, run it to completion under different conditions, and verify that the results are as expected.
+
+The same structure can be used for our other harvesters (with different mocked requests, of course, and with different expected results).
+
+Using the same structure, we can also add tests that verify that the metadata of the datasets that are created also match the expected/intended results.
 
 ## <a name="cron"></a>Suggested cron jobs
 ```
