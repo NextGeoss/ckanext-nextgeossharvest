@@ -3,20 +3,17 @@ import logging
 from datetime import timedelta, datetime
 
 from ckan import model
-from ckan.plugins.core import SingletonPlugin, implements
+from ckan.plugins.core import implements
 
 from ckanext.harvest.interfaces import IHarvester
 from ckanext.harvest.model import HarvestObject
-from ckanext.spatial.harvesters.base import SpatialHarvester
 
 from ckanext.nextgeossharvest.lib.cmems_base import CMEMSBase
 from ckanext.nextgeossharvest.lib.nextgeoss_base import NextGEOSSHarvester
 
 
 class CMEMSHarvester(CMEMSBase,
-                     NextGEOSSHarvester,
-                     SpatialHarvester,
-                     SingletonPlugin):
+                     NextGEOSSHarvester):
     '''
     A Harvester for CMEMS Products.
     '''
