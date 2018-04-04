@@ -153,10 +153,10 @@ class NextGEOSSHarvester(HarvesterBase):
                       .format(package_dict['name']))
             # Tags, extras, and resources are all new, so we add whatever we
             # get from the parsed content.
-            package_dict['id'] = unicode(uuid.uuid4())
+            package_dict['id'] = unicode(uuid.uuid4())  # noqa: F821
             package_dict['owner_org'] = model.Package.get(harvest_object.source.id).owner_org  # noqa: E501
             package_schema = logic.schema.default_create_package_schema()
-            package_schema['id'] = [unicode]
+            package_schema['id'] = [unicode]  # noqa: F821
             action = 'package_create'
 
         # Create context after establishing if we're updating or creating
@@ -166,7 +166,7 @@ class NextGEOSSHarvester(HarvesterBase):
             'user': self._get_user_name(),
         }
         tag_schema = logic.schema.default_tags_schema()
-        tag_schema['name'] = [not_empty, unicode]
+        tag_schema['name'] = [not_empty, unicode]  # noqa: F821
         extras_schema = logic.schema.default_extras_schema()
         package_schema['tags'] = tag_schema
         package_schema['extras'] = extras_schema
@@ -283,7 +283,7 @@ class NextGEOSSHarvester(HarvesterBase):
             return None
 
     def _crawl_urls_simple(self, url, provider):
-        
+
         timeout = self.source_config['timeout']
 
         # Make a request to the website
@@ -310,5 +310,5 @@ class NextGEOSSHarvester(HarvesterBase):
 
         if hasattr(self, 'provider_logger'):
             self.provider_logger.info(log_message.format(provider,
-                timestamp, r.status_code, r.elapsed.total_seconds()))  # noqa: E128
+                timestamp, r.status_code, r.elapsed.total_seconds()))  # noqa: E501
         return r.status_code
