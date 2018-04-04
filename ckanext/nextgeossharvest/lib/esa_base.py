@@ -142,7 +142,7 @@ class SentinelHarvester(HarvesterBase):
                              {'name': 'SAR'}, {'name': 'Altimeter'}])
             elif 'wat' in identifier:
                 tags.extend([{'name': 'Water'}, {'name': 'Level-2'},
-                             {'name': 'SAR'}, {'name': 'Altimete'}])
+                             {'name': 'SAR'}, {'name': 'Altimeter'}])
             elif 'sra' in identifier:
                 tags.extend([{'name': 'SRA'}, {'name': 'Level-1'},
                              {'name': 'SAR'}, {'name': 'Altimeter'}])
