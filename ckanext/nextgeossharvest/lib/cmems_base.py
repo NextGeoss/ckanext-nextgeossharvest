@@ -792,19 +792,6 @@ class CMEMSBase(HarvesterBase):
                          " concentration, sea ice thickness, sea ice velocity"
                          " and sea ice type.")
 
-        iso_values = metadata
-
-        if 'tags' in iso_values:
-            for tag in iso_values['tags']:
-                tag = tag[:50] if len(tag) > 50 else tag
-                tags.append({'name': tag})
-
-        # Add default_tags from config
-        default_tags = self.source_config.get('default_tags', [])
-        if default_tags:
-            for tag in default_tags:
-                tags.append({'name': tag})
-
         package_dict = {
             'title': dataset_name,
             'notes': notes,
