@@ -821,34 +821,6 @@ class CMEMSBase(HarvesterBase):
 
         package_dict['name'] = metadata['datasetname']
 
-        extras = {
-            'guid': harvest_object.guid,
-            'spatial_harvester': True,
-        }
-
-        # Add default_extras from config
-        default_extras = self.source_config.get('default_extras', {})
-        if default_extras:
-            override_extras = self.source_config.get('override_extras', False)
-            for key, value in default_extras.iteritems():
-                # log.debug('Processing extra %s', key)
-                if not key in extras or override_extras:
-                    # Look for replacement strings
-                    if isinstance(value, basestring):
-                        value = value.format(
-                            harvest_source_id=harvest_object.job.source.id,
-                            harvest_source_url=harvest_object.job.source.url.strip('/'),
-                            harvest_source_title=harvest_object.job.source.title,
-                            harvest_job_id=harvest_object.job.id)
-                    extras[key] = value
-
-        extras_as_dict = []
-        for key, value in extras.iteritems():
-            if isinstance(value, (list, dict)):
-                extras_as_dict.append({'key': key, 'value': json.dumps(value)})
-            else:
-                extras_as_dict.append({'key': key, 'value': value})
-
         return package_dict
 
     def _generateExtrasDict(self, name, metadata, **kwargs):
