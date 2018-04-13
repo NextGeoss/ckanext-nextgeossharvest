@@ -1,3 +1,7 @@
+[![Travis](https://travis-ci.org/NextGeoss/ckanext-nextgeossharvest.svg?branch=master)](https://travis-ci.org/NextGeoss/ckanext-nextgeossharvest)
+
+[![Coveralls](https://coveralls.io/repos/NextGeoss/ckanext-nextgeossharvest/badge.svg)](https://coveralls.io/r/NextGeoss/ckanext-nextgeossharvest)
+
 # ckanext-nextgeossharvest
 This extension contains harvester plugins for harvesting from sources used by NextGEOSS as well as a metaharvester plugin for adding additional tags and metadata retrieved from an iTag instance.
 
