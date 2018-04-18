@@ -283,7 +283,6 @@ class NextGEOSSHarvester(HarvesterBase):
             return None
 
     def _crawl_urls_simple(self, url, provider):
-
         timeout = self.source_config['timeout']
 
         # Make a request to the website

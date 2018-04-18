@@ -37,22 +37,22 @@ class CMEMSHarvester(CMEMSBase,
         try:
             config_obj = json.loads(config)
 
-            if config_obj.get('source') not in {'esa_scihub', 'esa_noa', 'esa_code'}:  # noqa: E501
-                raise ValueError('source is required and must be either scihub or noa')  # noqa: E501
+            if config_obj.get('source') not in {'cmems'}:  # noqa: E501
+                raise ValueError('source is required and must be cmems')  # noqa: E501
             if 'start_date' in config_obj:
                 try:
                     if config_obj['start_date'] != 'YESTERDAY':
                         datetime.strptime(config_obj['start_date'],
-                                          '%Y-%m-%dT%H:%M:%S.%fZ')
+                                          '%Y-%m-%d')
                 except ValueError:
-                    raise ValueError('start_date format must be 2018-01-01T00:00:00.000Z')  # noqa: E501
+                    raise ValueError('start_date format must be yyyy-mm-dd')  # noqa: E501
             if 'end_date' in config_obj:
                 try:
                     if config_obj['end_date'] != 'TODAY':
                         datetime.strptime(config_obj['end_date'],
-                                          '%Y-%m-%dT%H:%M:%S.%fZ')
+                                          '%Y-%m-%d')
                 except ValueError:
-                    raise ValueError('end_date format must be 2018-01-01T00:00:00.000Z')  # noqa: E501
+                    raise ValueError('end_date format must be yyyy-mm-dd')  # noqa: E501
             if 'timeout' in config_obj:
                 timeout = config_obj['timeout']
                 if not isinstance(timeout, int) and not timeout > 0:
@@ -65,6 +65,25 @@ class CMEMSHarvester(CMEMSBase,
     def fetch_stage(self, harvest_object):
         return True
 
+    def get_last_imported_object(self):
+        last_object = model.Session.query(HarvestObject). \
+            filter(HarvestObject.harvest_source_id == self.job.source_id,
+                   HarvestObject.import_finished is not None). \
+            order_by(desc(HarvestObject.import_finished)).limit(1)
+        if last_object:
+            return last_object[0]
+        else:
+            return None
+
+    def get_last_object_import_date(self):
+        last_object = self.get_last_imported_object()
+        if last_object is None:
+            return '*'
+        else:
+            return self._get_object_extra(last_object,'restart_date', '*')
+            
+        
+    
     def gather_stage(self, harvest_job):
         log = logging.getLogger(__name__ + '.gather')
         log.debug('CMEMS Harvester gather_stage for job: %r', harvest_job)
@@ -83,21 +102,12 @@ class CMEMSHarvester(CMEMSBase,
         guid_to_package_id = dict((res[0], res[1]) for res in query)
         current_guids = set(guid_to_package_id.keys())
         current_guids_in_harvest = set()
-
-        last_object = model.Session.query(HarvestObject). \
-            filter(HarvestObject.harvest_source_id == self.job.source_id,
-                   HarvestObject.import_finished is not None). \
-            order_by(desc(HarvestObject.import_finished)).limit(1)
-        if last_object:
-            try:
-                last_object = last_object[0]
-                restart_date = self._get_object_extra(last_object,
-                                                      'restart_date', '*')
-            except IndexError:
-                restart_date = '*'
-        else:
-            restart_date = '*'
-        log.debug('Restart date is {}'.format(restart_date))
+        
+        start_date = self.source_config.get('start_date', None)
+        if start_date is None:
+            start_date = self.get_last_object_import_date()
+        
+        # log.debug('Restart date is {}'.format(restart_date))
 
         # if self.source_config['start_date'] == 'YESTERDAY':
         #     star_s = datetime.strftime(datetime.now()-timedelta(1), '%Y-%m-%d')
@@ -109,15 +119,16 @@ class CMEMSHarvester(CMEMSBase,
         # else:
         #     end_s = self.source_config['end_date']
 
-        start_date = self.source_config.get('start_date', restart_date)
         end_date = self.source_config.get('end_date', 'NOW')
-        date_range = '[{} TO {}]'.format(start_date, end_date)
+        if end_date == 'NOW':
+            end_date = datetime.now()
+        else:
+            end_date = datetime.strptime(end_date, '%Y-%m-%d')
 
-        start_date_to_inc = datetime.strptime(star_s, '%Y-%m-%d')
+        start_date = datetime.strptime(start_date, '%Y-%m-%d')
 
         ids = self._get_metadata_create_objects(start_date,
                                                 end_date,
-                                                start_date_to_inc,
                                                 self.job,
                                                 current_guids,
                                                 current_guids_in_harvest)
