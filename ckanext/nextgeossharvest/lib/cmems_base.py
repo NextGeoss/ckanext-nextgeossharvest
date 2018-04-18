@@ -64,8 +64,8 @@ class CMEMSBase(HarvesterBase):
                             value='netCDF')
                 ])
 
-                obj.save()
-                id_list.append(obj.id)
+            obj.save()
+            id_list.append(obj.id)
 
     def _get_sst_product(self, id_list, metadata, start_date):
         day, month, year = self._format_date_separed(start_date)
@@ -85,7 +85,7 @@ class CMEMSBase(HarvesterBase):
         r_status_code = self._crawl_urls_simple(sst_ftp_link, 'cmems')
 
         if r_status_code == 200:
-
+            start_date = start_date.date()
             metadata['datasetname'] = ('sst-glo-l4-daily-nrt-obs-010-001-'
                                        + year
                                        + month
@@ -146,7 +146,7 @@ class CMEMSBase(HarvesterBase):
         r_status_code = self._crawl_urls_simple(sic_north_ftp_link, 'cmems')
 
         if r_status_code == 200:
-
+            start_date = start_date.date()
             metadata['datasetname'] = ('seaice-conc-north-l4-daily'
                                        '-nrt-obs-011-001-'
                                        + year
@@ -223,6 +223,8 @@ class CMEMSBase(HarvesterBase):
 
         if r_status_code == 200:
 
+            start_date = start_date.date()
+
             metadata['datasetname'] = ('seaice-conc-south-l4-daily'
                                        '-nrt-obs-011-001-'
                                        + year
@@ -281,9 +283,10 @@ class CMEMSBase(HarvesterBase):
 
     def _get_ocn_forecast_products(self, id_list, metadata, start_date):
         day, month, year = self._format_date_separed(start_date)
+        start_date = start_date.date()
 
         for i in range(10):
-
+            
             forecast_date = start_date + timedelta(days=i)
             fday, fmonth, fyear = self._format_date_separed(forecast_date)
          
@@ -303,58 +306,58 @@ class CMEMSBase(HarvesterBase):
 
             if r_status_code == 200:
 
-                    metadata['datasetname'] = ('arctic-forecast-'
-                                               + fyear
-                                               + fmonth
-                                               + fday
-                                               + '-phys-002-001-'
-                                               + year
-                                               + month
-                                               + day)
+                metadata['datasetname'] = ('arctic-forecast-'
+                                           + fyear
+                                           + fmonth
+                                           + fday
+                                           + '-phys-002-001-'
+                                           + year
+                                           + month
+                                           + day)
 
-                    metadata['collection_id'] = 'ARCTIC_ANALYSIS_FORECAST_PHYS_002_001_A' # noqa E501
+                metadata['collection_id'] = 'ARCTIC_ANALYSIS_FORECAST_PHYS_002_001_A' # noqa E501
 
-                    metadata['identifier'] = ('ARCTIC-FORECAST-'
-                                              + fyear
-                                              + fmonth
-                                              + fday
-                                              + '-PHYS-002-001-'
-                                              + year
-                                              + month
-                                              + day)
+                metadata['identifier'] = ('ARCTIC-FORECAST-'
+                                          + fyear
+                                          + fmonth
+                                          + fday
+                                          + '-PHYS-002-001-'
+                                          + year
+                                          + month
+                                          + day)
 
-                    metadata['StartTime'] = str(start_date) + 'T00:00:00.000Z'
+                metadata['StartTime'] = str(start_date) + 'T00:00:00.000Z'
 
-                    metadata['StopTime'] = self._product_enddate_url_parameter(start_date)
+                metadata['StopTime'] = self._product_enddate_url_parameter(start_date)
 
-                    metadata['BulletinDate'] = str(start_date)
+                metadata['BulletinDate'] = str(start_date)
 
-                    metadata['ForecastDate'] = datetime.strftime(forecast_date, '%Y-%m-%d')
-                    metadata['Coordinates'] = [
-                        [-180, 90],
-                        [180, 90],
-                        [180, 63],
-                        [-180, 63],
-                        [-180, 90]]
+                metadata['ForecastDate'] = datetime.strftime(forecast_date, '%Y-%m-%d')
+                metadata['Coordinates'] = [
+                    [-180, 90],
+                    [180, 90],
+                    [180, 63],
+                    [-180, 63],
+                    [-180, 90]]
 
-                    metadata['downloadLink'] = ocn_forecast_link
+                metadata['downloadLink'] = ocn_forecast_link
 
-                    metadata['thumbnail'] = ("http://thredds.met.no/thredds/wms/"  # noqa
-                                             "topaz/"
-                                             "dataset-topaz4-arc-1hr-myoceanv2-be"  # noqa
-                                             "?request=GetMap"
-                                             "&version=1.3.0"
-                                             "&layers=temperature"
-                                             "&CRS=CRS:84"
-                                             "&bbox=-180,0,180,90"
-                                             "&WIDTH=800"
-                                             "&HEIGHT=800"
-                                             "&styles=boxfill/rainbow"
-                                             "&format=image/png"
-                                             "&time="
-                                             + datetime.strftime(start_date, '%Y-%m-%d'))
+                metadata['thumbnail'] = ("http://thredds.met.no/thredds/wms/"  # noqa
+                                         "topaz/"
+                                         "dataset-topaz4-arc-1hr-myoceanv2-be"  # noqa
+                                         "?request=GetMap"
+                                         "&version=1.3.0"
+                                         "&layers=temperature"
+                                         "&CRS=CRS:84"
+                                         "&bbox=-180,0,180,90"
+                                         "&WIDTH=800"
+                                         "&HEIGHT=800"
+                                         "&styles=boxfill/rainbow"
+                                         "&format=image/png"
+                                         "&time="
+                                         + datetime.strftime(start_date, '%Y-%m-%d'))
 
-                    self._create_object(id_list, metadata, True)
+                self._create_object(id_list, metadata, True)
 
     def _product_end_date(self, product_start_date):
         return product_start_date + timedelta(days = 1)
@@ -393,15 +396,16 @@ class CMEMSBase(HarvesterBase):
             print(datetime.strftime(start_date, '%Y-%m-%d'))
             print('Start date' + str(start_date))
             
-            start_date_aux = start_date
+            base_start_date = start_date
             for idx in range(time_interval.days):
-                start_date = start_date_aux + timedelta(days = idx)
+                start_date = base_start_date + timedelta(days = idx)
                 print('idx = '+str(idx))
                 print('start_date = '+str(start_date))
-                self._get_ocn_forecast_products(id_list, metadata_dict, start_date)  # noqa #E501
                 self._get_sst_product(id_list, metadata_dict, start_date)
                 self._get_sic_south_product(id_list, metadata_dict, start_date)
                 self._get_sic_north_product(id_list, metadata_dict, start_date)
+                self._get_ocn_forecast_products(id_list, metadata_dict, start_date)  # noqa #E501
+            return id_list
         except Exception as e:
             import traceback
             print(traceback.format_exc())
