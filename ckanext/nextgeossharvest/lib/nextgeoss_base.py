@@ -122,8 +122,9 @@ class NextGEOSSHarvester(HarvesterBase):
         package_dict['name'] = parsed_content['name']
         package_dict['title'] = parsed_content['title']
         package_dict['notes'] = parsed_content['notes']
-        package_dict['tags'] = parsed_content['tags']
+        #package_dict['tags'] = parsed_content['tags']
         package_dict['extras'] = self._get_extras(parsed_content)
+        print package_dict['extras']
         package_dict['resources'] = self._get_resources(parsed_content)
 
         return package_dict
@@ -134,6 +135,7 @@ class NextGEOSSHarvester(HarvesterBase):
         """
         parsed_content = self._parse_content(harvest_object.content)
         package_dict = self._create_package_dict(parsed_content)
+        print package_dict
 
         # Add the harvester ID to the extras so that CKAN can find the
         # harvested datasets in searches for stats, etc.
@@ -150,8 +152,8 @@ class NextGEOSSHarvester(HarvesterBase):
             old_pkg_dict = self._get_package_dict(old_dataset)
             package_dict['id'] = old_dataset.id
             package_dict['owner_org'] = old_dataset.owner_org
-            package_dict['tags'] = self._update_tags(old_pkg_dict.get('tags', []),  # noqa: E501
-                                                     package_dict['tags'])
+            # package_dict['tags'] = self._update_tags(old_pkg_dict.get('tags', []),  # noqa: E501
+            #                                          package_dict['tags'])
             package_dict['extras'] = self._update_extras(old_pkg_dict.get('extras', []),  # noqa: E501
                                                          package_dict['extras'])  # noqa: E501
             package_schema = logic.schema.default_update_package_schema()
@@ -173,10 +175,10 @@ class NextGEOSSHarvester(HarvesterBase):
             'session': model.Session,
             'user': self._get_user_name(),
         }
-        tag_schema = logic.schema.default_tags_schema()
-        tag_schema['name'] = [not_empty, unicode]
+        #tag_schema = logic.schema.tag_schema()
+        #default_tags_schema['name'] = [not_empty, unicode]
         extras_schema = logic.schema.default_extras_schema()
-        package_schema['tags'] = tag_schema
+        #package_schema['tags'] = tag_schema
         package_schema['extras'] = extras_schema
         context['schema'] = package_schema
 
@@ -240,9 +242,10 @@ class NextGEOSSHarvester(HarvesterBase):
     def _get_extras(self, parsed_content):
         """Return a list of CKAN extras."""
         skip = {'id', 'title', 'tags', 'status', 'notes', 'name', 'resource'}
-        extras = [{'key': key, 'value': value}
-                  for key, value in parsed_content.items()
-                  if key not in skip]
+        extras_tmp = [{'key': key, 'value': value}
+                    for key, value in parsed_content.items()
+                    if key not in skip]
+        extras = [{'key': 'dataset_extra', 'value': str(extras_tmp)}]
         return extras
 
     def _update_tags(self, old_tags, new_tags):
