@@ -39,6 +39,8 @@ class CMEMSHarvester(CMEMSBase,
 
             if config_obj.get('source') not in {'cmems'}:  # noqa: E501
                 raise ValueError('source is required and must be cmems')  # noqa: E501
+            if config_obj.get('harvester_type') not in {'sst', 'sic_north', 'sic_south', 'ocn'}:  # noqa: E501
+                raise ValueError('harvester type is required and must be "sst" or "sic_north" or "sic_south" or "ocn"')  # noqa: E501
             if 'start_date' in config_obj:
                 try:
                     if config_obj['start_date'] != 'YESTERDAY':
@@ -117,12 +119,14 @@ class CMEMSHarvester(CMEMSBase,
         else:
             start_date = datetime.strptime(start_date, '%Y-%m-%d')
 
+        harvester_type = self.source_config.get('harvester_type')
 
         ids = self._get_metadata_create_objects(start_date,
                                                 end_date,
                                                 self.job,
                                                 current_guids,
-                                                current_guids_in_harvest)
+                                                current_guids_in_harvest,
+                                                harvester_type)
 
         return ids
 

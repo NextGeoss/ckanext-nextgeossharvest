@@ -84,7 +84,7 @@ class CMEMSBase(HarvesterBase):
 
         r_status_code = self._crawl_urls_ftp(sst_ftp_link, 'cmems')
 
-        if r_status_code == 200:
+        if r_status_code == 226:
             start_date = start_date.date()
             metadata['datasetname'] = ('sst-glo-l4-daily-nrt-obs-010-001-'
                                        + year
@@ -145,7 +145,7 @@ class CMEMSBase(HarvesterBase):
 
         r_status_code = self._crawl_urls_ftp(sic_north_ftp_link, 'cmems')
 
-        if r_status_code == 200:
+        if r_status_code == 226:
             start_date = start_date.date()
             metadata['datasetname'] = ('seaice-conc-north-l4-daily'
                                        '-nrt-obs-011-001-'
@@ -221,7 +221,7 @@ class CMEMSBase(HarvesterBase):
 
         r_status_code = self._crawl_urls_ftp(sic_south_ftp_link, 'cmems')
 
-        if r_status_code == 200:
+        if r_status_code == 226:
 
             start_date = start_date.date()
 
@@ -304,7 +304,7 @@ class CMEMSBase(HarvesterBase):
 
             r_status_code = self._crawl_urls_ftp(ocn_forecast_link, 'cmems')
 
-            if r_status_code == 200:
+            if r_status_code == 226:
 
                 metadata['datasetname'] = ('arctic-forecast-'
                                            + fyear
@@ -379,7 +379,8 @@ class CMEMSBase(HarvesterBase):
                                      end_date,
                                      harvest_job,
                                      current_guids,
-                                     current_guids_in_harvest):
+                                     current_guids_in_harvest,
+                                     harvester_type):
         # Get contents
         try:
             metadata_dict = dict()
@@ -401,10 +402,14 @@ class CMEMSBase(HarvesterBase):
                 start_date = base_start_date + timedelta(days = idx)
                 print('idx = '+str(idx))
                 print('start_date = '+str(start_date))
-                self._get_sst_product(id_list, metadata_dict, start_date)
-                self._get_sic_south_product(id_list, metadata_dict, start_date)
-                self._get_sic_north_product(id_list, metadata_dict, start_date)
-                self._get_ocn_forecast_products(id_list, metadata_dict, start_date)  # noqa #E501
+                if harvester_type == 'sst':
+                    self._get_sst_product(id_list, metadata_dict, start_date)
+                elif harvester_type == 'sic_north':
+                    self._get_sic_north_product(id_list, metadata_dict, start_date)
+                elif harvester_type == 'sic_south':
+                    self._get_sic_south_product(id_list, metadata_dict, start_date)
+                elif harvester_type == 'ocn':
+                    self._get_ocn_forecast_products(id_list, metadata_dict, start_date)  # noqa #E501
             return id_list
         except Exception as e:
             import traceback
