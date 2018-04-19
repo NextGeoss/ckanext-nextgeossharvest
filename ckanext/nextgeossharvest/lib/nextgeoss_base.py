@@ -329,9 +329,9 @@ class NextGEOSSHarvester(HarvesterBase):
             file_directory = path.dirname(url)
             file_name = path.basename(url)
             r = s.list(file_directory, auth=('ngeoss', 'NextCMEMS2017'))
-            print(r.status_code)
+            status_code = 999
             if file_name in r.content:
-                print('found ' + url)
+                status_code = 226
         except (ConnectTimeout, ReadTimeout) as e:
             self._save_gather_error('Request timed out: {}'.format(e), self.job)  # noqa: E501
             status_code = 408
@@ -341,15 +341,15 @@ class NextGEOSSHarvester(HarvesterBase):
                     timestamp, status_code, timeout))  # noqa: E128
             return 408
 
-        if r.status_code != 226:
-            self._save_gather_error('{} error: {}'.format(r.status_code, r.text), self.job)  # noqa: E501
+        if status_code != 226:
+            self._save_gather_error('{} error: {}'.format(status_code, r.text), self.job)  # noqa: E501
             elapsed = 9999
             if hasattr(self, 'provider_logger'):
                 self.provider_logger.info(log_message.format(provider,
-                    timestamp, r.status_code, elapsed))  # noqa: E128
-            return r.status_code
+                    timestamp, status_code, elapsed))  # noqa: E128
+            return status_code
  
         if hasattr(self, 'provider_logger'):
             self.provider_logger.info(log_message.format(provider,
-                timestamp, r.status_code, r.elapsed.total_seconds()))  # noqa: E501
-        return r.status_code
+                timestamp, status_code, r.elapsed.total_seconds()))  # noqa: E501
+        return status_code
