@@ -4,10 +4,14 @@ import json
 import logging
 import os
 import uuid
+from os import path
 from string import Template
 from requests.exceptions import Timeout
 from datetime import datetime
 import requests
+import requests_ftp
+from requests.exceptions import ConnectionError, ConnectTimeout, ReadTimeout
+from requests.exceptions import RequestException
 
 from sqlalchemy.sql import update, bindparam
 import shapely.wkt
@@ -290,7 +294,7 @@ class NextGEOSSHarvester(HarvesterBase):
         timestamp = str(datetime.utcnow())
         log_message = '{:<12} | {} | {} | {}s'
         try:
-            r = requests.get(url, timeout=timeout)
+            r = requests.get(url, timeout=timeout, auth=('ngeoss', 'NextCMEMS2017'),verify=False)
         except Timeout as e:
             self._save_gather_error('Request timed out: {}'.format(e), self.job)  # noqa: E501
             status_code = 408
@@ -312,3 +316,40 @@ class NextGEOSSHarvester(HarvesterBase):
             self.provider_logger.info(log_message.format(provider,
                 timestamp, r.status_code, r.elapsed.total_seconds()))  # noqa: E501
         return r.status_code
+    
+    def _crawl_urls_ftp(self, url, provider):
+        timeout = self.source_config['timeout']
+
+        # Make a request to the website
+        timestamp = str(datetime.utcnow())
+        log_message = '{:<12} | {} | {} | {}s'
+        try:
+            requests_ftp.monkeypatch_session()
+            s = requests.Session()
+            file_directory = path.dirname(url)
+            file_name = path.basename(url)
+            r = s.list(file_directory, auth=('ngeoss', 'NextCMEMS2017'))
+            status_code = 999
+            if file_name in r.content:
+                status_code = 226
+        except (ConnectTimeout, ReadTimeout) as e:
+            self._save_gather_error('Request timed out: {}'.format(e), self.job)  # noqa: E501
+            status_code = 408
+            elapsed = 9999
+            if hasattr(self, 'provider_logger'):
+                self.provider_logger.info(log_message.format(provider,
+                    timestamp, status_code, timeout))  # noqa: E128
+            return 408
+
+        if status_code != 226:
+            self._save_gather_error('{} error: {}'.format(status_code, r.text), self.job)  # noqa: E501
+            elapsed = 9999
+            if hasattr(self, 'provider_logger'):
+                self.provider_logger.info(log_message.format(provider,
+                    timestamp, status_code, elapsed))  # noqa: E128
+            return status_code
+ 
+        if hasattr(self, 'provider_logger'):
+            self.provider_logger.info(log_message.format(provider,
+                timestamp, status_code, r.elapsed.total_seconds()))  # noqa: E501
+        return status_code
