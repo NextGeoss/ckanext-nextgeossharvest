@@ -4,3 +4,4 @@ jmespath
 requests
 sqlalchemy
 shapely
+requests-ftp
