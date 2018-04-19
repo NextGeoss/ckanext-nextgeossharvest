@@ -45,14 +45,18 @@ class CMEMSHarvester(CMEMSBase,
                         datetime.strptime(config_obj['start_date'],
                                           '%Y-%m-%d')
                 except ValueError:
-                    raise ValueError('start_date format must be yyyy-mm-dd')  # noqa: E501
+                    raise ValueError('start_date format must be yyyy-mm-dd')
+            else:
+                raise ValueError('start_date is required')
             if 'end_date' in config_obj:
                 try:
                     if config_obj['end_date'] != 'TODAY':
                         datetime.strptime(config_obj['end_date'],
                                           '%Y-%m-%d')
                 except ValueError:
-                    raise ValueError('end_date format must be yyyy-mm-dd')  # noqa: E501
+                    raise ValueError('end_date format must be yyyy-mm-dd')
+            else:
+                raise ValueError('end_date is required')
             if 'timeout' in config_obj:
                 timeout = config_obj['timeout']
                 if not isinstance(timeout, int) and not timeout > 0:
@@ -64,24 +68,6 @@ class CMEMSHarvester(CMEMSBase,
 
     def fetch_stage(self, harvest_object):
         return True
-
-    def get_last_imported_object(self):
-        last_object = model.Session.query(HarvestObject). \
-            filter(HarvestObject.harvest_source_id == self.job.source_id,
-                   HarvestObject.import_finished is not None). \
-            order_by(desc(HarvestObject.import_finished)).limit(1)
-        if last_object:
-            return last_object[0]
-        else:
-            return None
-
-    def get_last_object_import_date(self):
-        last_object = self.get_last_imported_object()
-        if last_object is None:
-            return '*'
-        else:
-            return self._get_object_extra(last_object,'restart_date', '*')
-            
         
     
     def gather_stage(self, harvest_job):
@@ -103,9 +89,8 @@ class CMEMSHarvester(CMEMSBase,
         current_guids = set(guid_to_package_id.keys())
         current_guids_in_harvest = set()
         
-        start_date = self.source_config.get('start_date', None)
-        if start_date is None:
-            start_date = self.get_last_object_import_date()
+        start_date = self.source_config.get('start_date')
+
         
         # log.debug('Restart date is {}'.format(restart_date))
 
@@ -121,11 +106,17 @@ class CMEMSHarvester(CMEMSBase,
 
         end_date = self.source_config.get('end_date', 'NOW')
         if end_date == 'NOW':
-            end_date = datetime.now()
+            end_date = (datetime.now()).replace(hour=0, minute=0, second=0, microsecond=0)
+        elif end_date == 'TODAY':
+            end_date = (datetime.now()).replace(hour=0, minute=0, second=0, microsecond=0)
         else:
             end_date = datetime.strptime(end_date, '%Y-%m-%d')
 
-        start_date = datetime.strptime(start_date, '%Y-%m-%d')
+        if start_date == 'YESTERDAY':
+            start_date = (datetime.now() - timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+        else:
+            start_date = datetime.strptime(start_date, '%Y-%m-%d')
+
 
         ids = self._get_metadata_create_objects(start_date,
                                                 end_date,

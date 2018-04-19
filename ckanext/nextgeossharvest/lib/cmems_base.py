@@ -7,6 +7,7 @@ from datetime import timedelta, datetime
 import uuid
 
 
+
 from ckan import model
 from ckan import logic
 from ckan.lib.navl.validators import not_empty
@@ -17,7 +18,6 @@ from ckanext.harvest.model import HarvestObjectExtra as HOExtra
 from ckanext.harvest.model import HarvestObject
 from webob.datetime_utils import year
 from calendar import month
-
 
 log = logging.getLogger(__name__)
 
@@ -82,7 +82,7 @@ class CMEMSBase(HarvesterBase):
                         + day
                         + "120000-UKMO-L4_GHRSST-SSTfnd-OSTIA-GLOB-v02.0-fv02.0.nc") # noqa E501
 
-        r_status_code = self._crawl_urls_simple(sst_ftp_link, 'cmems')
+        r_status_code = self._crawl_urls_ftp(sst_ftp_link, 'cmems')
 
         if r_status_code == 200:
             start_date = start_date.date()
@@ -143,7 +143,7 @@ class CMEMSBase(HarvesterBase):
                               + day
                               + "1200.nc")
 
-        r_status_code = self._crawl_urls_simple(sic_north_ftp_link, 'cmems')
+        r_status_code = self._crawl_urls_ftp(sic_north_ftp_link, 'cmems')
 
         if r_status_code == 200:
             start_date = start_date.date()
@@ -219,7 +219,7 @@ class CMEMSBase(HarvesterBase):
                               + day
                               + "1200.nc")
 
-        r_status_code = self._crawl_urls_simple(sic_south_ftp_link, 'cmems')
+        r_status_code = self._crawl_urls_ftp(sic_south_ftp_link, 'cmems')
 
         if r_status_code == 200:
 
@@ -285,7 +285,7 @@ class CMEMSBase(HarvesterBase):
         day, month, year = self._format_date_separed(start_date)
         start_date = start_date.date()
 
-        for i in range(10):
+        for i in range(9):
             
             forecast_date = start_date + timedelta(days=i)
             fday, fmonth, fyear = self._format_date_separed(forecast_date)
@@ -302,7 +302,7 @@ class CMEMSBase(HarvesterBase):
                                  + day
                                  + "-fv02.0.nc")
 
-            r_status_code = self._crawl_urls_simple(ocn_forecast_link, 'cmems')
+            r_status_code = self._crawl_urls_ftp(ocn_forecast_link, 'cmems')
 
             if r_status_code == 200:
 
@@ -870,3 +870,7 @@ class CMEMSBase(HarvesterBase):
                     key != 'spatial'):
                 extras_dict += [{"value": value, "key": key}]
         return extras_dict
+    
+    
+    
+
