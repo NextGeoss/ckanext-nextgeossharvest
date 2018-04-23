@@ -142,11 +142,14 @@ class ESAHarvester(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
             skip_raw = ''
 
         limit = self.source_config.get('datasets_per_job', 100)
+        print limit
 
         harvest_url = '{base_url}/dhus/search?q=ingestiondate:{date_range}{skip_raw}&orderby=ingestiondate asc&start=0&rows={limit}'.format(base_url=base_url, date_range=date_range, skip_raw=skip_raw, limit=limit)  # noqa: E501
         log.debug('Harvest URL is {}'.format(harvest_url))
         username = config.get('ckanext.nextgeossharvest.nextgeoss_username')
+        print username
         password = config.get('ckanext.nextgeossharvest.nextgeoss_password')
+        print password
 
         # Set the limit for the maximum number of results per job.
         # Since the new harvester jobs will be created on a rolling basis
@@ -160,6 +163,7 @@ class ESAHarvester(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
         self.provider = source
 
         # This can be a hook
+        print harvest_url
         ids = self._crawl_results(harvest_url, limit, timeout, username,
                                   password)
         # This can be a hook
