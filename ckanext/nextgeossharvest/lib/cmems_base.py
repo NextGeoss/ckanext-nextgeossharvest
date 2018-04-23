@@ -69,31 +69,31 @@ class CMEMSBase(HarvesterBase):
 
         sst_ftp_link = ("ftp://cmems.isac.cnr.it/Core/"
                         "SST_GLO_SST_L4_NRT_OBSERVATIONS_010_001/"
-                        "METOFFICE-GLO-SST-L4-NRT-OBS-SST-V2/"
-                        + year
-                        + "/"
-                        + month
-                        + "/"
-                        + year
-                        + month
-                        + day
-                        + "120000-UKMO-L4_GHRSST-SSTfnd-OSTIA-GLOB-v02.0-fv02.0.nc") # noqa E501
+                        "METOFFICE-GLO-SST-L4-NRT-OBS-SST-V2/" +
+                        year +
+                        "/" +
+                        month +
+                        "/" +
+                        year +
+                        month +
+                        day +
+                        "120000-UKMO-L4_GHRSST-SSTfnd-OSTIA-GLOB-v02.0-fv02.0.nc")  # noqa E501
 
         r_status_code = self._crawl_urls_ftp(sst_ftp_link, 'cmems')
 
         if r_status_code == 226:
             start_date = start_date.date()
-            metadata['datasetname'] = ('sst-glo-l4-daily-nrt-obs-010-001-'
-                                       + year
-                                       + month
-                                       + day)
+            metadata['datasetname'] = ('sst-glo-l4-daily-nrt-obs-010-001-' +
+                                       year +
+                                       month +
+                                       day)
 
             metadata['collection_id'] = ('METOFFICE-GLO-SST-L4-NRT-OBS-SST-V2')
 
-            metadata['identifier'] = ('SST-GLO-L4-DAILY-NRT-OBS-010-001-'
-                                      + year
-                                      + month
-                                      + day)
+            metadata['identifier'] = ('SST-GLO-L4-DAILY-NRT-OBS-010-001-' +
+                                      year +
+                                      month +
+                                      day)
 
             metadata['StartTime'] = (str(start_date) + 'T00:00:00.000Z')
 
@@ -118,9 +118,9 @@ class CMEMSBase(HarvesterBase):
                                      "&HEIGHT=800"
                                      "&styles=boxfill/rainbow"
                                      "&format=image/png"
-                                     "&time="
-                                     + str(start_date)
-                                     + "T12:00:00.000Z")
+                                     "&time=" +
+                                     str(start_date) +
+                                     "T12:00:00.000Z")
 
             self._create_object(id_list, metadata, True)
 
@@ -129,33 +129,33 @@ class CMEMSBase(HarvesterBase):
 
         sic_north_ftp_link = ("ftp://mftp.cmems.met.no/Core/"
                               "SEAICE_GLO_SEAICE_L4_NRT_OBSERVATIONS_011_001/"
-                              "METNO-GLO-SEAICE_CONC-NORTH-L4-NRT-OBS/"
-                              + year
-                              + "/"
-                              + month
-                              + "/"
-                              + "ice_conc_nh_ease-125_multi_"
-                              + year
-                              + month
-                              + day
-                              + "1200.nc")
+                              "METNO-GLO-SEAICE_CONC-NORTH-L4-NRT-OBS/" +
+                              year +
+                              "/" +
+                              month +
+                              "/" +
+                              "ice_conc_nh_ease-125_multi_" +
+                              year +
+                              month +
+                              day +
+                              "1200.nc")
 
         r_status_code = self._crawl_urls_ftp(sic_north_ftp_link, 'cmems')
 
         if r_status_code == 226:
             start_date = start_date.date()
             metadata['datasetname'] = ('seaice-conc-north-l4-daily'
-                                       '-nrt-obs-011-001-'
-                                       + year
-                                       + month
-                                       + day)
+                                       '-nrt-obs-011-001-' +
+                                       year +
+                                       month +
+                                       day)
 
             metadata['collection_id'] = ('METNO-GLO-SEAICE_CONC-NORTH-L4-NRT-OBS')  # noqa E501
 
-            metadata['identifier'] = ('SEAICE-CONC-NORTH-L4-DAILY-NRT-OBS-011-001-' # noqa E501
-                                      + year
-                                      + month
-                                      + day)
+            metadata['identifier'] = ('SEAICE-CONC-NORTH-L4-DAILY-NRT-OBS-011-001-' +  # noqa E501
+                                      year +
+                                      month +
+                                      day)
 
             metadata['StartTime'] = (str(start_date) + 'T00:00:00.000Z')
 
@@ -169,18 +169,19 @@ class CMEMSBase(HarvesterBase):
 
             metadata['downloadLinkEase'] = sic_north_ftp_link
 
-            metadata['downloadLinkPolstere'] = ("ftp://mftp.cmems.met.no/Core/"
-                                                "SEAICE_GLO_SEAICE_L4_NRT_OBSERVATIONS_011_001/" # noqa E501
-                                                "METNO-GLO-SEAICE_CONC-NORTH-L4-NRT-OBS/" # noqa E501
-                                                + year
-                                                + "/"
-                                                + month
-                                                + "/"
-                                                + "ice_conc_nh_polstere-100_multi_" # noqa E501
-                                                + year
-                                                + month
-                                                + day
-                                                + "1200.nc")
+            metadata['downloadLinkPolstere'] = (
+              "ftp://mftp.cmems.met.no/Core/"  # noqa: E121
+              "SEAICE_GLO_SEAICE_L4_NRT_OBSERVATIONS_011_001/"
+              "METNO-GLO-SEAICE_CONC-NORTH-L4-NRT-OBS/" +
+              year +
+              "/" +
+              month +
+              "/" +
+              "ice_conc_nh_polstere-100_multi_" +
+              year +
+              month +
+              day +
+              "1200.nc")
 
             metadata['thumbnail'] = ("http://thredds.met.no/thredds/wms/"
                                      "sea_ice/SIW-OSISAF-GLO-SIT_SIE_SIC-OBS/"
@@ -194,9 +195,9 @@ class CMEMSBase(HarvesterBase):
                                      "&HEIGHT=800"
                                      "&styles=boxfill/rainbow"
                                      "&format=image/png"
-                                     "&time="
-                                     + str(start_date)
-                                     + "T12:00:00.000Z")
+                                     "&time=" +
+                                     str(start_date) +
+                                     "T12:00:00.000Z")
 
             self._create_object(id_list, metadata, False)
 
@@ -205,16 +206,16 @@ class CMEMSBase(HarvesterBase):
 
         sic_south_ftp_link = ("ftp://mftp.cmems.met.no/Core/"
                               "SEAICE_GLO_SEAICE_L4_NRT_OBSERVATIONS_011_001/"
-                              "METNO-GLO-SEAICE_CONC-SOUTH-L4-NRT-OBS/"
-                              + year
-                              + "/"
-                              + month
-                              + "/"
-                              + "ice_conc_sh_ease-125_multi_"
-                              + year
-                              + month
-                              + day
-                              + "1200.nc")
+                              "METNO-GLO-SEAICE_CONC-SOUTH-L4-NRT-OBS/" +
+                              year +
+                              "/" +
+                              month +
+                              "/" +
+                              "ice_conc_sh_ease-125_multi_" +
+                              year +
+                              month +
+                              day +
+                              "1200.nc")
 
         r_status_code = self._crawl_urls_ftp(sic_south_ftp_link, 'cmems')
 
@@ -223,17 +224,17 @@ class CMEMSBase(HarvesterBase):
             start_date = start_date.date()
 
             metadata['datasetname'] = ('seaice-conc-south-l4-daily'
-                                       '-nrt-obs-011-001-'
-                                       + year
-                                       + month
-                                       + day)
+                                       '-nrt-obs-011-001-' +
+                                       year +
+                                       month +
+                                       day)
 
-            metadata['collection_id'] = ('METNO-GLO-SEAICE_CONC-SOUTH-L4-NRT-OBS') # noqa E501
+            metadata['collection_id'] = ('METNO-GLO-SEAICE_CONC-SOUTH-L4-NRT-OBS')  # noqa E501
 
-            metadata['identifier'] = ('SEAICE-CONC-SOUTH-L4-DAILY-NRT-OBS-011-001-' # noqa E501
-                                      + year
-                                      + month
-                                      + day)
+            metadata['identifier'] = ('SEAICE-CONC-SOUTH-L4-DAILY-NRT-OBS-011-001-' +  # noqa E501
+                                      year +
+                                      month +
+                                      day)
 
             metadata['StartTime'] = str(start_date) + 'T00:00:00.000Z'
 
@@ -247,18 +248,19 @@ class CMEMSBase(HarvesterBase):
 
             metadata['downloadLinkEase'] = sic_south_ftp_link
 
-            metadata['downloadLinkPolstere'] = ("ftp://mftp.cmems.met.no/Core/"
-                                                "SEAICE_GLO_SEAICE_L4_NRT_OBSERVATIONS_011_001/" # noqa E501
-                                                "METNO-GLO-SEAICE_CONC-SOUTH-L4-NRT-OBS/" # noqa E501
-                                                + year
-                                                + "/"
-                                                + month
-                                                + "/"
-                                                + "ice_conc_sh_polstere-100_multi_" # noqa E501
-                                                + year
-                                                + month
-                                                + day
-                                                + "1200.nc")
+            metadata['downloadLinkPolstere'] = (
+              "ftp://mftp.cmems.met.no/Core/" +  # noqa: E121
+              "SEAICE_GLO_SEAICE_L4_NRT_OBSERVATIONS_011_001/" +
+              "METNO-GLO-SEAICE_CONC-SOUTH-L4-NRT-OBS/" +
+              year +
+              "/" +
+              month +
+              "/" +
+              "ice_conc_sh_polstere-100_multi_" +
+              year +
+              month +
+              day +
+              "1200.nc")
 
             metadata['thumbnail'] = ("http://thredds.met.no/thredds/wms/"
                                      "sea_ice/SIW-OSISAF-GLO-SIT_SIE_SIC-OBS/"
@@ -272,9 +274,9 @@ class CMEMSBase(HarvesterBase):
                                      "&HEIGHT=800"
                                      "&styles=boxfill/rainbow"
                                      "&format=image/png"
-                                     "&time="
-                                     + str(start_date)
-                                     + "T12:00:00.000Z")
+                                     "&time=" +
+                                     str(start_date) +
+                                     "T12:00:00.000Z")
 
             self._create_object(id_list, metadata, False)
 
@@ -289,39 +291,39 @@ class CMEMSBase(HarvesterBase):
 
             ocn_forecast_link = ("ftp://mftp.cmems.met.no/Core/"
                                  "ARCTIC_ANALYSIS_FORECAST_PHYS_002_001_a/"
-                                 "dataset-topaz4-arc-myoceanv2-be/"
-                                 + fyear
-                                 + fmonth
-                                 + fday
-                                 + "_dm-metno-MODEL-topaz4-ARC-b"
-                                 + year
-                                 + month
-                                 + day
-                                 + "-fv02.0.nc")
+                                 "dataset-topaz4-arc-myoceanv2-be/" +
+                                 fyear +
+                                 fmonth +
+                                 fday +
+                                 "_dm-metno-MODEL-topaz4-ARC-b" +
+                                 year +
+                                 month +
+                                 day +
+                                 "-fv02.0.nc")
 
             r_status_code = self._crawl_urls_ftp(ocn_forecast_link, 'cmems')
 
             if r_status_code == 226:
 
-                metadata['datasetname'] = ('arctic-forecast-'
-                                           + fyear
-                                           + fmonth
-                                           + fday
-                                           + '-phys-002-001-'
-                                           + year
-                                           + month
-                                           + day)
+                metadata['datasetname'] = ('arctic-forecast-' +
+                                           fyear +
+                                           fmonth +
+                                           fday +
+                                           '-phys-002-001-' +
+                                           year +
+                                           month +
+                                           day)
 
-                metadata['collection_id'] = 'ARCTIC_ANALYSIS_FORECAST_PHYS_002_001_A' # noqa E501
+                metadata['collection_id'] = 'ARCTIC_ANALYSIS_FORECAST_PHYS_002_001_A'  # noqa E501
 
-                metadata['identifier'] = ('ARCTIC-FORECAST-'
-                                          + fyear
-                                          + fmonth
-                                          + fday
-                                          + '-PHYS-002-001-'
-                                          + year
-                                          + month
-                                          + day)
+                metadata['identifier'] = ('ARCTIC-FORECAST-' +
+                                          fyear +
+                                          fmonth +
+                                          fday +
+                                          '-PHYS-002-001-' +
+                                          year +
+                                          month +
+                                          day)
 
                 metadata['StartTime'] = str(start_date) + 'T00:00:00.000Z'
 
@@ -352,8 +354,8 @@ class CMEMSBase(HarvesterBase):
                                          "&HEIGHT=800"
                                          "&styles=boxfill/rainbow"
                                          "&format=image/png"
-                                         "&time="
-                                         + datetime.strftime(start_date,
+                                         "&time=" +
+                                         datetime.strftime(start_date,
                                             '%Y-%m-%d'))
 
                 self._create_object(id_list, metadata, True)
@@ -397,8 +399,8 @@ class CMEMSBase(HarvesterBase):
             base_start_date = start_date
             for idx in range(time_interval.days):
                 start_date = base_start_date + timedelta(days=idx)
-                print('idx = '+str(idx))
-                print('start_date = '+str(start_date))
+                print('idx = ' + str(idx))
+                print('start_date = ' + str(start_date))
                 if harvester_type == 'sst':
                     self._get_sst_product(id_list, metadata_dict, start_date)
                 elif harvester_type == 'sic_north':
@@ -561,9 +563,9 @@ class CMEMSBase(HarvesterBase):
 
         # Create / update the package
         context.update({
-           'extras_as_string': True,
-           'api_version': '2',
-           'return_id_only': True})
+                       'extras_as_string': True,
+                       'api_version': '2',
+                       'return_id_only': True})
 
         if self._site_user and context['user'] == self._site_user['name']:
             context['ignore_auth'] = True

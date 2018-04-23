@@ -26,7 +26,7 @@ class CMEMSHarvester(CMEMSBase,
             'name': 'cmems',
             'title': 'CMEMS',
             'description': 'A Harvester for CMEMS Products'
-            }
+        }
 
     def validate_config(self, config):
         if not config:
