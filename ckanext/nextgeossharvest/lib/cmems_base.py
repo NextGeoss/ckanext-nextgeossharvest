@@ -6,8 +6,6 @@ import json
 from datetime import timedelta, datetime
 import uuid
 
-
-
 from ckan import model
 from ckan import logic
 from ckan.lib.navl.validators import not_empty
@@ -100,7 +98,7 @@ class CMEMSBase(HarvesterBase):
 
             metadata['StartTime'] = (str(start_date) + 'T00:00:00.000Z')
 
-            metadata['StopTime'] =  self._product_enddate_url_parameter(start_date)  # noqa: E501
+            metadata['StopTime'] = self._product_enddate_url_parameter(start_date)  # noqa: E501
 
             metadata['Coordinates'] = [[-180, 90],
                                        [180, 90],
@@ -129,7 +127,7 @@ class CMEMSBase(HarvesterBase):
 
     def _get_sic_north_product(self, id_list, metadata, start_date):
         day, month, year = self._format_date_separed(start_date)
-        
+
         sic_north_ftp_link = ("ftp://mftp.cmems.met.no/Core/"
                               "SEAICE_GLO_SEAICE_L4_NRT_OBSERVATIONS_011_001/"
                               "METNO-GLO-SEAICE_CONC-NORTH-L4-NRT-OBS/"
@@ -205,7 +203,7 @@ class CMEMSBase(HarvesterBase):
 
     def _get_sic_south_product(self, id_list, metadata, start_date):
         day, month, year = self._format_date_separed(start_date)
-        
+
         sic_south_ftp_link = ("ftp://mftp.cmems.met.no/Core/"
                               "SEAICE_GLO_SEAICE_L4_NRT_OBSERVATIONS_011_001/"
                               "METNO-GLO-SEAICE_CONC-SOUTH-L4-NRT-OBS/"
@@ -286,10 +284,10 @@ class CMEMSBase(HarvesterBase):
         start_date = start_date.date()
 
         for i in range(9):
-            
+
             forecast_date = start_date + timedelta(days=i)
             fday, fmonth, fyear = self._format_date_separed(forecast_date)
-         
+
             ocn_forecast_link = ("ftp://mftp.cmems.met.no/Core/"
                                  "ARCTIC_ANALYSIS_FORECAST_PHYS_002_001_a/"
                                  "dataset-topaz4-arc-myoceanv2-be/"
@@ -362,18 +360,17 @@ class CMEMSBase(HarvesterBase):
                 self._create_object(id_list, metadata, True)
 
     def _product_end_date(self, product_start_date):
-        return product_start_date + timedelta(days = 1)
-    
+        return product_start_date + timedelta(day=1)
+
     def _product_enddate_url_parameter(self, start_date):
         return datetime.strftime(self._product_end_date(start_date), '%Y-%m-%d') + 'T00:00:00.000Z'  # noqa: E501
+
     def _format_date_separed(self, date):
-        day = datetime.strftime(date,'%d')
-        month = datetime.strftime(date,'%m')
-        year = datetime.strftime(date,'%Y')
-        
+        day = datetime.strftime(date, '%d')
+        month = datetime.strftime(date, '%m')
+        year = datetime.strftime(date, '%Y')
+
         return day, month, year
-
-
 
     def _get_metadata_create_objects(self,
                                      start_date,
@@ -390,17 +387,17 @@ class CMEMSBase(HarvesterBase):
 
             year, month, day = str(start_date).split('-')
             time_interval = end_date - start_date
-            
+
             self.harvest_job = harvest_job
             self.current_guids = current_guids
             self.current_guids_in_harvest = current_guids_in_harvest
-      
+
             print(datetime.strftime(start_date, '%Y-%m-%d'))
             print('Start date' + str(start_date))
-            
+
             base_start_date = start_date
             for idx in range(time_interval.days):
-                start_date = base_start_date + timedelta(days = idx)
+                start_date = base_start_date + timedelta(days=idx)
                 print('idx = '+str(idx))
                 print('start_date = '+str(start_date))
                 if harvester_type == 'sst':
@@ -421,7 +418,6 @@ class CMEMSBase(HarvesterBase):
             self._save_gather_error('Unable to get content for URL: %s: %r'
                                     % (url, e), harvest_job)
             return None
-
 
     def _delete_dataset(self, harvest_object, context):
         log = logging.getLogger(__name__ + '.import')
@@ -838,7 +834,3 @@ class CMEMSBase(HarvesterBase):
                     key != 'spatial'):
                 extras_dict += [{"value": value, "key": key}]
         return extras_dict
-    
-    
-    
-

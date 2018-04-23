@@ -78,7 +78,7 @@ class NextGEOSSHarvester(HarvesterBase):
         context = {
             'model': model,
             'session': model.Session,
-            'user': 'test_user', #self._get_user_name(),
+            'user': 'test_user',  # self._get_user_name(),
             'ignore_auth': True
         }
         print package.id
@@ -309,7 +309,7 @@ class NextGEOSSHarvester(HarvesterBase):
         log_message = '{:<12} | {} | {} | {}s'
         try:
             r = requests.get(url, timeout=timeout,
-                             auth=('ngeoss', 'NextCMEMS2017'),verify=False)
+                             auth=('ngeoss', 'NextCMEMS2017'), verify=False)
         except Timeout as e:
             self._save_gather_error('Request timed out: {}'.format(e), self.job)  # noqa: E501
             status_code = 408
@@ -331,7 +331,7 @@ class NextGEOSSHarvester(HarvesterBase):
             self.provider_logger.info(log_message.format(provider,
                 timestamp, r.status_code, r.elapsed.total_seconds()))  # noqa: E501
         return r.status_code
-    
+
     def _crawl_urls_ftp(self, url, provider):
         timeout = self.source_config['timeout']
 
@@ -363,7 +363,7 @@ class NextGEOSSHarvester(HarvesterBase):
                 self.provider_logger.info(log_message.format(provider,
                     timestamp, status_code, elapsed))  # noqa: E128
             return status_code
- 
+
         if hasattr(self, 'provider_logger'):
             self.provider_logger.info(log_message.format(provider,
                 timestamp, status_code, r.elapsed.total_seconds()))  # noqa: E501

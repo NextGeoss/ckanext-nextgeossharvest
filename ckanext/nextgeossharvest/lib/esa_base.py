@@ -201,7 +201,7 @@ class SentinelHarvester(HarvesterBase):
             item['code_manifest_url'] = self._make_manifest_url(item)
             if thumbnail:
                 item['code_thumbnail'] = thumbnail['href']
-        item['thumbnail'] = item.get('scihub_thumbnail') or item.get('noa_thumbnail') or item.get('code_thumbnail') # noqa: E501
+        item['thumbnail'] = item.get('scihub_thumbnail') or item.get('noa_thumbnail') or item.get('code_thumbnail')  # noqa: E501
 
         # Convert size (298.74 MB to an integer representing bytes)
         item['size'] = int(float(item['size'].split(' ')[0]) * 1000000)

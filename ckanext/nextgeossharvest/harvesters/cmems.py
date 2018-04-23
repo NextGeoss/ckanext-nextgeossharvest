@@ -70,8 +70,7 @@ class CMEMSHarvester(CMEMSBase,
 
     def fetch_stage(self, harvest_object):
         return True
-        
-    
+
     def gather_stage(self, harvest_job):
         log = logging.getLogger(__name__ + '.gather')
         log.debug('CMEMS Harvester gather_stage for job: %r', harvest_job)
@@ -90,7 +89,7 @@ class CMEMSHarvester(CMEMSBase,
         guid_to_package_id = dict((res[0], res[1]) for res in query)
         current_guids = set(guid_to_package_id.keys())
         current_guids_in_harvest = set()
-        
+
         start_date = self.source_config.get('start_date')
 
         end_date = self.source_config.get('end_date', 'NOW')
