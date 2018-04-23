@@ -299,38 +299,6 @@ class NextGEOSSHarvester(HarvesterBase):
 
         return logger
 
-    def _crawl_urls_simple(self, url, provider):
-
-        timeout = self.source_config['timeout']
-
-        # Make a request to the website
-        timestamp = str(datetime.utcnow())
-        log_message = '{:<12} | {} | {} | {}s'
-        try:
-            r = requests.get(url, timeout=timeout,
-                             auth=('ngeoss', 'NextCMEMS2017'), verify=False)
-        except Timeout as e:
-            self._save_gather_error('Request timed out: {}'.format(e), self.job)  # noqa: E501
-            status_code = 408
-            elapsed = 9999
-            if hasattr(self, 'provider_logger'):
-                self.provider_logger.info(log_message.format(provider,
-                    timestamp, status_code, timeout))  # noqa: E128
-            return 408
-
-        if r.status_code != 200:
-            self._save_gather_error('{} error: {}'.format(r.status_code, r.text), self.job)  # noqa: E501
-            elapsed = 9999
-            if hasattr(self, 'provider_logger'):
-                self.provider_logger.info(log_message.format(provider,
-                    timestamp, r.status_code, elapsed))  # noqa: E128
-            return r.status_code
-
-        if hasattr(self, 'provider_logger'):
-            self.provider_logger.info(log_message.format(provider,
-                timestamp, r.status_code, r.elapsed.total_seconds()))  # noqa: E501
-        return r.status_code
-
     def _crawl_urls_ftp(self, url, provider):
         timeout = self.source_config['timeout']
 
