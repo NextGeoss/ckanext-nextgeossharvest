@@ -160,7 +160,7 @@ class CMEMSBase(HarvesterBase):
                                       + month
                                       + day)
 
-            metadata['STARTTIME'] = (str(start_date) + 'T00:00:00.000Z')
+            metadata['StartTime'] = (str(start_date) + 'T00:00:00.000Z')
 
             metadata['StopTime'] = self._product_enddate_url_parameter(start_date)
 
