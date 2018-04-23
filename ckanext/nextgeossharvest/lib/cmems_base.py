@@ -14,8 +14,7 @@ import ckan.plugins as plugins
 from ckanext.harvest.harvesters.base import HarvesterBase
 from ckanext.harvest.model import HarvestObjectExtra as HOExtra
 from ckanext.harvest.model import HarvestObject
-from webob.datetime_utils import year
-from calendar import month
+
 
 log = logging.getLogger(__name__)
 

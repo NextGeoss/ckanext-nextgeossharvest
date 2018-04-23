@@ -10,8 +10,7 @@ from requests.exceptions import Timeout
 from datetime import datetime
 import requests
 import requests_ftp
-from requests.exceptions import ConnectionError, ConnectTimeout, ReadTimeout
-from requests.exceptions import RequestException
+from requests.exceptions import ConnectTimeout, ReadTimeout
 
 from sqlalchemy.sql import update, bindparam
 import shapely.wkt

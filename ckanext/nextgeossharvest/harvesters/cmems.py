@@ -4,12 +4,8 @@ import json
 import logging
 from datetime import timedelta, datetime
 
-from sqlalchemy import desc
-
 from ckan import model
 from ckan.plugins.core import implements
-from ckan.common import config
-
 
 from ckanext.harvest.interfaces import IHarvester
 from ckanext.harvest.model import HarvestObject
