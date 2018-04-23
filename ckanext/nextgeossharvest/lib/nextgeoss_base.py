@@ -308,7 +308,8 @@ class NextGEOSSHarvester(HarvesterBase):
         timestamp = str(datetime.utcnow())
         log_message = '{:<12} | {} | {} | {}s'
         try:
-            r = requests.get(url, timeout=timeout, auth=('ngeoss', 'NextCMEMS2017'),verify=False)
+            r = requests.get(url, timeout=timeout,
+                             auth=('ngeoss', 'NextCMEMS2017'),verify=False)
         except Timeout as e:
             self._save_gather_error('Request timed out: {}'.format(e), self.job)  # noqa: E501
             status_code = 408

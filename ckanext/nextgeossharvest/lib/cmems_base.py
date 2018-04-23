@@ -100,7 +100,7 @@ class CMEMSBase(HarvesterBase):
 
             metadata['StartTime'] = (str(start_date) + 'T00:00:00.000Z')
 
-            metadata['StopTime'] =  self._product_enddate_url_parameter(start_date)
+            metadata['StopTime'] =  self._product_enddate_url_parameter(start_date)  # noqa: E501
 
             metadata['Coordinates'] = [[-180, 90],
                                        [180, 90],
@@ -162,7 +162,7 @@ class CMEMSBase(HarvesterBase):
 
             metadata['StartTime'] = (str(start_date) + 'T00:00:00.000Z')
 
-            metadata['StopTime'] = self._product_enddate_url_parameter(start_date)
+            metadata['StopTime'] = self._product_enddate_url_parameter(start_date)  # noqa: E501
 
             metadata['Coordinates'] = [[-180, 90],
                                        [180, 90],
@@ -240,7 +240,7 @@ class CMEMSBase(HarvesterBase):
 
             metadata['StartTime'] = str(start_date) + 'T00:00:00.000Z'
 
-            metadata['StopTime'] = self._product_enddate_url_parameter(start_date)
+            metadata['StopTime'] = self._product_enddate_url_parameter(start_date)  # noqa: E501
 
             metadata['Coordinates'] = [[-180, 0],
                                        [180, 0],
@@ -328,11 +328,12 @@ class CMEMSBase(HarvesterBase):
 
                 metadata['StartTime'] = str(start_date) + 'T00:00:00.000Z'
 
-                metadata['StopTime'] = self._product_enddate_url_parameter(start_date)
+                metadata['StopTime'] = self._product_enddate_url_parameter(start_date)  # noqa: E501
 
                 metadata['BulletinDate'] = str(start_date)
 
-                metadata['ForecastDate'] = datetime.strftime(forecast_date, '%Y-%m-%d')
+                metadata['ForecastDate'] = datetime.strftime(forecast_date,
+                                                             '%Y-%m-%d')
                 metadata['Coordinates'] = [
                     [-180, 90],
                     [180, 90],
@@ -355,7 +356,8 @@ class CMEMSBase(HarvesterBase):
                                          "&styles=boxfill/rainbow"
                                          "&format=image/png"
                                          "&time="
-                                         + datetime.strftime(start_date, '%Y-%m-%d'))
+                                         + datetime.strftime(start_date,
+                                            '%Y-%m-%d'))
 
                 self._create_object(id_list, metadata, True)
 
@@ -363,8 +365,7 @@ class CMEMSBase(HarvesterBase):
         return product_start_date + timedelta(days = 1)
     
     def _product_enddate_url_parameter(self, start_date):
-        return datetime.strftime(self._product_end_date(start_date), '%Y-%m-%d') + 'T00:00:00.000Z'
-    
+        return datetime.strftime(self._product_end_date(start_date), '%Y-%m-%d') + 'T00:00:00.000Z'  # noqa: E501
     def _format_date_separed(self, date):
         day = datetime.strftime(date,'%d')
         month = datetime.strftime(date,'%m')
@@ -405,11 +406,14 @@ class CMEMSBase(HarvesterBase):
                 if harvester_type == 'sst':
                     self._get_sst_product(id_list, metadata_dict, start_date)
                 elif harvester_type == 'sic_north':
-                    self._get_sic_north_product(id_list, metadata_dict, start_date)
+                    self._get_sic_north_product(id_list, metadata_dict,
+                                                start_date)
                 elif harvester_type == 'sic_south':
-                    self._get_sic_south_product(id_list, metadata_dict, start_date)
+                    self._get_sic_south_product(id_list, metadata_dict,
+                                                start_date)
                 elif harvester_type == 'ocn':
-                    self._get_ocn_forecast_products(id_list, metadata_dict, start_date)  # noqa #E501
+                    self._get_ocn_forecast_products(id_list, metadata_dict,
+                                                    start_date)
             return id_list
         except Exception as e:
             import traceback

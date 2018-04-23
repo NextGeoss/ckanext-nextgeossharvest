@@ -93,29 +93,19 @@ class CMEMSHarvester(CMEMSBase,
         
         start_date = self.source_config.get('start_date')
 
-        
-        # log.debug('Restart date is {}'.format(restart_date))
-
-        # if self.source_config['start_date'] == 'YESTERDAY':
-        #     star_s = datetime.strftime(datetime.now()-timedelta(1), '%Y-%m-%d')
-        # else:
-        #     star_s = self.source_config['start_date']
-
-        # if self.source_config['end_date'] == 'TODAY':
-        #     end_s = datetime.today().strftime('%Y-%m-%d')
-        # else:
-        #     end_s = self.source_config['end_date']
-
         end_date = self.source_config.get('end_date', 'NOW')
         if end_date == 'NOW':
-            end_date = (datetime.now()).replace(hour=0, minute=0, second=0, microsecond=0)
+            end_date = (datetime.now()).replace(
+                hour=0, minute=0, second=0, microsecond=0)
         elif end_date == 'TODAY':
-            end_date = (datetime.now()).replace(hour=0, minute=0, second=0, microsecond=0)
+            end_date = (datetime.now()).replace(
+                hour=0, minute=0, second=0, microsecond=0)
         else:
             end_date = datetime.strptime(end_date, '%Y-%m-%d')
 
         if start_date == 'YESTERDAY':
-            start_date = (datetime.now() - timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+            start_date = (datetime.now() - timedelta(days=1)).replace(
+                hour=0, minute=0, second=0, microsecond=0)
         else:
             start_date = datetime.strptime(start_date, '%Y-%m-%d')
 
