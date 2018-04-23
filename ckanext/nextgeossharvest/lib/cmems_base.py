@@ -361,7 +361,7 @@ class CMEMSBase(HarvesterBase):
                 self._create_object(id_list, metadata, True)
 
     def _product_end_date(self, product_start_date):
-        return product_start_date + timedelta(day=1)
+        return product_start_date + timedelta(days=1)
 
     def _product_enddate_url_parameter(self, start_date):
         return datetime.strftime(self._product_end_date(start_date), '%Y-%m-%d') + 'T00:00:00.000Z'  # noqa: E501
