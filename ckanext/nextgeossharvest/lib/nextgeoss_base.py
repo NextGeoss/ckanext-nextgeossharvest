@@ -78,10 +78,14 @@ class NextGEOSSHarvester(HarvesterBase):
         context = {
             'model': model,
             'session': model.Session,
-            'user': self._get_user_name(),
+            'user': 'test_user', #self._get_user_name(),
+            'ignore_auth': True
         }
-
-        return logic.get_action('package_show')(context, {'id': package.id})
+        print package.id
+        print 'user name: {}'.format(context['user'])
+        xx = logic.get_action('package_list')(context, {})
+        print 'package_list: {}'.format(xx)
+        return logic.get_action('package_show')(context, {'id': package.name})
 
     def _refresh_harvest_objects(self, harvest_object, package_id):
         """
@@ -114,22 +118,29 @@ class NextGEOSSHarvester(HarvesterBase):
 
         harvest_object.save()
 
-    def _create_or_update_dataset(self, harvest_object, status):
+    def _create_package_dict(self, parsed_content):
         """
-        Create a data dictionary and then creating or update a dataset.
+        Create a package dictionary using the parsed content.
 
-        We may want to move this to the NextGEOSSHarvester base class."""
-        parsed_content = self._parse_content(harvest_object.content)
+        The id and owner org will be added later as they are not derived from
+        the content.
+        """
         package_dict = {}
         package_dict['name'] = parsed_content['name']
         package_dict['title'] = parsed_content['title']
         package_dict['notes'] = parsed_content['notes']
         package_dict['tags'] = parsed_content['tags']
         package_dict['extras'] = self._get_extras(parsed_content)
-        package_dict['extras'].append({
-            'key': 'harvest_source_id',
-            'value': harvest_object.harvest_source_id})
         package_dict['resources'] = self._get_resources(parsed_content)
+
+        return package_dict
+
+    def _create_or_update_dataset(self, harvest_object, status):
+        """
+        Create a data dictionary and then create or update a dataset.
+        """
+        parsed_content = self._parse_content(harvest_object.content)
+        package_dict = self._create_package_dict(parsed_content)
 
         # Add the harvester ID to the extras so that CKAN can find the
         # harvested datasets in searches for stats, etc.
@@ -280,11 +291,14 @@ class NextGEOSSHarvester(HarvesterBase):
             logger = logging.getLogger('provider_logger')
             logger.setLevel(logging.INFO)
             logger.addHandler(handler)
-
-            return logger
-
         else:
-            return None
+            handler = logging.StreamHandler()
+            handler.setFormatter(logging.Formatter('%(levelname)s | %(message)s'))  # noqa: E501
+            logger = logging.getLogger('provider_logger')
+            logger.setLevel(logging.INFO)
+            logger.addHandler(handler)
+
+        return logger
 
     def _crawl_urls_simple(self, url, provider):
 
