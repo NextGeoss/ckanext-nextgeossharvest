@@ -35,8 +35,6 @@ class CMEMSHarvester(CMEMSBase,
         try:
             config_obj = json.loads(config)
 
-            if config_obj.get('source') not in {'cmems'}:  # noqa: E501
-                raise ValueError('source is required and must be cmems')  # noqa: E501
             if config_obj.get('harvester_type') not in {'sst', 'sic_north', 'sic_south', 'ocn'}:  # noqa: E501
                 raise ValueError('harvester type is required and must be "sst" or "sic_north" or "sic_south" or "ocn"')  # noqa: E501
             if 'start_date' in config_obj:
