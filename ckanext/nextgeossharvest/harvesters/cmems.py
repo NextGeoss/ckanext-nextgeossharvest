@@ -74,18 +74,6 @@ class CMEMSHarvester(CMEMSBase,
         self.job = harvest_job
         self._set_source_config(harvest_job.source.config)
 
-        # get current objects out of db
-        query = (model
-                 .Session
-                 .query(HarvestObject.guid, HarvestObject.package_id)
-                 .filter(HarvestObject.current is True)
-                 .filter(HarvestObject.harvest_source_id ==
-                         harvest_job.source.id))
-
-        guid_to_package_id = dict((res[0], res[1]) for res in query)
-        current_guids = set(guid_to_package_id.keys())
-        current_guids_in_harvest = set()
-
         start_date = self.source_config.get('start_date')
 
         end_date = self.source_config.get('end_date', 'NOW')
@@ -109,8 +97,6 @@ class CMEMSHarvester(CMEMSBase,
         ids = self._get_metadata_create_objects(start_date,
                                                 end_date,
                                                 self.job,
-                                                current_guids,
-                                                current_guids_in_harvest,
                                                 harvester_type)
 
         return ids

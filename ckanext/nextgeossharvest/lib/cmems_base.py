@@ -25,44 +25,41 @@ class CMEMSBase(HarvesterBase):
 
         hash = hashlib.md5(json.dumps(metadata)).hexdigest()
 
-        if hash in self.current_guids:
-            self.current_guids_in_harvest.add(hash)
+        if collection_flag:
+            obj = HarvestObject(job=self.harvest_job, guid=hash, extras=[
+                HOExtra(key='status',
+                        value='new'),
+                HOExtra(key='identifier',
+                        value=metadata['identifier']),
+                HOExtra(key='download_link',
+                        value=metadata['downloadLink']),
+                HOExtra(key='dataset_name',
+                        value=metadata['datasetname']),
+                HOExtra(key='original_metadata',
+                        value=json.dumps(metadata)),
+                HOExtra(key='original_format',
+                        value='netCDF')
+            ])
         else:
-            if collection_flag:
-                obj = HarvestObject(job=self.harvest_job, guid=hash, extras=[
-                    HOExtra(key='status',
-                            value='new'),
-                    HOExtra(key='identifier',
-                            value=metadata['identifier']),
-                    HOExtra(key='download_link',
-                            value=metadata['downloadLink']),
-                    HOExtra(key='dataset_name',
-                            value=metadata['datasetname']),
-                    HOExtra(key='original_metadata',
-                            value=json.dumps(metadata)),
-                    HOExtra(key='original_format',
-                            value='netCDF')
-                ])
-            else:
-                obj = HarvestObject(job=self.harvest_job, guid=hash, extras=[
-                    HOExtra(key='status',
-                            value='new'),
-                    HOExtra(key='identifier',
-                            value=metadata['identifier']),
-                    HOExtra(key='download_link_ease',
-                            value=metadata['downloadLinkEase']),
-                    HOExtra(key='download_link_polstere',
-                            value=metadata['downloadLinkPolstere']),
-                    HOExtra(key='dataset_name',
-                            value=metadata['datasetname']),
-                    HOExtra(key='original_metadata',
-                            value=json.dumps(metadata)),
-                    HOExtra(key='original_format',
-                            value='netCDF')
-                ])
+            obj = HarvestObject(job=self.harvest_job, guid=hash, extras=[
+                HOExtra(key='status',
+                        value='new'),
+                HOExtra(key='identifier',
+                        value=metadata['identifier']),
+                HOExtra(key='download_link_ease',
+                        value=metadata['downloadLinkEase']),
+                HOExtra(key='download_link_polstere',
+                        value=metadata['downloadLinkPolstere']),
+                HOExtra(key='dataset_name',
+                        value=metadata['datasetname']),
+                HOExtra(key='original_metadata',
+                        value=json.dumps(metadata)),
+                HOExtra(key='original_format',
+                        value='netCDF')
+            ])
 
-            obj.save()
-            id_list.append(obj.id)
+        obj.save()
+        id_list.append(obj.id)
 
     def _get_sst_product(self, id_list, metadata, start_date):
         day, month, year = self._format_date_separed(start_date)
@@ -377,8 +374,6 @@ class CMEMSBase(HarvesterBase):
                                      start_date,
                                      end_date,
                                      harvest_job,
-                                     current_guids,
-                                     current_guids_in_harvest,
                                      harvester_type):
         # Get contents
         try:
@@ -390,8 +385,6 @@ class CMEMSBase(HarvesterBase):
             time_interval = end_date - start_date
 
             self.harvest_job = harvest_job
-            self.current_guids = current_guids
-            self.current_guids_in_harvest = current_guids_in_harvest
 
             print(datetime.strftime(start_date, '%Y-%m-%d'))
             print('Start date' + str(start_date))
