@@ -21,7 +21,7 @@ log = logging.getLogger(__name__)
 
 class CMEMSBase(HarvesterBase):
 
-    def _create_object(self, id_list, metadata, collection_flag):
+    def _create_object(self, metadata, collection_flag):
 
         hash = hashlib.md5(json.dumps(metadata)).hexdigest()
 
@@ -59,10 +59,13 @@ class CMEMSBase(HarvesterBase):
             ])
 
         obj.save()
-        id_list.append(obj.id)
 
-    def _get_sst_product(self, id_list, start_date):
+        return obj.id
+
+    def _get_sst_product(self, start_date):
         day, month, year = self._format_date_separed(start_date)
+
+        harvest_object_ids = []
 
         sst_ftp_link = ("ftp://cmems.isac.cnr.it/Core/"
                         "SST_GLO_SST_L4_NRT_OBSERVATIONS_010_001/"
@@ -120,10 +123,14 @@ class CMEMSBase(HarvesterBase):
                                      str(start_date) +
                                      "T12:00:00.000Z")
 
-            self._create_object(id_list, metadata, True)
+            harvest_object_id = self._create_object(metadata, True)
 
-    def _get_sic_north_product(self, id_list, start_date):
+        return harvest_object_ids.append(harvest_object_id)
+
+    def _get_sic_north_product(self, start_date):
         day, month, year = self._format_date_separed(start_date)
+
+        harvest_object_ids = []
 
         sic_north_ftp_link = ("ftp://mftp.cmems.met.no/Core/"
                               "SEAICE_GLO_SEAICE_L4_NRT_OBSERVATIONS_011_001/"
@@ -198,10 +205,14 @@ class CMEMSBase(HarvesterBase):
                                      str(start_date) +
                                      "T12:00:00.000Z")
 
-            self._create_object(id_list, metadata, False)
+            harvest_object_id = self._create_object(metadata, False)
 
-    def _get_sic_south_product(self, id_list, start_date):
+        return harvest_object_ids.append(harvest_object_id)
+
+    def _get_sic_south_product(self, start_date):
         day, month, year = self._format_date_separed(start_date)
+
+        harvest_object_ids = []
 
         sic_south_ftp_link = ("ftp://mftp.cmems.met.no/Core/"
                               "SEAICE_GLO_SEAICE_L4_NRT_OBSERVATIONS_011_001/"
@@ -279,11 +290,16 @@ class CMEMSBase(HarvesterBase):
                                      str(start_date) +
                                      "T12:00:00.000Z")
 
-            self._create_object(id_list, metadata, False)
+            harvest_object_id = self._create_object(metadata, False)
+            harvest_object_ids.append(harvest_object_id)
 
-    def _get_ocn_forecast_products(self, id_list, start_date):
+        return harvest_object_ids
+
+    def _get_ocn_forecast_products(self, start_date):
         day, month, year = self._format_date_separed(start_date)
         start_date = start_date.date()
+
+        harvest_object_ids = []
 
         for i in range(10):
 
@@ -361,7 +377,10 @@ class CMEMSBase(HarvesterBase):
                                          datetime.strftime(start_date,
                                             '%Y-%m-%d'))
 
-                self._create_object(id_list, metadata, True)
+                harvest_object_id = self._create_object(metadata, True)
+                harvest_object_ids.append(harvest_object_id)
+
+        return harvest_object_ids
 
     def _product_end_date(self, product_start_date):
         return product_start_date + timedelta(days=1)
@@ -382,7 +401,6 @@ class CMEMSBase(HarvesterBase):
                                      harvester_type):
         # Get contents
         try:
-            id_list = list()
             url = "dummy"
 
             year, month, day = str(start_date).split('-')
@@ -397,16 +415,13 @@ class CMEMSBase(HarvesterBase):
                 print('idx = ' + str(idx))
                 print('start_date = ' + str(start_date))
                 if harvester_type == 'sst':
-                    self._get_sst_product(id_list, start_date)
+                    id_list = self._get_sst_product(start_date)
                 elif harvester_type == 'sic_north':
-                    self._get_sic_north_product(id_list,
-                                                start_date)
+                    id_list = self._get_sic_north_product(start_date)
                 elif harvester_type == 'sic_south':
-                    self._get_sic_south_product(id_list,
-                                                start_date)
+                    id_list = self._get_sic_south_product(start_date)
                 elif harvester_type == 'ocn':
-                    self._get_ocn_forecast_products(id_list,
-                                                    start_date)
+                    id_list = self._get_ocn_forecast_products(start_date)
             return id_list
         except Exception as e:
             import traceback
