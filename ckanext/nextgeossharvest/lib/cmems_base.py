@@ -284,7 +284,7 @@ class CMEMSBase(HarvesterBase):
         day, month, year = self._format_date_separed(start_date)
         start_date = start_date.date()
 
-        for i in range(9):
+        for i in range(10):
 
             forecast_date = start_date + timedelta(days=i)
             fday, fmonth, fyear = self._format_date_separed(forecast_date)
