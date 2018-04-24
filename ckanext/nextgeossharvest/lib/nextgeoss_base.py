@@ -6,7 +6,6 @@ import os
 import uuid
 from os import path
 from string import Template
-from requests.exceptions import Timeout
 from datetime import datetime
 import requests
 import requests_ftp
