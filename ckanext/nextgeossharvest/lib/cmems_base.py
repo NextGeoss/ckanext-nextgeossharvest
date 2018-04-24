@@ -26,7 +26,7 @@ class CMEMSBase(HarvesterBase):
         hash = hashlib.md5(json.dumps(metadata)).hexdigest()
 
         if collection_flag:
-            obj = HarvestObject(job=self.harvest_job, guid=hash, extras=[
+            obj = HarvestObject(job=self.job, guid=hash, extras=[
                 HOExtra(key='status',
                         value='new'),
                 HOExtra(key='identifier',
@@ -41,7 +41,7 @@ class CMEMSBase(HarvesterBase):
                         value='netCDF')
             ])
         else:
-            obj = HarvestObject(job=self.harvest_job, guid=hash, extras=[
+            obj = HarvestObject(job=self.job, guid=hash, extras=[
                 HOExtra(key='status',
                         value='new'),
                 HOExtra(key='identifier',
@@ -373,7 +373,6 @@ class CMEMSBase(HarvesterBase):
     def _get_metadata_create_objects(self,
                                      start_date,
                                      end_date,
-                                     harvest_job,
                                      harvester_type):
         # Get contents
         try:
@@ -383,8 +382,6 @@ class CMEMSBase(HarvesterBase):
 
             year, month, day = str(start_date).split('-')
             time_interval = end_date - start_date
-
-            self.harvest_job = harvest_job
 
             print(datetime.strftime(start_date, '%Y-%m-%d'))
             print('Start date' + str(start_date))
@@ -410,7 +407,7 @@ class CMEMSBase(HarvesterBase):
             import traceback
             print(traceback.format_exc())
             self._save_gather_error('Unable to get content for URL: %s: %r'
-                                    % (url, e), harvest_job)
+                                    % (url, e), self.job)
             return None
 
     def _create_package_dict(self, harvest_object, context, previous_object):

@@ -96,7 +96,6 @@ class CMEMSHarvester(CMEMSBase,
 
         ids = self._get_metadata_create_objects(start_date,
                                                 end_date,
-                                                self.job,
                                                 harvester_type)
 
         return ids
