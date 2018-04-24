@@ -8,7 +8,6 @@ from ckan import model
 from ckan.plugins.core import implements
 
 from ckanext.harvest.interfaces import IHarvester
-from ckanext.harvest.model import HarvestObject
 
 from ckanext.nextgeossharvest.lib.cmems_base import CMEMSBase
 from ckanext.nextgeossharvest.lib.nextgeoss_base import NextGEOSSHarvester
@@ -112,15 +111,7 @@ class CMEMSHarvester(CMEMSBase,
 
         self._set_source_config(harvest_object.source.config)
 
-        # Get the last harvested object (if any)
-        previous_object = (model
-                           .Session
-                           .query(HarvestObject)
-                           .filter(HarvestObject.guid == harvest_object.guid)
-                           .filter(HarvestObject.current is True)
-                           .first())
-
-        self._create_package_dict(harvest_object, context, previous_object)
+        self._create_package_dict(harvest_object, context)
 
         model.Session.commit()
 

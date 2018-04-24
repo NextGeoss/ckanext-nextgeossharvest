@@ -410,7 +410,7 @@ class CMEMSBase(HarvesterBase):
                                     % (url, e), self.job)
             return None
 
-    def _create_package_dict(self, harvest_object, context, previous_object):
+    def _create_package_dict(self, harvest_object, context):
 
         original_metadata = self._get_object_extra(harvest_object,
                                                    'original_metadata')
@@ -419,12 +419,6 @@ class CMEMSBase(HarvesterBase):
 
         metadata = json.loads(original_metadata)
         uuid = self._get_object_extra(harvest_object, 'uuid')
-
-        # Flag previous object as not current anymore
-
-        if previous_object and not self.force_import:
-            previous_object.current = False
-            previous_object.add()
 
         # Update GUID with the one on the document
         iso_guid = uuid    # iso_values['guid']
@@ -558,7 +552,6 @@ class CMEMSBase(HarvesterBase):
 
         self._create_dataset(
             harvest_object,
-            previous_object,
             context,
             package_dict,
             tag_schema,
@@ -566,154 +559,113 @@ class CMEMSBase(HarvesterBase):
 
     def _create_dataset(self,
                         harvest_object,
-                        previous_object,
                         context,
                         package_dict,
                         tag_schema,
                         metadata):
 
-        status = self._get_object_extra(harvest_object, 'status')
+        package_schema = logic.schema.default_create_package_schema()
+        package_schema['tags'] = tag_schema
+        context['schema'] = package_schema
 
-        if status == 'new':
-            package_schema = logic.schema.default_create_package_schema()
-            package_schema['tags'] = tag_schema
-            context['schema'] = package_schema
+        # We need to explicitly provide a package ID,
+        # otherwise ckanext-spatial
+        # won't be be able to link the extent to the package.
+        package_dict['id'] = unicode(uuid.uuid4())
+        package_schema['id'] = [unicode]
 
-            # We need to explicitly provide a package ID,
-            # otherwise ckanext-spatial
-            # won't be be able to link the extent to the package.
-            package_dict['id'] = unicode(uuid.uuid4())
-            package_schema['id'] = [unicode]
+        # Save reference to the package on the object
+        harvest_object.package_id = package_dict['id']
+        harvest_object.add()
+        # Defer constraints and flush so the dataset can be indexed with
+        # the harvest object id (on the after_show hook from the harvester
+        # plugin)
+        model.Session.execute('SET CONSTRAINTS '
+                              'harvest_object_package_id_fkey DEFERRED')
+        model.Session.flush()
 
-            # Save reference to the package on the object
-            harvest_object.package_id = package_dict['id']
-            harvest_object.add()
-            # Defer constraints and flush so the dataset can be indexed with
-            # the harvest object id (on the after_show hook from the harvester
-            # plugin)
-            model.Session.execute('SET CONSTRAINTS '
-                                  'harvest_object_package_id_fkey DEFERRED')
-            model.Session.flush()
+        try:
+            package_id = (plugins
+                          .toolkit
+                          .get_action('package_create')
+                          (context, package_dict))
+            log.info('Created new package %s with guid %s',
+                     package_id,
+                     harvest_object.guid)
 
-            try:
-                package_id = (plugins
-                              .toolkit
-                              .get_action('package_create')
-                              (context, package_dict))
-                log.info('Created new package %s with guid %s',
-                         package_id,
-                         harvest_object.guid)
+            for key, value in metadata.iteritems():
+                # create resources
 
-                for key, value in metadata.iteritems():
-                    # create resources
+                if key == 'downloadLink':
+                    resource_dict = {}
+                    resource_dict['package_id'] = package_id
+                    resource_dict['url'] = str(value)
+                    resource_dict['name'] = 'Product Download'
+                    resource_dict['description'] = ('Download the netCDF'
+                                                    ' from CMEMS. NOTE:'
+                                                    ' DOWNLOAD REQUIRES'
+                                                    ' LOGIN')
+                    resource_dict['format'] = 'netcdf'
+                    resource_dict['mimetype'] = 'application/x-netcdf'
+                    (plugins.toolkit
+                     .get_action('resource_create')
+                     (context, resource_dict))
 
-                    if key == 'downloadLink':
-                        resource_dict = {}
-                        resource_dict['package_id'] = package_id
-                        resource_dict['url'] = str(value)
-                        resource_dict['name'] = 'Product Download'
-                        resource_dict['description'] = ('Download the netCDF'
-                                                        ' from CMEMS. NOTE:'
-                                                        ' DOWNLOAD REQUIRES'
-                                                        ' LOGIN')
-                        resource_dict['format'] = 'netcdf'
-                        resource_dict['mimetype'] = 'application/x-netcdf'
-                        (plugins.toolkit
-                         .get_action('resource_create')
-                         (context, resource_dict))
+                if key == 'downloadLinkEase':
+                    resource_dict = {}
+                    resource_dict['package_id'] = package_id
+                    resource_dict['url'] = str(value)
+                    resource_dict['name'] = 'Product Download (EASE GRID)'
+                    resource_dict['description'] = ('Download the netCDF'
+                                                    ' from CMEMS. NOTE:'
+                                                    ' DOWNLOAD REQUIRES'
+                                                    ' LOGIN')
+                    resource_dict['format'] = 'netcdf'
+                    resource_dict['mimetype'] = 'application/x-netcdf'
+                    (plugins.toolkit
+                     .get_action('resource_create')
+                     (context, resource_dict))
 
-                    if key == 'downloadLinkEase':
-                        resource_dict = {}
-                        resource_dict['package_id'] = package_id
-                        resource_dict['url'] = str(value)
-                        resource_dict['name'] = 'Product Download (EASE GRID)'
-                        resource_dict['description'] = ('Download the netCDF'
-                                                        ' from CMEMS. NOTE:'
-                                                        ' DOWNLOAD REQUIRES'
-                                                        ' LOGIN')
-                        resource_dict['format'] = 'netcdf'
-                        resource_dict['mimetype'] = 'application/x-netcdf'
-                        (plugins.toolkit
-                         .get_action('resource_create')
-                         (context, resource_dict))
+                if key == 'downloadLinkPolstere':
+                    resource_dict = {}
+                    resource_dict['package_id'] = package_id
+                    resource_dict['url'] = str(value)
+                    resource_dict['name'] = ('Product Download'
+                                             ' (Polar Stereographic)')
+                    resource_dict['description'] = ('Download the netCDF'
+                                                    ' from CMEMS. NOTE:'
+                                                    ' DOWNLOAD REQUIRES'
+                                                    ' LOGIN')
+                    resource_dict['format'] = 'netcdf'
+                    resource_dict['mimetype'] = 'application/x-netcdf'
+                    (plugins.toolkit
+                     .get_action('resource_create')
+                     (context, resource_dict))
 
-                    if key == 'downloadLinkPolstere':
-                        resource_dict = {}
-                        resource_dict['package_id'] = package_id
-                        resource_dict['url'] = str(value)
-                        resource_dict['name'] = ('Product Download'
-                                                 ' (Polar Stereographic)')
-                        resource_dict['description'] = ('Download the netCDF'
-                                                        ' from CMEMS. NOTE:'
-                                                        ' DOWNLOAD REQUIRES'
-                                                        ' LOGIN')
-                        resource_dict['format'] = 'netcdf'
-                        resource_dict['mimetype'] = 'application/x-netcdf'
-                        (plugins.toolkit
-                         .get_action('resource_create')
-                         (context, resource_dict))
+                if key == 'thumbnail':
+                    resource_dict = {}
+                    resource_dict['package_id'] = package_id
+                    resource_dict['url'] = value
+                    resource_dict['name'] = 'Thumbnail Link'
+                    resource_dict['format'] = 'png'
+                    resource_dict['mimetype'] = 'image/png'
+                    (plugins.toolkit
+                     .get_action('resource_create')(context,
+                                                    resource_dict))
 
-                    if key == 'thumbnail':
-                        resource_dict = {}
-                        resource_dict['package_id'] = package_id
-                        resource_dict['url'] = value
-                        resource_dict['name'] = 'Thumbnail Link'
-                        resource_dict['format'] = 'png'
-                        resource_dict['mimetype'] = 'image/png'
-                        (plugins.toolkit
-                         .get_action('resource_create')(context,
-                                                        resource_dict))
-
-            except plugins.toolkit.ValidationError as e:
-                self._save_object_error(
-                    'Validation Error: %s'
-                    % str(e.error_summary),
-                    harvest_object,
-                    'Import')
-                return False
-            except Exception as e:
-                self._save_object_error('Error: %s'
-                                        % str(e),
-                                        harvest_object,
-                                        'Import')
-                return False
-
-        elif status == 'change':
-
-            # Check if the modified date is more recent
-            if (not self.force_import and
-                    previous_object and
-                    harvest_object.metadata_modified_date <=
-                    previous_object.metadata_modified_date):
-                # Assign the previous job id to the new object to
-                # avoid losing history
-                harvest_object.harvest_job_id = previous_object.job.id
-                harvest_object.add()
-
-                # Delete the previous object
-                # to avoid cluttering the object table
-                previous_object.delete()
-
-                log.info('Document with GUID %s unchanged, skipping...'
-                         % (harvest_object.guid))
-            else:
-                package_schema = logic.schema.default_update_package_schema()
-                package_schema['tags'] = tag_schema
-                context['schema'] = package_schema
-
-                package_dict['id'] = harvest_object.package_id
-                try:
-                    package_id = (plugins.toolkit
-                                  .get_action('package_update')
-                                  (context, package_dict))
-                    log.info('Updated package %s with guid %s',
-                             package_id,
-                             harvest_object.guid)
-                except plugins.toolkit.ValidationError, e:
-                    self._save_object_error('Validation Error: %s'
-                                            % str(e.error_summary),
-                                            harvest_object, 'Import')
-                    return False
+        except plugins.toolkit.ValidationError as e:
+            self._save_object_error(
+                'Validation Error: %s'
+                % str(e.error_summary),
+                harvest_object,
+                'Import')
+            return False
+        except Exception as e:
+            self._save_object_error('Error: %s'
+                                    % str(e),
+                                    harvest_object,
+                                    'Import')
+            return False
 
     def _get_package_dict(self,
                           metadata,
