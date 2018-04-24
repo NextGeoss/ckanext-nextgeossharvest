@@ -75,22 +75,18 @@ class CMEMSHarvester(CMEMSBase,
         self._set_source_config(harvest_job.source.config)
 
         start_date = self.source_config.get('start_date')
-
-        end_date = self.source_config.get('end_date', 'NOW')
-        if end_date == 'NOW':
-            end_date = (datetime.now()).replace(
-                hour=0, minute=0, second=0, microsecond=0)
-        elif end_date == 'TODAY':
-            end_date = (datetime.now()).replace(
-                hour=0, minute=0, second=0, microsecond=0)
-        else:
-            end_date = datetime.strptime(end_date, '%Y-%m-%d')
-
         if start_date == 'YESTERDAY':
             start_date = (datetime.now() - timedelta(days=1)).replace(
                 hour=0, minute=0, second=0, microsecond=0)
         else:
             start_date = datetime.strptime(start_date, '%Y-%m-%d')
+
+        end_date = self.source_config.get('end_date', 'NOW')
+        if end_date in {'TODAY', 'NOW'}:
+            end_date = (datetime.now()).replace(
+                hour=0, minute=0, second=0, microsecond=0)
+        else:
+            end_date = datetime.strptime(end_date, '%Y-%m-%d')
 
         harvester_type = self.source_config.get('harvester_type')
 
