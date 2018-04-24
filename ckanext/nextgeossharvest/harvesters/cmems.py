@@ -132,7 +132,6 @@ class CMEMSHarvester(CMEMSBase,
             return False
 
         self._set_source_config(harvest_object.source.config)
-        status = self._get_object_extra(harvest_object, 'status')
 
         # Get the last harvested object (if any)
         previous_object = (model
@@ -141,11 +140,6 @@ class CMEMSHarvester(CMEMSBase,
                            .filter(HarvestObject.guid == harvest_object.guid)
                            .filter(HarvestObject.current is True)
                            .first())
-
-        if status == 'delete':
-            # Delete package
-            self._delete_dataset(self, harvest_object, context)
-            return True
 
         self._create_package_dict(harvest_object, context, previous_object)
 

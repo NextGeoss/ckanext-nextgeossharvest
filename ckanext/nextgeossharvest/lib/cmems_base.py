@@ -420,18 +420,6 @@ class CMEMSBase(HarvesterBase):
                                     % (url, e), harvest_job)
             return None
 
-    def _delete_dataset(self, harvest_object, context):
-        log = logging.getLogger(__name__ + '.import')
-        context.update({
-            'ignore_auth': True,
-        })
-
-        plugins.toolkit.get_action('package_delete')(
-            context, {'id': harvest_object.package_id})
-
-        log.info('Deleted package {0} with guid {1}'.format(
-            harvest_object.package_id, harvest_object.guid))
-
     def _create_package_dict(self, harvest_object, context, previous_object):
 
         original_metadata = self._get_object_extra(harvest_object,
