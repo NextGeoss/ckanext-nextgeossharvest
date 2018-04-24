@@ -61,7 +61,7 @@ class CMEMSBase(HarvesterBase):
         obj.save()
         id_list.append(obj.id)
 
-    def _get_sst_product(self, id_list, metadata, start_date):
+    def _get_sst_product(self, id_list, start_date):
         day, month, year = self._format_date_separed(start_date)
 
         sst_ftp_link = ("ftp://cmems.isac.cnr.it/Core/"
@@ -80,6 +80,7 @@ class CMEMSBase(HarvesterBase):
 
         if r_status_code == 226:
             start_date = start_date.date()
+            metadata = {}
             metadata['datasetname'] = ('sst-glo-l4-daily-nrt-obs-010-001-' +
                                        year +
                                        month +
@@ -121,7 +122,7 @@ class CMEMSBase(HarvesterBase):
 
             self._create_object(id_list, metadata, True)
 
-    def _get_sic_north_product(self, id_list, metadata, start_date):
+    def _get_sic_north_product(self, id_list, start_date):
         day, month, year = self._format_date_separed(start_date)
 
         sic_north_ftp_link = ("ftp://mftp.cmems.met.no/Core/"
@@ -141,6 +142,7 @@ class CMEMSBase(HarvesterBase):
 
         if r_status_code == 226:
             start_date = start_date.date()
+            metadata = {}
             metadata['datasetname'] = ('seaice-conc-north-l4-daily'
                                        '-nrt-obs-011-001-' +
                                        year +
@@ -198,7 +200,7 @@ class CMEMSBase(HarvesterBase):
 
             self._create_object(id_list, metadata, False)
 
-    def _get_sic_south_product(self, id_list, metadata, start_date):
+    def _get_sic_south_product(self, id_list, start_date):
         day, month, year = self._format_date_separed(start_date)
 
         sic_south_ftp_link = ("ftp://mftp.cmems.met.no/Core/"
@@ -219,6 +221,8 @@ class CMEMSBase(HarvesterBase):
         if r_status_code == 226:
 
             start_date = start_date.date()
+
+            metadata = {}
 
             metadata['datasetname'] = ('seaice-conc-south-l4-daily'
                                        '-nrt-obs-011-001-' +
@@ -277,7 +281,7 @@ class CMEMSBase(HarvesterBase):
 
             self._create_object(id_list, metadata, False)
 
-    def _get_ocn_forecast_products(self, id_list, metadata, start_date):
+    def _get_ocn_forecast_products(self, id_list, start_date):
         day, month, year = self._format_date_separed(start_date)
         start_date = start_date.date()
 
@@ -301,6 +305,8 @@ class CMEMSBase(HarvesterBase):
             r_status_code = self._crawl_urls_ftp(ocn_forecast_link, 'cmems')
 
             if r_status_code == 226:
+
+                metadata = {}
 
                 metadata['datasetname'] = ('arctic-forecast-' +
                                            fyear +
@@ -376,7 +382,6 @@ class CMEMSBase(HarvesterBase):
                                      harvester_type):
         # Get contents
         try:
-            metadata_dict = dict()
             id_list = list()
             url = "dummy"
 
@@ -392,15 +397,15 @@ class CMEMSBase(HarvesterBase):
                 print('idx = ' + str(idx))
                 print('start_date = ' + str(start_date))
                 if harvester_type == 'sst':
-                    self._get_sst_product(id_list, metadata_dict, start_date)
+                    self._get_sst_product(id_list, start_date)
                 elif harvester_type == 'sic_north':
-                    self._get_sic_north_product(id_list, metadata_dict,
+                    self._get_sic_north_product(id_list,
                                                 start_date)
                 elif harvester_type == 'sic_south':
-                    self._get_sic_south_product(id_list, metadata_dict,
+                    self._get_sic_south_product(id_list,
                                                 start_date)
                 elif harvester_type == 'ocn':
-                    self._get_ocn_forecast_products(id_list, metadata_dict,
+                    self._get_ocn_forecast_products(id_list,
                                                     start_date)
             return id_list
         except Exception as e:
