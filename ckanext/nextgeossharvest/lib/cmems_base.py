@@ -124,8 +124,9 @@ class CMEMSBase(HarvesterBase):
                                      "T12:00:00.000Z")
 
             harvest_object_id = self._create_object(metadata, True)
+            harvest_object_ids.append(harvest_object_id)
 
-        return harvest_object_ids.append(harvest_object_id)
+        return harvest_object_ids
 
     def _get_sic_north_product(self, start_date):
         day, month, year = self._format_date_separed(start_date)
@@ -206,8 +207,9 @@ class CMEMSBase(HarvesterBase):
                                      "T12:00:00.000Z")
 
             harvest_object_id = self._create_object(metadata, False)
+            harvest_object_ids.append(harvest_object_id)
 
-        return harvest_object_ids.append(harvest_object_id)
+        return harvest_object_ids
 
     def _get_sic_south_product(self, start_date):
         day, month, year = self._format_date_separed(start_date)
