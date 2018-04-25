@@ -299,6 +299,18 @@ class NextGEOSSHarvester(HarvesterBase):
         return logger
 
     def _crawl_urls_ftp(self, url, provider):
+        """
+        Check if a file is present on an FTP server and return the appropriate
+        status code.
+        """
+        # We need to be able to mock this for testing and requests-mock doesn't
+        # work with requests-ftp, so this is our workaround. We'll just bypass
+        # this method like so:
+        test_status_code = self.source_config.get('test_ftp_status')
+        if test_status_code:
+            return test_status_code
+
+        # And now here's the real method:
         timeout = self.source_config['timeout']
 
         # Make a request to the website
