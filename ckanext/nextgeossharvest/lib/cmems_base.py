@@ -333,7 +333,6 @@ class CMEMSBase(HarvesterBase):
         try:
             url = "dummy"
 
-            year, month, day = str(start_date).split('-')
             time_interval = end_date - start_date
 
             print(datetime.strftime(start_date, '%Y-%m-%d'))
