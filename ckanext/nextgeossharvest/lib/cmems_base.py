@@ -562,8 +562,8 @@ class CMEMSBase(HarvesterBase):
         elif harvester_type == 'ocn':
             tags_list.extend([{"name": "arctic"},
                               {"name": "arctic ocean"},
-                              {"name": "south"},
-                              {"name": "southern"},
+                              {"name": "north"},
+                              {"name": "northern"},
                               {"name": "forecast"},
                               {"name": "temperature"},
                               {"name": "salinity"},
