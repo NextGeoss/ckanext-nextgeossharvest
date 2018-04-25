@@ -325,9 +325,7 @@ class CMEMSBase(HarvesterBase):
 
         return day, month, year
 
-    def _get_metadata_create_objects(self,
-                                     start_date,
-                                     end_date,
+    def _get_metadata_create_objects(self, start_date, end_date,
                                      harvester_type):
         # Get contents
         try:
@@ -364,32 +362,6 @@ class CMEMSBase(HarvesterBase):
         # Parse document
 
         metadata = json.loads(original_metadata)
-        uuid = self._get_object_extra(harvest_object, 'uuid')
-
-        # Update GUID with the one on the document
-        iso_guid = uuid    # iso_values['guid']
-        if iso_guid and harvest_object.guid != iso_guid:
-            # First make sure there already aren't current objects
-            # with the same guid
-            existing_object = (model.Session.query(HarvestObject.id)
-                               .filter(HarvestObject.guid == iso_guid)
-                               .filter(HarvestObject.current is True)
-                               .first())
-            if existing_object:
-                self._save_object_error('Object {0} already has this guid {1}'
-                                        .format(existing_object.id, iso_guid),
-                                        harvest_object, 'Import')
-                return False
-
-            harvest_object.guid = iso_guid
-            harvest_object.add()
-
-        # Generate GUID if not present (i.e. it's a manual import)
-        if not harvest_object.guid:
-            m = hashlib.md5()
-            m.update(harvest_object.content.encode('utf8', 'ignore'))
-            harvest_object.guid = m.hexdigest()
-            harvest_object.add()
 
         # Build the package dict
 
