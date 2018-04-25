@@ -378,21 +378,12 @@ class CMEMSBase(HarvesterBase):
                         '"coordinates":[' + str(metadata['Coordinates']) +
                         ']}')
 
-        try:
-            thumbnail = metadata['thumbnail']
-            extras_dict = (self
-                           ._generateExtrasDict(
-                               name=dataset_name
-                               .upper(),
-                               metadata=metadata,
-                               thumbnail=thumbnail,
-                               spatial=spatial_json))
-        except Exception:
-            extras_dict = (self
-                           ._generateExtrasDict(
-                               name=dataset_name.upper(),
-                               metadata=metadata,
-                               spatial=spatial_json))
+        extras_dict = (self
+                       ._generateExtrasDict(
+                           name=dataset_name
+                           .upper(),
+                           metadata=metadata,
+                           spatial=spatial_json))
 
         tags_list = self._create_tags(harvest_object)
 
@@ -686,11 +677,7 @@ class CMEMSBase(HarvesterBase):
             extras_dict += [{"value": kwargs[a], "key": a}]
 
         for key, value in metadata.iteritems():
-            if (
-                    key != 'Coordinates' and
-                    key != 'metadataLink' and
-                    key != 'downloadLink' and
-                    key != 'thumbnail' and
-                    key != 'spatial'):
+            if key not in {'Coordinates', 'metadataLink', 'downloadLink',
+                           'spatial'}:
                 extras_dict += [{"value": value, "key": key}]
         return extras_dict
