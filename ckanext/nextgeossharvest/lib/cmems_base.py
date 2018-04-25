@@ -394,49 +394,7 @@ class CMEMSBase(HarvesterBase):
                                metadata=metadata,
                                spatial=spatial_json))
 
-        tags_dict = [{"name": "CMEMS"}]
-
-        if 'sst' in dataset_name.lower():
-            tags_dict.append({"name": "SST"})
-            tags_dict.append({"name": "sea surface temperature"})
-            tags_dict.append({"name": "temperature"})
-            tags_dict.append({"name": "sea"})
-            tags_dict.append({"name": "observation"})
-
-        elif 'seaice' in dataset_name.lower():
-            tags_dict.append({"name": "sea ice"})
-            tags_dict.append({"name": "ice"})
-            tags_dict.append({"name": "sea"})
-            tags_dict.append({"name": "sea ice concentration"})
-            tags_dict.append({"name": "observation"})
-
-            if 'north' in dataset_name.lower():
-                tags_dict.append({"name": "north"})
-                tags_dict.append({"name": "northern"})
-                tags_dict.append({"name": "arctic"})
-                tags_dict.append({"name": "arctic ocean"})
-
-            elif 'south' in dataset_name.lower():
-                tags_dict.append({"name": "south"})
-                tags_dict.append({"name": "Southern"})
-                tags_dict.append({"name": "antarctic"})
-                tags_dict.append({"name": "antarctic ocean"})
-
-        elif 'arctic' in dataset_name.lower():
-            tags_dict.append({"name": "arctic"})
-            tags_dict.append({"name": "arctic ocean"})
-            tags_dict.append({"name": "south"})
-            tags_dict.append({"name": "southern"})
-            tags_dict.append({"name": "forecast"})
-            tags_dict.append({"name": "temperature"})
-            tags_dict.append({"name": "salinity"})
-            tags_dict.append({"name": "sea ice"})
-            tags_dict.append({"name": "sea"})
-            tags_dict.append({"name": "ice"})
-            tags_dict.append({"name": "sea ice concentration"})
-            tags_dict.append({"name": "sea ice thickness"})
-            tags_dict.append({"name": "sea ice velocity"})
-            tags_dict.append({"name": "sea ice type"})
+        tags_list = self._create_tags(harvest_object)
 
         # ##### FINISHED ADD EXTRAS
         # Build the package dict
@@ -445,7 +403,7 @@ class CMEMSBase(HarvesterBase):
                             metadata,
                             harvest_object,
                             extras_dict,
-                            tags_dict))
+                            tags_list))
 
         if not package_dict:
             log.error(('No package dict returned,'
@@ -586,6 +544,57 @@ class CMEMSBase(HarvesterBase):
                                     harvest_object,
                                     'Import')
             return False
+
+    def _create_tags(self, harvest_object):
+        """Create a list of tags based on the type of harvester."""
+        harvester_type = self._get_object_extra(harvest_object,
+                                                'harvester_type')
+
+        tags_list = [{"name": "CMEMS"}]
+
+        if harvester_type == 'sst':
+            tags_list.extend([{"name": "SST"},
+                              {"name": "sea surface temperature"},
+                              {"name": "temperature"},
+                              {"name": "sea"},
+                              {"name": "observation"}])
+
+        elif harvester_type == 'ocn':
+            tags_list.extend([{"name": "arctic"},
+                              {"name": "arctic ocean"},
+                              {"name": "south"},
+                              {"name": "southern"},
+                              {"name": "forecast"},
+                              {"name": "temperature"},
+                              {"name": "salinity"},
+                              {"name": "sea ice"},
+                              {"name": "sea"},
+                              {"name": "ice"},
+                              {"name": "sea ice concentration"},
+                              {"name": "sea ice thickness"},
+                              {"name": "sea ice velocity"},
+                              {"name": "sea ice type"}])
+
+        else:
+            tags_list.extend([{"name": "sea ice"},
+                              {"name": "ice"},
+                              {"name": "sea"},
+                              {"name": "sea ice concentration"},
+                              {"name": "observation"}])
+
+            if harvester_type == 'sic_north':
+                tags_list.extend([{"name": "north"},
+                                  {"name": "northern"},
+                                  {"name": "arctic"},
+                                  {"name": "arctic ocean"}])
+
+            elif harvester_type == 'sic_south':
+                tags_list.extend([{"name": "south"},
+                                  {"name": "Southern"},
+                                  {"name": "antarctic"},
+                                  {"name": "antarctic ocean"}])
+
+        return tags_list
 
     def _get_package_dict(self,
                           metadata,
