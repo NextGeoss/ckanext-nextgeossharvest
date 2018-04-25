@@ -34,7 +34,9 @@ class CMEMSBase(HarvesterBase):
                   HOExtra(key='original_metadata',
                           value=json.dumps(metadata)),
                   HOExtra(key='original_format',
-                          value='netCDF')]
+                          value='netCDF'),
+                  HOExtra(key='harvester_type',
+                          value=harvester_type)]
 
         if harvester_type in {'sst', 'ocn'}:
             extras.append(HOExtra(key='download_link',
