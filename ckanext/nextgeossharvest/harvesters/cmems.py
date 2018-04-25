@@ -4,7 +4,6 @@ import json
 import logging
 from datetime import timedelta, datetime
 
-from ckan import model
 from ckan.plugins.core import implements
 
 from ckanext.harvest.interfaces import IHarvester
@@ -63,9 +62,6 @@ class CMEMSHarvester(CMEMSBase,
 
         return config
 
-    def fetch_stage(self, harvest_object):
-        return True
-
     def gather_stage(self, harvest_job):
         log = logging.getLogger(__name__ + '.gather')
         log.debug('CMEMS Harvester gather_stage for job: %r', harvest_job)
@@ -95,24 +91,5 @@ class CMEMSHarvester(CMEMSBase,
 
         return ids
 
-    def import_stage(self, harvest_object):
-        context = {
-            'model': model,
-            'session': model.Session,
-            'user': self._get_user_name(),
-        }
-
-        log = logging.getLogger(__name__ + '.import')
-        log.debug('Import stage for harvest object: %s', harvest_object.id)
-
-        if not harvest_object:
-            log.error('No harvest object received')
-            return False
-
-        self._set_source_config(harvest_object.source.config)
-
-        self._create_package_dict(harvest_object, context)
-
-        model.Session.commit()
-
+    def fetch_stage(self, harvest_object):
         return True
