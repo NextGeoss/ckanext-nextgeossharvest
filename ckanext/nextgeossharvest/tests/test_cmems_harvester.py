@@ -58,14 +58,15 @@ ocn = {
     },
     'config': {
         'harvester_type': 'ocn',
-        'start_date': 'YESTERDAY',
-        'end_date': 'TODAY',
+        'start_date': '2018-01-01',
+        'end_date': '2018-01-3',
         'timeout': 10
     }
 }
 
 
-def test_harvester(test_config=ocn, test_ftp_status=226, expected=10):
+# We're simulating a run covering two days
+def test_harvester(test_config=ocn, test_ftp_status=226, expected=20):
         """
         Test the harvester by running it for real with mocked requests.
 
