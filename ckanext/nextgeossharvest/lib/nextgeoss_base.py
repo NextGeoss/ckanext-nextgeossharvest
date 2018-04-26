@@ -4,7 +4,6 @@ import json
 import logging
 import os
 import uuid
-from os import path
 from string import Template
 from datetime import datetime
 import requests
@@ -302,10 +301,12 @@ class NextGEOSSHarvester(HarvesterBase):
         """
         # We need to be able to mock this for testing and requests-mock doesn't
         # work with requests-ftp, so this is our workaround. We'll just bypass
-        # this method like so:
-        test_status_code = self.source_config.get('test_ftp_status')
-        if test_status_code:
-            return test_status_code
+        # this method like so (the real method returns either an int or None):
+        test_ftp_status = self.source_config.get('test_ftp_status')
+        if test_ftp_status == 'ok':
+            return 10000
+        elif test_ftp_status == 'error':
+            return None
 
         # And now here's the real method:
         timeout = self.source_config['timeout']
@@ -316,28 +317,26 @@ class NextGEOSSHarvester(HarvesterBase):
         try:
             requests_ftp.monkeypatch_session()
             s = requests.Session()
-            file_directory = path.dirname(url)
-            file_name = path.basename(url)
-            r = s.list(file_directory, auth=('ngeoss', 'NextCMEMS2017'),
-                       timeout=timeout)
-            status_code = 999
-            if file_name in r.content:
-                status_code = 226
-                elapsed = r.elapsed.total_seconds()
+            r = s.size(url, auth=('ngeoss', 'NextCMEMS2017'), timeout=timeout)
+            status_code = r.status_code
+            elapsed = r.elapsed.total_seconds()
         except (ConnectTimeout, ReadTimeout) as e:
             self._save_gather_error('Request timed out: {}'.format(e), self.job)  # noqa: E501
             status_code = 408
             elapsed = 9999
 
-        if status_code not in {226, 408}:
+        if status_code == 213:
+            size = int(r.text)
+        else:
+            size = None
+
+        if status_code not in {213, 408}:
             self._save_gather_error(
-                '{} error: {}'.format(status_code, 'Error or file not found'),
-                self.job)
-            elapsed = 9999
+                '{} error: {}'.format(status_code, r.text), self.job)
 
         self.provider_logger.info(log_message.format(provider, timestamp,
                                                      status_code, elapsed))
-        return status_code
+        return size
 
     def import_stage(self, harvest_object):
         log = logging.getLogger(__name__ + '.import')

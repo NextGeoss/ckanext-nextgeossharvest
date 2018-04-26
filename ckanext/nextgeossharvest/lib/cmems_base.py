@@ -18,13 +18,13 @@ log = logging.getLogger(__name__)
 
 class CMEMSBase(HarvesterBase):
 
-    def _create_object(self, identifier, ftp_link, forecast_date):
+    def _create_object(self, identifier, ftp_link, size, forecast_date):
 
         extras = [HOExtra(key='status',
                           value='new')]
 
         content = json.dumps({'identifier': identifier, 'ftp_link': ftp_link,
-                              'start_date': self.start_date,
+                              'size': size, 'start_date': self.start_date,
                               'forecast_date': forecast_date}, default=str)
 
         obj = HarvestObject(job=self.job, guid=unicode(uuid.uuid4()),
@@ -52,11 +52,12 @@ class CMEMSBase(HarvesterBase):
                     ftp_link = self._make_ftp_link(day, month,
                                                    year, fday, fmonth, fyear)
 
-                    r_status_code = self._crawl_urls_ftp(ftp_link, 'cmems')
+                    size = self._crawl_urls_ftp(ftp_link, 'cmems')
 
-                    if r_status_code == 226:
+                    if size:
                         harvest_object_id = self._create_object(identifier,
                                                                 ftp_link,
+                                                                size,
                                                                 forecast_date)
                         harvest_object_ids.append(harvest_object_id)
 
@@ -68,11 +69,12 @@ class CMEMSBase(HarvesterBase):
                 ftp_link = self._make_ftp_link(day, month,
                                                year)
 
-                r_status_code = self._crawl_urls_ftp(ftp_link, 'cmems')
+                size = self._crawl_urls_ftp(ftp_link, 'cmems')
 
-                if r_status_code == 226:
+                if size:
                     harvest_object_id = self._create_object(identifier,
                                                             ftp_link,
+                                                            size,
                                                             None)
                     harvest_object_ids.append(harvest_object_id)
 
@@ -401,6 +403,7 @@ class CMEMSBase(HarvesterBase):
         metadata['name'] = metadata['identifier'].lower()
         metadata['StartTime'] = '{}T00:00:00.000Z'.format(start_date_string)
         metadata['StopTime'] = self._make_stop_time(start_date)
+        metadata['size'] = content['size']
 
         # For now, the collection name and description are the same as the
         # title and notes, though one or the other should probably change in
@@ -450,11 +453,13 @@ class CMEMSBase(HarvesterBase):
 
         if self.harvester_type in {'sst', 'ocn'}:
             resources.append(self._make_resource(metadata['downloadLink'],
-                                                 'Product Download'))
+                                                 'Product Download',
+                                                 metadata['size']))
 
         else:
             resources.append(self._make_resource(metadata['downloadLinkEase'],
-                                                 'Product Download (EASE GRID)'))  # noqa: E501
+                                                 'Product Download (EASE GRID)',  # noqa: E501,
+                                                 metadata['size']))
             resources.append(self._make_resource(metadata['downloadLinkPolstere'],  # noqa: E501
                                                  'Product Download (Polar Stereographic)'))  # noqa: E501
 
@@ -463,7 +468,7 @@ class CMEMSBase(HarvesterBase):
 
         return resources
 
-    def _make_resource(self, url, name):
+    def _make_resource(self, url, name, size=None):
         """Return a resource dictionary."""
         resource_dict = {}
         resource_dict['name'] = name
@@ -478,6 +483,8 @@ class CMEMSBase(HarvesterBase):
                                             ' from CMEMS. NOTE:'
                                             ' DOWNLOAD REQUIRES'
                                             ' LOGIN')
+        if size:
+            resource_dict['size'] = size
 
         return resource_dict
 

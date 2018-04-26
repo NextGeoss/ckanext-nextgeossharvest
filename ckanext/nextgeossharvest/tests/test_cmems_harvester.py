@@ -66,7 +66,7 @@ ocn = {
 
 
 # We're simulating a run covering two days
-def test_harvester(test_config=ocn, test_ftp_status=226, expected=20):
+def test_harvester(test_config=ocn, test_ftp_status='ok', expected=20):
         """
         Test the harvester by running it for real with mocked requests.
 
