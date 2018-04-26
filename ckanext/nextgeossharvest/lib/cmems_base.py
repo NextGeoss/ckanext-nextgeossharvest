@@ -153,11 +153,9 @@ class CMEMSBase(HarvesterBase):
                     day +
                     "-fv02.0.nc")
 
-    def _product_end_date(self, product_start_date):
-        return product_start_date + timedelta(days=1)
-
-    def _product_enddate_url_parameter(self, start_date):
-        return datetime.strftime(self._product_end_date(start_date), '%Y-%m-%d') + 'T00:00:00.000Z'  # noqa: E501
+    def _make_stop_time(self, start_date):
+        stop_date = start_date + timedelta(days=1)
+        return '{}T00:00:00.000Z'.format(stop_date.date())
 
     def _format_date_separed(self, date):
         day = datetime.strftime(date, '%d')
@@ -257,7 +255,7 @@ class CMEMSBase(HarvesterBase):
             forecast_date = deserialize_date(content['forecast_date'])
             fday, fmonth, fyear = self._format_date_separed(forecast_date)
 
-        start_date_as_date = start_date.date()
+        start_date_string = str(start_date.date())
 
         spatial_template = '{{"type":"Polygon", "coordinates":[{}]}}'
         metadata = {}
@@ -287,7 +285,7 @@ class CMEMSBase(HarvesterBase):
                                      "&styles=boxfill/rainbow"
                                      "&format=image/png"
                                      "&time=" +
-                                     str(start_date_as_date) +
+                                     start_date_string +
                                      "T12:00:00.000Z")
 
         elif self.harvester_type == 'sic_north':
@@ -330,7 +328,7 @@ class CMEMSBase(HarvesterBase):
                                      "&styles=boxfill/rainbow"
                                      "&format=image/png"
                                      "&time=" +
-                                     str(start_date_as_date) +
+                                     start_date_string +
                                      "T12:00:00.000Z")
 
         elif self.harvester_type == 'sic_south':
@@ -373,7 +371,7 @@ class CMEMSBase(HarvesterBase):
                                      "&styles=boxfill/rainbow"
                                      "&format=image/png"
                                      "&time=" +
-                                     str(start_date_as_date) +
+                                     start_date_string +
                                      "T12:00:00.000Z")
 
         elif self.harvester_type == 'ocn':
@@ -384,7 +382,7 @@ class CMEMSBase(HarvesterBase):
                                  " including temperature, salinity, sea ice"
                                  " concentration, sea ice thickness, sea ice velocity"  # noqa E501
                                  " and sea ice type.")
-            metadata['BulletinDate'] = str(start_date_as_date)
+            metadata['BulletinDate'] = start_date_string
             metadata['ForecastDate'] = datetime.strftime(forecast_date,
                                                          '%Y-%m-%d')
             metadata['spatial'] = spatial_template.format([[-180, 90],
@@ -406,7 +404,7 @@ class CMEMSBase(HarvesterBase):
                                      "&styles=boxfill/rainbow"
                                      "&format=image/png"
                                      "&time=" +
-                                     str(start_date_as_date))
+                                     start_date_string)
 
         # Is there any way to determine the size of the downloads?
         # Would be good to have (or possibly required) in some cases, like
@@ -415,8 +413,8 @@ class CMEMSBase(HarvesterBase):
         # Add common metadata
         metadata['identifier'] = content['identifier']
         metadata['name'] = metadata['identifier'].lower()
-        metadata['StartTime'] = (str(start_date_as_date) + 'T00:00:00.000Z')
-        metadata['StopTime'] = self._product_enddate_url_parameter(start_date_as_date)  # noqa: E501
+        metadata['StartTime'] = '{}T00:00:00.000Z'.format(start_date_string)
+        metadata['StopTime'] = self._make_stop_time(start_date)
 
         # For now, the collection name and description are the same as the
         # title and notes, though one or the other should probably change in
