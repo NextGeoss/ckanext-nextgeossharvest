@@ -68,6 +68,7 @@ class CMEMSHarvester(CMEMSBase,
 
         self.job = harvest_job
         self._set_source_config(harvest_job.source.config)
+        self.harvester_type = self.source_config['harvester_type']
 
         start_date = self.source_config.get('start_date')
         if start_date == 'YESTERDAY':
@@ -83,11 +84,8 @@ class CMEMSHarvester(CMEMSBase,
         else:
             end_date = datetime.strptime(end_date, '%Y-%m-%d')
 
-        harvester_type = self.source_config.get('harvester_type')
-
         ids = self._get_metadata_create_objects(start_date,
-                                                end_date,
-                                                harvester_type)
+                                                end_date)
 
         return ids
 

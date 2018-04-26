@@ -18,7 +18,7 @@ log = logging.getLogger(__name__)
 
 class CMEMSBase(HarvesterBase):
 
-    def _create_object(self, harvester_type, identifier, ftp_link,
+    def _create_object(self, identifier, ftp_link,
                        start_date, forecast_date):
 
         extras = [HOExtra(key='status',
@@ -35,47 +35,45 @@ class CMEMSBase(HarvesterBase):
 
         return obj.id
 
-    def _get_products(self, harvester_type, start_date):
+    def _get_products(self, start_date):
         day, month, year = self._format_date_separed(start_date)
 
         harvest_object_ids = []
 
-        if harvester_type == 'ocn':
+        if self.harvester_type == 'ocn':
             for i in range(10):
                 forecast_date = start_date + timedelta(days=i)
                 fday, fmonth, fyear = self._format_date_separed(forecast_date)
 
-                identifier = self._make_identifier(harvester_type, day, month,
+                identifier = self._make_identifier(day, month,
                                                    year, fday, fmonth, fyear)
 
                 if not self._was_harvested(identifier):
 
-                    ftp_link = self._make_ftp_link(harvester_type, day, month,
+                    ftp_link = self._make_ftp_link(day, month,
                                                    year, fday, fmonth, fyear)
 
                     r_status_code = self._crawl_urls_ftp(ftp_link, 'cmems')
 
                     if r_status_code == 226:
-                        harvest_object_id = self._create_object(harvester_type,
-                                                                identifier,
+                        harvest_object_id = self._create_object(identifier,
                                                                 ftp_link,
                                                                 start_date,
                                                                 forecast_date)
                         harvest_object_ids.append(harvest_object_id)
 
         else:
-            identifier = self._make_identifier(harvester_type, day, month,
+            identifier = self._make_identifier(day, month,
                                                year)
 
             if not self._was_harvested(identifier):
-                ftp_link = self._make_ftp_link(harvester_type, day, month,
+                ftp_link = self._make_ftp_link(day, month,
                                                year)
 
                 r_status_code = self._crawl_urls_ftp(ftp_link, 'cmems')
 
                 if r_status_code == 226:
-                    harvest_object_id = self._create_object(harvester_type,
-                                                            identifier,
+                    harvest_object_id = self._create_object(identifier,
                                                             ftp_link,
                                                             start_date,
                                                             None)
@@ -98,13 +96,13 @@ class CMEMSBase(HarvesterBase):
             log.debug('{} has not been harvested before. Attempting to harvest it.'.format(identifier))  # noqa: E501
             return False
 
-    def _make_ftp_link(self, harvester_type, day, month, year, fday=None,
+    def _make_ftp_link(self, day, month, year, fday=None,
                        fmonth=None, fyear=None):
         """
         Construct a link to a product based on the harvest type and start date.
         """
 
-        if harvester_type == 'sst':
+        if self.harvester_type == 'sst':
             return ("ftp://cmems.isac.cnr.it/Core/"
                     "SST_GLO_SST_L4_NRT_OBSERVATIONS_010_001/"
                     "METOFFICE-GLO-SST-L4-NRT-OBS-SST-V2/" +
@@ -117,7 +115,7 @@ class CMEMSBase(HarvesterBase):
                     day +
                     "120000-UKMO-L4_GHRSST-SSTfnd-OSTIA-GLOB-v02.0-fv02.0.nc")
 
-        elif harvester_type == 'sic_north':
+        elif self.harvester_type == 'sic_north':
             return ("ftp://mftp.cmems.met.no/Core/"
                     "SEAICE_GLO_SEAICE_L4_NRT_OBSERVATIONS_011_001/"
                     "METNO-GLO-SEAICE_CONC-NORTH-L4-NRT-OBS/" +
@@ -131,7 +129,7 @@ class CMEMSBase(HarvesterBase):
                     day +
                     "1200.nc")
 
-        elif harvester_type == 'sic_south':
+        elif self.harvester_type == 'sic_south':
             return ("ftp://mftp.cmems.met.no/Core/"
                     "SEAICE_GLO_SEAICE_L4_NRT_OBSERVATIONS_011_001/"
                     "METNO-GLO-SEAICE_CONC-SOUTH-L4-NRT-OBS/" +
@@ -145,7 +143,7 @@ class CMEMSBase(HarvesterBase):
                     day +
                     "1200.nc")
 
-        elif harvester_type == 'ocn':
+        elif self.harvester_type == 'ocn':
             return ("ftp://mftp.cmems.met.no/Core/"
                     "ARCTIC_ANALYSIS_FORECAST_PHYS_002_001_a/"
                     "dataset-topaz4-arc-myoceanv2-be/" +
@@ -171,8 +169,7 @@ class CMEMSBase(HarvesterBase):
 
         return day, month, year
 
-    def _get_metadata_create_objects(self, start_date, end_date,
-                                     harvester_type):
+    def _get_metadata_create_objects(self, start_date, end_date):
         # Get contents
         try:
             url = "dummy"
@@ -187,7 +184,7 @@ class CMEMSBase(HarvesterBase):
                 start_date = base_start_date + timedelta(days=idx)
                 print('idx = ' + str(idx))
                 print('start_date = ' + str(start_date))
-                id_list = self._get_products(harvester_type, start_date)
+                id_list = self._get_products(start_date)
 
             return id_list
 
@@ -199,18 +196,18 @@ class CMEMSBase(HarvesterBase):
 
             return None
 
-    def _create_tags(self, harvester_type):
+    def _create_tags(self):
         """Create a list of tags based on the type of harvester."""
         tags_list = [{"name": "CMEMS"}]
 
-        if harvester_type == 'sst':
+        if self.harvester_type == 'sst':
             tags_list.extend([{"name": "SST"},
                               {"name": "sea surface temperature"},
                               {"name": "temperature"},
                               {"name": "sea"},
                               {"name": "observation"}])
 
-        elif harvester_type == 'ocn':
+        elif self.harvester_type == 'ocn':
             tags_list.extend([{"name": "arctic"},
                               {"name": "arctic ocean"},
                               {"name": "north"},
@@ -233,13 +230,13 @@ class CMEMSBase(HarvesterBase):
                               {"name": "sea ice concentration"},
                               {"name": "observation"}])
 
-            if harvester_type == 'sic_north':
+            if self.harvester_type == 'sic_north':
                 tags_list.extend([{"name": "north"},
                                   {"name": "northern"},
                                   {"name": "arctic"},
                                   {"name": "arctic ocean"}])
 
-            elif harvester_type == 'sic_south':
+            elif self.harvester_type == 'sic_south':
                 tags_list.extend([{"name": "south"},
                                   {"name": "Southern"},
                                   {"name": "antarctic"},
@@ -253,7 +250,7 @@ class CMEMSBase(HarvesterBase):
         Parse the entry content and return a dictionary using our standard
         metadata terms.
         """
-        harvester_type = self.source_config['harvester_type']
+        self.harvester_type = self.source_config['harvester_type']
 
         content = json.loads(content)
         ftp_link = content['ftp_link']
@@ -269,7 +266,7 @@ class CMEMSBase(HarvesterBase):
         spatial_template = '{{"type":"Polygon", "coordinates":[{}]}}'
         metadata = {}
 
-        if harvester_type == 'sst':
+        if self.harvester_type == 'sst':
             metadata['collection_id'] = ('METOFFICE-GLO-SST-L4-NRT-OBS-SST-V2')
             metadata['title'] = "Global Observed Sea Surface Temperature"
             metadata['notes'] = ("Daily analysis of sea surface temperature (SST),"  # noqa: E501
@@ -297,7 +294,7 @@ class CMEMSBase(HarvesterBase):
                                      str(start_date) +
                                      "T12:00:00.000Z")
 
-        elif harvester_type == 'sic_north':
+        elif self.harvester_type == 'sic_north':
             metadata['collection_id'] = ('METNO-GLO-SEAICE_CONC-NORTH-L4-NRT-OBS')  # noqa E501
             metadata['title'] = ("Arctic Ocean Observed Sea Ice"
                                  " Concentration")
@@ -340,7 +337,7 @@ class CMEMSBase(HarvesterBase):
                                      str(start_date) +
                                      "T12:00:00.000Z")
 
-        elif harvester_type == 'sic_south':
+        elif self.harvester_type == 'sic_south':
             metadata['collection_id'] = ('METNO-GLO-SEAICE_CONC-SOUTH-L4-NRT-OBS')  # noqa E501
             metadata['title'] = ("Antarctic Ocean Observed"
                                  " Sea Ice Concentration")
@@ -383,7 +380,7 @@ class CMEMSBase(HarvesterBase):
                                      str(start_date) +
                                      "T12:00:00.000Z")
 
-        elif harvester_type == 'ocn':
+        elif self.harvester_type == 'ocn':
             metadata['collection_id'] = 'ARCTIC_ANALYSIS_FORECAST_PHYS_002_001_A'  # noqa E501
             metadata['title'] = "Arctic Ocean Physics Analysis and Forecast"
             metadata['notes'] = ("Daily Arctic Ocean physics analysis to provide 10"  # noqa E501
@@ -423,7 +420,6 @@ class CMEMSBase(HarvesterBase):
         # Add common metadata
         metadata['identifier'] = content['identifier']
         metadata['name'] = metadata['identifier'].lower()
-        print metadata['name']
         metadata['StartTime'] = (str(start_date) + 'T00:00:00.000Z')
         metadata['StopTime'] = self._product_enddate_url_parameter(start_date)
 
@@ -433,7 +429,7 @@ class CMEMSBase(HarvesterBase):
         metadata['collection_name'] = metadata['title']
         metadata['collection_description'] = metadata['notes']
 
-        metadata['tags'] = self._create_tags(harvester_type)
+        metadata['tags'] = self._create_tags()
 
         # Add time range metadata that's not tied to product-specific fields
         # like StartTime so that we can filter by a dataset's time range
@@ -448,23 +444,23 @@ class CMEMSBase(HarvesterBase):
 
         return metadata
 
-    def _make_identifier(self, harvester_type, day, month, year,
+    def _make_identifier(self, day, month, year,
                          fday=None, fmonth=None, fyear=None):
         """
         Make an identifier for the product according to how it's identified at
         the source.
         """
-        if harvester_type == 'sst':
+        if self.harvester_type == 'sst':
             return 'SST-GLO-L4-DAILY-NRT-OBS-010-001-{}{}{}'.format(year,
                                                                     month,
                                                                     day)
-        elif harvester_type == 'sic_north':
+        elif self.harvester_type == 'sic_north':
             return 'SEAICE-CONC-NORTH-L4-DAILY-NRT-OBS-011-001-{}{}{}'.format(
                 year, month, day)
-        elif harvester_type == 'sic_south':
+        elif self.harvester_type == 'sic_south':
             return 'SEAICE-CONC-SOUTH-L4-DAILY-NRT-OBS-011-001{}{}{}'.format(
                 year, month, day)
-        elif harvester_type == 'ocn':
+        elif self.harvester_type == 'ocn':
             return 'ARCTIC-FORECAST-{}{}{}-PHYS-002-001-{}{}{}'.format(
                 fyear, fmonth, fday, year, month, day)
 
@@ -472,9 +468,8 @@ class CMEMSBase(HarvesterBase):
     def _get_resources(self, metadata):
         """Return a list of resource dictionaries."""
         resources = []
-        harvester_type = self.source_config['harvester_type']
 
-        if harvester_type in {'sst', 'ocn'}:
+        if self.harvester_type in {'sst', 'ocn'}:
             resources.append(self._make_resource(metadata['downloadLink'],
                                                  'Product Download'))
 
