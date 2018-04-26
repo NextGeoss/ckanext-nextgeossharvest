@@ -168,14 +168,9 @@ class CMEMSBase(HarvesterBase):
         # Get contents
         time_interval = self.end_date - self.start_date
 
-        print(datetime.strftime(self.start_date, '%Y-%m-%d'))
-        print('Start date' + str(self.start_date))
-
         ids = []
         for idx in range(time_interval.days):
             self.start_date = self.start_date + timedelta(days=idx)
-            print('idx = ' + str(idx))
-            print('start_date = ' + str(self.start_date))
             new_ids = self._get_products()
             ids.extend(new_ids)
 

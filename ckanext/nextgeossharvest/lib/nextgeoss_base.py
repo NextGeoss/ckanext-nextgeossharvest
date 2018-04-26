@@ -79,10 +79,7 @@ class NextGEOSSHarvester(HarvesterBase):
             'user': 'test_user',  # self._get_user_name(),
             'ignore_auth': True
         }
-        print package.id
-        print 'user name: {}'.format(context['user'])
-        xx = logic.get_action('package_list')(context, {})
-        print 'package_list: {}'.format(xx)
+
         return logic.get_action('package_show')(context, {'id': package.name})
 
     def _refresh_harvest_objects(self, harvest_object, package_id):
