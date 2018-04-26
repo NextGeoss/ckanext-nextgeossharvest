@@ -414,6 +414,12 @@ class CMEMSBase(HarvesterBase):
         metadata['StartTime'] = (str(start_date) + 'T00:00:00.000Z')
         metadata['StopTime'] = self._product_enddate_url_parameter(start_date)
 
+        # For now, the collection name and description are the same as the
+        # title and notes, though one or the other should probably change in
+        # the future.
+        metadata['collection_name'] = metadata['title']
+        metadata['collection_description'] = metadata['notes']
+
         metadata['tags'] = self._create_tags(harvester_type)
 
         # Add time range metadata that's not tied to product-specific fields
