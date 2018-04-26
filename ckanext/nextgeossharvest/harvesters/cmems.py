@@ -2,7 +2,7 @@
 
 import json
 import logging
-from datetime import timedelta, datetime
+from datetime import datetime
 
 from ckan.plugins.core import implements
 
@@ -37,22 +37,28 @@ class CMEMSHarvester(CMEMSBase,
                 raise ValueError('harvester type is required and must be "sst" or "sic_north" or "sic_south" or "ocn"')  # noqa: E501
             if 'start_date' in config_obj:
                 try:
-                    if config_obj['start_date'] != 'YESTERDAY':
-                        datetime.strptime(config_obj['start_date'],
-                                          '%Y-%m-%d')
+                    start_date = config_obj['start_date']
+                    if start_date != 'YESTERDAY':
+                        start_date = datetime.strptime(start_date, '%Y-%m-%d')
+                    else:
+                        start_date = self.convert_date_config(start_date)
                 except ValueError:
                     raise ValueError('start_date format must be yyyy-mm-dd')
             else:
                 raise ValueError('start_date is required')
             if 'end_date' in config_obj:
                 try:
-                    if config_obj['end_date'] != 'TODAY':
-                        datetime.strptime(config_obj['end_date'],
-                                          '%Y-%m-%d')
+                    end_date = config_obj['end_date']
+                    if end_date != 'TODAY':
+                        end_date = datetime.strptime(end_date, '%Y-%m-%d')
+                    else:
+                        end_date = self.convert_date_config(end_date)
                 except ValueError:
                     raise ValueError('end_date format must be yyyy-mm-dd')
             else:
                 raise ValueError('end_date is required')
+            if not end_date > start_date:
+                raise ValueError('end_date must be after start_date')
             if 'timeout' in config_obj:
                 timeout = config_obj['timeout']
                 if not isinstance(timeout, int) and not timeout > 0:
@@ -72,16 +78,14 @@ class CMEMSHarvester(CMEMSBase,
 
         start_date = self.source_config.get('start_date')
         if start_date == 'YESTERDAY':
-            start_date = (datetime.now() - timedelta(days=1)).replace(
-                hour=0, minute=0, second=0, microsecond=0)
+            start_date = self.convert_date_config(start_date)
         else:
             start_date = datetime.strptime(start_date, '%Y-%m-%d')
         self.start_date = start_date
 
         end_date = self.source_config.get('end_date', 'NOW')
         if end_date in {'TODAY', 'NOW'}:
-            end_date = (datetime.now()).replace(
-                hour=0, minute=0, second=0, microsecond=0)
+            end_date = self.convert_date_config(end_date)
         else:
             end_date = datetime.strptime(end_date, '%Y-%m-%d')
         self.end_date = end_date
