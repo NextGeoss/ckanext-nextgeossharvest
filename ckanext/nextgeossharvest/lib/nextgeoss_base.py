@@ -321,7 +321,8 @@ class NextGEOSSHarvester(HarvesterBase):
             s = requests.Session()
             file_directory = path.dirname(url)
             file_name = path.basename(url)
-            r = s.list(file_directory, auth=('ngeoss', 'NextCMEMS2017'))
+            r = s.list(file_directory, auth=('ngeoss', 'NextCMEMS2017'),
+                       timeout=timeout)
             status_code = 999
             if file_name in r.content:
                 status_code = 226
