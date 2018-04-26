@@ -65,10 +65,6 @@ ocn = {
 }
 
 
-# NOTE: The old CMEMS code didn't properly check if a product had already been
-# harvested, so the revised code, which hasn't added a check yet, should
-# expect the number of updates to match the number of files "found" while
-# harvesting.
 def test_harvester(test_config=ocn, test_ftp_status=226, expected=10):
         """
         Test the harvester by running it for real with mocked requests.
@@ -121,7 +117,7 @@ def test_harvester(test_config=ocn, test_ftp_status=226, expected=10):
         assert source['status']['last_job']['status'] == 'Finished'
         assert source['status']['last_job']['stats']['added'] == expected
 
-        # Re-run the harvester
+        # Re-run the harvester without forcing updates
         job_dict = get_action('harvest_job_create')(
             context, {'source_id': source['id']})
         job_obj = HarvestJob.get(job_dict['id'])
@@ -134,7 +130,7 @@ def test_harvester(test_config=ocn, test_ftp_status=226, expected=10):
 
         assert source['status']['last_job']['status'] == 'Finished'
         assert source['status']['last_job']['stats']['added'] == 0
-        assert source['status']['last_job']['stats']['updated'] == expected
+        assert source['status']['last_job']['stats']['updated'] == 0
 
         # Verify that the org has the expected number of datasets now
         org_response = helpers.call_action('organization_show', context,

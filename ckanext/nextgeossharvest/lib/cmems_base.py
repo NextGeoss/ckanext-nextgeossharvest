@@ -5,6 +5,9 @@ import json
 from datetime import timedelta, datetime
 import uuid
 
+from ckan.model import Session
+from ckan.model import Package
+
 from ckanext.harvest.harvesters.base import HarvesterBase
 from ckanext.harvest.model import HarvestObjectExtra as HOExtra
 from ckanext.harvest.model import HarvestObject
@@ -15,13 +18,14 @@ log = logging.getLogger(__name__)
 
 class CMEMSBase(HarvesterBase):
 
-    def _create_object(self, harvester_type, ftp_link,
+    def _create_object(self, harvester_type, identifier, ftp_link,
                        start_date, forecast_date):
 
         extras = [HOExtra(key='status',
                           value='new')]
 
-        content = json.dumps({'ftp_link': ftp_link, 'start_date': start_date,
+        content = json.dumps({'identifier': identifier, 'ftp_link': ftp_link,
+                              'start_date': start_date,
                               'forecast_date': forecast_date}, default=str)
 
         obj = HarvestObject(job=self.job, guid=unicode(uuid.uuid4()),
@@ -41,31 +45,58 @@ class CMEMSBase(HarvesterBase):
                 forecast_date = start_date + timedelta(days=i)
                 fday, fmonth, fyear = self._format_date_separed(forecast_date)
 
+                identifier = self._make_identifier(harvester_type, day, month,
+                                                   year, fday, fmonth, fyear)
+
+                if not self._was_harvested(identifier):
+
+                    ftp_link = self._make_ftp_link(harvester_type, day, month,
+                                                   year, fday, fmonth, fyear)
+
+                    r_status_code = self._crawl_urls_ftp(ftp_link, 'cmems')
+
+                    if r_status_code == 226:
+                        harvest_object_id = self._create_object(harvester_type,
+                                                                identifier,
+                                                                ftp_link,
+                                                                start_date,
+                                                                forecast_date)
+                        harvest_object_ids.append(harvest_object_id)
+
+        else:
+            identifier = self._make_identifier(harvester_type, day, month,
+                                               year)
+
+            if not self._was_harvested(identifier):
                 ftp_link = self._make_ftp_link(harvester_type, day, month,
-                                               year, fday, fmonth, fyear)
+                                               year)
 
                 r_status_code = self._crawl_urls_ftp(ftp_link, 'cmems')
 
                 if r_status_code == 226:
                     harvest_object_id = self._create_object(harvester_type,
+                                                            identifier,
                                                             ftp_link,
                                                             start_date,
-                                                            forecast_date)
+                                                            None)
                     harvest_object_ids.append(harvest_object_id)
 
-        else:
-            ftp_link = self._make_ftp_link(harvester_type, day, month, year)
-
-            r_status_code = self._crawl_urls_ftp(ftp_link, 'cmems')
-
-            if r_status_code == 226:
-                harvest_object_id = self._create_object(harvester_type,
-                                                        ftp_link,
-                                                        start_date,
-                                                        None)
-                harvest_object_ids.append(harvest_object_id)
-
         return harvest_object_ids
+
+    def _was_harvested(self, identifier):
+        """
+        Check if a product has already been harvested and return True or False.
+        """
+
+        package = Session.query(Package) \
+            .filter(Package.name == identifier.lower()).first()
+
+        if package:
+            log.debug('{} will not be updated.'.format(identifier))
+            return True
+        else:
+            log.debug('{} has not been harvested before. Attempting to harvest it.'.format(identifier))  # noqa: E501
+            return False
 
     def _make_ftp_link(self, harvester_type, day, month, year, fday=None,
                        fmonth=None, fyear=None):
@@ -239,10 +270,6 @@ class CMEMSBase(HarvesterBase):
         metadata = {}
 
         if harvester_type == 'sst':
-            metadata['identifier'] = ('SST-GLO-L4-DAILY-NRT-OBS-010-001-' +
-                                      year +
-                                      month +
-                                      day)
             metadata['collection_id'] = ('METOFFICE-GLO-SST-L4-NRT-OBS-SST-V2')
             metadata['title'] = "Global Observed Sea Surface Temperature"
             metadata['notes'] = ("Daily analysis of sea surface temperature (SST),"  # noqa: E501
@@ -271,10 +298,6 @@ class CMEMSBase(HarvesterBase):
                                      "T12:00:00.000Z")
 
         elif harvester_type == 'sic_north':
-            metadata['identifier'] = ('SEAICE-CONC-NORTH-L4-DAILY-NRT-OBS-011-001-' +  # noqa E501
-                                      year +
-                                      month +
-                                      day)
             metadata['collection_id'] = ('METNO-GLO-SEAICE_CONC-NORTH-L4-NRT-OBS')  # noqa E501
             metadata['title'] = ("Arctic Ocean Observed Sea Ice"
                                  " Concentration")
@@ -318,10 +341,6 @@ class CMEMSBase(HarvesterBase):
                                      "T12:00:00.000Z")
 
         elif harvester_type == 'sic_south':
-            metadata['identifier'] = ('SEAICE-CONC-SOUTH-L4-DAILY-NRT-OBS-011-001-' +  # noqa E501
-                                      year +
-                                      month +
-                                      day)
             metadata['collection_id'] = ('METNO-GLO-SEAICE_CONC-SOUTH-L4-NRT-OBS')  # noqa E501
             metadata['title'] = ("Antarctic Ocean Observed"
                                  " Sea Ice Concentration")
@@ -365,14 +384,6 @@ class CMEMSBase(HarvesterBase):
                                      "T12:00:00.000Z")
 
         elif harvester_type == 'ocn':
-            metadata['identifier'] = ('ARCTIC-FORECAST-' +
-                                      fyear +
-                                      fmonth +
-                                      fday +
-                                      '-PHYS-002-001-' +
-                                      year +
-                                      month +
-                                      day)
             metadata['collection_id'] = 'ARCTIC_ANALYSIS_FORECAST_PHYS_002_001_A'  # noqa E501
             metadata['title'] = "Arctic Ocean Physics Analysis and Forecast"
             metadata['notes'] = ("Daily Arctic Ocean physics analysis to provide 10"  # noqa E501
@@ -410,7 +421,9 @@ class CMEMSBase(HarvesterBase):
         # OpenSearch
 
         # Add common metadata
+        metadata['identifier'] = content['identifier']
         metadata['name'] = metadata['identifier'].lower()
+        print metadata['name']
         metadata['StartTime'] = (str(start_date) + 'T00:00:00.000Z')
         metadata['StopTime'] = self._product_enddate_url_parameter(start_date)
 
@@ -434,6 +447,26 @@ class CMEMSBase(HarvesterBase):
         metadata['timerange_end'] = metadata['StopTime']
 
         return metadata
+
+    def _make_identifier(self, harvester_type, day, month, year,
+                         fday=None, fmonth=None, fyear=None):
+        """
+        Make an identifier for the product according to how it's identified at
+        the source.
+        """
+        if harvester_type == 'sst':
+            return 'SST-GLO-L4-DAILY-NRT-OBS-010-001-{}{}{}'.format(year,
+                                                                    month,
+                                                                    day)
+        elif harvester_type == 'sic_north':
+            return 'SEAICE-CONC-NORTH-L4-DAILY-NRT-OBS-011-001-{}{}{}'.format(
+                year, month, day)
+        elif harvester_type == 'sic_south':
+            return 'SEAICE-CONC-SOUTH-L4-DAILY-NRT-OBS-011-001{}{}{}'.format(
+                year, month, day)
+        elif harvester_type == 'ocn':
+            return 'ARCTIC-FORECAST-{}{}{}-PHYS-002-001-{}{}{}'.format(
+                fyear, fmonth, fday, year, month, day)
 
     # Required by NextGEOSS base harvester
     def _get_resources(self, metadata):
