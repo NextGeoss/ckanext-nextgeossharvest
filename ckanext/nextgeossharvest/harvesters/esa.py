@@ -87,7 +87,7 @@ class ESAHarvester(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
         last_object = Session.query(HarvestObject). \
             filter(HarvestObject.harvest_source_id == self.job.source_id,
                    HarvestObject.import_finished != None). \
-            order_by(desc(HarvestObject.import_finished)).limit(1)
+            order_by(desc(HarvestObject.import_finished)).limit(1)  # noqa: E711, E501
         if last_object:
             try:
                 last_object = last_object[0]
@@ -168,41 +168,3 @@ class ESAHarvester(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
     def fetch_stage(self, harvest_object):
         """Fetch was completed during gather."""
         return True
-
-    def import_stage(self, harvest_object):
-        log = logging.getLogger(__name__ + '.import')
-        log.debug('Import stage for harvest object with GUID {}'
-                  .format(harvest_object.id))
-
-        # Save a reference (review the utility of this)
-        self.obj = harvest_object
-
-        if harvest_object.content is None:
-            self._save_object_error('Empty content for object {}'
-                                    .format(harvest_object.id),
-                                    harvest_object, 'Import')
-            return False
-
-        status = self._get_object_extra(harvest_object, 'status')
-
-        # Check if we need to update the dataset
-        if status != 'unchanged':
-            # This can be a hook
-            package = self._create_or_update_dataset(harvest_object, status)
-            # This can be a hook
-            if not package:
-                return False
-            package_id = package['id']
-        else:
-            package_id = harvest_object.package.id
-
-        # Perform the necessary harvester housekeeping
-        self._refresh_harvest_objects(harvest_object, package_id)
-
-        # Finish up
-        if status == 'unchanged':
-            return 'unchanged'
-        else:
-            log.debug('Package {} was successully harvested.'
-                      .format(package['id']))
-            return True

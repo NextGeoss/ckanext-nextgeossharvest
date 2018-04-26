@@ -1,115 +1,266 @@
 # -*- coding: utf-8 -*-
 
 import logging
-import hashlib
 import json
 from datetime import timedelta, datetime
 import uuid
 
-
-
-from ckan import model
-from ckan import logic
-from ckan.lib.navl.validators import not_empty
-import ckan.plugins as plugins
+from ckan.model import Session
+from ckan.model import Package
 
 from ckanext.harvest.harvesters.base import HarvesterBase
 from ckanext.harvest.model import HarvestObjectExtra as HOExtra
 from ckanext.harvest.model import HarvestObject
-from webob.datetime_utils import year
-from calendar import month
+
 
 log = logging.getLogger(__name__)
 
 
 class CMEMSBase(HarvesterBase):
 
-    def _create_object(self, id_list, metadata, collection_flag):
+    def _create_object(self, identifier, ftp_link, size, forecast_date):
 
-        hash = hashlib.md5(json.dumps(metadata)).hexdigest()
+        extras = [HOExtra(key='status',
+                          value='new')]
 
-        if hash in self.current_guids:
-            self.current_guids_in_harvest.add(hash)
+        content = json.dumps({'identifier': identifier, 'ftp_link': ftp_link,
+                              'size': size, 'start_date': self.start_date,
+                              'forecast_date': forecast_date}, default=str)
+
+        obj = HarvestObject(job=self.job, guid=unicode(uuid.uuid4()),
+                            extras=extras, content=content)
+
+        obj.save()
+
+        return obj.id
+
+    def _get_products(self):
+        day, month, year = self._format_date_separed(self.start_date)
+
+        harvest_object_ids = []
+
+        if self.harvester_type == 'ocn':
+            for i in range(10):
+                forecast_date = self.start_date + timedelta(days=i)
+                fday, fmonth, fyear = self._format_date_separed(forecast_date)
+
+                identifier = self._make_identifier(day, month,
+                                                   year, fday, fmonth, fyear)
+
+                if not self._was_harvested(identifier):
+
+                    ftp_link = self._make_ftp_link(day, month,
+                                                   year, fday, fmonth, fyear)
+
+                    size = self._crawl_urls_ftp(ftp_link, 'cmems')
+
+                    if size:
+                        harvest_object_id = self._create_object(identifier,
+                                                                ftp_link,
+                                                                size,
+                                                                forecast_date)
+                        harvest_object_ids.append(harvest_object_id)
+
         else:
-            if collection_flag:
-                obj = HarvestObject(job=self.harvest_job, guid=hash, extras=[
-                    HOExtra(key='status',
-                            value='new'),
-                    HOExtra(key='identifier',
-                            value=metadata['identifier']),
-                    HOExtra(key='download_link',
-                            value=metadata['downloadLink']),
-                    HOExtra(key='dataset_name',
-                            value=metadata['datasetname']),
-                    HOExtra(key='original_metadata',
-                            value=json.dumps(metadata)),
-                    HOExtra(key='original_format',
-                            value='netCDF')
-                ])
-            else:
-                obj = HarvestObject(job=self.harvest_job, guid=hash, extras=[
-                    HOExtra(key='status',
-                            value='new'),
-                    HOExtra(key='identifier',
-                            value=metadata['identifier']),
-                    HOExtra(key='download_link_ease',
-                            value=metadata['downloadLinkEase']),
-                    HOExtra(key='download_link_polstere',
-                            value=metadata['downloadLinkPolstere']),
-                    HOExtra(key='dataset_name',
-                            value=metadata['datasetname']),
-                    HOExtra(key='original_metadata',
-                            value=json.dumps(metadata)),
-                    HOExtra(key='original_format',
-                            value='netCDF')
-                ])
+            identifier = self._make_identifier(day, month,
+                                               year)
 
-            obj.save()
-            id_list.append(obj.id)
+            if not self._was_harvested(identifier):
+                ftp_link = self._make_ftp_link(day, month,
+                                               year)
 
-    def _get_sst_product(self, id_list, metadata, start_date):
+                size = self._crawl_urls_ftp(ftp_link, 'cmems')
+
+                if size:
+                    harvest_object_id = self._create_object(identifier,
+                                                            ftp_link,
+                                                            size,
+                                                            None)
+                    harvest_object_ids.append(harvest_object_id)
+
+        return harvest_object_ids
+
+    def _was_harvested(self, identifier):
+        """
+        Check if a product has already been harvested and return True or False.
+        """
+
+        package = Session.query(Package) \
+            .filter(Package.name == identifier.lower()).first()
+
+        if package:
+            log.debug('{} will not be updated.'.format(identifier))
+            return True
+        else:
+            log.debug('{} has not been harvested before. Attempting to harvest it.'.format(identifier))  # noqa: E501
+            return False
+
+    def _make_ftp_link(self, day, month, year, fday=None,
+                       fmonth=None, fyear=None):
+        """
+        Construct a link to a product based on the harvest type and start date.
+        """
+
+        if self.harvester_type == 'sst':
+            return ("ftp://cmems.isac.cnr.it/Core/"
+                    "SST_GLO_SST_L4_NRT_OBSERVATIONS_010_001/"
+                    "METOFFICE-GLO-SST-L4-NRT-OBS-SST-V2/" +
+                    year +
+                    "/" +
+                    month +
+                    "/" +
+                    year +
+                    month +
+                    day +
+                    "120000-UKMO-L4_GHRSST-SSTfnd-OSTIA-GLOB-v02.0-fv02.0.nc")
+
+        elif self.harvester_type == 'sic_north':
+            return ("ftp://mftp.cmems.met.no/Core/"
+                    "SEAICE_GLO_SEAICE_L4_NRT_OBSERVATIONS_011_001/"
+                    "METNO-GLO-SEAICE_CONC-NORTH-L4-NRT-OBS/" +
+                    year +
+                    "/" +
+                    month +
+                    "/" +
+                    "ice_conc_nh_ease-125_multi_" +
+                    year +
+                    month +
+                    day +
+                    "1200.nc")
+
+        elif self.harvester_type == 'sic_south':
+            return ("ftp://mftp.cmems.met.no/Core/"
+                    "SEAICE_GLO_SEAICE_L4_NRT_OBSERVATIONS_011_001/"
+                    "METNO-GLO-SEAICE_CONC-SOUTH-L4-NRT-OBS/" +
+                    year +
+                    "/" +
+                    month +
+                    "/" +
+                    "ice_conc_sh_ease-125_multi_" +
+                    year +
+                    month +
+                    day +
+                    "1200.nc")
+
+        elif self.harvester_type == 'ocn':
+            return ("ftp://mftp.cmems.met.no/Core/"
+                    "ARCTIC_ANALYSIS_FORECAST_PHYS_002_001_a/"
+                    "dataset-topaz4-arc-myoceanv2-be/" +
+                    fyear +
+                    fmonth +
+                    fday +
+                    "_dm-metno-MODEL-topaz4-ARC-b" +
+                    year +
+                    month +
+                    day +
+                    "-fv02.0.nc")
+
+    def _make_stop_time(self, start_date):
+        stop_date = start_date + timedelta(days=1)
+        return '{}T00:00:00.000Z'.format(stop_date.date())
+
+    def _format_date_separed(self, date):
+        day = datetime.strftime(date, '%d')
+        month = datetime.strftime(date, '%m')
+        year = datetime.strftime(date, '%Y')
+
+        return day, month, year
+
+    def _get_metadata_create_objects(self):
+        # Get contents
+        time_interval = self.end_date - self.start_date
+
+        ids = []
+        for idx in range(time_interval.days):
+            self.start_date = self.start_date + timedelta(days=idx)
+            new_ids = self._get_products()
+            ids.extend(new_ids)
+
+        return ids
+
+    def _create_tags(self):
+        """Create a list of tags based on the type of harvester."""
+        tags_list = [{"name": "CMEMS"}]
+
+        if self.harvester_type == 'sst':
+            tags_list.extend([{"name": "SST"},
+                              {"name": "sea surface temperature"},
+                              {"name": "temperature"},
+                              {"name": "sea"},
+                              {"name": "observation"}])
+
+        elif self.harvester_type == 'ocn':
+            tags_list.extend([{"name": "arctic"},
+                              {"name": "arctic ocean"},
+                              {"name": "north"},
+                              {"name": "northern"},
+                              {"name": "forecast"},
+                              {"name": "temperature"},
+                              {"name": "salinity"},
+                              {"name": "sea ice"},
+                              {"name": "sea"},
+                              {"name": "ice"},
+                              {"name": "sea ice concentration"},
+                              {"name": "sea ice thickness"},
+                              {"name": "sea ice velocity"},
+                              {"name": "sea ice type"}])
+
+        else:
+            tags_list.extend([{"name": "sea ice"},
+                              {"name": "ice"},
+                              {"name": "sea"},
+                              {"name": "sea ice concentration"},
+                              {"name": "observation"}])
+
+            if self.harvester_type == 'sic_north':
+                tags_list.extend([{"name": "north"},
+                                  {"name": "northern"},
+                                  {"name": "arctic"},
+                                  {"name": "arctic ocean"}])
+
+            elif self.harvester_type == 'sic_south':
+                tags_list.extend([{"name": "south"},
+                                  {"name": "Southern"},
+                                  {"name": "antarctic"},
+                                  {"name": "antarctic ocean"}])
+
+        return tags_list
+
+    # Required by NextGEOSS base harvester
+    def _parse_content(self, content):
+        """
+        Parse the entry content and return a dictionary using our standard
+        metadata terms.
+        """
+        self.harvester_type = self.source_config['harvester_type']
+
+        content = json.loads(content)
+        ftp_link = content['ftp_link']
+        start_date = deserialize_date(content['start_date'])
         day, month, year = self._format_date_separed(start_date)
+        forecast_date = content.get('forecast_date')
+        if forecast_date:
+            forecast_date = deserialize_date(content['forecast_date'])
+            fday, fmonth, fyear = self._format_date_separed(forecast_date)
 
-        sst_ftp_link = ("ftp://cmems.isac.cnr.it/Core/"
-                        "SST_GLO_SST_L4_NRT_OBSERVATIONS_010_001/"
-                        "METOFFICE-GLO-SST-L4-NRT-OBS-SST-V2/"
-                        + year
-                        + "/"
-                        + month
-                        + "/"
-                        + year
-                        + month
-                        + day
-                        + "120000-UKMO-L4_GHRSST-SSTfnd-OSTIA-GLOB-v02.0-fv02.0.nc") # noqa E501
+        start_date_string = str(start_date.date())
 
-        r_status_code = self._crawl_urls_ftp(sst_ftp_link, 'cmems')
+        spatial_template = '{{"type":"Polygon", "coordinates":[{}]}}'
+        metadata = {}
 
-        if r_status_code == 226:
-            start_date = start_date.date()
-            metadata['datasetname'] = ('sst-glo-l4-daily-nrt-obs-010-001-'
-                                       + year
-                                       + month
-                                       + day)
-
+        if self.harvester_type == 'sst':
             metadata['collection_id'] = ('METOFFICE-GLO-SST-L4-NRT-OBS-SST-V2')
-
-            metadata['identifier'] = ('SST-GLO-L4-DAILY-NRT-OBS-010-001-'
-                                      + year
-                                      + month
-                                      + day)
-
-            metadata['StartTime'] = (str(start_date) + 'T00:00:00.000Z')
-
-            metadata['StopTime'] =  self._product_enddate_url_parameter(start_date)
-
-            metadata['Coordinates'] = [[-180, 90],
-                                       [180, 90],
-                                       [180, -90],
-                                       [-180, -90],
-                                       [-180, 90]]
-
-            metadata['downloadLink'] = sst_ftp_link
-
+            metadata['title'] = "Global Observed Sea Surface Temperature"
+            metadata['notes'] = ("Daily analysis of sea surface temperature (SST),"  # noqa: E501
+                                 " based on measurements from several satellite and"  # noqa: E501
+                                 " in situ SST datasets, for the global ocean and"  # noqa: E501
+                                 " some lakes.")
+            metadata['spatial'] = spatial_template.format([[-180, 90],
+                                                           [180, 90],
+                                                           [180, -90],
+                                                           [-180, -90],
+                                                           [-180, 90]])
+            metadata['downloadLink'] = ftp_link
             metadata['thumbnail'] = ("http://cmems.isac.cnr.it/thredds/wms"
                                      "/METOFFICE-GLO-SST-L4-NRT-OBS-SST-V2"
                                      "?request=GetMap"
@@ -121,70 +272,37 @@ class CMEMSBase(HarvesterBase):
                                      "&HEIGHT=800"
                                      "&styles=boxfill/rainbow"
                                      "&format=image/png"
-                                     "&time="
-                                     + str(start_date)
-                                     + "T12:00:00.000Z")
+                                     "&time=" +
+                                     start_date_string +
+                                     "T12:00:00.000Z")
 
-            self._create_object(id_list, metadata, True)
-
-    def _get_sic_north_product(self, id_list, metadata, start_date):
-        day, month, year = self._format_date_separed(start_date)
-        
-        sic_north_ftp_link = ("ftp://mftp.cmems.met.no/Core/"
-                              "SEAICE_GLO_SEAICE_L4_NRT_OBSERVATIONS_011_001/"
-                              "METNO-GLO-SEAICE_CONC-NORTH-L4-NRT-OBS/"
-                              + year
-                              + "/"
-                              + month
-                              + "/"
-                              + "ice_conc_nh_ease-125_multi_"
-                              + year
-                              + month
-                              + day
-                              + "1200.nc")
-
-        r_status_code = self._crawl_urls_ftp(sic_north_ftp_link, 'cmems')
-
-        if r_status_code == 226:
-            start_date = start_date.date()
-            metadata['datasetname'] = ('seaice-conc-north-l4-daily'
-                                       '-nrt-obs-011-001-'
-                                       + year
-                                       + month
-                                       + day)
-
+        elif self.harvester_type == 'sic_north':
             metadata['collection_id'] = ('METNO-GLO-SEAICE_CONC-NORTH-L4-NRT-OBS')  # noqa E501
-
-            metadata['identifier'] = ('SEAICE-CONC-NORTH-L4-DAILY-NRT-OBS-011-001-' # noqa E501
-                                      + year
-                                      + month
-                                      + day)
-
-            metadata['STARTTIME'] = (str(start_date) + 'T00:00:00.000Z')
-
-            metadata['StopTime'] = self._product_enddate_url_parameter(start_date)
-
-            metadata['Coordinates'] = [[-180, 90],
-                                       [180, 90],
-                                       [180, 0],
-                                       [-180, 0],
-                                       [-180, 90]]
-
-            metadata['downloadLinkEase'] = sic_north_ftp_link
-
-            metadata['downloadLinkPolstere'] = ("ftp://mftp.cmems.met.no/Core/"
-                                                "SEAICE_GLO_SEAICE_L4_NRT_OBSERVATIONS_011_001/" # noqa E501
-                                                "METNO-GLO-SEAICE_CONC-NORTH-L4-NRT-OBS/" # noqa E501
-                                                + year
-                                                + "/"
-                                                + month
-                                                + "/"
-                                                + "ice_conc_nh_polstere-100_multi_" # noqa E501
-                                                + year
-                                                + month
-                                                + day
-                                                + "1200.nc")
-
+            metadata['title'] = ("Arctic Ocean Observed Sea Ice"
+                                 " Concentration")
+            metadata['notes'] = ("Daily sea ice concentration at 10km"
+                                 " resolution in polar stereographic and EASE"
+                                 " grid projections covering the Northern"
+                                 " Hemisphere.")
+            metadata['spatial'] = spatial_template.format([[-180, 90],
+                                                           [180, 90],
+                                                           [180, 0],
+                                                           [-180, 0],
+                                                           [-180, 90]])
+            metadata['downloadLinkEase'] = ftp_link
+            metadata['downloadLinkPolstere'] = (
+              "ftp://mftp.cmems.met.no/Core/"  # noqa: E121
+              "SEAICE_GLO_SEAICE_L4_NRT_OBSERVATIONS_011_001/"
+              "METNO-GLO-SEAICE_CONC-NORTH-L4-NRT-OBS/" +
+              year +
+              "/" +
+              month +
+              "/" +
+              "ice_conc_nh_polstere-100_multi_" +
+              year +
+              month +
+              day +
+              "1200.nc")
             metadata['thumbnail'] = ("http://thredds.met.no/thredds/wms/"
                                      "sea_ice/SIW-OSISAF-GLO-SIT_SIE_SIC-OBS/"
                                      "ice_conc_north_aggregated"
@@ -197,72 +315,37 @@ class CMEMSBase(HarvesterBase):
                                      "&HEIGHT=800"
                                      "&styles=boxfill/rainbow"
                                      "&format=image/png"
-                                     "&time="
-                                     + str(start_date)
-                                     + "T12:00:00.000Z")
+                                     "&time=" +
+                                     start_date_string +
+                                     "T12:00:00.000Z")
 
-            self._create_object(id_list, metadata, False)
-
-    def _get_sic_south_product(self, id_list, metadata, start_date):
-        day, month, year = self._format_date_separed(start_date)
-        
-        sic_south_ftp_link = ("ftp://mftp.cmems.met.no/Core/"
-                              "SEAICE_GLO_SEAICE_L4_NRT_OBSERVATIONS_011_001/"
-                              "METNO-GLO-SEAICE_CONC-SOUTH-L4-NRT-OBS/"
-                              + year
-                              + "/"
-                              + month
-                              + "/"
-                              + "ice_conc_sh_ease-125_multi_"
-                              + year
-                              + month
-                              + day
-                              + "1200.nc")
-
-        r_status_code = self._crawl_urls_ftp(sic_south_ftp_link, 'cmems')
-
-        if r_status_code == 226:
-
-            start_date = start_date.date()
-
-            metadata['datasetname'] = ('seaice-conc-south-l4-daily'
-                                       '-nrt-obs-011-001-'
-                                       + year
-                                       + month
-                                       + day)
-
-            metadata['collection_id'] = ('METNO-GLO-SEAICE_CONC-SOUTH-L4-NRT-OBS') # noqa E501
-
-            metadata['identifier'] = ('SEAICE-CONC-SOUTH-L4-DAILY-NRT-OBS-011-001-' # noqa E501
-                                      + year
-                                      + month
-                                      + day)
-
-            metadata['StartTime'] = str(start_date) + 'T00:00:00.000Z'
-
-            metadata['StopTime'] = self._product_enddate_url_parameter(start_date)
-
-            metadata['Coordinates'] = [[-180, 0],
-                                       [180, 0],
-                                       [180, -90],
-                                       [-180, -90],
-                                       [-180, 0]]
-
-            metadata['downloadLinkEase'] = sic_south_ftp_link
-
-            metadata['downloadLinkPolstere'] = ("ftp://mftp.cmems.met.no/Core/"
-                                                "SEAICE_GLO_SEAICE_L4_NRT_OBSERVATIONS_011_001/" # noqa E501
-                                                "METNO-GLO-SEAICE_CONC-SOUTH-L4-NRT-OBS/" # noqa E501
-                                                + year
-                                                + "/"
-                                                + month
-                                                + "/"
-                                                + "ice_conc_sh_polstere-100_multi_" # noqa E501
-                                                + year
-                                                + month
-                                                + day
-                                                + "1200.nc")
-
+        elif self.harvester_type == 'sic_south':
+            metadata['collection_id'] = ('METNO-GLO-SEAICE_CONC-SOUTH-L4-NRT-OBS')  # noqa E501
+            metadata['title'] = ("Antarctic Ocean Observed"
+                                 " Sea Ice Concentration")
+            metadata['notes'] = ("Daily sea ice concentration at 10km "
+                                 "resolution in polar stereographic and EASE"
+                                 " grid projections covering the Southern"
+                                 " Hemisphere.")
+            metadata['spatial'] = spatial_template.format([[-180, 0],
+                                                           [180, 0],
+                                                           [180, -90],
+                                                           [-180, -90],
+                                                           [-180, 0]])
+            metadata['downloadLinkEase'] = ftp_link
+            metadata['downloadLinkPolstere'] = (
+                "ftp://mftp.cmems.met.no/Core/" +  # noqa: E121
+                "SEAICE_GLO_SEAICE_L4_NRT_OBSERVATIONS_011_001/" +
+                "METNO-GLO-SEAICE_CONC-SOUTH-L4-NRT-OBS/" +
+                year +
+                "/" +
+                month +
+                "/" +
+                "ice_conc_sh_polstere-100_multi_" +
+                year +
+                month +
+                day +
+                "1200.nc")
             metadata['thumbnail'] = ("http://thredds.met.no/thredds/wms/"
                                      "sea_ice/SIW-OSISAF-GLO-SIT_SIE_SIC-OBS/"
                                      "ice_conc_south_aggregated"
@@ -275,566 +358,145 @@ class CMEMSBase(HarvesterBase):
                                      "&HEIGHT=800"
                                      "&styles=boxfill/rainbow"
                                      "&format=image/png"
-                                     "&time="
-                                     + str(start_date)
-                                     + "T12:00:00.000Z")
-
-            self._create_object(id_list, metadata, False)
-
-    def _get_ocn_forecast_products(self, id_list, metadata, start_date):
-        day, month, year = self._format_date_separed(start_date)
-        start_date = start_date.date()
-
-        for i in range(10):
-            
-            forecast_date = start_date + timedelta(days=i)
-            fday, fmonth, fyear = self._format_date_separed(forecast_date)
-         
-            ocn_forecast_link = ("ftp://mftp.cmems.met.no/Core/"
-                                 "ARCTIC_ANALYSIS_FORECAST_PHYS_002_001_a/"
-                                 "dataset-topaz4-arc-myoceanv2-be/"
-                                 + fyear
-                                 + fmonth
-                                 + fday
-                                 + "_dm-metno-MODEL-topaz4-ARC-b"
-                                 + year
-                                 + month
-                                 + day
-                                 + "-fv02.0.nc")
-
-            r_status_code = self._crawl_urls_ftp(ocn_forecast_link, 'cmems')
-
-            if r_status_code == 226:
-
-                metadata['datasetname'] = ('arctic-forecast-'
-                                           + fyear
-                                           + fmonth
-                                           + fday
-                                           + '-phys-002-001-'
-                                           + year
-                                           + month
-                                           + day)
-
-                metadata['collection_id'] = 'ARCTIC_ANALYSIS_FORECAST_PHYS_002_001_A' # noqa E501
-
-                metadata['identifier'] = ('ARCTIC-FORECAST-'
-                                          + fyear
-                                          + fmonth
-                                          + fday
-                                          + '-PHYS-002-001-'
-                                          + year
-                                          + month
-                                          + day)
-
-                metadata['StartTime'] = str(start_date) + 'T00:00:00.000Z'
-
-                metadata['StopTime'] = self._product_enddate_url_parameter(start_date)
-
-                metadata['BulletinDate'] = str(start_date)
-
-                metadata['ForecastDate'] = datetime.strftime(forecast_date, '%Y-%m-%d')
-                metadata['Coordinates'] = [
-                    [-180, 90],
-                    [180, 90],
-                    [180, 63],
-                    [-180, 63],
-                    [-180, 90]]
-
-                metadata['downloadLink'] = ocn_forecast_link
-
-                metadata['thumbnail'] = ("http://thredds.met.no/thredds/wms/"  # noqa
-                                         "topaz/"
-                                         "dataset-topaz4-arc-1hr-myoceanv2-be"  # noqa
-                                         "?request=GetMap"
-                                         "&version=1.3.0"
-                                         "&layers=temperature"
-                                         "&CRS=CRS:84"
-                                         "&bbox=-180,0,180,90"
-                                         "&WIDTH=800"
-                                         "&HEIGHT=800"
-                                         "&styles=boxfill/rainbow"
-                                         "&format=image/png"
-                                         "&time="
-                                         + datetime.strftime(start_date, '%Y-%m-%d'))
-
-                self._create_object(id_list, metadata, True)
-
-    def _product_end_date(self, product_start_date):
-        return product_start_date + timedelta(days = 1)
-    
-    def _product_enddate_url_parameter(self, start_date):
-        return datetime.strftime(self._product_end_date(start_date), '%Y-%m-%d') + 'T00:00:00.000Z'
-    
-    def _format_date_separed(self, date):
-        day = datetime.strftime(date,'%d')
-        month = datetime.strftime(date,'%m')
-        year = datetime.strftime(date,'%Y')
-        
-        return day, month, year
-
-
-
-    def _get_metadata_create_objects(self,
-                                     start_date,
-                                     end_date,
-                                     harvest_job,
-                                     current_guids,
-                                     current_guids_in_harvest,
-                                     harvester_type):
-        # Get contents
-        try:
-            metadata_dict = dict()
-            id_list = list()
-            url = "dummy"
-
-            year, month, day = str(start_date).split('-')
-            time_interval = end_date - start_date
-            
-            self.harvest_job = harvest_job
-            self.current_guids = current_guids
-            self.current_guids_in_harvest = current_guids_in_harvest
-      
-            print(datetime.strftime(start_date, '%Y-%m-%d'))
-            print('Start date' + str(start_date))
-            
-            base_start_date = start_date
-            for idx in range(time_interval.days):
-                start_date = base_start_date + timedelta(days = idx)
-                print('idx = '+str(idx))
-                print('start_date = '+str(start_date))
-                if harvester_type == 'sst':
-                    self._get_sst_product(id_list, metadata_dict, start_date)
-                elif harvester_type == 'sic_north':
-                    self._get_sic_north_product(id_list, metadata_dict, start_date)
-                elif harvester_type == 'sic_south':
-                    self._get_sic_south_product(id_list, metadata_dict, start_date)
-                elif harvester_type == 'ocn':
-                    self._get_ocn_forecast_products(id_list, metadata_dict, start_date)  # noqa #E501
-            return id_list
-        except Exception as e:
-            import traceback
-            print(traceback.format_exc())
-            self._save_gather_error('Unable to get content for URL: %s: %r'
-                                    % (url, e), harvest_job)
-            return None
-
-
-    def _delete_dataset(self, harvest_object, context):
-        log = logging.getLogger(__name__ + '.import')
-        context.update({
-            'ignore_auth': True,
-        })
-
-        plugins.toolkit.get_action('package_delete')(
-            context, {'id': harvest_object.package_id})
-
-        log.info('Deleted package {0} with guid {1}'.format(
-            harvest_object.package_id, harvest_object.guid))
-
-    def _create_package_dict(self, harvest_object, context, previous_object):
-
-        original_metadata = self._get_object_extra(harvest_object,
-                                                   'original_metadata')
-
-        # Parse document
-
-        metadata = json.loads(original_metadata)
-        uuid = self._get_object_extra(harvest_object, 'uuid')
-
-        # Flag previous object as not current anymore
-
-        if previous_object and not self.force_import:
-            previous_object.current = False
-            previous_object.add()
-
-        # Update GUID with the one on the document
-        iso_guid = uuid    # iso_values['guid']
-        if iso_guid and harvest_object.guid != iso_guid:
-            # First make sure there already aren't current objects
-            # with the same guid
-            existing_object = (model.Session.query(HarvestObject.id)
-                               .filter(HarvestObject.guid == iso_guid)
-                               .filter(HarvestObject.current is True)
-                               .first())
-            if existing_object:
-                self._save_object_error('Object {0} already has this guid {1}'
-                                        .format(existing_object.id, iso_guid),
-                                        harvest_object, 'Import')
-                return False
-
-            harvest_object.guid = iso_guid
-            harvest_object.add()
-
-        # Generate GUID if not present (i.e. it's a manual import)
-        if not harvest_object.guid:
-            m = hashlib.md5()
-            m.update(harvest_object.content.encode('utf8', 'ignore'))
-            harvest_object.guid = m.hexdigest()
-            harvest_object.add()
-
-        # Build the package dict
-
-        dataset_name = self._get_object_extra(harvest_object, 'dataset_name')
-
-        spatial_json = ('{"type":"Polygon",'
-                        '"crs":'
-                        '{"type":"EPSG",'
-                        '"properties":'
-                        '{"code":4326,'
-                        '"coordinate_order":"Long,Lat"}},'
-                        '"coordinates":[' + str(metadata['Coordinates']) +
-                        ']}')
-
-        try:
-            thumbnail = metadata['thumbnail']
-            extras_dict = (self
-                           ._generateExtrasDict(
-                               name=dataset_name
-                               .upper(),
-                               metadata=metadata,
-                               thumbnail=thumbnail,
-                               spatial=spatial_json))
-        except Exception:
-            extras_dict = (self
-                           ._generateExtrasDict(
-                               name=dataset_name.upper(),
-                               metadata=metadata,
-                               spatial=spatial_json))
-
-        tags_dict = [{"name": "CMEMS"}]
-
-        if 'sst' in dataset_name.lower():
-            tags_dict.append({"name": "SST"})
-            tags_dict.append({"name": "sea surface temperature"})
-            tags_dict.append({"name": "temperature"})
-            tags_dict.append({"name": "sea"})
-            tags_dict.append({"name": "observation"})
-
-        elif 'seaice' in dataset_name.lower():
-            tags_dict.append({"name": "sea ice"})
-            tags_dict.append({"name": "ice"})
-            tags_dict.append({"name": "sea"})
-            tags_dict.append({"name": "sea ice concentration"})
-            tags_dict.append({"name": "observation"})
-
-            if 'north' in dataset_name.lower():
-                tags_dict.append({"name": "north"})
-                tags_dict.append({"name": "northern"})
-                tags_dict.append({"name": "arctic"})
-                tags_dict.append({"name": "arctic ocean"})
-
-            elif 'south' in dataset_name.lower():
-                tags_dict.append({"name": "south"})
-                tags_dict.append({"name": "Southern"})
-                tags_dict.append({"name": "antarctic"})
-                tags_dict.append({"name": "antarctic ocean"})
-
-        elif 'arctic' in dataset_name.lower():
-            tags_dict.append({"name": "arctic"})
-            tags_dict.append({"name": "arctic ocean"})
-            tags_dict.append({"name": "south"})
-            tags_dict.append({"name": "southern"})
-            tags_dict.append({"name": "forecast"})
-            tags_dict.append({"name": "temperature"})
-            tags_dict.append({"name": "salinity"})
-            tags_dict.append({"name": "sea ice"})
-            tags_dict.append({"name": "sea"})
-            tags_dict.append({"name": "ice"})
-            tags_dict.append({"name": "sea ice concentration"})
-            tags_dict.append({"name": "sea ice thickness"})
-            tags_dict.append({"name": "sea ice velocity"})
-            tags_dict.append({"name": "sea ice type"})
-
-        # ##### FINISHED ADD EXTRAS
-        # Build the package dict
-        package_dict = (self
-                        ._get_package_dict(
-                            metadata,
-                            harvest_object,
-                            extras_dict,
-                            tags_dict))
-
-        if not package_dict:
-            log.error(('No package dict returned,'
-                       ' aborting import for object {0}')
-                      .format(harvest_object.id))
-            return False
-
-        # Create / update the package
-        context.update({
-           'extras_as_string': True,
-           'api_version': '2',
-           'return_id_only': True})
-
-        if self._site_user and context['user'] == self._site_user['name']:
-            context['ignore_auth'] = True
-
-        # The default package schema does not like Upper case tags
-        tag_schema = logic.schema.default_tags_schema()
-        tag_schema['name'] = [not_empty, unicode]
-
-        # Flag this object as the current one
-        harvest_object.current = True
-        harvest_object.add()
-
-        self._create_dataset(
-            harvest_object,
-            previous_object,
-            context,
-            package_dict,
-            tag_schema,
-            metadata)
-
-    def _create_dataset(self,
-                        harvest_object,
-                        previous_object,
-                        context,
-                        package_dict,
-                        tag_schema,
-                        metadata):
-
-        status = self._get_object_extra(harvest_object, 'status')
-
-        if status == 'new':
-            package_schema = logic.schema.default_create_package_schema()
-            package_schema['tags'] = tag_schema
-            context['schema'] = package_schema
-
-            # We need to explicitly provide a package ID,
-            # otherwise ckanext-spatial
-            # won't be be able to link the extent to the package.
-            package_dict['id'] = unicode(uuid.uuid4())
-            package_schema['id'] = [unicode]
-
-            # Save reference to the package on the object
-            harvest_object.package_id = package_dict['id']
-            harvest_object.add()
-            # Defer constraints and flush so the dataset can be indexed with
-            # the harvest object id (on the after_show hook from the harvester
-            # plugin)
-            model.Session.execute('SET CONSTRAINTS '
-                                  'harvest_object_package_id_fkey DEFERRED')
-            model.Session.flush()
-
-            try:
-                package_id = (plugins
-                              .toolkit
-                              .get_action('package_create')
-                              (context, package_dict))
-                log.info('Created new package %s with guid %s',
-                         package_id,
-                         harvest_object.guid)
-
-                for key, value in metadata.iteritems():
-                    # create resources
-
-                    if key == 'downloadLink':
-                        resource_dict = {}
-                        resource_dict['package_id'] = package_id
-                        resource_dict['url'] = str(value)
-                        resource_dict['name'] = 'Product Download'
-                        resource_dict['description'] = ('Download the netCDF'
-                                                        ' from CMEMS. NOTE:'
-                                                        ' DOWNLOAD REQUIRES'
-                                                        ' LOGIN')
-                        resource_dict['format'] = 'netcdf'
-                        resource_dict['mimetype'] = 'application/x-netcdf'
-                        (plugins.toolkit
-                         .get_action('resource_create')
-                         (context, resource_dict))
-
-                    if key == 'downloadLinkEase':
-                        resource_dict = {}
-                        resource_dict['package_id'] = package_id
-                        resource_dict['url'] = str(value)
-                        resource_dict['name'] = 'Product Download (EASE GRID)'
-                        resource_dict['description'] = ('Download the netCDF'
-                                                        ' from CMEMS. NOTE:'
-                                                        ' DOWNLOAD REQUIRES'
-                                                        ' LOGIN')
-                        resource_dict['format'] = 'netcdf'
-                        resource_dict['mimetype'] = 'application/x-netcdf'
-                        (plugins.toolkit
-                         .get_action('resource_create')
-                         (context, resource_dict))
-
-                    if key == 'downloadLinkPolstere':
-                        resource_dict = {}
-                        resource_dict['package_id'] = package_id
-                        resource_dict['url'] = str(value)
-                        resource_dict['name'] = ('Product Download'
-                                                 ' (Polar Stereographic)')
-                        resource_dict['description'] = ('Download the netCDF'
-                                                        ' from CMEMS. NOTE:'
-                                                        ' DOWNLOAD REQUIRES'
-                                                        ' LOGIN')
-                        resource_dict['format'] = 'netcdf'
-                        resource_dict['mimetype'] = 'application/x-netcdf'
-                        (plugins.toolkit
-                         .get_action('resource_create')
-                         (context, resource_dict))
-
-                    if key == 'thumbnail':
-                        resource_dict = {}
-                        resource_dict['package_id'] = package_id
-                        resource_dict['url'] = value
-                        resource_dict['name'] = 'Thumbnail Link'
-                        resource_dict['format'] = 'png'
-                        resource_dict['mimetype'] = 'image/png'
-                        (plugins.toolkit
-                         .get_action('resource_create')(context,
-                                                        resource_dict))
-
-            except plugins.toolkit.ValidationError as e:
-                self._save_object_error(
-                    'Validation Error: %s'
-                    % str(e.error_summary),
-                    harvest_object,
-                    'Import')
-                return False
-            except Exception as e:
-                self._save_object_error('Error: %s'
-                                        % str(e),
-                                        harvest_object,
-                                        'Import')
-                return False
-
-        elif status == 'change':
-
-            # Check if the modified date is more recent
-            if (not self.force_import and
-                    previous_object and
-                    harvest_object.metadata_modified_date <=
-                    previous_object.metadata_modified_date):
-                # Assign the previous job id to the new object to
-                # avoid losing history
-                harvest_object.harvest_job_id = previous_object.job.id
-                harvest_object.add()
-
-                # Delete the previous object
-                # to avoid cluttering the object table
-                previous_object.delete()
-
-                log.info('Document with GUID %s unchanged, skipping...'
-                         % (harvest_object.guid))
-            else:
-                package_schema = logic.schema.default_update_package_schema()
-                package_schema['tags'] = tag_schema
-                context['schema'] = package_schema
-
-                package_dict['id'] = harvest_object.package_id
-                try:
-                    package_id = (plugins.toolkit
-                                  .get_action('package_update')
-                                  (context, package_dict))
-                    log.info('Updated package %s with guid %s',
-                             package_id,
-                             harvest_object.guid)
-                except plugins.toolkit.ValidationError, e:
-                    self._save_object_error('Validation Error: %s'
-                                            % str(e.error_summary),
-                                            harvest_object, 'Import')
-                    return False
-
-    def _get_package_dict(self,
-                          metadata,
-                          harvest_object,
-                          extras_dict,
-                          tags_dict):
-        '''
-        Constructs a package_dict suitable to be passed to package_create or
-        package_update. See documentation on
-        ckan.logic.action.create.package_create for more details
-        Extensions willing to modify the dict should do so implementing the
-        ISpatialHarvester interface
-            import ckan.plugins as p
-            from ckanext.spatial.interfaces import ISpatialHarvester
-            class MyHarvester(p.SingletonPlugin):
-                p.implements(ISpatialHarvester, inherit=True)
-                def get_package_dict(self, context, data_dict):
-                    package_dict = data_dict['package_dict']
-                    package_dict['extras'].append(
-                        {'key': 'my-custom-extra', 'value': 'my-custom-value'}
-                    )
-                    return package_dict
-        If a dict is not returned by this function, the import stage
-        will be cancelled.
-        :param iso_values: Dictionary with parsed values from the ISO 19139
-            XML document
-        :type iso_values: dict
-        :param harvest_object: HarvestObject domain object (with access to
-            job and source objects)
-        :type harvest_object: HarvestObject
-        :returns: A dataset dictionary (package_dict)
-        :rtype: dict
-        '''
-
-        tags = tags_dict
-        for tag in tags:
-            if tag.get('name') == "SST":
-                dataset_name = "Global Observed Sea Surface Temperature"
-                notes = ("Daily analysis of sea surface temperature (SST),"
-                         " based on measurements from several satellite and"
-                         " in situ SST datasets, for the global ocean and"
-                         " some lakes.")
-            elif tag.get('name') == "observation":
-                for tag2 in tags:
-                    if tag2.get('name') == "antarctic":
-                        dataset_name = ("Antarctic Ocean Observed"
-                                        " Sea Ice Concentration")
-                        notes = ("Daily sea ice concentration at 10km "
-                                 "resolution in polar stereographic and EASE"
-                                 " grid projections covering the Southern"
-                                 " Hemisphere.")
-                    elif tag2.get('name') == "arctic":
-                        dataset_name = ("Arctic Ocean Observed Sea Ice"
-                                        " Concentration")
-                        notes = ("Daily sea ice concentration at 10km"
-                                 " resolution in polar stereographic and EASE"
-                                 " grid projections covering the Northern"
-                                 " Hemisphere.")
-            elif tag.get('name') == "forecast":
-                dataset_name = "Arctic Ocean Physics Analysis and Forecast"
-                notes = ("Daily Arctic Ocean physics analysis to provide 10"
-                         " days of forecast of the 3D physical ocean,"
-                         " including temperature, salinity, sea ice"
-                         " concentration, sea ice thickness, sea ice velocity"
-                         " and sea ice type.")
-
-        package_dict = {
-            'title': dataset_name,
-            'notes': notes,
-            'tags': tags,  # overriding previous operations
-            'resources': [],
-            'extras': extras_dict,
-        }
-
-        # We need to get the owner organization (if any) from the harvest
-
-        source_dataset = model.Package.get(harvest_object.source.id)
-        if source_dataset.owner_org:
-            package_dict['owner_org'] = source_dataset.owner_org
-
-        package_dict['name'] = metadata['datasetname']
-
-        return package_dict
-
-    def _generateExtrasDict(self, name, metadata, **kwargs):
-        extras_dict = []
-
-        for a in kwargs:
-            extras_dict += [{"value": kwargs[a], "key": a}]
-
-        for key, value in metadata.iteritems():
-            if (
-                    key != 'Coordinates' and
-                    key != 'metadataLink' and
-                    key != 'downloadLink' and
-                    key != 'thumbnail' and
-                    key != 'spatial'):
-                extras_dict += [{"value": value, "key": key}]
-        return extras_dict
-    
-    
-    
-
+                                     "&time=" +
+                                     start_date_string +
+                                     "T12:00:00.000Z")
+
+        elif self.harvester_type == 'ocn':
+            metadata['collection_id'] = 'ARCTIC_ANALYSIS_FORECAST_PHYS_002_001_A'  # noqa E501
+            metadata['title'] = "Arctic Ocean Physics Analysis and Forecast"
+            metadata['notes'] = ("Daily Arctic Ocean physics analysis to provide 10"  # noqa E501
+                                 " days of forecast of the 3D physical ocean,"
+                                 " including temperature, salinity, sea ice"
+                                 " concentration, sea ice thickness, sea ice velocity"  # noqa E501
+                                 " and sea ice type.")
+            metadata['BulletinDate'] = start_date_string
+            metadata['ForecastDate'] = datetime.strftime(forecast_date,
+                                                         '%Y-%m-%d')
+            metadata['spatial'] = spatial_template.format([[-180, 90],
+                                                           [180, 90],
+                                                           [180, 63],
+                                                           [-180, 63],
+                                                           [-180, 90]])
+            metadata['downloadLink'] = ftp_link
+            metadata['thumbnail'] = ("http://thredds.met.no/thredds/wms/"  # noqa
+                                     "topaz/"
+                                     "dataset-topaz4-arc-1hr-myoceanv2-be"  # noqa
+                                     "?request=GetMap"
+                                     "&version=1.3.0"
+                                     "&layers=temperature"
+                                     "&CRS=CRS:84"
+                                     "&bbox=-180,0,180,90"
+                                     "&WIDTH=800"
+                                     "&HEIGHT=800"
+                                     "&styles=boxfill/rainbow"
+                                     "&format=image/png"
+                                     "&time=" +
+                                     start_date_string)
+
+        # Is there any way to determine the size of the downloads?
+        # Would be good to have (or possibly required) in some cases, like
+        # OpenSearch
+
+        # Add common metadata
+        metadata['identifier'] = content['identifier']
+        metadata['name'] = metadata['identifier'].lower()
+        metadata['StartTime'] = '{}T00:00:00.000Z'.format(start_date_string)
+        metadata['StopTime'] = self._make_stop_time(start_date)
+        metadata['size'] = content['size']
+
+        # For now, the collection name and description are the same as the
+        # title and notes, though one or the other should probably change in
+        # the future.
+        metadata['collection_name'] = metadata['title']
+        metadata['collection_description'] = metadata['notes']
+
+        metadata['tags'] = self._create_tags()
+
+        # Add time range metadata that's not tied to product-specific fields
+        # like StartTime so that we can filter by a dataset's time range
+        # without having to cram other kinds of temporal data into StartTime
+        # and StopTime fields, etc. We do this for the Sentinel products.
+        #
+        # We'll want to revisit this later--it's still not clear if we can just
+        # use StartTime and StopTime everywhere or if it has a special meaning
+        # for certain kinds of products.
+        metadata['timerange_start'] = metadata['StartTime']
+        metadata['timerange_end'] = metadata['StopTime']
+
+        return metadata
+
+    def _make_identifier(self, day, month, year,
+                         fday=None, fmonth=None, fyear=None):
+        """
+        Make an identifier for the product according to how it's identified at
+        the source.
+        """
+        if self.harvester_type == 'sst':
+            return 'SST-GLO-L4-DAILY-NRT-OBS-010-001-{}{}{}'.format(year,
+                                                                    month,
+                                                                    day)
+        elif self.harvester_type == 'sic_north':
+            return 'SEAICE-CONC-NORTH-L4-DAILY-NRT-OBS-011-001-{}{}{}'.format(
+                year, month, day)
+        elif self.harvester_type == 'sic_south':
+            return 'SEAICE-CONC-SOUTH-L4-DAILY-NRT-OBS-011-001{}{}{}'.format(
+                year, month, day)
+        elif self.harvester_type == 'ocn':
+            return 'ARCTIC-FORECAST-{}{}{}-PHYS-002-001-{}{}{}'.format(
+                fyear, fmonth, fday, year, month, day)
+
+    # Required by NextGEOSS base harvester
+    def _get_resources(self, metadata):
+        """Return a list of resource dictionaries."""
+        resources = []
+
+        if self.harvester_type in {'sst', 'ocn'}:
+            resources.append(self._make_resource(metadata['downloadLink'],
+                                                 'Product Download',
+                                                 metadata['size']))
+        else:
+            resources.append(self._make_resource(metadata['downloadLinkEase'],
+                                                 'Product Download (EASE GRID)',  # noqa: E501,
+                                                 metadata['size']))
+            resources.append(self._make_resource(metadata['downloadLinkPolstere'],  # noqa: E501
+                                                 'Product Download (Polar Stereographic)'))  # noqa: E501
+
+        resources.append(self._make_resource(metadata['thumbnail'],
+                                             'Thumbnail Link'))
+
+        return resources
+
+    def _make_resource(self, url, name, size=None):
+        """Return a resource dictionary."""
+        resource_dict = {}
+        resource_dict['name'] = name
+        resource_dict['url'] = url
+        if name == 'Thumbnail Link':
+            resource_dict['format'] = 'png'
+            resource_dict['mimetype'] = 'image/png'
+        else:
+            resource_dict['format'] = 'netcdf'
+            resource_dict['mimetype'] = 'application/x-netcdf'
+            resource_dict['description'] = ('Download the netCDF'
+                                            ' from CMEMS. NOTE:'
+                                            ' DOWNLOAD REQUIRES'
+                                            ' LOGIN')
+        if size:
+            resource_dict['size'] = size
+
+        return resource_dict
+
+    def convert_date_config(self, term):
+        """Convert a term into a datetime object."""
+        if term == 'YESTERDAY':
+            date_time = datetime.now() - timedelta(days=1)
+        elif term in {'TODAY', 'NOW'}:
+            date_time = datetime.now()
+
+        return date_time.replace(hour=0, minute=0, second=0, microsecond=0)
+
+
+def deserialize_date(date_string):
+    """Deserialize dates serialized by calling str(date)."""
+    return datetime.strptime(date_string, '%Y-%m-%d %H:%M:%S')

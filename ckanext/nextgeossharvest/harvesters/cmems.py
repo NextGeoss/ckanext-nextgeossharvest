@@ -1,16 +1,12 @@
+# -*- coding: utf-8 -*-
+
 import json
 import logging
-from datetime import timedelta, datetime
+from datetime import datetime
 
-from sqlalchemy import desc
-
-from ckan import model
 from ckan.plugins.core import implements
-from ckan.common import config
-
 
 from ckanext.harvest.interfaces import IHarvester
-from ckanext.harvest.model import HarvestObject
 
 from ckanext.nextgeossharvest.lib.cmems_base import CMEMSBase
 from ckanext.nextgeossharvest.lib.nextgeoss_base import NextGEOSSHarvester
@@ -28,7 +24,7 @@ class CMEMSHarvester(CMEMSBase,
             'name': 'cmems',
             'title': 'CMEMS',
             'description': 'A Harvester for CMEMS Products'
-            }
+        }
 
     def validate_config(self, config):
         if not config:
@@ -37,28 +33,32 @@ class CMEMSHarvester(CMEMSBase,
         try:
             config_obj = json.loads(config)
 
-            if config_obj.get('source') not in {'cmems'}:  # noqa: E501
-                raise ValueError('source is required and must be cmems')  # noqa: E501
             if config_obj.get('harvester_type') not in {'sst', 'sic_north', 'sic_south', 'ocn'}:  # noqa: E501
                 raise ValueError('harvester type is required and must be "sst" or "sic_north" or "sic_south" or "ocn"')  # noqa: E501
             if 'start_date' in config_obj:
                 try:
-                    if config_obj['start_date'] != 'YESTERDAY':
-                        datetime.strptime(config_obj['start_date'],
-                                          '%Y-%m-%d')
+                    start_date = config_obj['start_date']
+                    if start_date != 'YESTERDAY':
+                        start_date = datetime.strptime(start_date, '%Y-%m-%d')
+                    else:
+                        start_date = self.convert_date_config(start_date)
                 except ValueError:
                     raise ValueError('start_date format must be yyyy-mm-dd')
             else:
                 raise ValueError('start_date is required')
             if 'end_date' in config_obj:
                 try:
-                    if config_obj['end_date'] != 'TODAY':
-                        datetime.strptime(config_obj['end_date'],
-                                          '%Y-%m-%d')
+                    end_date = config_obj['end_date']
+                    if end_date != 'TODAY':
+                        end_date = datetime.strptime(end_date, '%Y-%m-%d')
+                    else:
+                        end_date = self.convert_date_config(end_date)
                 except ValueError:
                     raise ValueError('end_date format must be yyyy-mm-dd')
             else:
                 raise ValueError('end_date is required')
+            if not end_date > start_date:
+                raise ValueError('end_date must be after start_date')
             if 'timeout' in config_obj:
                 timeout = config_obj['timeout']
                 if not isinstance(timeout, int) and not timeout > 0:
@@ -68,100 +68,34 @@ class CMEMSHarvester(CMEMSBase,
 
         return config
 
-    def fetch_stage(self, harvest_object):
-        return True
-        
-    
     def gather_stage(self, harvest_job):
         log = logging.getLogger(__name__ + '.gather')
         log.debug('CMEMS Harvester gather_stage for job: %r', harvest_job)
 
+        if not hasattr(self, 'provider_logger'):
+            self.provider_logger = self.make_provider_logger()
+
         self.job = harvest_job
         self._set_source_config(harvest_job.source.config)
+        self.harvester_type = self.source_config['harvester_type']
 
-        # get current objects out of db
-        query = (model
-                 .Session
-                 .query(HarvestObject.guid, HarvestObject.package_id)
-                 .filter(HarvestObject.current is True)
-                 .filter(HarvestObject.harvest_source_id ==
-                         harvest_job.source.id))
-
-        guid_to_package_id = dict((res[0], res[1]) for res in query)
-        current_guids = set(guid_to_package_id.keys())
-        current_guids_in_harvest = set()
-        
         start_date = self.source_config.get('start_date')
-
-        
-        # log.debug('Restart date is {}'.format(restart_date))
-
-        # if self.source_config['start_date'] == 'YESTERDAY':
-        #     star_s = datetime.strftime(datetime.now()-timedelta(1), '%Y-%m-%d')
-        # else:
-        #     star_s = self.source_config['start_date']
-
-        # if self.source_config['end_date'] == 'TODAY':
-        #     end_s = datetime.today().strftime('%Y-%m-%d')
-        # else:
-        #     end_s = self.source_config['end_date']
-
-        end_date = self.source_config.get('end_date', 'NOW')
-        if end_date == 'NOW':
-            end_date = (datetime.now()).replace(hour=0, minute=0, second=0, microsecond=0)
-        elif end_date == 'TODAY':
-            end_date = (datetime.now()).replace(hour=0, minute=0, second=0, microsecond=0)
-        else:
-            end_date = datetime.strptime(end_date, '%Y-%m-%d')
-
         if start_date == 'YESTERDAY':
-            start_date = (datetime.now() - timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+            start_date = self.convert_date_config(start_date)
         else:
             start_date = datetime.strptime(start_date, '%Y-%m-%d')
+        self.start_date = start_date
 
-        harvester_type = self.source_config.get('harvester_type')
+        end_date = self.source_config.get('end_date', 'NOW')
+        if end_date in {'TODAY', 'NOW'}:
+            end_date = self.convert_date_config(end_date)
+        else:
+            end_date = datetime.strptime(end_date, '%Y-%m-%d')
+        self.end_date = end_date
 
-        ids = self._get_metadata_create_objects(start_date,
-                                                end_date,
-                                                self.job,
-                                                current_guids,
-                                                current_guids_in_harvest,
-                                                harvester_type)
+        ids = self._get_metadata_create_objects()
 
         return ids
 
-    def import_stage(self, harvest_object):
-        context = {
-            'model': model,
-            'session': model.Session,
-            'user': self._get_user_name(),
-        }
-
-        log = logging.getLogger(__name__ + '.import')
-        log.debug('Import stage for harvest object: %s', harvest_object.id)
-
-        if not harvest_object:
-            log.error('No harvest object received')
-            return False
-
-        self._set_source_config(harvest_object.source.config)
-        status = self._get_object_extra(harvest_object, 'status')
-
-        # Get the last harvested object (if any)
-        previous_object = (model
-                           .Session
-                           .query(HarvestObject)
-                           .filter(HarvestObject.guid == harvest_object.guid)
-                           .filter(HarvestObject.current is True)
-                           .first())
-
-        if status == 'delete':
-            # Delete package
-            self._delete_dataset(self, harvest_object, context)
-            return True
-
-        self._create_package_dict(harvest_object, context, previous_object)
-
-        model.Session.commit()
-
+    def fetch_stage(self, harvest_object):
         return True

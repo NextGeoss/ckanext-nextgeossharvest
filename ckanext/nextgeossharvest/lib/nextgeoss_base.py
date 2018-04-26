@@ -4,14 +4,11 @@ import json
 import logging
 import os
 import uuid
-from os import path
 from string import Template
-from requests.exceptions import Timeout
 from datetime import datetime
 import requests
 import requests_ftp
-from requests.exceptions import ConnectionError, ConnectTimeout, ReadTimeout
-from requests.exceptions import RequestException
+from requests.exceptions import ConnectTimeout, ReadTimeout
 
 from sqlalchemy.sql import update, bindparam
 import shapely.wkt
@@ -78,13 +75,10 @@ class NextGEOSSHarvester(HarvesterBase):
         context = {
             'model': model,
             'session': model.Session,
-            'user': 'test_user', #self._get_user_name(),
+            'user': 'test_user',  # self._get_user_name(),
             'ignore_auth': True
         }
-        print package.id
-        print 'user name: {}'.format(context['user'])
-        xx = logic.get_action('package_list')(context, {})
-        print 'package_list: {}'.format(xx)
+
         return logic.get_action('package_show')(context, {'id': package.name})
 
     def _refresh_harvest_objects(self, harvest_object, package_id):
@@ -300,38 +294,21 @@ class NextGEOSSHarvester(HarvesterBase):
 
         return logger
 
-    def _crawl_urls_simple(self, url, provider):
-
-        timeout = self.source_config['timeout']
-
-        # Make a request to the website
-        timestamp = str(datetime.utcnow())
-        log_message = '{:<12} | {} | {} | {}s'
-        try:
-            r = requests.get(url, timeout=timeout, auth=('ngeoss', 'NextCMEMS2017'),verify=False)
-        except Timeout as e:
-            self._save_gather_error('Request timed out: {}'.format(e), self.job)  # noqa: E501
-            status_code = 408
-            elapsed = 9999
-            if hasattr(self, 'provider_logger'):
-                self.provider_logger.info(log_message.format(provider,
-                    timestamp, status_code, timeout))  # noqa: E128
-            return 408
-
-        if r.status_code != 200:
-            self._save_gather_error('{} error: {}'.format(r.status_code, r.text), self.job)  # noqa: E501
-            elapsed = 9999
-            if hasattr(self, 'provider_logger'):
-                self.provider_logger.info(log_message.format(provider,
-                    timestamp, r.status_code, elapsed))  # noqa: E128
-            return r.status_code
-
-        if hasattr(self, 'provider_logger'):
-            self.provider_logger.info(log_message.format(provider,
-                timestamp, r.status_code, r.elapsed.total_seconds()))  # noqa: E501
-        return r.status_code
-    
     def _crawl_urls_ftp(self, url, provider):
+        """
+        Check if a file is present on an FTP server and return the appropriate
+        status code.
+        """
+        # We need to be able to mock this for testing and requests-mock doesn't
+        # work with requests-ftp, so this is our workaround. We'll just bypass
+        # this method like so (the real method returns either an int or None):
+        test_ftp_status = self.source_config.get('test_ftp_status')
+        if test_ftp_status == 'ok':
+            return 10000
+        elif test_ftp_status == 'error':
+            return None
+
+        # And now here's the real method:
         timeout = self.source_config['timeout']
 
         # Make a request to the website
@@ -340,30 +317,61 @@ class NextGEOSSHarvester(HarvesterBase):
         try:
             requests_ftp.monkeypatch_session()
             s = requests.Session()
-            file_directory = path.dirname(url)
-            file_name = path.basename(url)
-            r = s.list(file_directory, auth=('ngeoss', 'NextCMEMS2017'))
-            status_code = 999
-            if file_name in r.content:
-                status_code = 226
+            r = s.size(url, auth=('ngeoss', 'NextCMEMS2017'), timeout=timeout)
+            status_code = r.status_code
+            elapsed = r.elapsed.total_seconds()
         except (ConnectTimeout, ReadTimeout) as e:
             self._save_gather_error('Request timed out: {}'.format(e), self.job)  # noqa: E501
             status_code = 408
             elapsed = 9999
-            if hasattr(self, 'provider_logger'):
-                self.provider_logger.info(log_message.format(provider,
-                    timestamp, status_code, timeout))  # noqa: E128
-            return 408
 
-        if status_code != 226:
-            self._save_gather_error('{} error: {}'.format(status_code, r.text), self.job)  # noqa: E501
-            elapsed = 9999
-            if hasattr(self, 'provider_logger'):
-                self.provider_logger.info(log_message.format(provider,
-                    timestamp, status_code, elapsed))  # noqa: E128
-            return status_code
- 
-        if hasattr(self, 'provider_logger'):
-            self.provider_logger.info(log_message.format(provider,
-                timestamp, status_code, r.elapsed.total_seconds()))  # noqa: E501
-        return status_code
+        if status_code == 213:
+            size = int(r.text)
+        else:
+            size = None
+
+        if status_code not in {213, 408}:
+            self._save_gather_error(
+                '{} error: {}'.format(status_code, r.text), self.job)
+
+        self.provider_logger.info(log_message.format(provider, timestamp,
+                                                     status_code, elapsed))
+        return size
+
+    def import_stage(self, harvest_object):
+        log = logging.getLogger(__name__ + '.import')
+        log.debug('Import stage for harvest object with GUID {}'
+                  .format(harvest_object.id))
+
+        # Save a reference (review the utility of this)
+        self.obj = harvest_object
+
+        if harvest_object.content is None:
+            self._save_object_error('Empty content for object {}'
+                                    .format(harvest_object.id),
+                                    harvest_object, 'Import')
+            return False
+
+        status = self._get_object_extra(harvest_object, 'status')
+
+        # Check if we need to update the dataset
+        if status != 'unchanged':
+            # This can be a hook
+            package = self._create_or_update_dataset(harvest_object, status)
+            # This can be a hook
+            if not package:
+                return False
+            package_id = package['id']
+        else:
+            package_id = harvest_object.package.id
+
+        # Perform the necessary harvester housekeeping
+        self._refresh_harvest_objects(harvest_object, package_id)
+
+        # Finish up
+        if status == 'unchanged':
+            return 'unchanged'
+        else:
+            log.debug('Package {} was successully harvested.'
+                      .format(package['id']))
+            return True
