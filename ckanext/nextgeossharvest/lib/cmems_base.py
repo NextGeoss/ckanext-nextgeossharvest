@@ -18,14 +18,13 @@ log = logging.getLogger(__name__)
 
 class CMEMSBase(HarvesterBase):
 
-    def _create_object(self, identifier, ftp_link,
-                       start_date, forecast_date):
+    def _create_object(self, identifier, ftp_link, forecast_date):
 
         extras = [HOExtra(key='status',
                           value='new')]
 
         content = json.dumps({'identifier': identifier, 'ftp_link': ftp_link,
-                              'start_date': start_date,
+                              'start_date': self.start_date,
                               'forecast_date': forecast_date}, default=str)
 
         obj = HarvestObject(job=self.job, guid=unicode(uuid.uuid4()),
@@ -35,14 +34,14 @@ class CMEMSBase(HarvesterBase):
 
         return obj.id
 
-    def _get_products(self, start_date):
-        day, month, year = self._format_date_separed(start_date)
+    def _get_products(self):
+        day, month, year = self._format_date_separed(self.start_date)
 
         harvest_object_ids = []
 
         if self.harvester_type == 'ocn':
             for i in range(10):
-                forecast_date = start_date + timedelta(days=i)
+                forecast_date = self.start_date + timedelta(days=i)
                 fday, fmonth, fyear = self._format_date_separed(forecast_date)
 
                 identifier = self._make_identifier(day, month,
@@ -58,7 +57,6 @@ class CMEMSBase(HarvesterBase):
                     if r_status_code == 226:
                         harvest_object_id = self._create_object(identifier,
                                                                 ftp_link,
-                                                                start_date,
                                                                 forecast_date)
                         harvest_object_ids.append(harvest_object_id)
 
@@ -75,7 +73,6 @@ class CMEMSBase(HarvesterBase):
                 if r_status_code == 226:
                     harvest_object_id = self._create_object(identifier,
                                                             ftp_link,
-                                                            start_date,
                                                             None)
                     harvest_object_ids.append(harvest_object_id)
 
@@ -169,22 +166,21 @@ class CMEMSBase(HarvesterBase):
 
         return day, month, year
 
-    def _get_metadata_create_objects(self, start_date, end_date):
+    def _get_metadata_create_objects(self):
         # Get contents
         try:
             url = "dummy"
 
-            time_interval = end_date - start_date
+            time_interval = self.end_date - self.start_date
 
-            print(datetime.strftime(start_date, '%Y-%m-%d'))
-            print('Start date' + str(start_date))
+            print(datetime.strftime(self.start_date, '%Y-%m-%d'))
+            print('Start date' + str(self.start_date))
 
-            base_start_date = start_date
             for idx in range(time_interval.days):
-                start_date = base_start_date + timedelta(days=idx)
+                self.start_date = self.start_date + timedelta(days=idx)
                 print('idx = ' + str(idx))
-                print('start_date = ' + str(start_date))
-                id_list = self._get_products(start_date)
+                print('start_date = ' + str(self.start_date))
+                id_list = self._get_products()
 
             return id_list
 
@@ -261,7 +257,7 @@ class CMEMSBase(HarvesterBase):
             forecast_date = deserialize_date(content['forecast_date'])
             fday, fmonth, fyear = self._format_date_separed(forecast_date)
 
-        start_date = start_date.date()
+        start_date_as_date = start_date.date()
 
         spatial_template = '{{"type":"Polygon", "coordinates":[{}]}}'
         metadata = {}
@@ -291,7 +287,7 @@ class CMEMSBase(HarvesterBase):
                                      "&styles=boxfill/rainbow"
                                      "&format=image/png"
                                      "&time=" +
-                                     str(start_date) +
+                                     str(start_date_as_date) +
                                      "T12:00:00.000Z")
 
         elif self.harvester_type == 'sic_north':
@@ -334,7 +330,7 @@ class CMEMSBase(HarvesterBase):
                                      "&styles=boxfill/rainbow"
                                      "&format=image/png"
                                      "&time=" +
-                                     str(start_date) +
+                                     str(start_date_as_date) +
                                      "T12:00:00.000Z")
 
         elif self.harvester_type == 'sic_south':
@@ -377,7 +373,7 @@ class CMEMSBase(HarvesterBase):
                                      "&styles=boxfill/rainbow"
                                      "&format=image/png"
                                      "&time=" +
-                                     str(start_date) +
+                                     str(start_date_as_date) +
                                      "T12:00:00.000Z")
 
         elif self.harvester_type == 'ocn':
@@ -388,7 +384,7 @@ class CMEMSBase(HarvesterBase):
                                  " including temperature, salinity, sea ice"
                                  " concentration, sea ice thickness, sea ice velocity"  # noqa E501
                                  " and sea ice type.")
-            metadata['BulletinDate'] = str(start_date)
+            metadata['BulletinDate'] = str(start_date_as_date)
             metadata['ForecastDate'] = datetime.strftime(forecast_date,
                                                          '%Y-%m-%d')
             metadata['spatial'] = spatial_template.format([[-180, 90],
@@ -410,8 +406,7 @@ class CMEMSBase(HarvesterBase):
                                      "&styles=boxfill/rainbow"
                                      "&format=image/png"
                                      "&time=" +
-                                     datetime.strftime(start_date,
-                                        '%Y-%m-%d'))
+                                     str(start_date_as_date))
 
         # Is there any way to determine the size of the downloads?
         # Would be good to have (or possibly required) in some cases, like
@@ -420,8 +415,8 @@ class CMEMSBase(HarvesterBase):
         # Add common metadata
         metadata['identifier'] = content['identifier']
         metadata['name'] = metadata['identifier'].lower()
-        metadata['StartTime'] = (str(start_date) + 'T00:00:00.000Z')
-        metadata['StopTime'] = self._product_enddate_url_parameter(start_date)
+        metadata['StartTime'] = (str(start_date_as_date) + 'T00:00:00.000Z')
+        metadata['StopTime'] = self._product_enddate_url_parameter(start_date_as_date)  # noqa: E501
 
         # For now, the collection name and description are the same as the
         # title and notes, though one or the other should probably change in

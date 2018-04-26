@@ -76,6 +76,7 @@ class CMEMSHarvester(CMEMSBase,
                 hour=0, minute=0, second=0, microsecond=0)
         else:
             start_date = datetime.strptime(start_date, '%Y-%m-%d')
+        self.start_date = start_date
 
         end_date = self.source_config.get('end_date', 'NOW')
         if end_date in {'TODAY', 'NOW'}:
@@ -83,9 +84,9 @@ class CMEMSHarvester(CMEMSBase,
                 hour=0, minute=0, second=0, microsecond=0)
         else:
             end_date = datetime.strptime(end_date, '%Y-%m-%d')
+        self.end_date = end_date
 
-        ids = self._get_metadata_create_objects(start_date,
-                                                end_date)
+        ids = self._get_metadata_create_objects()
 
         return ids
 
