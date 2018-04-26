@@ -166,31 +166,20 @@ class CMEMSBase(HarvesterBase):
 
     def _get_metadata_create_objects(self):
         # Get contents
-        try:
-            url = "dummy"
+        time_interval = self.end_date - self.start_date
 
-            time_interval = self.end_date - self.start_date
+        print(datetime.strftime(self.start_date, '%Y-%m-%d'))
+        print('Start date' + str(self.start_date))
 
-            print(datetime.strftime(self.start_date, '%Y-%m-%d'))
-            print('Start date' + str(self.start_date))
+        ids = []
+        for idx in range(time_interval.days):
+            self.start_date = self.start_date + timedelta(days=idx)
+            print('idx = ' + str(idx))
+            print('start_date = ' + str(self.start_date))
+            new_ids = self._get_products()
+            ids.extend(new_ids)
 
-            ids = []
-            for idx in range(time_interval.days):
-                self.start_date = self.start_date + timedelta(days=idx)
-                print('idx = ' + str(idx))
-                print('start_date = ' + str(self.start_date))
-                new_ids = self._get_products()
-                ids.extend(new_ids)
-
-            return ids
-
-        except Exception as e:
-            import traceback
-            print(traceback.format_exc())
-            self._save_gather_error('Unable to get content for URL: %s: %r'
-                                    % (url, e), self.job)
-
-            return None
+        return ids
 
     def _create_tags(self):
         """Create a list of tags based on the type of harvester."""
