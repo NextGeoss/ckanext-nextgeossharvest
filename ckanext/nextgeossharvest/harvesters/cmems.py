@@ -72,6 +72,9 @@ class CMEMSHarvester(CMEMSBase,
         log = logging.getLogger(__name__ + '.gather')
         log.debug('CMEMS Harvester gather_stage for job: %r', harvest_job)
 
+        if not hasattr(self, 'provider_logger'):
+            self.provider_logger = self.make_provider_logger()
+
         self.job = harvest_job
         self._set_source_config(harvest_job.source.config)
         self.harvester_type = self.source_config['harvester_type']
