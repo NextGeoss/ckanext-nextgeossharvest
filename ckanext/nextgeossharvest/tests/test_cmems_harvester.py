@@ -1,5 +1,9 @@
+# -*- coding: utf-8 -*-
 """Tests for the CMEMS harvester."""
+
 import json
+
+from parameterized import parameterized
 
 from ckan import model
 import ckan.tests.helpers as helpers
@@ -25,6 +29,19 @@ sst = {
     }
 }
 
+sst_3 = {
+    'org': {
+        'name': 'sst_test_org',
+        'url': 'http://example.com/sst'
+    },
+    'config': {
+        'harvester_type': 'sst',
+        'start_date': '2018-01-01',
+        'end_date': '2018-01-04',
+        'timeout': 10
+    }
+}
+
 sic_north = {
     'org': {
         'name': 'sic_north_test_org',
@@ -34,6 +51,19 @@ sic_north = {
         'harvester_type': 'sic_north',
         'start_date': 'YESTERDAY',
         'end_date': 'TODAY',
+        'timeout': 10
+    }
+}
+
+sic_north_3 = {
+    'org': {
+        'name': 'sic_north_test_org',
+        'url': 'http://example.com/sic_north'
+    },
+    'config': {
+        'harvester_type': 'sic_north',
+        'start_date': '2018-01-01',
+        'end_date': '2018-01-04',
         'timeout': 10
     }
 }
@@ -51,6 +81,19 @@ sic_south = {
     }
 }
 
+sic_south_3 = {
+    'org': {
+        'name': 'sic_south_test_org',
+        'url': 'http://example.com/sic_south'
+    },
+    'config': {
+        'harvester_type': 'sic_south',
+        'start_date': '2018-01-01',
+        'end_date': '2018-01-04',
+        'timeout': 10
+    }
+}
+
 ocn = {
     'org': {
         'name': 'ocn_test_org',
@@ -58,8 +101,21 @@ ocn = {
     },
     'config': {
         'harvester_type': 'ocn',
+        'start_date': 'YESTERDAY',
+        'end_date': 'TODAY',
+        'timeout': 10
+    }
+}
+
+ocn_3 = {
+    'org': {
+        'name': 'ocn_test_org',
+        'url': 'http://example.com/ocn'
+    },
+    'config': {
+        'harvester_type': 'ocn',
         'start_date': '2018-01-01',
-        'end_date': '2018-01-3',
+        'end_date': '2018-01-04',
         'timeout': 10
     }
 }
@@ -70,9 +126,19 @@ test_auth = {
 }
 
 
-# We're simulating a run covering two days
-def test_harvester(test_config=ocn, test_ftp_status='ok', expected=20,
-                   private=True):
+@parameterized([
+    # Run for one-day interval
+    (sst, 'ok', 1, False),
+    (sic_south, 'ok', 1, False),
+    (sic_north, 'ok', 1, False),
+    (ocn, 'ok', 10, False),
+    # Run for three-day interval
+    (sst_3, 'ok', 3, False),
+    (sic_south_3, 'ok', 3, False),
+    (sic_north_3, 'ok', 3, False),
+    (ocn_3, 'ok', 30, False),
+])
+def test_harvester(test_config, test_ftp_status, expected, private):
         """
         Test the harvester by running it for real with mocked requests.
 
@@ -95,7 +161,6 @@ def test_harvester(test_config=ocn, test_ftp_status='ok', expected=20,
 
         org = test_config['org']
         owner_org = helpers.call_action('organization_create', context, **org)
-
         config_dict = test_config['config']
         config_dict['test_ftp_status'] = test_ftp_status
         config_dict['username'] = test_auth['username']
@@ -123,7 +188,6 @@ def test_harvester(test_config=ocn, test_ftp_status='ok', expected=20,
         lib.run_harvest_job(job_obj, harvester)
 
         source = harvest_source_show(context, {'id': source['name']})
-
         assert source['status']['last_job']['status'] == 'Finished'
         assert source['status']['last_job']['stats']['added'] == expected
 
