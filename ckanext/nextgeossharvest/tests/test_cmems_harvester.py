@@ -64,6 +64,11 @@ ocn = {
     }
 }
 
+test_auth = {
+    'username': 'testuser',
+    'password': 'testpass'
+}
+
 
 # We're simulating a run covering two days
 def test_harvester(test_config=ocn, test_ftp_status='ok', expected=20):
@@ -92,6 +97,8 @@ def test_harvester(test_config=ocn, test_ftp_status='ok', expected=20):
 
         config_dict = test_config['config']
         config_dict['test_ftp_status'] = test_ftp_status
+        config_dict['username'] = test_auth['username']
+        config_dict['password'] = test_auth['password']
         config = json.dumps(config_dict)
 
         source = {
