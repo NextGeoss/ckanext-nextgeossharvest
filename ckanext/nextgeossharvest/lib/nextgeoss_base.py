@@ -76,7 +76,7 @@ class NextGEOSSHarvester(HarvesterBase):
         context = {
             'model': model,
             'session': model.Session,
-            'user': 'test_user',  # self._get_user_name(),
+            'user': self._get_user_name(),
             'ignore_auth': True
         }
 

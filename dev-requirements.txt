@@ -1,3 +1,4 @@
 requests_mock
 factory-boy>=2
 mock
+parameterized
