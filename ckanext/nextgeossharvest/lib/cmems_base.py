@@ -35,39 +35,37 @@ class CMEMSBase(HarvesterBase):
         return obj.id
 
     def _get_products(self):
+        """
+        Check if a product or products exist on an FTP server, create a harvest
+        object and append the id to a list if so.
+
+        The `ocn` source is a special case, with multiple products and
+        additional date parameters.
+        """
         day, month, year = self._format_date_separed(self.start_date)
 
         harvest_object_ids = []
 
         if self.harvester_type == 'ocn':
-            for i in range(10):
-                forecast_date = self.start_date + timedelta(days=i)
-                fday, fmonth, fyear = self._format_date_separed(forecast_date)
-
-                identifier = self._make_identifier(day, month,
-                                                   year, fday, fmonth, fyear)
-
-                if not self._was_harvested(identifier):
-
-                    ftp_link = self._make_ftp_link(day, month,
-                                                   year, fday, fmonth, fyear)
-
-                    size = self._crawl_urls_ftp(ftp_link, 'cmems')
-
-                    if size:
-                        harvest_object_id = self._create_object(identifier,
-                                                                ftp_link,
-                                                                size,
-                                                                forecast_date)
-                        harvest_object_ids.append(harvest_object_id)
-
+            num_products = 10
         else:
+            num_products = 1
+
+        for i in range(num_products):
+            if self.harvester_type == 'ocn':
+                forecast_date = self.start_date + timedelta(days=i)
+                fday, fmonth, fyear = self._format_date_separed(
+                    forecast_date)
+            else:
+                forecast_date = fday = fmonth = fyear = None
+
             identifier = self._make_identifier(day, month,
-                                               year)
+                                               year, fday, fmonth, fyear)
 
             if not self._was_harvested(identifier):
+
                 ftp_link = self._make_ftp_link(day, month,
-                                               year)
+                                               year, fday, fmonth, fyear)
 
                 size = self._crawl_urls_ftp(ftp_link, 'cmems')
 
@@ -75,7 +73,7 @@ class CMEMSBase(HarvesterBase):
                     harvest_object_id = self._create_object(identifier,
                                                             ftp_link,
                                                             size,
-                                                            None)
+                                                            forecast_date)
                     harvest_object_ids.append(harvest_object_id)
 
         return harvest_object_ids

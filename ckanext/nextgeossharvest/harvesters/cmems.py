@@ -63,6 +63,12 @@ class CMEMSHarvester(CMEMSBase,
                 timeout = config_obj['timeout']
                 if not isinstance(timeout, int) and not timeout > 0:
                     raise ValueError('timeout must be a positive integer')
+            if type(config_obj.get('password', None)) != unicode:
+                raise ValueError('password is required and must be a string')
+            if type(config_obj.get('username', None)) != unicode:
+                raise ValueError('username is requred and must be a string')
+            if type(config_obj.get('make_private', False)) != bool:
+                raise ValueError('make_private must be true or false')
         except ValueError as e:
             raise e
 

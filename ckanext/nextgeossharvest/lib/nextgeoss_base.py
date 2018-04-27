@@ -7,6 +7,7 @@ import uuid
 from string import Template
 from datetime import datetime
 import requests
+from requests.auth import HTTPBasicAuth
 import requests_ftp
 from requests.exceptions import ConnectTimeout, ReadTimeout
 
@@ -126,6 +127,8 @@ class NextGEOSSHarvester(HarvesterBase):
         package_dict['tags'] = parsed_content['tags']
         package_dict['extras'] = self._get_extras(parsed_content)
         package_dict['resources'] = self._get_resources(parsed_content)
+        print type(self.source_config.get('make_private'))
+        package_dict['private'] = self.source_config.get('make_private', False)
 
         return package_dict
 
@@ -240,7 +243,8 @@ class NextGEOSSHarvester(HarvesterBase):
 
     def _get_extras(self, parsed_content):
         """Return a list of CKAN extras."""
-        skip = {'id', 'title', 'tags', 'status', 'notes', 'name', 'resource'}
+        skip = {'id', 'title', 'tags', 'status', 'notes', 'name', 'resource',
+                'private'}
         extras = [{'key': key, 'value': value}
                   for key, value in parsed_content.items()
                   if key not in skip]
@@ -310,6 +314,8 @@ class NextGEOSSHarvester(HarvesterBase):
 
         # And now here's the real method:
         timeout = self.source_config['timeout']
+        username = self.source_config['username']
+        password = self.source_config['password']
 
         # Make a request to the website
         timestamp = str(datetime.utcnow())
@@ -317,7 +323,8 @@ class NextGEOSSHarvester(HarvesterBase):
         try:
             requests_ftp.monkeypatch_session()
             s = requests.Session()
-            r = s.size(url, auth=('ngeoss', 'NextCMEMS2017'), timeout=timeout)
+            r = s.size(url, auth=HTTPBasicAuth(username, password),
+                       timeout=timeout)
             status_code = r.status_code
             elapsed = r.elapsed.total_seconds()
         except (ConnectTimeout, ReadTimeout) as e:
