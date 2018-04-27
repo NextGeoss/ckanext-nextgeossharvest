@@ -127,7 +127,6 @@ class NextGEOSSHarvester(HarvesterBase):
         package_dict['tags'] = parsed_content['tags']
         package_dict['extras'] = self._get_extras(parsed_content)
         package_dict['resources'] = self._get_resources(parsed_content)
-        print type(self.source_config.get('make_private'))
         package_dict['private'] = self.source_config.get('make_private', False)
 
         return package_dict
