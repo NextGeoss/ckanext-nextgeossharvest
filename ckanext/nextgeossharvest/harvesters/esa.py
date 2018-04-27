@@ -62,6 +62,8 @@ class ESAHarvester(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
                 if key in config_obj:
                     if not isinstance(config_obj[key], bool):
                         raise ValueError('{} must be boolean'.format(key))
+            if type(config_obj.get('make_private', False)) != bool:
+                raise ValueError('make_private must be true or false')
 
         except ValueError as e:
             raise e

@@ -71,7 +71,8 @@ test_auth = {
 
 
 # We're simulating a run covering two days
-def test_harvester(test_config=ocn, test_ftp_status='ok', expected=20):
+def test_harvester(test_config=ocn, test_ftp_status='ok', expected=20,
+                   private=True):
         """
         Test the harvester by running it for real with mocked requests.
 
@@ -99,6 +100,7 @@ def test_harvester(test_config=ocn, test_ftp_status='ok', expected=20):
         config_dict['test_ftp_status'] = test_ftp_status
         config_dict['username'] = test_auth['username']
         config_dict['password'] = test_auth['password']
+        config_dict['make_private'] = private
         config = json.dumps(config_dict)
 
         source = {
