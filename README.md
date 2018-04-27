@@ -15,24 +15,32 @@ This extension contains harvester plugins for harvesting from sources used by Ne
     4. [Sentinel settings (SciHub, NOA & CODE-DE)](#generalsettings)
     5. [Harvesting from more than one Sentinel source](#multi)
     6. [How the three Sentinel harvesters work together](#alltogether)
-4. [Developing new harvesters](#develop)
+4. [Harvesting CMEMS products](#harvesting-cmems)
+    1. [CMEMS Settings](#cmems-settings)
+    2. [Running a CMEMS harvester](#running-cmems)
+5. [Developing new harvesters](#develop)
     1. [The basic harvester workflow](#basicworkflow)
         1. [gather_stage](#gather_stage)
         2. [fetch_stage](#fetch_stage)
         3. [import_stage](#import_stage)
     2. [Example of an OpenSearch-based harvester](#opensearchexample)
-5. [iTag](#itag)
+6. [iTag](#itag)
     1. [How ITagEnricher works](#itagprocess)
     2. [Setting up ITagEnricher](#setupitag)
     3. [Handling iTag errors](#handlingitagerrors)
-6. [Testing testing testing](#tests)
-7. [Suggested cron jobs](#cron)
-8. [Logs](#logs)
+7. [Testing testing testing](#tests)
+8. [Suggested cron jobs](#cron)
+9. [Logs](#logs)
 
 ## <a name="repo"></a>What's in the repository
 The repository contains three plugins:
 1. `nextgeossharvest`, the base CKAN plugin
-2. `esa`, a harvester plugin for harvesting Sentinel datasets from SciHub, NOA, and CODE-DE via their DHuS interfaces
+2. `esa`, a harvester plugin for harvesting Sentinel products from SciHub, NOA, and CODE-DE via their DHuS interfaces
+3. `cmems`, a harvester plugin for harvesting the following types of CMEMS products:
+    1. Arctic Ocean Physics Analysis and Forecast (OCN)
+    2. Global Observed Sea Surface Temperature (SST)
+    3. Antarctic Ocean Observed Sea Ice Concentration (SIC South)
+    4. Arctic Ocean Observed Sea Ice Concentration (SIC North)
 3. `itag` a harvester plugin for adding additional tags and metadata to datasets that have already been harvested (more on this later)
 
 ## <a name="usage"></a>Basic usage
@@ -49,7 +57,7 @@ The repository contains three plugins:
  `0 * * * * paster --plugin=ckanext-harvest harvester run -c /srv/app/production.ini >> /var/log/cron.log 2>&1`
 
 ## <a name="harvesting"></a>Harvesting Sentinel products
-To harvest Sentinel products, activate the `esa` plugin, which you will use to create a harvester that harvest from SciHub, NOA or CODE-DE. To harvest from more than one of those sources, just create more than one harvester and point it at a different source.
+To harvest Sentinel products, activate the `esa` plugin, which you will use to create a harvester that harvests from SciHub, NOA or CODE-DE. To harvest from more than one of those sources, just create more than one harvester and point it at a different source.
 
 ### <a name="scihub"></a>Harvesting from SciHub
 Create a new harvest source and select `ESA Sentinel Harvester New`. The URL does not matter—the harvester only harvests from SciHub, NOA, or CODE-DE, depending on the configuration below.
@@ -86,6 +94,7 @@ After saving the configuration, you can click Reharvest and the job will begin (
 5. `datasets_per_job`: (optional, integer, defaults to 1000) determines the maximum number of products that will be harvested during each job. If a query returns 2,501 results, only the first 1000 will be harvested if you're using the default. This is useful for running the harvester via recurring jobs intended to harvest products incrementally (i.e., you want to start from the beginning and harvest all available products). The harvester will harvest products in groups of 1000, rather than attmepting to harvest all x-hundred-thousand at once. You'll get feedback after each job, so you'll know if there are errors without waiting for the whole job to run. And the harvester will automatically resume from the harvested dataset if you're running it via a recurring cron job.
 6. `timeout`: (optional, integer, defaults to 4) determines the number of seconds to wait before timing out a request.
 7. `skip_raw`: (optional, boolean, defaults to false) determines whether RAW products are skipped or included in the harvest.
+8. `make_private` is optional and defaults to `false`. If `true`, the datasets created by the harvester will be marked private. This setting is not retroactive. It only applies to datasets created by the harvester while the setting is `true`.
 
 Example configuration with all variables present:
 ```
@@ -96,7 +105,8 @@ Example configuration with all variables present:
   "end_date": "2018-01-16T11:00:00.000Z",
   "datasets_per_job": 1000,
   "timeout": 4,
-  "skip_raw": true
+  "skip_raw": true,
+  "make_private: false"
 }
 ```
 Note: you must place your username and password in the `.ini` file as described above.
@@ -121,6 +131,49 @@ The workflow for all the harvesters is:
 
 #### A note on datasets counts
 The created/updated counts for each harvester job will be accurate. The count that appears in the sidebar on each harvester's page, however, will not be accurate. Besides issues with how Solr updates the `harvest_source_id` associated with each dataset, the fact that up to three harvesters may be creating or updating a single dataset means that only one harvest source can "own" a dataset at any given time. If you need to evaluate the performance of a harvester, use the job reports.
+
+## <a name="harvesting-cmems"></a>Harvesting CMEMS products
+To harvest CMEMS products, activate the `cmems` plugin, which you will use to create a harvester that harvests one of the following types of CMEMS product:
+1. Arctic Ocean Physics Analysis and Forecast (OCN) from ftp://mftp.cmems.met.no/Core/ARCTIC_ANALYSIS_FORECAST_PHYS_002_001_a/dataset-topaz4-arc-myoceanv2-be/
+2. Global Observed Sea Surface Temperature (SST) from ftp://cmems.isac.cnr.it/Core/SST_GLO_SST_L4_NRT_OBSERVATIONS_010_001/METOFFICE-GLO-SST-L4-NRT-OBS-SST-V2/
+3. Antarctic Ocean Observed Sea Ice Concentration (SIC South) from ftp://mftp.cmems.met.no/Core/SEAICE_GLO_SEAICE_L4_NRT_OBSERVATIONS_011_001/METNO-GLO-SEAICE_CONC-SOUTH-L4-NRT-OBS/
+4. Arctic Ocean Observed Sea Ice Concentration (SIC North) from ftp://mftp.cmems.met.no/Core/SEAICE_GLO_SEAICE_L4_NRT_OBSERVATIONS_011_001/METNO-GLO-SEAICE_CONC-NORTH-L4-NRT-OBS/
+
+To harvest more than one of those types of product, just create more than one harvester and configure a different `harvester_type`.
+
+The URL you enter in the harvester GUI does not matter--the plugin determines the correct URL based on the `harvester_type`.
+
+The different products are hosted on different services, so separate harvesters are necessary for ensuring that the harvesting of one is not affected by errors or outages on the others.
+
+### <a name="cmems-settings"></a>CMEMS Settings
+`harvester_type` determines which type of product will be harvested. It must be one of the following four strings: `sst`, `sic_north`, `sic_south`, or `ocn`.
+
+`start_date` determines the start date for the harvester job. It must be the string `YESTERDAY` or a string describing a date in the format `YYYY-MM-DD`, like `2018-01-31`.
+
+`end_date` determines the end date for the harvester job. It must be the string `TODAY` or a string describing a date in the format `YYYY-MM-DD`, like `2018-01-31`.
+
+The harvester will harvest all the products available on the start date and on every date up to but not including the end date. If the start and end dates are `YESTERDAY` and `TODAY`, respectively, then the harvester will harvest all the products available yesterday but not any of the products available today. If the start and end dates are `2018-01-01` and `2018-02-01`, respectively, then the harvester will harvest all the products available in the month of January (and none from the month of February).
+
+`timeout` determines how long the harvester will wait for a response from a server before cancelling the attempt. It must be a postive integer.
+
+`username` and `password` are your username and password for accessing the CMEMS products at the source for the harvester type you selected above.
+
+`make_private` is optional and defaults to `false`. If `true`, the datasets created by the harvester will be marked private. This setting is not retroactive. It only applies to datasets created by the harvester while the setting is `true`.
+
+Example config:
+```
+{
+  "harvester_type": "sic_south",
+  "start_date": "YESTERDAY",
+  "end_date": "TODAY",
+  "timeout": 10,
+  "username": "your_username",
+  "password": "your_password",
+  "make_private": false
+}
+```
+### <a name="running-cmems"></a>Running a CMEMS harvester
+You can run the harvester on a Daily update frequencey with `YESTERDAY` and `TODAY` as the start and end dates. Since requests may time out, you can also run the harvester more than once a day using the Manual update frequency and a cron job. There's no way to recover from outages at the moment; the CMEMS harvester could be more robust.
 
 ## <a name="develop"></a>Developing new harvesters
 ### <a name="basicworkflow"></a>The basic harvester workflow
