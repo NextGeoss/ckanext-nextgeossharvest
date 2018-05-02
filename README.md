@@ -18,19 +18,22 @@ This extension contains harvester plugins for harvesting from sources used by Ne
 4. [Harvesting CMEMS products](#harvesting-cmems)
     1. [CMEMS Settings](#cmems-settings)
     2. [Running a CMEMS harvester](#running-cmems)
-5. [Developing new harvesters](#develop)
+5. [Harvesting GOME-2 products](#harvesting-gome2)
+    1. [GOME-2 Settings](#gome2-settings)
+    2. [Running a GOME-2 harvester](#running-gome2)
+6. [Developing new harvesters](#develop)
     1. [The basic harvester workflow](#basicworkflow)
         1. [gather_stage](#gather_stage)
         2. [fetch_stage](#fetch_stage)
         3. [import_stage](#import_stage)
     2. [Example of an OpenSearch-based harvester](#opensearchexample)
-6. [iTag](#itag)
+7. [iTag](#itag)
     1. [How ITagEnricher works](#itagprocess)
     2. [Setting up ITagEnricher](#setupitag)
     3. [Handling iTag errors](#handlingitagerrors)
-7. [Testing testing testing](#tests)
-8. [Suggested cron jobs](#cron)
-9. [Logs](#logs)
+8. [Testing testing testing](#tests)
+9. [Suggested cron jobs](#cron)
+10. [Logs](#logs)
 
 ## <a name="repo"></a>What's in the repository
 The repository contains three plugins:
@@ -175,13 +178,52 @@ Example config:
 ### <a name="running-cmems"></a>Running a CMEMS harvester
 You can run the harvester on a Daily update frequencey with `YESTERDAY` and `TODAY` as the start and end dates. Since requests may time out, you can also run the harvester more than once a day using the Manual update frequency and a cron job. There's no way to recover from outages at the moment; the CMEMS harvester could be more robust.
 
+## <a name="harvesting-gome2></a>Harvesting GOME-2 products
+The GOME-2 harvester harvests products from the following GOME-2 coverages:
+1. GOME2_O3
+2. GOME2_NO2
+3. GOME2_TropNO2
+4. GOME2_SO2
+5. GOME2_SO2mass
+
+The GOME-2 program has ceased creating those coverages. The earliest is from 2007-01-04 and the latest is from 2018-02-17.
+
+Unlike other harvesters, the GOME-2 harvester doesn't make any requests at all. It programmatically creates datasets and resources for products in those collections. There's no central registry to query, and the URL schemas are known.
+
+For that reason, the harvester (also unlike other harvesters) only needs to be run once in order to "harvest" all the products. The start and end dates are configurable, so it's possible to harvest the products in smaller chunks.
+
+Since no requests are made, there will never be any failures do to the source being unavailable and thus no need to retry failed requests, etc. There's no reason not to just harvest all the products at once. Harvesting a smaller date range is useful for generating a limited number of datasets for testing the portal, though.
+
+### <a name="gome2-settings></a>GOME-2 Settings
+The GOME-2 harvester has two required and one optional setting.
+1. `start_date` (required) determines the date on which the harvesting begins. It must be in the format `YYY-MM-DD`. If you want to harvest from the earliest product onwards, use `2007-01-04`
+2. `end_date` (required) determines the date on which the harvesting ends. It is inclusive, i.e., if the end date is `2017-03-2`, then products will be harvested up to _and including_ that date. If you want to harvest up to and including the very last GOME-2 product, use `2018-02-17`.
+3. `make_private` (optional) determines whether the datasets created by the harvester will be private or public. The default is `false`, i.e., by default, all datasets created by the harvester will be public.
+
+#### Example of GOME-2 settings
+{
+    "start_date": "2017-03-01",
+    "end_date": "2017-03-02",
+    "make_private": false
+}
+
+### <a name="running-gome2"></a>Running a GOME-2 harvester
+1. Add `gome2` to the list of plugins in your .ini file.
+2. Create a new harvester via the harvester interface.
+3. The URL you enter does not matter--as mentioned above, the GOME-2 harvester does not make any requests. Select `GOME-2` from the list of harvesters.
+4. Add a config as described above.
+5. Select `Manual` from the freuqency options. The harvester only needs to run once; the datasets are created programmatically and the program that produced the products has ended, so there are no updates or new products that you'll need to harvest later.
+6. Run the harvester. It will programmatically create datasets representing all the GOME-2 products.
+
 ## <a name="develop"></a>Developing new harvesters
 ### <a name="basicworkflow"></a>The basic harvester workflow
 The basic harvester workflow is divided into three stages. Each stage has a related method, and each method must be included in the harvester plugin.
+
 The three methods are:
 1. `gather_stage()`
 2. `fetch_stage()`
 3. `import_stage()`
+
 While the `fetch_stage()` method _must_ be included, it may be the case that the harvester does not require a fetch stage (for instance, if the source is an OpenSearch service, then the search results in the gather stage may already include the necessary content, so there's no need to fetch it again. In those cases, the `fetch_stage()` method will still be implemented, but it will just return `True`. The `gather_stage()` and `import_stage()` methods, however, will always include some amount of code, as they will always be used.
 #### <a name="gather_stage"></a>gather_stage
 To simplify things, the gather stage is used to create a list of datasets that will be created or updated in the final import stage. That's really all it's for. It is not meant for parsing content into dictionaries for creating or updating datasets (that occurs in the import stage). It also isn't meant for acquiring or storing raw content that will be parsed later (that occurs in the fetch stage)—with certain exceptions, like OpenSearch services, where the content is already provided in the initial search results.
