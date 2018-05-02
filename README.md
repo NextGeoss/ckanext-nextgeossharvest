@@ -44,7 +44,13 @@ The repository contains three plugins:
     2. Global Observed Sea Surface Temperature (SST)
     3. Antarctic Ocean Observed Sea Ice Concentration (SIC South)
     4. Arctic Ocean Observed Sea Ice Concentration (SIC North)
-3. `itag` a harvester plugin for adding additional tags and metadata to datasets that have already been harvested (more on this later)
+4. `gome2`, a harvester plugin for harvesting the following types of GOME-2 coverage products:
+    1. GOME2_O3
+    2. GOME2_NO2
+    3. GOME2_TropNO2
+    4. GOME2_SO2
+    5. GOME2_SO2mass
+5. `itag` a harvester plugin for adding additional tags and metadata to datasets that have already been harvested (more on this later)
 
 ## <a name="usage"></a>Basic usage
 1. Run `python setup.py develop` in the `ckanext-nextgeossharvest` directory.
