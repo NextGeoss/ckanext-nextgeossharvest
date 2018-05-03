@@ -142,25 +142,33 @@ class GOME2Base(HarvesterBase):
 
         metadata = {}
 
+        description = ('Daily global concentrations of {}. These data are '
+                       'crucial for monitoring atmospheric pollutants to keep '
+                       'a check on the health of the Earth\'s atmosphere.')
+
         if self.coverage == 'GOME2_O3':
-            metadata['title'] = 'GOME-2 O3'  # There should be a better title
-            metadata['notes'] = 'No description available'  # Why is there no description? # noqa: E501
+            metadata['title'] = 'MetOP-A GOME-2 Ozone (O3)'
+            metadata['notes'] = description.format('atmospheric ozone')
 
         elif self.coverage == 'GOME2_NO2':
-            metadata['title'] = 'GOME-2 NO2'  # There should be a better title
-            metadata['notes'] = 'No description available'  # Why is there no description? # noqa: E501
+            metadata['title'] = 'MetOP-A GOME-2 Nitrogen Dioxide (NO2)'
+            metadata['notes'] = description.format(
+                'atmospheric nitrogen dioxide')
 
         elif self.coverage == 'GOME2_TropNO2':
-            metadata['title'] = 'GOME-2 Tropospheric NO2'  # There should be a better title # noqa: E501
-            metadata['notes'] = 'No description available'  # Why is there no description? # noqa: E501
+            metadata['title'] = 'MetOP-A GOME-2 Tropospheric Nitrogen Dioxide (NO2)'  # noqa: E501
+            metadata['notes'] = description.format(
+                'tropospheric nitrogen dioxide')
 
         elif self.coverage == 'GOME2_SO2':
-            metadata['title'] = 'GOME-2 SO2'  # There should be a better title
-            metadata['notes'] = 'No description available'  # Why is there no description? # noqa: E501
+            metadata['title'] = 'MetOP-A GOME-2 Sulphur Dioxide (SO2)'
+            metadata['notes'] = description.format(
+                'atmospheric sulphur dioxide')
 
         elif self.coverage == 'GOME2_SO2mass':
-            metadata['title'] = 'GOME-2 SO2 Mass'  # There should be a better title # noqa: E501
-            metadata['notes'] = 'No description available'  # Why is there no description? # noqa: E501
+            metadata['title'] = 'MetOP-A GOME-2 Sulphur Dioxide (SO2) mass'
+            metadata['notes'] = description.format(
+                'atmospheric sulphur dioxide mass')
 
         # Common metadata
         metadata['collection_id'] = 'METOP_A_{}'.format(self.coverage)
