@@ -184,7 +184,7 @@ Example config:
 ### <a name="running-cmems"></a>Running a CMEMS harvester
 You can run the harvester on a Daily update frequencey with `YESTERDAY` and `TODAY` as the start and end dates. Since requests may time out, you can also run the harvester more than once a day using the Manual update frequency and a cron job. There's no way to recover from outages at the moment; the CMEMS harvester could be more robust.
 
-## <a name="harvesting-gome2></a>Harvesting GOME-2 products
+## <a name="harvesting-gome2"></a>Harvesting GOME-2 products
 The GOME-2 harvester harvests products from the following GOME-2 coverages:
 1. GOME2_O3
 2. GOME2_NO2
@@ -200,7 +200,7 @@ For that reason, the harvester (also unlike other harvesters) only needs to be r
 
 Since no requests are made, there will never be any failures do to the source being unavailable and thus no need to retry failed requests, etc. There's no reason not to just harvest all the products at once. Harvesting a smaller date range is useful for generating a limited number of datasets for testing the portal, though.
 
-### <a name="gome2-settings></a>GOME-2 Settings
+### <a name="gome2-settings"></a>GOME-2 Settings
 The GOME-2 harvester has two required and one optional setting.
 1. `start_date` (required) determines the date on which the harvesting begins. It must be in the format `YYY-MM-DD`. If you want to harvest from the earliest product onwards, use `2007-01-04`
 2. `end_date` (required) determines the date on which the harvesting ends. It is inclusive, i.e., if the end date is `2017-03-2`, then products will be harvested up to _and including_ that date. If you want to harvest up to and including the very last GOME-2 product, use `2018-02-17`.
@@ -216,7 +216,7 @@ The GOME-2 harvester has two required and one optional setting.
 ### <a name="running-gome2"></a>Running a GOME-2 harvester
 1. Add `gome2` to the list of plugins in your .ini file.
 2. Create a new harvester via the harvester interface.
-3. The URL you enter does not matter--as mentioned above, the GOME-2 harvester does not make any requests. Select `GOME-2` from the list of harvesters.
+3. The URL you enter does not matter--as mentioned above, the GOME-2 harvester does not make any requests. Select `GOME2` from the list of harvesters.
 4. Add a config as described above.
 5. Select `Manual` from the freuqency options. The harvester only needs to run once; the datasets are created programmatically and the program that produced the products has ended, so there are no updates or new products that you'll need to harvest later.
 6. Run the harvester. It will programmatically create datasets representing all the GOME-2 products.
