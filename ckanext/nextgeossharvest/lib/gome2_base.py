@@ -57,8 +57,9 @@ class GOME2Base(HarvesterBase):
 
         for date_string in self.date_strings:
             identifier = self._make_identifier(coverage, date_string)
-            content_dicts.append({'identifier': identifier, 'coverage': coverage,
-                   'date_string': date_string})
+            content_dicts.append({'identifier': identifier,
+                                  'coverage': coverage,
+                                  'date_string': date_string})
         return content_dicts
 
     def _missing_or_harvested(self, coverage, content_dict):
