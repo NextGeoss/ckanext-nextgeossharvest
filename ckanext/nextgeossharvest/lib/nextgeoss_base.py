@@ -23,7 +23,6 @@ from ckan.model import Package
 from ckan import logic
 from ckan.lib.navl.validators import not_empty
 
-from ckanext.harvest.model import HarvestJob
 from ckanext.harvest.harvesters.base import HarvesterBase
 
 
