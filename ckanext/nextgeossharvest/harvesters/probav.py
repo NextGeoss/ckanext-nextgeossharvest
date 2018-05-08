@@ -88,6 +88,102 @@ class PROBAVHarvester(PROBAVBase):
         return config
     
     
+    def _make_requests_and_parse_responses_creating_objects(self, url, collection, user, password, products_list):
+        # Inital HTTP Request
+        timestamp = datetime.datetime.now()
+        r = requests.get(url)
+        #logger.info('%-12s' % ('vito') + ' | ' + str(timestamp) + ' | ' + str(r.status_code) + ' | ' + str(r.elapsed.total_seconds())+'s')
+
+
+        # XML Parsing to the first HTTP response.
+        soup = BeautifulSoup(r.text, 'lxml-xml')
+    
+        dataset_num = 0
+        while True:
+        # Populate the List
+            dataset_num = dataset_num + len(soup.find_all('entry'))
+            for e in soup.find_all('entry'):
+                if 'S1' in collection or 'S5' in collection or 'S10' in collection:
+                    timestamp = datetime.datetime.now()
+                    r2 = requests.get(e.find(rel='enclosure')['href'],auth=(user, password))
+                    #logger.info('%-12s' % ('vito') + ' | ' + str(timestamp) + ' | ' + str(r2.status_code) + ' | ' + str(r2.elapsed.total_seconds())+'s')
+                    soup2 = BeautifulSoup(r2.text, 'lxml-xml')
+                    for file in soup2.find_all('file'):
+                        if '.HDF5' in file['name']:
+                            metadata = {}
+                            metadata['datasetname'] = file['name']
+                            metadata['Collection'] = collection.replace('urn:ogc:def:EOP:VITO:','')
+                            metadata['uuid'] = file['name'].lower().replace('.hdf5', '')
+                            metadata['StartTime'] = e.date.get_text().split('Z/')[0]
+                            metadata['StopTime'] = e.date.get_text().split('Z/')[1][:-1]
+                            tile = file['name'].split('_')[3]
+                            numX = int(tile[1:3])
+                            numY = int(tile[4:])
+                            for x in range(36):
+                                if numX == x:
+                                    for y in range(14):
+                                        if numY == y:
+                                            lng_min = str(-180.0 + (10*x))
+                                            lng_max = str(-170.0 + (10*x))
+                                            lat_max = str(75 - (10*y))
+                                            lat_min = str(65 - (10*y))
+                                            break
+                            metadata['Coordinates'] = [[lng_min,lat_max], [lng_max,lat_max], [lng_max,lat_min], [lng_min, lat_min], [lng_min,lat_max]]
+                            thumbnail_without_bbox = e.find(rel='icon')['href'].split('BBOX=')[0]
+                            thumbnail_url = thumbnail_without_bbox + 'BBOX=' + lat_min + ',' + lng_min + ',' + lat_max + ',' + lng_max + '&HEIGHT=200&WIDTH=200'
+                            metadata['thumbnail'] = thumbnail_url
+                            metadata['downloadLink'] = file.url.text
+                            products_list.append(metadata)
+                else:
+                    metadata = {}
+                    metadata['Collection'] = collection.replace('urn:ogc:def:EOP:VITO:','')
+                    metadata['uuid'] = e.id.get_text().split(':')[6] + '_' + e.id.get_text().split(':')[7]
+                    metadata['uuid'] = metadata['uuid'].lower()
+                    metadata['StartTime'] = e.date.get_text().split('Z/')[0]
+                    metadata['StopTime'] = e.date.get_text().split('Z/')[1][:-1]
+                    lat_min = e.box.get_text().split(' ')[0]
+                    lng_min = e.box.get_text().split(' ')[1]
+                    lat_max = e.box.get_text().split(' ')[2]
+                    lng_max = e.box.get_text().split(' ')[3]
+                    metadata['Coordinates'] = [[lng_min,lat_max], [lng_max,lat_max], [lng_max,lat_min], [lng_min, lat_min], [lng_min,lat_max]]
+                    metadata['metadataLink'] = None
+                    try:
+                        #metadata['metadataLink'] = e.find(title='Inspire')['href']
+                        metadata['metadataLink'] = e.find(title='HMA')['href']
+                    except Exception:
+                        pass
+                    #r2 = requests.get(e.find(rel='enclosure')['href'],auth=(user, password))
+                    #soup2 = BeautifulSoup(r2.text, 'lxml-xml')
+                    metadata['thumbnail'] = None
+                    try:
+                        height_ql = int(e.find(rel='icon')['href'].split('HEIGHT=')[1].split('&')[0]) * 2
+                        width_ql = int(e.find(rel='icon')['href'].split('WIDTH=')[1]) * 2
+                        metadata['thumbnail'] = e.find(rel='icon')['href'].split('HEIGHT=')[0] + 'HEIGHT=' + str(height_ql) + '&WIDTH=' + str(width_ql)
+                    except Exception:
+                        pass
+                    #for file in soup2.find_all('file'):
+                    #    if '.HDF5' in file['name']:
+                    metadata['datasetname'] = e.title.get_text()
+                    metadata['downloadLink'] = e.find(rel='enclosure')['href']
+                            #metadata['downloadLink'] = file.url.text
+                    #    elif '.xml' in file['name'] and 'INSPIRE' not in file['name'] and metadata['metadataLink'] == None:                                
+                    #        metadata['metadataLink'] = file.url.text
+                    #    elif '.tiff' in file['name'] and metadata['thumbnail'] == None:
+                    #        metadata['thumbnail'] = file.url.text
+                    products_list.append(metadata)
+
+            # Check if there are more entries than the ones
+            # available in the actual response.
+            # Stop the loop if the actual response is the last.
+            if soup.find(rel='next') is None:
+                print dataset_num
+                break
+            # Make one more request if the actual is not the last.
+            timestamp = datetime.datetime.now()
+            r = requests.get(soup.find(rel='next')['href'])
+            #logger.info('%-12s' % ('vito') + ' | ' + str(timestamp) + ' | ' + str(r.status_code) + ' | ' + str(r.elapsed.total_seconds())+'s')
+            soup = BeautifulSoup(r.text, 'lxml-xml')
+    
     def gather_stage(self,harvest_job):
         log = logging.getLogger(__name__ + '.gather')
         log.debug('ProbaVHarvester gather_stage for job: %r', harvest_job)
@@ -143,100 +239,7 @@ class PROBAVHarvester(PROBAVBase):
               try:
                 url = 'http://www.vito-eodata.be/openSearch/findProducts.atom?collection=' + collection + '&platform=PV01&start=' + YESTERDAY + '&end=' + NOW + '&count=500'
 
-                # Inital HTTP Request
-                timestamp = datetime.datetime.now()
-                r = requests.get(url)
-                #logger.info('%-12s' % ('vito') + ' | ' + str(timestamp) + ' | ' + str(r.status_code) + ' | ' + str(r.elapsed.total_seconds())+'s')
-
-
-                # XML Parsing to the first HTTP response.
-                soup = BeautifulSoup(r.text, 'lxml-xml')
-            
-                dataset_num = 0
-                while True:
-                # Populate the List
-                    dataset_num = dataset_num + len(soup.find_all('entry'))
-                    for e in soup.find_all('entry'):
-                        if 'S1' in collection or 'S5' in collection or 'S10' in collection:
-                            timestamp = datetime.datetime.now()
-                            r2 = requests.get(e.find(rel='enclosure')['href'],auth=(user, password))
-                            #logger.info('%-12s' % ('vito') + ' | ' + str(timestamp) + ' | ' + str(r2.status_code) + ' | ' + str(r2.elapsed.total_seconds())+'s')
-                            soup2 = BeautifulSoup(r2.text, 'lxml-xml')
-                            for file in soup2.find_all('file'):
-                                if '.HDF5' in file['name']:
-                                    metadata = {}
-                                    metadata['datasetname'] = file['name']
-                                    metadata['Collection'] = collection.replace('urn:ogc:def:EOP:VITO:','')
-                                    metadata['uuid'] = file['name'].lower().replace('.hdf5', '')
-                                    metadata['StartTime'] = e.date.get_text().split('Z/')[0]
-                                    metadata['StopTime'] = e.date.get_text().split('Z/')[1][:-1]
-                                    tile = file['name'].split('_')[3]
-                                    numX = int(tile[1:3])
-                                    numY = int(tile[4:])
-                                    for x in range(36):
-                                        if numX == x:
-                                            for y in range(14):
-                                                if numY == y:
-                                                    lng_min = str(-180.0 + (10*x))
-                                                    lng_max = str(-170.0 + (10*x))
-                                                    lat_max = str(75 - (10*y))
-                                                    lat_min = str(65 - (10*y))
-                                                    break
-                                    metadata['Coordinates'] = [[lng_min,lat_max], [lng_max,lat_max], [lng_max,lat_min], [lng_min, lat_min], [lng_min,lat_max]]
-                                    thumbnail_without_bbox = e.find(rel='icon')['href'].split('BBOX=')[0]
-                                    thumbnail_url = thumbnail_without_bbox + 'BBOX=' + lat_min + ',' + lng_min + ',' + lat_max + ',' + lng_max + '&HEIGHT=200&WIDTH=200'
-                                    metadata['thumbnail'] = thumbnail_url
-                                    metadata['downloadLink'] = file.url.text
-                                    products_list.append(metadata)
-                        else:
-                            metadata = {}
-                            metadata['Collection'] = collection.replace('urn:ogc:def:EOP:VITO:','')
-                            metadata['uuid'] = e.id.get_text().split(':')[6] + '_' + e.id.get_text().split(':')[7]
-                            metadata['uuid'] = metadata['uuid'].lower()
-                            metadata['StartTime'] = e.date.get_text().split('Z/')[0]
-                            metadata['StopTime'] = e.date.get_text().split('Z/')[1][:-1]
-                            lat_min = e.box.get_text().split(' ')[0]
-                            lng_min = e.box.get_text().split(' ')[1]
-                            lat_max = e.box.get_text().split(' ')[2]
-                            lng_max = e.box.get_text().split(' ')[3]
-                            metadata['Coordinates'] = [[lng_min,lat_max], [lng_max,lat_max], [lng_max,lat_min], [lng_min, lat_min], [lng_min,lat_max]]
-                            metadata['metadataLink'] = None
-                            try:
-                                #metadata['metadataLink'] = e.find(title='Inspire')['href']
-                                metadata['metadataLink'] = e.find(title='HMA')['href']
-                            except Exception:
-                                pass
-                            #r2 = requests.get(e.find(rel='enclosure')['href'],auth=(user, password))
-                            #soup2 = BeautifulSoup(r2.text, 'lxml-xml')
-                            metadata['thumbnail'] = None
-                            try:
-                                height_ql = int(e.find(rel='icon')['href'].split('HEIGHT=')[1].split('&')[0]) * 2
-                                width_ql = int(e.find(rel='icon')['href'].split('WIDTH=')[1]) * 2
-                                metadata['thumbnail'] = e.find(rel='icon')['href'].split('HEIGHT=')[0] + 'HEIGHT=' + str(height_ql) + '&WIDTH=' + str(width_ql)
-                            except Exception:
-                                pass
-                            #for file in soup2.find_all('file'):
-                            #    if '.HDF5' in file['name']:
-                            metadata['datasetname'] = e.title.get_text()
-                            metadata['downloadLink'] = e.find(rel='enclosure')['href']
-                                    #metadata['downloadLink'] = file.url.text
-                            #    elif '.xml' in file['name'] and 'INSPIRE' not in file['name'] and metadata['metadataLink'] == None:                                
-                            #        metadata['metadataLink'] = file.url.text
-                            #    elif '.tiff' in file['name'] and metadata['thumbnail'] == None:
-                            #        metadata['thumbnail'] = file.url.text
-                            products_list.append(metadata)
-
-                    # Check if there are more entries than the ones
-                    # available in the actual response.
-                    # Stop the loop if the actual response is the last.
-                    if soup.find(rel='next') is None:
-                        print dataset_num
-                        break
-                    # Make one more request if the actual is not the last.
-                    timestamp = datetime.datetime.now()
-                    r = requests.get(soup.find(rel='next')['href'])
-                    #logger.info('%-12s' % ('vito') + ' | ' + str(timestamp) + ' | ' + str(r.status_code) + ' | ' + str(r.elapsed.total_seconds())+'s')
-                    soup = BeautifulSoup(r.text, 'lxml-xml')
+                self._make_requests_and_parse_responses_creating_objects(url, collection, user, password, products_list)
 
               except Exception as err:
                   #pass

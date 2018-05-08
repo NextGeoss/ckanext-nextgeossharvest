@@ -1,6 +1,7 @@
 from ckan.plugins.core import SingletonPlugin, implements
 from ckanext.harvest.harvesters.base import HarvesterBase
 from ckanext.spatial.harvesters.base import SpatialHarvester
+from ckan import model
 
 
 class PROBAVBase(SpatialHarvester, SingletonPlugin):
