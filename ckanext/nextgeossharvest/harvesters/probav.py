@@ -1,51 +1,30 @@
-from ckan.plugins.core import SingletonPlugin, implements
+# -*- coding: utf-8 -*-
+
 import logging
-import hashlib
-import ckan.plugins as plugins
-
-from ckan import model
-from ckan.lib.navl.validators import not_empty
-
-from ckanext.harvest.interfaces import IHarvester
-from ckanext.harvest.model import HarvestObject
-from ckanext.harvest.model import HarvestObjectExtra as HOExtra
-from ckanext.spatial.harvesters.base import SpatialHarvester
-import uuid as uuid_gen
-
-import utils
-
-from ckan import logic
-
-import os
 import json
-import requests
-import datetime
-from datetime import date, timedelta
-from bs4 import BeautifulSoup
-from ckanext.nextgeossharvest.lib.probav_base import PROBAVBase
+from datetime import datetime
 
-#formatter= logging.Formatter('%(levelname)s | %(message)s')
-#https://docs.python.org/2/howto/logging.html
+from sqlalchemy import desc
 
-#def setup_logger(name, log_file, level=logging.INFO):
-#    """Function setup as many loggers as you want"""
+from ckan.common import config
+from ckan.model import Session
+from ckan.plugins.core import implements
 
-#    handler = logging.FileHandler(log_file)        
-#    handler.setFormatter(formatter)
+from ckanext.harvest.model import HarvestObject
+from ckanext.harvest.interfaces import IHarvester
 
-#    logger = logging.getLogger(name)
-#    logger.setLevel(level)
-#    logger.addHandler(handler)
-
-#    return logger
-
-#logger = setup_logger('loggerdataproviders4', '/var/log/harvesters/dataproviders_info.log')
+from ckanext.nextgeossharvest.lib.opensearch_base import OpenSearchHarvester
+from ckanext.nextgeossharvest.lib.nextgeoss_base import NextGEOSSHarvester
 
 
-class PROBAVHarvester(PROBAVBase):
-    '''
-    A Harvester for Proba-V Products.
-    '''
+class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
+    """
+    A an example of how to build a harvester for OpenSearch sources.
+
+    You'll want to add some custom code (or preferably a custom class) to
+    handle parsing the entries themselves, as well as any special logic
+    for deciding which entries to import, etc.
+    """
     implements(IHarvester)
 
     def info(self):
@@ -54,8 +33,7 @@ class PROBAVHarvester(PROBAVBase):
             'title': 'Proba-V Harvester',
             'description': 'A Harvester for Proba-V Products'
             }
-        
-        
+
     def validate_config(self, config):
         if not config:
             return config
@@ -63,497 +41,207 @@ class PROBAVHarvester(PROBAVBase):
         try:
             config_obj = json.loads(config)
 
-            if 'DATE_MIN' in config_obj:
-                try:
-                    if config_obj['DATE_MIN'] != 'YESTERDAY':
-                        datetime.datetime.strptime(config_obj['DATE_MIN'], '%Y-%m-%d')
-                except ValueError:
-                    raise ValueError('DATE_MIN must be in the format YYYY-MM-DD or the keyword YESTERDAY')
+            # If your harvester has a config,
+            # validate it here.
 
-            if 'DATE_MAX' in config_obj:
-                try:
-                    if config_obj['DATE_MAX'] != 'TODAY':
-                        datetime.datetime.strptime(config_obj['DATE_MAX'], '%Y-%m-%d')
-                except ValueError:
-                    raise ValueError('DATE_MAX must be in the format YYYY-MM-DD or the keyword TODAY')
-
-            if not 'user' in config_obj:
-                raise ValueError('user must be set')
-            if not 'password' in config_obj:
-                raise ValueError('password must be set')
-
-        except ValueError, e:
+        except ValueError as e:
             raise e
 
         return config
-    
-    
-    def _make_requests_and_parse_responses_creating_objects(self, url, collection, user, password, products_list):
-        # Inital HTTP Request
-        timestamp = datetime.datetime.now()
-        r = requests.get(url)
-        #logger.info('%-12s' % ('vito') + ' | ' + str(timestamp) + ' | ' + str(r.status_code) + ' | ' + str(r.elapsed.total_seconds())+'s')
+
+    def gather_stage(self, harvest_job):
+        log = logging.getLogger(__name__ + '.{your_harvester}.gather')
+        log.debug('{your_harvester} gather_stage for job: %r', harvest_job)
+
+        # Save a reference so you don't need to pass harvest_job to all the
+        # methods that might need it. The OpenSearchHarvester class assumes
+        # you've done this; you can also use it in your own custom class
+        # if you need more complex result parsing logic. This reference only
+        # lasts during the gather stage. It won't be available during the other
+        # stages.
+        self.job = harvest_job
+
+        # Creates self.source_config, value either a dict of config key-value
+        # pairs or None
+        self._set_source_config(self.job.source.config)
+
+        # What comes next just shows what attributes are required to use the
+        # OpenSearchHarvester to gather results.
+
+        # This next section is a bit unwieldy, but allows us to configure
+        # how the OpenSearchHarvester parses the results without having to
+        # write a separate parser just for the gather stage. If you're
+        # harvesting from an OpenSearch source, then you don't need to fully
+        # parse each entry during the gather stage. You just need to parse
+        # enough to create a harvest object and then store the content of the
+        # entry in the harvest object's content field. The real parsing will
+        # happen in the import_stage, and that's when you'll use your custom
+        # harvester base class.
+
+        # Required: specify the name of the entry element that you'll use as
+        # the name or id of the dataset you'll create later. This is used to
+        # check if there already is a dataset with that name (to prevent
+        # duplicats and enable updates)
+        self.os_id_name = 'atom:id' #  Example
+        # Required: specify the attribute or attributes of the entry element
+        # above in case there is more than one element with the name reference
+        # above. Must be a dict. Keys are the attribute names, values are the
+        # attribute values. If no attributes are necessary for identifying the
+        # element, use {'key': None}.
+        self.os_id_attr = {'key': None}  # Example
+        # Optional: specify a function or method that will modify the text of
+        # the element. For instance, if the text is `urn:uri:the_relevant_part`,
+        # you can reference a function here that will return `the_relevant_part`
+        # when OpenSearchHarvester processes the entry.
+        #self.os_id_mod = None
+
+        # Required: specify the name of the entry element that you'll use as
+        # the GUID for the harvest object. Could be the same as os_id_name.
+        self.os_guid_name = 'atom:id'  # Example
+        # Required: specify the attribute or attributes of the entry element
+        # above in case there is more than one element with the name reference
+        # above. Must be a dict. Keys are the attribute names, values are the
+        # attribute values. If no attributes are necessary for identifying the
+        # element, use {'key': None}. Could be the same as os_id_attr.
+        self.os_guid_attr = {'key': None}  # Example
+        # Optional: specify a function or method that will modify the text of
+        # the element. For instance, if the text is `urn:uri:the_relevant_part`,
+        # you can reference a function here that will return `the_relevant_part`
+        # when OpenSearchHarvester processes the entry. Could be the same as
+        # os_id_mod.
+        #self.os_guid_mod = None
+
+        # The following three attributes are also required. They work like their
+        # siblings described above. The restart date is the date that will be
+        # used for creating new queries if the harvester has to restart. It
+        # will be the lower bound of the temporal part of the query.
+        # The restart date of the last harvest object that was successfully
+        # imported will be the new start date.
+        self.os_restart_date_name = 'atom:updated'
+        self.os_restart_date_attr = {'key': None}
+        # self.os_restart_mod = None
+
+        # Optional, and probably only need in cases like the triple Sentinel
+        # harvester. The flagged extra is the name of an extra field to check
+        # before deciding that a dataset really should not be updated when
+        # the update_all setting is False. If flagged_extra is None, the
+        # harvester will not update datasets that already exist. If
+        # flagged_extra is the name of an extra, the harvester will check to
+        # see if it's in the package dictionary. If it's _not_ in the package
+        # dictionary, then the harvester _will_ update the dataset. This is
+        # useful in the case of the Sentinel harvesters, because it means that
+        # each harvester can update datasets created by the other two harvesters
+        # and if we need to re-run the harvester, we can control whether it
+        # skips datasets it created itself or whether it updates them
+        # (for instance, we might re-run the harvester to grab products that
+        # were skipped, and we wouldn't want to update all the old datasets—
+        # but we also might re-run it to update the metadata if we change the
+        # way it's represented, in which case we would want to update all the
+        # old products.)
+        self.flagged_extra = None
+
+        harvest_url = 'http://www.vito-eodata.be/openSearch/findProducts.atom?collection=urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001&platform=PV01&start=2018-01-01&end=2018-01-02&count=500'# This will be the URL that you'll begin harvesting from
+        # when the gather stage begins. How you construct it is up to you,
+        # but it needs to be a valid URL that includes the OpenSearch query.
+        log.debug('Harvest URL is {}'.format(harvest_url))
 
 
-        # XML Parsing to the first HTTP response.
-        soup = BeautifulSoup(r.text, 'lxml-xml')
-    
-        dataset_num = 0
-        while True:
-        # Populate the List
-            dataset_num = dataset_num + len(soup.find_all('entry'))
-            for e in soup.find_all('entry'):
-                if 'S1' in collection or 'S5' in collection or 'S10' in collection:
-                    timestamp = datetime.datetime.now()
-                    r2 = requests.get(e.find(rel='enclosure')['href'],auth=(user, password))
-                    #logger.info('%-12s' % ('vito') + ' | ' + str(timestamp) + ' | ' + str(r2.status_code) + ' | ' + str(r2.elapsed.total_seconds())+'s')
-                    soup2 = BeautifulSoup(r2.text, 'lxml-xml')
-                    for file in soup2.find_all('file'):
-                        if '.HDF5' in file['name']:
-                            metadata = {}
-                            metadata['datasetname'] = file['name']
-                            metadata['Collection'] = collection.replace('urn:ogc:def:EOP:VITO:','')
-                            metadata['uuid'] = file['name'].lower().replace('.hdf5', '')
-                            metadata['StartTime'] = e.date.get_text().split('Z/')[0]
-                            metadata['StopTime'] = e.date.get_text().split('Z/')[1][:-1]
-                            tile = file['name'].split('_')[3]
-                            numX = int(tile[1:3])
-                            numY = int(tile[4:])
-                            for x in range(36):
-                                if numX == x:
-                                    for y in range(14):
-                                        if numY == y:
-                                            lng_min = str(-180.0 + (10*x))
-                                            lng_max = str(-170.0 + (10*x))
-                                            lat_max = str(75 - (10*y))
-                                            lat_min = str(65 - (10*y))
-                                            break
-                            metadata['Coordinates'] = [[lng_min,lat_max], [lng_max,lat_max], [lng_max,lat_min], [lng_min, lat_min], [lng_min,lat_max]]
-                            thumbnail_without_bbox = e.find(rel='icon')['href'].split('BBOX=')[0]
-                            thumbnail_url = thumbnail_without_bbox + 'BBOX=' + lat_min + ',' + lng_min + ',' + lat_max + ',' + lng_max + '&HEIGHT=200&WIDTH=200'
-                            metadata['thumbnail'] = thumbnail_url
-                            metadata['downloadLink'] = file.url.text
-                            products_list.append(metadata)
-                else:
-                    metadata = {}
-                    metadata['Collection'] = collection.replace('urn:ogc:def:EOP:VITO:','')
-                    metadata['uuid'] = e.id.get_text().split(':')[6] + '_' + e.id.get_text().split(':')[7]
-                    metadata['uuid'] = metadata['uuid'].lower()
-                    metadata['StartTime'] = e.date.get_text().split('Z/')[0]
-                    metadata['StopTime'] = e.date.get_text().split('Z/')[1][:-1]
-                    lat_min = e.box.get_text().split(' ')[0]
-                    lng_min = e.box.get_text().split(' ')[1]
-                    lat_max = e.box.get_text().split(' ')[2]
-                    lng_max = e.box.get_text().split(' ')[3]
-                    metadata['Coordinates'] = [[lng_min,lat_max], [lng_max,lat_max], [lng_max,lat_min], [lng_min, lat_min], [lng_min,lat_max]]
-                    metadata['metadataLink'] = None
-                    try:
-                        #metadata['metadataLink'] = e.find(title='Inspire')['href']
-                        metadata['metadataLink'] = e.find(title='HMA')['href']
-                    except Exception:
-                        pass
-                    #r2 = requests.get(e.find(rel='enclosure')['href'],auth=(user, password))
-                    #soup2 = BeautifulSoup(r2.text, 'lxml-xml')
-                    metadata['thumbnail'] = None
-                    try:
-                        height_ql = int(e.find(rel='icon')['href'].split('HEIGHT=')[1].split('&')[0]) * 2
-                        width_ql = int(e.find(rel='icon')['href'].split('WIDTH=')[1]) * 2
-                        metadata['thumbnail'] = e.find(rel='icon')['href'].split('HEIGHT=')[0] + 'HEIGHT=' + str(height_ql) + '&WIDTH=' + str(width_ql)
-                    except Exception:
-                        pass
-                    #for file in soup2.find_all('file'):
-                    #    if '.HDF5' in file['name']:
-                    metadata['datasetname'] = e.title.get_text()
-                    metadata['downloadLink'] = e.find(rel='enclosure')['href']
-                            #metadata['downloadLink'] = file.url.text
-                    #    elif '.xml' in file['name'] and 'INSPIRE' not in file['name'] and metadata['metadataLink'] == None:                                
-                    #        metadata['metadataLink'] = file.url.text
-                    #    elif '.tiff' in file['name'] and metadata['thumbnail'] == None:
-                    #        metadata['thumbnail'] = file.url.text
-                    products_list.append(metadata)
+        # The _crawl_results() method belongs to the OpenSearchHarvester class.
+        # harvest_url is the only required argument. limit, timeout, username,
+        # and password are all optional and default to 100, 5, None and None,
+        # respectively.
 
-            # Check if there are more entries than the ones
-            # available in the actual response.
-            # Stop the loop if the actual response is the last.
-            if soup.find(rel='next') is None:
-                print dataset_num
-                break
-            # Make one more request if the actual is not the last.
-            timestamp = datetime.datetime.now()
-            r = requests.get(soup.find(rel='next')['href'])
-            #logger.info('%-12s' % ('vito') + ' | ' + str(timestamp) + ' | ' + str(r.status_code) + ' | ' + str(r.elapsed.total_seconds())+'s')
-            soup = BeautifulSoup(r.text, 'lxml-xml')
-    
-    def gather_stage(self,harvest_job):
-        log = logging.getLogger(__name__ + '.gather')
-        log.debug('ProbaVHarvester gather_stage for job: %r', harvest_job)
+        # If you're going to create the new harvester jobs on a rolling basis
+        # via cron jobs, you don't need to grab all the results from a date
+        # range at once. The harvester will resume from the point it stopped
+        # each time it runs. You can control how many OpenSearch entries are
+        # gathered by using the limit argument.
 
-        self.harvest_job = harvest_job
-
-        # Get source URL
-        source_url = harvest_job.source.url
-
-        self._set_source_config(harvest_job.source.config)
-
-        # get current objects out of db
-        query = model.Session.query(HarvestObject.guid, HarvestObject.package_id).filter(HarvestObject.current==True).\
-                                    filter(HarvestObject.harvest_source_id==harvest_job.source.id)
-
-        guid_to_package_id = dict((res[0], res[1]) for res in query)
-        current_guids = set(guid_to_package_id.keys())
-        current_guids_in_harvest = set()
-
-
-        # Get contents
-        try:
-            ids = []
-            
-            today = datetime.datetime.today().strftime('%Y-%m-%d')
-            
-            yesterday_d = datetime.datetime.today() - timedelta(1)
-            yesterday = yesterday_d.strftime('%Y-%m-%d')
-            
-            config = self.source_config
-    
-            if not config:
-                pass #leave today and yesterday as is
-            else:
-                if config.get('DATE_MIN') != 'YESTERDAY':
-                    yesterday =  config['DATE_MIN']
-                
-                if config['DATE_MAX'] != 'TODAY':
-                    today =  config['DATE_MAX']
-                    
-                user = config['user']
-                password = config['password']
-         
-            NOW = str(today)+'T00:00:00.000Z'#Thh:mm:ss.SSSZ
-            YESTERDAY = str(yesterday)+'T00:00:00.000Z'#Thh:mm:ss.SSSZ
-
-            products_list = []
-            # 
-            product_collections = ["urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001", "urn:ogc:def:EOP:VITO:PROBAV_S1-TOC_1KM_V001", "urn:ogc:def:EOP:VITO:PROBAV_S1-TOA_1KM_V001", "urn:ogc:def:EOP:VITO:PROBAV_S10-TOC_1KM_V001", "urn:ogc:def:EOP:VITO:PROBAV_S10-TOC-NDVI_1KM_V001", "urn:ogc:def:EOP:VITO:PROBAV_L2A_1KM_V001", "urn:ogc:def:EOP:VITO:PROBAV_P_V001", "urn:ogc:def:EOP:VITO:PROBAV_S1-TOC_333M_V001", "urn:ogc:def:EOP:VITO:PROBAV_S1-TOA_333M_V001", "urn:ogc:def:EOP:VITO:PROBAV_S10-TOC_333M_V001", "urn:ogc:def:EOP:VITO:PROBAV_S10-TOC-NDVI_333M_V001", "urn:ogc:def:EOP:VITO:PROBAV_S1-TOC_100M_V001", "urn:ogc:def:EOP:VITO:PROBAV_S1-TOA_100M_V001", "urn:ogc:def:EOP:VITO:PROBAV_S1-TOC-NDVI_100M_V001", "urn:ogc:def:EOP:VITO:PROBAV_S5-TOC_100M_V001", "urn:ogc:def:EOP:VITO:PROBAV_S5-TOA_100M_V001", "urn:ogc:def:EOP:VITO:PROBAV_S5-TOC-NDVI_100M_V001", "urn:ogc:def:EOP:VITO:PROBAV_L2A_100M_V001"]
-
-            #os.system('mkdir /tmp/probav')
-            for collection in product_collections:
-              try:
-                url = 'http://www.vito-eodata.be/openSearch/findProducts.atom?collection=' + collection + '&platform=PV01&start=' + YESTERDAY + '&end=' + NOW + '&count=500'
-
-                self._make_requests_and_parse_responses_creating_objects(url, collection, user, password, products_list)
-
-              except Exception as err:
-                  #pass
-                  print err
-
-            for dataset in products_list:
-                hash = hashlib.md5(json.dumps(dataset)).hexdigest() #hash content data
-                if hash in current_guids:
-                    current_guids_in_harvest.add(hash)
-                else:
-                    try:
-                        obj = HarvestObject(job=harvest_job, guid=hash, extras=[
-                            HOExtra(key='status', value='new'),
-                            HOExtra(key='uuid', value=dataset['uuid']),
-                            HOExtra(key='download_link', value=dataset['downloadLink']),
-                            HOExtra(key='metadata_link', value=dataset['metadataLink']),
-                            HOExtra(key='dataset_name', value=dataset['datasetname']),
-                            HOExtra(key='original_metadata', value=json.dumps(dataset)),
-                            HOExtra(key='original_format', value='hdf5')
-                        ])
-                    except Exception:
-                        obj = HarvestObject(job=harvest_job, guid=hash, extras=[
-                            HOExtra(key='status', value='new'),
-                            HOExtra(key='uuid', value=dataset['uuid']),
-                            HOExtra(key='download_link', value=dataset['downloadLink']),
-                            HOExtra(key='dataset_name', value=dataset['datasetname']),
-                            HOExtra(key='original_metadata', value=json.dumps(dataset)),
-                            HOExtra(key='original_format', value='hdf5')
-                        ])
-
-                obj.save()
-                ids.append(obj.id)
-
-            return ids
-
-        except Exception,e:
-            import traceback
-            traceback.print_exc()
-            log.debug("Some error")
-            log.info('MESSAGE' + str(e.args))
-            log.info(e.message)
-            self._save_gather_error('Unable to get content for URL: %s: %r' % \
-                                        (source_url, e),harvest_job)
-            return None
-
-
-
-    def import_stage(self, harvest_object):
-        context = {
-            'model': model,
-            'session': model.Session,
-            'user': self._get_user_name(),
-        }
-
-        log = logging.getLogger(__name__ + '.import')
-        log.debug('Import stage for harvest object: %s', harvest_object.id)
-
-        if not harvest_object:
-            log.error('No harvest object received')
-            return False
-
-        self._set_source_config(harvest_object.source.config)
-
-
-        status = self._get_object_extra(harvest_object, 'status')
-
-        # Get the last harvested object (if any)
-        previous_object = model.Session.query(HarvestObject) \
-                          .filter(HarvestObject.guid==harvest_object.guid) \
-                          .filter(HarvestObject.current==True) \
-                          .first()
-
-        if status == 'delete':
-            # Delete package
-            context.update({
-                'ignore_auth': True,
-            })
-            plugins.toolkit.get_action('package_delete')(context, {'id': harvest_object.package_id})
-            log.info('Deleted package {0} with guid {1}'.format(harvest_object.package_id, harvest_object.guid))
- 
-            return True
-
-
-
-        # Check if it is a esa-safe file
-        original_document = self._get_object_extra(harvest_object, 'original_document')
-        original_format = self._get_object_extra(harvest_object, 'original_format')
-        original_metadata = self._get_object_extra(harvest_object, 'original_metadata')
-
-
-        # Parse document
-
-        metadata = json.loads(original_metadata)
-        uuid = self._get_object_extra(harvest_object, 'uuid')
-
-
-        # Flag previous object as not current anymore
-
-        if previous_object and not self.force_import:
-            previous_object.current = False
-            previous_object.add()
-
-        # Update GUID with the one on the document
-        iso_guid = uuid #iso_values['guid']
-        if iso_guid and harvest_object.guid != iso_guid:
-            # First make sure there already aren't current objects
-            # with the same guid
-            existing_object = model.Session.query(HarvestObject.id) \
-                            .filter(HarvestObject.guid==iso_guid) \
-                            .filter(HarvestObject.current==True) \
-                            .first()
-            if existing_object:
-                self._save_object_error('Object {0} already has this guid {1}'.format(existing_object.id, iso_guid),
-                        harvest_object, 'Import')
-                return False
-
-            harvest_object.guid = iso_guid
-            harvest_object.add()
-
-        # Generate GUID if not present (i.e. it's a manual import)
-        if not harvest_object.guid:
-            m = hashlib.md5()
-            m.update(harvest_object.content.encode('utf8', 'ignore'))
-            harvest_object.guid = m.hexdigest()
-            harvest_object.add()
-
-
-
+        # Optioninal snippet if you want to log source repsonses like the
+        # Sentinel harvester do.
+        if not hasattr(self, 'provider_logger'):
+            self.provider_logger = self.make_provider_logger()
+        self.provider = '' # a string indicating the source to be used in the logs
+        # (could be set in the config)
+        # As explained above, only harvest_url is required.
+        ids = self._crawl_results(harvest_url, parser='lxml-xml')
         
-        now = datetime.datetime.now()
-        try:
-            metadata_modified_date = now
-        except ValueError:
-            self._save_object_error('Could not extract reference date for object {0} ({1})'
-                        .format(harvest_object.id, now['metadata-date']), harvest_object, 'Import')
-            return False
+        print(ids)
 
-        harvest_object.metadata_modified_date = metadata_modified_date
-        harvest_object.add()
-
-
-        # Build the package dict (deimos part)
-
-        ####ADD EXTRAS
-
-        #########
-        #TODO NEED TO ADD LICENSE TYPE on dataset
-        ########
-
-        
-        coords_checked = self.checkIfCoordsAreCircular(metadata['Coordinates'])
-        coords_final = self.createStringCoords(coords_checked)
-        
-        dataset_name = self._get_object_extra(harvest_object, 'dataset_name')
-
-        spatial_json="{\"type\":\"Polygon\",\"crs\":{\"type\":\"EPSG\",\"properties\":{\"code\":4326,\"coordinate_order\":\"Long,Lat\"}},\"coordinates\":["+str(coords_final)+"]}"
-
-
-        #log.debug(extras_dict)
-        #print extras_dict
-
-        tags_dict = [{"name": "Proba-V"}]
-
-        if 'l2a' in dataset_name.lower():
-            tags_dict.append({"name": "L2A"})
-        elif 's1_toc' in dataset_name.lower():
-            tags_dict.append({"name": "S1-TOC"})
-        elif 's1_toa' in dataset_name.lower():
-            tags_dict.append({"name": "S1-TOA"})
-        elif 's10_toc' in dataset_name.lower():
-            tags_dict.append({"name": "S10-TOC"})
-        elif 's5_toc' in dataset_name.lower():
-            tags_dict.append({"name": "S5-TOC"})
-        elif 's5_toa' in dataset_name.lower():
-            tags_dict.append({"name": "S5-TOA"})
-        elif '_p_' in dataset_name.lower():
-            tags_dict.append({"name": "L1C"})
-
-        if '1km' in dataset_name.lower():
-            tags_dict.append({"name": "1KM"})
-        elif '333m' in dataset_name.lower():
-            tags_dict.append({"name": "333M"})
-        elif '100m' in dataset_name.lower():
-            tags_dict.append({"name": "100M"})
-
-        if 'ndvi' in dataset_name.lower():
-            tags_dict.append({"name": "NDVI"})
-
-        try:
-            thumbnail= metadata['thumbnail']
-            extras_dict = self.generateExtrasDict(name=dataset_name.upper(),metadata=metadata,thumbnail=thumbnail, spatial=spatial_json)
-        except Exception:
-            extras_dict = self.generateExtrasDict(name=dataset_name.upper(),metadata=metadata,spatial=spatial_json)
-
-        ###### FINISHED ADD EXTRAS
-        # Build the package dict
-        package_dict = self.get_package_dict(metadata, harvest_object, extras_dict, tags_dict)
-
-        if not package_dict:
-            log.error('No package dict returned, aborting import for object {0}'.format(harvest_object.id))
-            return False
-
-        # Create / update the package
-        context.update({
-           'extras_as_string': True,
-           'api_version': '2',
-           'return_id_only': True})
-
-        if self._site_user and context['user'] == self._site_user['name']:
-            context['ignore_auth'] = True
-
-
-        # The default package schema does not like Upper case tags
-        tag_schema = logic.schema.default_tags_schema()
-        tag_schema['name'] = [not_empty, unicode]
-
-        # Flag this object as the current one
-        harvest_object.current = True
-        harvest_object.add()
-
-        if status == 'new':
-            package_schema = logic.schema.default_create_package_schema()
-            package_schema['tags'] = tag_schema
-            context['schema'] = package_schema
-
-            # We need to explicitly provide a package ID, otherwise ckanext-spatial
-            # won't be be able to link the extent to the package.
-            package_dict['id'] = unicode(uuid_gen.uuid4())
-            package_schema['id'] = [unicode]
-
-            # Save reference to the package on the object
-            harvest_object.package_id = package_dict['id']
-            harvest_object.add()
-            # Defer constraints and flush so the dataset can be indexed with
-            # the harvest object id (on the after_show hook from the harvester
-            # plugin)
-            model.Session.execute('SET CONSTRAINTS harvest_object_package_id_fkey DEFERRED')
-            model.Session.flush()
-
-            try:
-                package_id = plugins.toolkit.get_action('package_create')(context, package_dict)
-                log.info('Created new package %s with guid %s', package_id, harvest_object.guid)
-
-                for key,value in metadata.iteritems():
-                    #create resources
-                    if key == 'metadataLink':
-                        resource_dict={}
-                        resource_dict['package_id'] = package_id
-                        resource_dict['url'] = value
-                        resource_dict['name'] = 'Metadata Download'
-                        resource_dict['format'] = 'xml'
-                        resource_dict['mimetype'] = 'application/xml'
-                        plugins.toolkit.get_action('resource_create')(context,resource_dict)
-
-                    if key == 'downloadLink':
-                        resource_dict={}
-                        resource_dict['package_id'] = package_id
-                        resource_dict['url'] = value
-                        resource_dict['name'] = 'Product Download'
-                        resource_dict['format'] = 'hdf5'
-                        resource_dict['mimetype'] = 'application/x-hdf5'
-                        plugins.toolkit.get_action('resource_create')(context,resource_dict)
-
-                    if key == 'thumbnail':
-                        resource_dict={}
-                        resource_dict['package_id'] = package_id
-                        resource_dict['url'] = value
-                        resource_dict['name'] = 'Thumbnail Link'
-                        resource_dict['format'] = 'png'
-                        resource_dict['mimetype'] = 'image/png'
-                        plugins.toolkit.get_action('resource_create')(context,resource_dict)
-
-            except Exception as err:
-                log.info(err)
-                log.info("Error on product " + dataset_name)
-                plugins.toolkit.get_action('package_delete')(context, package_dict)
-
-            #except plugins.toolkit.ValidationError, e:
-            #    self._save_object_error('Validation Error: %s' % str(e.error_summary), harvest_object, 'Import')
-            #    return False
-
-        elif status == 'change':
-
-            # Check if the modified date is more recent
-            if not self.force_import and previous_object and harvest_object.metadata_modified_date <= previous_object.metadata_modified_date:
-
-                # Assign the previous job id to the new object to
-                # avoid losing history
-                harvest_object.harvest_job_id = previous_object.job.id
-                harvest_object.add()
-
-                # Delete the previous object to avoid cluttering the object table
-                previous_object.delete()
-
-                log.info('Document with GUID %s unchanged, skipping...' % (harvest_object.guid))
-            else:
-                package_schema = logic.schema.default_update_package_schema()
-                package_schema['tags'] = tag_schema
-                context['schema'] = package_schema
-
-                package_dict['id'] = harvest_object.package_id
-                try:
-                    package_id = plugins.toolkit.get_action('package_update')(context, package_dict)
-                    log.info('Updated package %s with guid %s', package_id, harvest_object.guid)
-                except plugins.toolkit.ValidationError, e:
-                    self._save_object_error('Validation Error: %s' % str(e.error_summary), harvest_object, 'Import')
-                    return False
-
-        model.Session.commit()
-
-
-        return True
-    ##
+        return ids
 
     def fetch_stage(self, harvest_object):
-        return True
+        """Fetch was completed during gather."""
 
+        # We don't need to fetch anything—the OpenSearch entries contain all
+        # the content we need for the import stage.
+
+        return True
+    
+    def _parse_content(self, content):
+        content_dict = {}
+        content_dict['name'] = ''
+        content_dict['title'] = ''
+        content_dict['notes'] = ''
+        content_dict['tags'] = ''
+        return content_dict
+    
+    def _get_resources(self, content):
+        return []
+
+    def import_stage(self, harvest_object):
+        log = logging.getLogger(__name__ + '.import')
+        log.info('Import stage for harvest object with GUID {}'
+                  .format(harvest_object.id))
+
+        # NOTE: There is nothing in this method that you need to change.
+        # Keep this method as-is.
+        # Create two methods in your custom class called
+        # _parse_content and _get_resources. _parsed_content
+        # will take harvest_object.content and return a dictionary.
+        # _get_resources will take that dictionary and return a list of 
+        # resource dictionaries. See NextGEOSSHarvester.
+        # All your custom class has to do is parse the content so that
+        # NextGEOSSHarvester can create or update a dataset. This method
+        # handles all the setup and housekeeping for the import stage.
+
+        # Save a reference like we did for the harvest_job in the gather
+        # stage. If you prefer to just pass the harvest_object around directly,
+        # then this line isn't necessary.
+        
+        self.obj = harvest_object
+        
+        self._set_source_config(self.obj.source.config)
+
+
+        if harvest_object.content is None:
+            self._save_object_error('Empty content for object {}'
+                                    .format(harvest_object.id),
+                                    harvest_object, 'Import')
+            return False
+
+        # The OpenSearchHarvester will have assigned a status to each harvest
+        # object.
+        status = self._get_object_extra(harvest_object, 'status')
+
+        # Check if we need to update the dataset
+        if status != 'unchanged':
+            # This can be a hook
+            package = self._create_or_update_dataset(harvest_object, status)
+            # This can be a hook
+            if not package:
+                return False
+            package_id = package['id']
+        else:
+            package_id = harvest_object.package.id
+
+        # Perform the necessary harvester housekeeping
+        self._refresh_harvest_objects(harvest_object, package_id)
+
+        # Finish up
+        if status == 'unchanged':
+            return 'unchanged'
+        else:
+            log.debug('Package {} was successully harvested.'
+                      .format(package['id']))
+            return True
