@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
-
+from enum import Enum
 import logging
 import json
+import uuid
 from datetime import datetime
+
+from bs4 import BeautifulSoup
 
 from sqlalchemy import desc
 
@@ -16,6 +19,57 @@ from ckanext.harvest.interfaces import IHarvester
 from ckanext.nextgeossharvest.lib.opensearch_base import OpenSearchHarvester
 from ckanext.nextgeossharvest.lib.nextgeoss_base import NextGEOSSHarvester
 
+COLLECTION_TEMPLATE = 'PROBAV_{type}_{resolution}_V001'
+COLLECTIONS = [
+    "PROBAV_L2A_100M_V001"
+    "PROBAV_L2A_1KM_V001",
+    "PROBAV_L2A_333M_V001",
+    "PROBAV_P_V001",
+    "PROBAV_S1-TOA_100M_V001",
+    "PROBAV_S1-TOA_1KM_V001",
+    "PROBAV_S1-TOA_333M_V001",
+    "PROBAV_S1-TOC_100M_V001",
+    "PROBAV_S1-TOC_1KM_V001",
+    "PROBAV_S1-TOC_333M_V001",
+    "PROBAV_S1-TOC-NDVI_100M_V001",
+    "PROBAV_S10-TOC_1KM_V001",
+    "PROBAV_S10-TOC_333M_V001",
+    "PROBAV_S10-TOC-NDVI_1KM_V001",
+    "PROBAV_S10-TOC-NDVI_333M_V001",
+    "PROBAV_S5-TOA_100M_V001",
+    "PROBAV_S5-TOC_100M_V001",
+    "PROBAV_S5-TOC-NDVI_100M_V001",
+    ]
+
+class Units(Enum):
+    METERS = 'M'
+    KILOMETERS = 'K'
+
+class ProductType(Enum):
+    TOC = 'TOA'
+    TOC = 'TOC'
+    L2A = 'L2A'
+
+class Resolution(object):
+
+    def __init__(self, value, units):
+        self.value = value
+        self.units = units
+
+class ProbaVCollection(object):
+
+    def __init__(self, product_type, resolution):
+        self.product_type = product_type
+        self.resolution = resolution
+
+class SProbaVCollection(ProbaVCollection):
+
+    def __init__(self, frequency, product_type, resolution, ndvi):
+        super(SProbaVCollection, self).__init__(product_type, resolution)
+        self.frequency = frequency
+        self.ndvi = ndvi
+    
+        
 
 class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
     """
@@ -178,70 +232,48 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
 
         return True
     
-    def _parse_content(self, content):
-        content_dict = {}
-        content_dict['name'] = ''
-        content_dict['title'] = ''
-        content_dict['notes'] = ''
-        content_dict['tags'] = ''
-        return content_dict
+    def _parse_content(self, content_str):
+        content = BeautifulSoup(content_str, 'lxml-xml')
+        collection = self._parse_collection(content)
+        parsed_content = {}
+        parsed_content['title']  = self._get_title(collection)
+        parsed_content['description'] = self._get_description(collection)
+        parsed_content['tags'] = self._get_tags(collection)
+        parsed_content['identifier'] = self._parse_identifier(content)
+        parsed_content['uuid'] = str(uuid.uuid4())
+        parsed_content['StartTime'], parsed_content['StopTime'] = self._parse_data(content)
+        parsed_content['Collection'] = collection
+        parsed_content['name'] = self._parse_name(content)
+        parsed_content['spatial'] = self._bbox_to_geojson(self._parse_bbox(content))
+        return parsed_content
+
     
+    def _parse_collection(self, content):
+        identifier = content.identifier
+        return self._parse_collection_from_identifier(identifier)
+    
+    def _parse_collection_from_identifier(self, identifier):
+        collection_name = identifier.split(':')[5]
+        _, product_type, resolution_str, _ = collection_name.split('_')
+        resolution = self._parse_resolution(resolution_str) 
+        if product_type == ProductType.L2A:
+            return ProbaVCollection(ProductType.L2A, resolution)
+        else:
+            product_parts = product_type.split('-')
+            frequency = int(product_parts[0][1:])
+            subtype = ProductType(product_parts[1])
+            ndvi = len(product_parts) > 0 and product_parts[2] == 'NDVI'
+            return SProbaVCollection(frequency, subtype, resolution, ndvi)
+    
+    def _parse_resolution(self, resolution_str):
+        #we are assuming resolution is one of {100M, 1Km, 333M}
+        if resolution_str.endswith('KM'):
+            units = Units.KILOMETERS
+            value = int(resolution_str[:-2])
+        else:
+            units = Units.METERS
+            value = int(resolution_str[:-1])
+        return Resolution(value, units)
+        
     def _get_resources(self, content):
         return []
-
-    def import_stage(self, harvest_object):
-        log = logging.getLogger(__name__ + '.import')
-        log.info('Import stage for harvest object with GUID {}'
-                  .format(harvest_object.id))
-
-        # NOTE: There is nothing in this method that you need to change.
-        # Keep this method as-is.
-        # Create two methods in your custom class called
-        # _parse_content and _get_resources. _parsed_content
-        # will take harvest_object.content and return a dictionary.
-        # _get_resources will take that dictionary and return a list of 
-        # resource dictionaries. See NextGEOSSHarvester.
-        # All your custom class has to do is parse the content so that
-        # NextGEOSSHarvester can create or update a dataset. This method
-        # handles all the setup and housekeeping for the import stage.
-
-        # Save a reference like we did for the harvest_job in the gather
-        # stage. If you prefer to just pass the harvest_object around directly,
-        # then this line isn't necessary.
-        
-        self.obj = harvest_object
-        
-        self._set_source_config(self.obj.source.config)
-
-
-        if harvest_object.content is None:
-            self._save_object_error('Empty content for object {}'
-                                    .format(harvest_object.id),
-                                    harvest_object, 'Import')
-            return False
-
-        # The OpenSearchHarvester will have assigned a status to each harvest
-        # object.
-        status = self._get_object_extra(harvest_object, 'status')
-
-        # Check if we need to update the dataset
-        if status != 'unchanged':
-            # This can be a hook
-            package = self._create_or_update_dataset(harvest_object, status)
-            # This can be a hook
-            if not package:
-                return False
-            package_id = package['id']
-        else:
-            package_id = harvest_object.package.id
-
-        # Perform the necessary harvester housekeeping
-        self._refresh_harvest_objects(harvest_object, package_id)
-
-        # Finish up
-        if status == 'unchanged':
-            return 'unchanged'
-        else:
-            log.debug('Package {} was successully harvested.'
-                      .format(package['id']))
-            return True
