@@ -198,6 +198,7 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         parsed_content['name'] = self._parse_name(identifier)
         parsed_content['spatial'] = self._bbox_to_geojson(
             self._parse_bbox(content))
+        parsed_content['notes'] = parsed_content['description']
         return parsed_content
 
     def _create_ckan_tags(self, tags):

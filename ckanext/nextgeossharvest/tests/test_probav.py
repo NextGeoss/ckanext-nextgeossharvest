@@ -125,6 +125,7 @@ class TestProbavHarvester(TestCase):
             'Collection': 'PROBAV_L2A_333M_V001',
             'name': 'PROBAV_CENTER_L2A_20180101_005544_333M_V101.HDF5',
             'spatial': {"type":"Polygon","crs":{"type":"EPSG","properties":{"code":4326,"coordinate_order":"Long,Lat"}},"coordinates":[[[145.476,65.071], [165.962992,65.071], [165.962992,40.341], [145.476, 40.341], [145.476,65.071]]]},
+            'notes': 'PROBA-V Level2A - 333M segments contain the Level 1C (P product) data projected on a uniform 333m grid.',
         }
         print(parsed_content)
         self.maxDiff = None 
