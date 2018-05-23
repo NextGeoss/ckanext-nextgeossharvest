@@ -164,7 +164,7 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         self.provider = '' # a string indicating the source to be used in the logs
         # (could be set in the config)
         # As explained above, only harvest_url is required.
-        ids = self._crawl_results(harvest_url, parser='lxml-xml')
+        ids = self._crawl_results(harvest_url, timeout=60, parser='lxml-xml')
         
         print(ids)
 
