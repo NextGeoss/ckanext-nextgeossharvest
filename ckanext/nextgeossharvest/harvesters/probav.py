@@ -298,4 +298,4 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         return str(content.find('link', rel='enclosure')['href'])
 
     def _get_thumbnail_url(self, content):
-        pass
+        return str(content.find('link', rel='icon')['href'])

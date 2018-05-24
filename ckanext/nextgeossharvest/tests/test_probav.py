@@ -148,3 +148,9 @@ class TestProbavHarvester(TestCase):
         harvester = PROBAVHarvester()
         product_url = harvester._get_product_url(entry)
         self.assertEqual(product_url, "https://www.vito-eodata.be/PDF/dataaccess?service=DSEO&request=GetProduct&version=1.0.0&collectionID=1000126&productID=267446487&ProductURI=urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001:PROBAV_CENTER_L2A_20180101_005544_333M:V101&")
+
+    def test_get_thumbnail_url(self):
+        entry = self.read_first_entry('l2a_entry.xml')
+        harvester = PROBAVHarvester()
+        thumbnail_url = harvester._get_thumbnail_url(entry)
+        self.assertEqual(thumbnail_url, "https://www.vito-eodata.be/cgi-bin/probav?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&SRS=EPSG:4326&FORMAT=image/png&LAYERS=PROBAV_L2A_333M_Red band&TIME=2018-01-01T00:55:44Z&BBOX=40.341,145.476,65.071,165.962992&HEIGHT=200&WIDTH=166")
