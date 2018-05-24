@@ -200,6 +200,9 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         parsed_content['spatial'] = self._bbox_to_geojson(
             self._parse_bbox(content))
         parsed_content['notes'] = parsed_content['description']
+        parsed_content['metadata_download'] = self._get_metadata_url(content)
+        parsed_content['product_download'] = self._get_product_url(content)
+        parsed_content['thumbnail_download'] = self._get_thumbnail_url(content)
         return parsed_content
 
     def _create_ckan_tags(self, tags):
@@ -275,23 +278,23 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
             value = int(resolution_str[:-1])
         return Resolution(value, units)
 
-    def _get_resources(self, content):
+    def _get_resources(self, parsed_content):
         return [
             {
                 'name': 'Metadata Download',
-                'url': self._get_metadata_url(content),
+                'url': parsed_content['metadata_download'],
                 'format': 'xml',
                 'mimetype': 'application/xml'
             },
             {
                 'name': 'Product Download',
-                'url': self._get_product_url(content),
+                'url': parsed_content['product_download'],
                 'format': 'hdf5',
                 'mimetype': 'application/x-hdf5'
             },
             {
                 'name': 'Thumbnail Download',
-                'url': self._get_thumbnail_url(content),
+                'url': parsed_content['thumbnail_download'],
                 'format': 'png',
                 'mimetype': 'image/png'
             }
