@@ -197,8 +197,8 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         parsed_content['Collection'] = str(collection)
         parsed_content['name'] = self._parse_name(identifier)
         parsed_content['filename'] = self._parse_filename(identifier)
-        parsed_content['spatial'] = self._bbox_to_geojson(
-            self._parse_bbox(content))
+        parsed_content['spatial'] = json.dumps(self._bbox_to_geojson(
+            self._parse_bbox(content)))
         parsed_content['notes'] = parsed_content['description']
         parsed_content['metadata_download'] = self._get_metadata_url(content)
         parsed_content['product_download'] = self._get_product_url(content)

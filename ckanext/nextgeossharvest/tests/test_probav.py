@@ -3,6 +3,7 @@ from ..harvesters.probav import PROBAVHarvester, Units, ProductType, L2AProbaVCo
 from unittest import TestCase
 from os import path
 from bs4 import BeautifulSoup
+import json
 
 class TestProvaVCollection(TestCase):
 
@@ -131,15 +132,17 @@ class TestProbavHarvester(TestCase):
             'Collection': 'PROBAV_L2A_333M_V001',
             'name': 'probav_center_l2a_20180101_005544_333m_v101',
             'filename': 'PROBAV_CENTER_L2A_20180101_005544_333M_V101.HDF5',
-            'spatial': {"type":"Polygon","crs":{"type":"EPSG","properties":{"code":4326,"coordinate_order":"Long,Lat"}},"coordinates":[[[145.476,65.071], [165.962992,65.071], [165.962992,40.341], [145.476, 40.341], [145.476,65.071]]]},
             'notes': 'PROBA-V Level2A - 333M segments contain the Level 1C (P product) data projected on a uniform 333m grid.',
             'metadata_download': "https://www.vito-eodata.be/PDF/dataaccessMdXML?mdmode=hma&collectionID=1000126&productID=267446487&fileName=PV_CENTER_L2A-20180101005544_333M_V101.xml",
             'product_download': "https://www.vito-eodata.be/PDF/dataaccess?service=DSEO&request=GetProduct&version=1.0.0&collectionID=1000126&productID=267446487&ProductURI=urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001:PROBAV_CENTER_L2A_20180101_005544_333M:V101&",
             'thumbnail_download': "https://www.vito-eodata.be/cgi-bin/probav?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&SRS=EPSG:4326&FORMAT=image/png&LAYERS=PROBAV_L2A_333M_Red band&TIME=2018-01-01T00:55:44Z&BBOX=40.341,145.476,65.071,165.962992&HEIGHT=200&WIDTH=166"
         }
-        print(parsed_content)
-        self.maxDiff = None 
+        expected_spatial = {"type":"Polygon","crs":{"type":"EPSG","properties":{"code":4326,"coordinate_order":"Long,Lat"}},"coordinates":[[[145.476,65.071], [165.962992,65.071], [165.962992,40.341], [145.476, 40.341], [145.476,65.071]]]}
+        spatial = json.loads(parsed_content['spatial'])
+        del parsed_content['spatial']
+        self.maxDiff = None
         self.assertDictEqual(parsed_content, expected_parsed_content)
+        self.assertDictEqual(spatial, expected_spatial)
 
     def read_first_entry(self, filename):
         filepath = path.join(path.dirname(__file__), filename)
