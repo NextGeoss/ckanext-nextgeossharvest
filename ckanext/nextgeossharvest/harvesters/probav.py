@@ -270,4 +270,32 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         return Resolution(value, units)
 
     def _get_resources(self, content):
-        return []
+        return [
+            {
+                'name': 'Metadata Download',
+                'url': self._get_metadata_url(content),
+                'format': 'xml',
+                'mimetype': 'application/xml'
+            },
+            {
+                'name': 'Product Download',
+                'url': self._get_product_url(content),
+                'format': 'hdf5',
+                'mimetype': 'application/x-hdf5'
+            },
+            {
+                'name': 'Thumbnail Download',
+                'url': self._get_thumbnail_url(content),
+                'format': 'png',
+                'mimetype': 'image/png'
+            }
+        ]
+
+    def _get_metadata_url(self, content):
+        return str(content.find('link', title='HMA')['href'])
+
+    def _get_product_url(self, content):
+        pass
+
+    def _get_thumbnail_url(self, content):
+        pass
