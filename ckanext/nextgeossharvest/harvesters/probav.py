@@ -295,7 +295,7 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         return str(content.find('link', title='HMA')['href'])
 
     def _get_product_url(self, content):
-        pass
+        return str(content.find('link', rel='enclosure')['href'])
 
     def _get_thumbnail_url(self, content):
         pass
