@@ -5,10 +5,14 @@ import logging
 import json
 import uuid
 from datetime import datetime
-
+import time
 from bs4 import BeautifulSoup
 
 from sqlalchemy import desc
+
+import requests
+from requests.auth import HTTPBasicAuth
+from requests.exceptions import Timeout
 
 from ckan.common import config
 from ckan.model import Session
@@ -20,7 +24,17 @@ from ckanext.harvest.interfaces import IHarvester
 from ckanext.nextgeossharvest.lib.opensearch_base import OpenSearchHarvester
 from ckanext.nextgeossharvest.lib.nextgeoss_base import NextGEOSSHarvester
 
+from ckan import model
+from ckan.model import Package
+
+from ckanext.harvest.model import HarvestObjectExtra as HOExtra
+from ckanext.harvest.harvesters.base import HarvesterBase
+
+
 from probav_collections import COLLECTION_DESCRIPTIONS
+
+log = logging.getLogger(__name__)
+
 
 COLLECTION_TEMPLATE = 'PROBAV_{type}_{resolution}_V001'
 COLLECTIONS = [
@@ -308,3 +322,121 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
 
     def _get_thumbnail_url(self, content):
         return str(content.find('link', rel='icon')['href'])
+
+    def _crawl_results(self, harvest_url, limit=100, timeout=5, username=None, password=None, provider=None, parser='lxml', gather_entry=None):  # noqa: E501
+        """
+        Iterate through the results, create harvest objects,
+        and return the ids.
+        """
+        ids = []
+        if gather_entry is None:
+            gather_entry = self._gather_entry
+
+
+        while len(ids) < limit and harvest_url:
+            # We'll limit ourselves to one request per second
+            start_request = time.time()
+
+            # Make a request to the website
+            timestamp = str(datetime.utcnow())
+            log_message = '{:<12} | {} | {} | {}s'
+            try:
+                kwargs = { 'verify': False,
+                           'timeout': timeout }
+                if username is not None and password is not None:
+                    kwargs['auth'] = HTTPBasicAuth(username, password)
+                r = requests.get(harvest_url, **kwargs)
+            except Timeout as e:
+                self._save_gather_error('Request timed out: {}'.format(e), self.job)  # noqa: E501
+                status_code = 408
+                elapsed = 9999
+                if hasattr(self, 'provider_logger'):
+                    self.provider_logger.info(log_message.format(self.provider,
+                        timestamp, status_code, timeout))  # noqa: E128
+                return ids
+            if r.status_code != 200:
+                self._save_gather_error('{} error: {}'.format(r.status_code, r.text), self.job)  # noqa: E501
+                elapsed = 9999
+                if hasattr(self, 'provider_logger'):
+                    self.provider_logger.info(log_message.format(self.provider,
+                        timestamp, r.status_code, elapsed))  # noqa: E128
+                return ids
+
+            if hasattr(self, 'provider_logger'):
+                self.provider_logger.info(log_message.format(self.provider,
+                    timestamp, r.status_code, r.elapsed.total_seconds()))  # noqa: E128, E501
+
+            soup = BeautifulSoup(r.content, parser)
+
+            # Get the URL for the next loop, or None to break the loop
+            harvest_url = self._get_next_url(soup)
+
+            # Get the entries from the results
+            entries = self._get_entries_from_results(soup)
+
+            # Create a harvest object for each entry
+            for entry in entries:
+                ids.extend(gather_entry(entry))
+            
+
+            end_request = time.time()
+            request_time = end_request - start_request
+            if request_time < 1.0:
+                time.sleep(1 - request_time)
+
+        return ids
+
+
+    def _gather_entry(self, entry):
+        # Create a harvest object for each entry
+        entry_guid = entry['guid']
+        entry_name = entry['identifier']
+        entry_restart_date = entry['restart_date']
+
+        package = Session.query(Package) \
+            .filter(Package.name == entry_name).first()
+
+        if package:
+            # Meaning we've previously harvested this,
+            # but we may want to reharvest it now.
+            previous_obj = model.Session.query(HarvestObject) \
+                .filter(HarvestObject.guid == entry_guid) \
+                .filter(HarvestObject.current == True) \
+                .first()  # noqa: E712
+            if previous_obj:
+                previous_obj.current = False
+                previous_obj.save()
+
+            if self.update_all:
+                log.debug('{} already exists and will be updated.'.format(entry_name))  # noqa: E501
+                status = 'change'
+            # E.g., a Sentinel dataset exists,
+            # but doesn't have a NOA resource yet.
+            elif self.flagged_extra and not self._get_package_extra(package.as_dict(), self.flagged_extra):  # noqa: E501
+                log.debug('{} already exists and will be extended.'.format(entry_name))  # noqa: E501
+                status = 'change'
+            else:
+                log.debug('{} will not be updated.'.format(entry_name))  # noqa: E501
+                status = 'unchanged'
+
+            obj = HarvestObject(guid=entry_guid, job=self.job,
+                                extras=[HOExtra(key='status',
+                                        value=status),
+                                        HOExtra(key='restart_date',
+                                        value=entry_restart_date)])
+            obj.content = entry['content']
+            obj.package = package
+            obj.save()
+            ids.append(obj.id)
+        elif not package:
+            # It's a product we haven't harvested before.
+            log.debug('{} has not been harvested before. Creating a new harvest object.'.format(entry_name))  # noqa: E501
+            obj = HarvestObject(guid=entry_guid, job=self.job,
+                                extras=[HOExtra(key='status',
+                                        value='new'),
+                                        HOExtra(key='restart_date',
+                                        value=entry_restart_date)])
+            obj.content = entry['content']
+            obj.package = None
+            obj.save()
+            return [obj.id]
