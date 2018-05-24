@@ -154,3 +154,28 @@ class TestProbavHarvester(TestCase):
         harvester = PROBAVHarvester()
         thumbnail_url = harvester._get_thumbnail_url(entry)
         self.assertEqual(thumbnail_url, "https://www.vito-eodata.be/cgi-bin/probav?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&SRS=EPSG:4326&FORMAT=image/png&LAYERS=PROBAV_L2A_333M_Red band&TIME=2018-01-01T00:55:44Z&BBOX=40.341,145.476,65.071,165.962992&HEIGHT=200&WIDTH=166")
+
+    def test_get_resources(self):
+        entry = self.read_first_entry('l2a_entry.xml')
+        harvester = PROBAVHarvester()
+        resources = harvester._get_resources(entry)
+        self.assertListEqual(resources, [
+            {
+                'name': 'Metadata Download',
+                'url': "https://www.vito-eodata.be/PDF/dataaccessMdXML?mdmode=hma&collectionID=1000126&productID=267446487&fileName=PV_CENTER_L2A-20180101005544_333M_V101.xml",
+                'format': 'xml',
+                'mimetype': 'application/xml'
+            },
+            {
+                'name': 'Product Download',
+                'url': "https://www.vito-eodata.be/PDF/dataaccess?service=DSEO&request=GetProduct&version=1.0.0&collectionID=1000126&productID=267446487&ProductURI=urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001:PROBAV_CENTER_L2A_20180101_005544_333M:V101&",
+                'format': 'hdf5',
+                'mimetype': 'application/x-hdf5'
+            },
+            {
+                'name': 'Thumbnail Download',
+                'url': "https://www.vito-eodata.be/cgi-bin/probav?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&SRS=EPSG:4326&FORMAT=image/png&LAYERS=PROBAV_L2A_333M_Red band&TIME=2018-01-01T00:55:44Z&BBOX=40.341,145.476,65.071,165.962992&HEIGHT=200&WIDTH=166",
+                'format': 'png',
+                'mimetype': 'image/png'
+            }
+        ])
