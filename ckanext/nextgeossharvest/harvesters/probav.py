@@ -196,6 +196,7 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
             content)
         parsed_content['Collection'] = str(collection)
         parsed_content['name'] = self._parse_name(identifier)
+        parsed_content['filename'] = self._parse_filename(identifier)
         parsed_content['spatial'] = self._bbox_to_geojson(
             self._parse_bbox(content))
         parsed_content['notes'] = parsed_content['description']
@@ -218,7 +219,12 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
     def _parse_name(self, identifier):
         identifier_parts = identifier.split(':')
         name = identifier_parts[-2]
-        return '{}_{}.HDF5'.format(name, identifier_parts[-1])
+        return '{}_{}'.format(name, identifier_parts[-1]).lower()
+
+    def _parse_filename(self, identifier):
+        identifier_parts = identifier.split(':')
+        filename = identifier_parts[-2]
+        return '{}_{}.HDF5'.format(filename, identifier_parts[-1])
 
     def _bbox_to_geojson(self, bbox):
         return {
