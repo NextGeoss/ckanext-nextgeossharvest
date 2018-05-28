@@ -246,7 +246,7 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         parsed_content['name'] = self._parse_S_name(name)
         parsed_content['filename'] = name 
         parsed_content['spatial'] = json.dumps(self._bbox_to_geojson(
-            self._generate_bbox(name)))
+            self._generate_bbox(self.parse_coordinates(name))))
         parsed_content['metadata_download'] = self._get_metadata_url(content)
         parsed_content['product_download'] = self._parse_file_url(file_entry)
         parsed_content['thumbnail_download'] = self._get_thumbnail_url(content)
@@ -266,8 +266,13 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         match = re.search(self.COORDINATES_REGEX, name)
         return int(match.group(1)), int(match.group(2))
 
-    def _generate_bbox(self, name):
-        pass
+    def _generate_bbox(self, coordinates):
+        x, y = coordinates
+        lng_min = - 180 + 10 * x
+        lng_max = lng_min + 10
+        lat_max = 75 - 10 * y
+        lat_min = lat_max - 10
+        return [lat_min, lng_min, lat_max, lng_max]
 
     def _parse_file_url(self, file_entry):
         return str(file_entry.resources.url.string)

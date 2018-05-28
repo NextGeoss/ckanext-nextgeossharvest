@@ -57,6 +57,16 @@ class TestSProbavHarvester(TestCase):
         coordinates = self.harvester._parse_coordinates("PROBAV_S1_TOA_X02Y09_20180101_100M_V101.HDF5")
         self.assertEqual(coordinates, (2, 9))
 
+    def test_generate_bbox(self):
+        x, y = (2, 1)
+        bbox = self.harvester._generate_bbox((x, y))
+        lng_min = -160
+        lng_max = -150
+        lat_max = 65
+        lat_min = 55
+        self.assertEqual(bbox,[lat_min, lng_min, lat_max, lng_max])
+        
+
 
 
     
