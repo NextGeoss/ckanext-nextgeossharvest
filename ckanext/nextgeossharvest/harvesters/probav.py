@@ -260,6 +260,12 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
     def _parse_S_name(self, name):
         return path.splitext(name)[0].lower()
 
+    COORDINATES_REGEX = re.compile('X(\d\d)Y(\d\d)')
+
+    def _parse_coordinates(self, name):
+        match = re.search(self.COORDINATES_REGEX, name)
+        return int(match.group(1)), int(match.group(2))
+
     def _generate_bbox(self, name):
         pass
 

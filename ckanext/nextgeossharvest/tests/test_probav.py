@@ -52,7 +52,12 @@ class TestSProbavHarvester(TestCase):
     def test_parse_file_url(self):
         url = self.harvester._parse_file_url(self.file)
         self.assertEqual(url, METALINK_URL)
-        
+
+    def test_parse_coordinates(self):
+        coordinates = self.harvester._parse_coordinates("PROBAV_S1_TOA_X02Y09_20180101_100M_V101.HDF5")
+        self.assertEqual(coordinates, (2, 9))
+
+
 
     
 
