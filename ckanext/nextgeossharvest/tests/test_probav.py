@@ -24,6 +24,7 @@ class TestProvaVCollection(TestCase):
         collection = L2AProbaVCollection(ProductType.L2A, Resolution(333, Units.METERS))
         self.assertListEqual(collection.get_tags(), ['Proba-V', 'L2A', '333M'])
 
+METALINK_URL = "https://www.vito-eodata.be/PDF/dataaccess?service=DSEO&request=GetProduct&version=1.0.0&collectionID=1000125&productID=267473044&ProductURI=urn:ogc:def:EOP:VITO:PROBAV_S1-TOA_100M_V001:PROBAV_S1-TOA_20180101_100M:V101&fileIndex=1"
 
 class TestSProbavHarvester(TestCase):
 
@@ -47,6 +48,11 @@ class TestSProbavHarvester(TestCase):
     def test_parse_S_name(self):
         file_name = self.harvester._parse_S_name("PROBAV_S1_TOA_X00Y00_20180101_100M_V101.HDF5")
         self.assertEqual(file_name, "probav_s1_toa_x00y00_20180101_100m_v101")
+
+    def test_parse_file_url(self):
+        url = self.harvester._parse_file_url(self.file)
+        self.assertEqual(url, METALINK_URL)
+        
 
     
 
