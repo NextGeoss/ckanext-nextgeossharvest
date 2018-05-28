@@ -258,7 +258,7 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         return path.splitext(name)[0]
 
     def _parse_S_name(self, name):
-        pass
+        return path.splitext(name)[0].lower()
 
     def _generate_bbox(self, name):
         pass

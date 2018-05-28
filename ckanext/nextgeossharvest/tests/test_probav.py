@@ -44,6 +44,12 @@ class TestSProbavHarvester(TestCase):
         file_name = self.harvester._parse_S_identifier("PROBAV_S1_TOA_X00Y00_20180101_100M_V101.HDF5")
         self.assertEqual(file_name, "PROBAV_S1_TOA_X00Y00_20180101_100M_V101")
 
+    def test_parse_S_name(self):
+        file_name = self.harvester._parse_S_name("PROBAV_S1_TOA_X00Y00_20180101_100M_V101.HDF5")
+        self.assertEqual(file_name, "probav_s1_toa_x00y00_20180101_100m_v101")
+
+    
+
 
 HDF5_FILENAME_REGEX = re.compile('.*\.HDF5$')
 
