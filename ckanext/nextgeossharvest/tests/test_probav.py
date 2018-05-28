@@ -4,6 +4,7 @@ from unittest import TestCase
 from os import path
 from bs4 import BeautifulSoup
 import json
+import re
 
 class TestProvaVCollection(TestCase):
 
@@ -29,12 +30,28 @@ class TestSProbavHarvester(TestCase):
     def setUp(self):
         self.entry = read_first_entry('s1_100m.xml')
         self.harvester = PROBAVHarvester()
+        self.file = read_first_file('metalink.xml')
 
     def test_parse_metalink_url(self):
         url = self.harvester._parse_metalink_url(self.entry)
         self.assertEqual(url, "https://www.vito-eodata.be/PDF/dataaccess?service=DSEO&request=GetProduct&version=1.0.0&collectionID=1000125&productID=267473044&ProductURI=urn:ogc:def:EOP:VITO:PROBAV_S1-TOA_100M_V001:PROBAV_S1-TOA_20180101_100M:V101&")
 
+    def test_parse_file_name(self):
+        filename = self.harvester._parse_file_name(self.file)
+        self.assertEqual(filename, "PROBAV_S1_TOA_X00Y00_20180101_100M_V101.HDF5")
+        
 
+HDF5_FILENAME_REGEX = re.compile('.*\.HDF5$')
+
+def read_first_file(filename):
+    filepath = path.join(path.dirname(__file__), filename)
+    with open(filepath, 'r') as open_search_file:
+        open_search_resp = BeautifulSoup(open_search_file.read(), 'lxml-xml')
+        return open_search_resp.files.find(name='file', attrs={'name': HDF5_FILENAME_REGEX})
+
+
+        
+        
 def read_first_entry(filename):
     filepath = path.join(path.dirname(__file__), filename)
     with open(filepath, 'r') as open_search_file:

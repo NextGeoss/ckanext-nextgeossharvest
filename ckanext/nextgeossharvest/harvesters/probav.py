@@ -206,27 +206,64 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         return True
 
     def _parse_content(self, content_str):
-        content = BeautifulSoup(content_str, 'lxml-xml')
+        content_json = json.loads(content_str)
+        opensearch_contnet = content_json['opensearch_entry']
+        content = BeautifulSoup(opensearch_contnet, 'lxml-xml')
         identifier = self._parse_identifier_element(content)
         collection = self._parse_collection_from_identifier(identifier)
+
         parsed_content = {}
         parsed_content['title'] = collection.get_name()
         parsed_content['description'] = collection.get_description()
         parsed_content['tags'] = self._create_ckan_tags(collection.get_tags())
-        parsed_content['identifier'] = self._parse_identifier(identifier)
         parsed_content['uuid'] = str(uuid.uuid4())
         parsed_content['StartTime'], parsed_content['StopTime'] = self._parse_interval(
             content)
         parsed_content['Collection'] = str(collection)
+        parsed_content['notes'] = parsed_content['description']
+        if collection.product_type == ProductType.L2A:
+            self._parse_L2A_content(parsed_content, identifier, content)
+        else:
+            file_entry = content_json['file_entry']
+            self._parse_S_content(parsed_content, content, file_entry)
+        return parsed_content
+
+    def _parse_L2A_content(self, parsed_content, identifier, content):
+        parsed_content['identifier'] = self._parse_identifier(identifier)
         parsed_content['name'] = self._parse_name(identifier)
         parsed_content['filename'] = self._parse_filename(identifier)
         parsed_content['spatial'] = json.dumps(self._bbox_to_geojson(
             self._parse_bbox(content)))
-        parsed_content['notes'] = parsed_content['description']
         parsed_content['metadata_download'] = self._get_metadata_url(content)
         parsed_content['product_download'] = self._get_product_url(content)
         parsed_content['thumbnail_download'] = self._get_thumbnail_url(content)
-        return parsed_content
+
+    def _parse_S_content(self, parsed_content, content, file_entry):
+        file_entry = BeautifulSoup(file_entry, 'lxml-xml')
+        name = self._parse_file_name(file_entry)
+        parsed_content['identifier'] = self._parse_S_identifier(name)
+        parsed_content['name'] = self._parse_S_name(name)
+        parsed_content['filename'] = name 
+        parsed_content['spatial'] = json.dumps(self._bbox_to_geojson(
+            self._generate_bbox(name)))
+        parsed_content['metadata_download'] = self._get_metadata_url(content)
+        parsed_content['product_download'] = self._parse_url(file_entry)
+        parsed_content['thumbnail_download'] = self._get_thumbnail_url(content)
+    
+    def _parse_file_name(self, file_entry):
+        return file_entry['name']
+
+    def _parse_S_identifier(self, name):
+        pass
+
+    def _parse_S_name(self, name):
+        pass
+
+    def _generate_bbox(self, name):
+        pass
+
+    def _parse_url(self, file_entry):
+        pass
 
     def _create_ckan_tags(self, tags):
         return [{'name': tag} for tag in tags]
