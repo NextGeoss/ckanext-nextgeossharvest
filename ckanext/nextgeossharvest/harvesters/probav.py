@@ -59,6 +59,8 @@ COLLECTIONS = [
 ]
 
 
+log = logging.getLogger(__name__)
+
 class Units(Enum):
     METERS = 'M'
     KILOMETERS = 'K'
@@ -174,7 +176,9 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         self.flagged_extra = None
 
         # This will be the URL that you'll begin harvesting from
-        harvest_url = 'http://www.vito-eodata.be/openSearch/findProducts.atom?collection=urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001&platform=PV01&start=2018-01-01&end=2018-01-02&count=500'
+        # harvest_url = 'http://www.vito-eodata.be/openSearch/findProducts.atom?collection=urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001&platform=PV01&start=2018-01-01&end=2018-01-02&count=500'
+        harvest_url = "http://www.vito-eodata.be/openSearch/findProducts.atom?collection=urn:ogc:def:EOP:VITO:PROBAV_S1-TOA_100M_V001&platform=PV01&start=2018-01-01&end=2018-01-02&count=500"
+        
         log.debug('Harvest URL is {}'.format(harvest_url))
 
         if not hasattr(self, 'provider_logger'):
@@ -182,7 +186,12 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         self.provider = ''  # a string indicating the source to be used in the logs
         # (could be set in the config)
         # As explained above, only harvest_url is required.
-        ids = self._crawl_results(harvest_url, timeout=60, parser='lxml-xml')
+
+        config = json.loads(harvest_job.source.config)
+        auth = (config.get('ckanext.nextgeossharvest.nextgeoss_username'),
+                config.get('ckanext.nextgeossharvest.nextgeoss_password'))
+        auth = ('nextgeoss', 'nextgeoss')
+        ids = self._crawl_results(harvest_url, timeout=60, parser='lxml-xml', gather_entry=self._gather_metalink_files, auth=auth)
 
         print(ids)
 
@@ -322,8 +331,16 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
 
     def _get_thumbnail_url(self, content):
         return str(content.find('link', rel='icon')['href'])
+    
+    def _get_url(self, url, auth=None, **kwargs):
+        log.info('getting %s with user %s', url, auth[0])
+        if auth:
+            kwargs['auth'] = HTTPBasicAuth(*auth)
+        response = requests.get(url, **kwargs)
+        log.info('got HTTP %d', response.status_code)
+        return response
 
-    def _crawl_results(self, harvest_url, limit=100, timeout=5, username=None, password=None, provider=None, parser='lxml', gather_entry=None):  # noqa: E501
+    def _crawl_results(self, harvest_url, limit=100, timeout=5, auth=None, provider=None, parser='lxml', gather_entry=None):  # noqa: E501
         """
         Iterate through the results, create harvest objects,
         and return the ids.
@@ -343,9 +360,7 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
             try:
                 kwargs = { 'verify': False,
                            'timeout': timeout }
-                if username is not None and password is not None:
-                    kwargs['auth'] = HTTPBasicAuth(username, password)
-                r = requests.get(harvest_url, **kwargs)
+                r = self._get_url(harvest_url, auth=auth, **kwargs)
             except Timeout as e:
                 self._save_gather_error('Request timed out: {}'.format(e), self.job)  # noqa: E501
                 status_code = 408
@@ -370,13 +385,16 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
 
             # Get the URL for the next loop, or None to break the loop
             harvest_url = self._get_next_url(soup)
+            log.debug('next url: %s', harvest_url)
 
             # Get the entries from the results
             entries = self._get_entries_from_results(soup)
+            log.debug('OpenSearch entries: %d', len(entries))
+
 
             # Create a harvest object for each entry
             for entry in entries:
-                ids.extend(gather_entry(entry))
+                ids.extend(gather_entry(entry, auth=auth))
             
 
             end_request = time.time()
@@ -386,10 +404,33 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
 
         return ids
 
+    def _gather_metalink_files(self, opensearch_entry, auth=None):
+        content = opensearch_entry['content']
+        content_soup = BeautifulSoup(content, 'lxml-xml')
+        metalink_url = self._parse_metalink_url(content_soup)
+        response = self._get_url(metalink_url, auth)
+        metalinks = BeautifulSoup(response.text, 'lxml-xml')
+        ids = list()
+        for _file in metalinks.find_all('file'):
+            metalink_content = self._merge_contents(content, str(_file))
+            opensearch_entry['content'] = metalink_content
+            id_list = self._gather_entry(opensearch_entry)
+            ids.extend(id_list)
+        return ids
+
+    def _parse_metalink_url(self, openseach_entry):
+        return openseach_entry.find('link', type="application/metalink+xml")['href']
+
+            
+    def _merge_contents(self, content, file_content):
+        content_dict = {'opensearch_entry': content,
+                        'file_element': file_content}
+        return json.dumps(content_dict)
 
     def _gather_entry(self, entry):
         # Create a harvest object for each entry
         entry_guid = entry['guid']
+        log.debug('gathering %s', entry_guid)
         entry_name = entry['identifier']
         entry_restart_date = entry['restart_date']
 
@@ -427,7 +468,7 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
             obj.content = entry['content']
             obj.package = package
             obj.save()
-            ids.append(obj.id)
+            return [obj.id]
         elif not package:
             # It's a product we haven't harvested before.
             log.debug('{} has not been harvested before. Creating a new harvest object.'.format(entry_name))  # noqa: E501
