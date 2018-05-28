@@ -7,6 +7,7 @@ import uuid
 from datetime import datetime
 import time
 from bs4 import BeautifulSoup
+from os import path
 
 from sqlalchemy import desc
 
@@ -254,7 +255,7 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         return file_entry['name']
 
     def _parse_S_identifier(self, name):
-        pass
+        return path.splitext(name)[0]
 
     def _parse_S_name(self, name):
         pass

@@ -39,7 +39,11 @@ class TestSProbavHarvester(TestCase):
     def test_parse_file_name(self):
         filename = self.harvester._parse_file_name(self.file)
         self.assertEqual(filename, "PROBAV_S1_TOA_X00Y00_20180101_100M_V101.HDF5")
-        
+
+    def test_parse_S_identifier(self):
+        file_name = self.harvester._parse_S_identifier("PROBAV_S1_TOA_X00Y00_20180101_100M_V101.HDF5")
+        self.assertEqual(file_name, "PROBAV_S1_TOA_X00Y00_20180101_100M_V101")
+
 
 HDF5_FILENAME_REGEX = re.compile('.*\.HDF5$')
 
@@ -49,9 +53,6 @@ def read_first_file(filename):
         open_search_resp = BeautifulSoup(open_search_file.read(), 'lxml-xml')
         return open_search_resp.files.find(name='file', attrs={'name': HDF5_FILENAME_REGEX})
 
-
-        
-        
 def read_first_entry(filename):
     filepath = path.join(path.dirname(__file__), filename)
     with open(filepath, 'r') as open_search_file:
