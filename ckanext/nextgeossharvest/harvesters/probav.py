@@ -8,6 +8,8 @@ from datetime import datetime
 import time
 from bs4 import BeautifulSoup
 from os import path
+from urllib import urlencode, unquote
+from urlparse import urlparse, urlunparse, parse_qsl
 
 from sqlalchemy import desc
 
@@ -242,11 +244,25 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         parsed_content['identifier'] = self._parse_S_identifier(name)
         parsed_content['name'] = self._parse_S_name(name)
         parsed_content['filename'] = name 
-        parsed_content['spatial'] = json.dumps(self._bbox_to_geojson(
-            self._generate_bbox(self._parse_coordinates(name))))
+        bbox = self._generate_bbox(self._parse_coordinates(name))
+        parsed_content['spatial'] = json.dumps(self._bbox_to_geojson(bbox))
         parsed_content['metadata_download'] = self._get_metadata_url(content)
         parsed_content['product_download'] = self._parse_file_url(file_entry)
-        parsed_content['thumbnail_download'] = self._get_thumbnail_url(content)
+        parsed_content['thumbnail_download'] = self._generate_tile_thumbnail_url(self._get_thumbnail_url(content), bbox)
+    
+
+    def _generate_tile_thumbnail_url(self, thumbnail_url, bbox):
+        url_parts = urlparse(thumbnail_url)
+        query_params_tuple = parse_qsl(url_parts.query)
+        query_params = dict(query_params_tuple)
+        query_params['BBOX'] = ','.join(str(n) for n in bbox)
+        query_params['HEIGHT'] = 10
+        query_params['WIDTH'] = 10
+        url_parts_list = list(url_parts)
+
+        url_parts_list[4] = urlencode(tuple((key, query_params[key]) for key, _ in query_params_tuple))
+
+        return unquote(urlunparse(tuple(url_parts_list)))
     
     def _parse_file_name(self, file_entry):
         return str(file_entry['name'])

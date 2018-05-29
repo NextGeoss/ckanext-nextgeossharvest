@@ -83,6 +83,11 @@ class TestSProbavHarvester(TestCase):
         lat_max = 65
         lat_min = 55
         self.assertEqual(bbox, [lat_min, lng_min, lat_max, lng_max])
+    
+    def test_generate_tile_thumbnail(self):
+        thumbnail_url = "https://www.vito-eodata.be/cgi-bin/probav?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&SRS=EPSG:4326&FORMAT=image/png&LAYERS=PROBAV_L3_S1_TOA_100M_Red band&TIME=2018-01-01T00:00:00Z&BBOX=-54.999,-180.0,75.0,179.998992&HEIGHT=200&WIDTH=554"
+        tile_url = self.harvester._generate_tile_thumbnail_url(thumbnail_url, [65, -160, 75, -150])
+        self.assertEqual(tile_url, 'https://www.vito-eodata.be/cgi-bin/probav?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&SRS=EPSG:4326&FORMAT=image/png&LAYERS=PROBAV_L3_S1_TOA_100M_Red+band&TIME=2018-01-01T00:00:00Z&BBOX=65,-160,75,-150&HEIGHT=10&WIDTH=10')
 
     def test_parse_S_content(self):
         content = {
@@ -109,7 +114,7 @@ class TestSProbavHarvester(TestCase):
             'notes': 'Synthesis products with Top of Atmosphere (TOA) reflectances composited over defined time frame of 1 day for 100m of spatial resolution.',
             'metadata_download': "https://www.vito-eodata.be/PDF/dataaccessMdXML?mdmode=hma&collectionID=1000125&productID=267473044&fileName=PV_S1_TOA-20180101_100M_V101.xml",
             'product_download': "https://www.vito-eodata.be/PDF/dataaccess?service=DSEO&request=GetProduct&version=1.0.0&collectionID=1000125&productID=267473044&ProductURI=urn:ogc:def:EOP:VITO:PROBAV_S1-TOA_100M_V001:PROBAV_S1-TOA_20180101_100M:V101&fileIndex=1",
-            'thumbnail_download': "https://www.vito-eodata.be/cgi-bin/probav?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&SRS=EPSG:4326&FORMAT=image/png&LAYERS=PROBAV_L3_S1_TOA_100M_Red band&TIME=2018-01-01T00:00:00Z&BBOX=-54.999,-180.0,75.0,179.998992&HEIGHT=200&WIDTH=554"
+            'thumbnail_download': "https://www.vito-eodata.be/cgi-bin/probav?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&SRS=EPSG:4326&FORMAT=image/png&LAYERS=PROBAV_L3_S1_TOA_100M_Red+band&TIME=2018-01-01T00:00:00Z&BBOX=65,-180,75,-170&HEIGHT=10&WIDTH=10"
         }
         lng_min = -180
         lat_min = 65
