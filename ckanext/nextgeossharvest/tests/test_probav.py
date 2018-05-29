@@ -170,6 +170,10 @@ class TestProbavHarvester(TestCase):
         self.entry = read_first_entry('l2a_entry.xml')
         self.harvester = PROBAVHarvester()
 
+    def test_create_contents_json(self):
+        json_string = self.harvester._create_contents_json('os entry', 'metalink entry')
+        self.assertDictEqual(json.loads(json_string), {'opensearch_entry': 'os entry', 'file_entry': 'metalink entry'})
+
     def test_parse_identifier_element(self):
         identifier = self.harvester._parse_identifier_element(self.entry)
         self.assertEqual(identifier, 'urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001:PROBAV_CENTER_L2A_20180101_005544_333M:V101')

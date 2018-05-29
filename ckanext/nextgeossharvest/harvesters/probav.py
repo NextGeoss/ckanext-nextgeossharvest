@@ -176,8 +176,8 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         self.flagged_extra = None
 
         # This will be the URL that you'll begin harvesting from
-        # harvest_url = 'http://www.vito-eodata.be/openSearch/findProducts.atom?collection=urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001&platform=PV01&start=2018-01-01&end=2018-01-02&count=500'
-        harvest_url = "http://www.vito-eodata.be/openSearch/findProducts.atom?collection=urn:ogc:def:EOP:VITO:PROBAV_S1-TOA_100M_V001&platform=PV01&start=2018-01-01&end=2018-01-02&count=500"
+        harvest_url = 'http://www.vito-eodata.be/openSearch/findProducts.atom?collection=urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001&platform=PV01&start=2018-01-01&end=2018-01-02&count=500'
+        #harvest_url = "http://www.vito-eodata.be/openSearch/findProducts.atom?collection=urn:ogc:def:EOP:VITO:PROBAV_S1-TOA_100M_V001&platform=PV01&start=2018-01-01&end=2018-01-02&count=500"
         
         log.debug('Harvest URL is {}'.format(harvest_url))
 
@@ -191,7 +191,9 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         auth = (config.get('ckanext.nextgeossharvest.nextgeoss_username'),
                 config.get('ckanext.nextgeossharvest.nextgeoss_password'))
         auth = ('nextgeoss', 'nextgeoss')
-        ids = self._crawl_results(harvest_url, timeout=60, parser='lxml-xml', gather_entry=self._gather_metalink_files, auth=auth)
+
+        ids = self._crawl_results(harvest_url, timeout=60, parser='lxml-xml', gather_entry=self._gather_entry, auth=auth)
+        # ids = self._crawl_results(harvest_url, timeout=60, parser='lxml-xml', gather_entry=self._gather_metalink_files, auth=auth)
 
         print(ids)
 
@@ -474,7 +476,7 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         metalinks = BeautifulSoup(response.text, 'lxml-xml')
         ids = list()
         for _file in self._get_metalink_file_entries(metalinks):
-            metalink_content = self._merge_contents(content, str(_file))
+            metalink_content = self._create_contents_json(content, str(_file))
             opensearch_entry['content'] = metalink_content
             id_list = self._gather_entry(opensearch_entry)
             ids.extend(id_list)
@@ -489,12 +491,13 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         return openseach_entry.find('link', type="application/metalink+xml")['href']
 
             
-    def _merge_contents(self, content, file_content):
-        content_dict = {'opensearch_entry': content,
-                        'file_element': file_content}
+    def _create_contents_json(self, opensearch_entry, metalink_file_entry=None):
+        content_dict = {'opensearch_entry': opensearch_entry}
+        if metalink_file_entry is not None:
+            content_dict['file_entry'] = metalink_file_entry 
         return json.dumps(content_dict)
 
-    def _gather_entry(self, entry):
+    def _gather_entry(self, entry, auth=None):
         # Create a harvest object for each entry
         entry_guid = entry['guid']
         log.debug('gathering %s', entry_guid)
