@@ -64,21 +64,18 @@ class TestSProbavHarvester(TestCase):
         lng_max = -150
         lat_max = 65
         lat_min = 55
-        self.assertEqual(bbox,[lat_min, lng_min, lat_max, lng_max])
-        
-
-
-
-    
+        self.assertEqual(bbox, [lat_min, lng_min, lat_max, lng_max])
 
 
 HDF5_FILENAME_REGEX = re.compile('.*\.HDF5$')
+
 
 def read_first_file(filename):
     filepath = path.join(path.dirname(__file__), filename)
     with open(filepath, 'r') as open_search_file:
         open_search_resp = BeautifulSoup(open_search_file.read(), 'lxml-xml')
         return open_search_resp.files.find(name='file', attrs={'name': HDF5_FILENAME_REGEX})
+
 
 def read_first_entry(filename):
     filepath = path.join(path.dirname(__file__), filename)
@@ -157,7 +154,7 @@ class TestProbavHarvester(TestCase):
         self.assertEqual(collection.product_type, ProductType.L2A)
         self.assertEqual(collection.resolution.units, Units.METERS)
         self.assertEqual(collection.resolution.value, 100)
- 
+
     def test_parse_S1_TOC_NDVI_collection_from_identifier(self):
         identifier = 'urn:ogc:def:EOP:VITO:PROBAV_S1-TOC-NDVI_100M_V001:PROBAV_S1-TOC-NDVI_20180101_100M:V101'
         collection  = self.harvester._parse_collection_from_identifier(identifier)
@@ -168,7 +165,8 @@ class TestProbavHarvester(TestCase):
         self.assertEqual(collection.resolution.value, 100)
 
     def test_parse_L2A_content(self):
-        parsed_content = self.harvester._parse_content(str(self.entry))
+        content = {'opensearch_entry': str(self.entry)}
+        parsed_content = self.harvester._parse_content(json.dumps(content))
         self.assertIsNotNone(parsed_content.get('uuid'))
         del parsed_content['uuid']
         expected_parsed_content = {
@@ -210,8 +208,9 @@ class TestProbavHarvester(TestCase):
         self.assertEqual(thumbnail_url, "https://www.vito-eodata.be/cgi-bin/probav?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&SRS=EPSG:4326&FORMAT=image/png&LAYERS=PROBAV_L2A_333M_Red band&TIME=2018-01-01T00:55:44Z&BBOX=40.341,145.476,65.071,165.962992&HEIGHT=200&WIDTH=166")
 
     def test_get_resources(self):
-        content = self.harvester._parse_content(str(self.entry))
-        resources = self.harvester._get_resources(content)
+        content = {'opensearch_entry': str(self.entry)}
+        parsed_content = self.harvester._parse_content(json.dumps(content))
+        resources = self.harvester._get_resources(parsed_content)
         self.assertListEqual(resources, [
             {
                 'name': 'Metadata Download',
