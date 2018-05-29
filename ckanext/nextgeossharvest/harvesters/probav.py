@@ -68,7 +68,7 @@ class Units(Enum):
 
 
 class ProductType(Enum):
-    TOC = 'TOA'
+    TOA = 'TOA'
     TOC = 'TOC'
     L2A = 'L2A'
 
@@ -89,6 +89,15 @@ class ProbaVCollection(object):
         self.product_type = product_type
         self.resolution = resolution
 
+    def get_description(self):
+        return COLLECTION_DESCRIPTIONS[self.get_name()]
+
+    def get_tags(self):
+        return ['Proba-V', self._type_token(), str(self.resolution)]
+
+    def __str__(self):
+        return 'PROBAV_{}_{}_V001'.format(self._type_token(), str(self.resolution))
+
 
 class L2AProbaVCollection(ProbaVCollection):
 
@@ -97,15 +106,6 @@ class L2AProbaVCollection(ProbaVCollection):
 
     def get_name(self):
         return 'Proba-V Level-2A ({})'.format(self.resolution)
-
-    def get_description(self):
-        return COLLECTION_DESCRIPTIONS[self.get_name()]
-
-    def get_tags(self):
-        return ['Proba-V', 'L2A', str(self.resolution)]
-
-    def __str__(self):
-        return 'PROBAV_{}_{}_V001'.format(self._type_token(), str(self.resolution))
 
 
 class SProbaVCollection(ProbaVCollection):
@@ -117,18 +117,15 @@ class SProbaVCollection(ProbaVCollection):
 
     def _type_token(self):
         return 'S{}-{}{}'.format(str(self.frequency),
-                                 str(self.product_type),
+                                 self.product_type.value,
                                  ('NDVI' if self.ndvi else '')
-                                 )
+                                )
 
     def get_name(self):
-        return ''
-
-    def get_description(self):
-        return ''
-
-    def get_tags(self):
-        return []
+        return 'Proba-V S{}-{}{} ({})'.format(str(self.frequency),
+                                               self.product_type.value,
+                                               (' NVDI' if self.ndvi else ''),
+                                               str(self.resolution))
 
 
 class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
@@ -240,19 +237,19 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         parsed_content['thumbnail_download'] = self._get_thumbnail_url(content)
 
     def _parse_S_content(self, parsed_content, content, file_entry):
-        file_entry = BeautifulSoup(file_entry, 'lxml-xml')
+        file_entry = BeautifulSoup(file_entry, 'lxml-xml').file
         name = self._parse_file_name(file_entry)
         parsed_content['identifier'] = self._parse_S_identifier(name)
         parsed_content['name'] = self._parse_S_name(name)
         parsed_content['filename'] = name 
         parsed_content['spatial'] = json.dumps(self._bbox_to_geojson(
-            self._generate_bbox(self.parse_coordinates(name))))
+            self._generate_bbox(self._parse_coordinates(name))))
         parsed_content['metadata_download'] = self._get_metadata_url(content)
         parsed_content['product_download'] = self._parse_file_url(file_entry)
         parsed_content['thumbnail_download'] = self._get_thumbnail_url(content)
     
     def _parse_file_name(self, file_entry):
-        return file_entry['name']
+        return str(file_entry['name'])
 
     def _parse_S_identifier(self, name):
         return path.splitext(name)[0]
@@ -337,7 +334,7 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
             product_parts = product_type.split('-')
             frequency = int(product_parts[0][1:])
             subtype = ProductType(product_parts[1])
-            ndvi = len(product_parts) > 0 and product_parts[2] == 'NDVI'
+            ndvi = len(product_parts) > 2 and product_parts[2] == 'NDVI'
             return SProbaVCollection(frequency, subtype, resolution, ndvi)
 
     def _parse_resolution(self, resolution_str):

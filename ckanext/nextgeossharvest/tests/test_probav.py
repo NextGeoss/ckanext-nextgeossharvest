@@ -24,6 +24,24 @@ class TestProvaVCollection(TestCase):
         collection = L2AProbaVCollection(ProductType.L2A, Resolution(333, Units.METERS))
         self.assertListEqual(collection.get_tags(), ['Proba-V', 'L2A', '333M'])
 
+class TestSProvaVCollection(TestCase):
+
+    def test_l2a_collection_str(self):
+        collection = SProbaVCollection(1, ProductType.TOA, Resolution(333, Units.METERS), False)
+        self.assertEqual(str(collection), 'PROBAV_S1-TOA_333M_V001') 
+    
+    def test_get_name(self):
+        collection = SProbaVCollection(1, ProductType.TOA, Resolution(333, Units.METERS), False)
+        self.assertEqual(collection.get_name(), 'Proba-V S1-TOA (333M)')
+    
+    def test_get_description(self):
+        collection = SProbaVCollection(1, ProductType.TOA, Resolution(333, Units.METERS), False)
+        self.assertEqual(collection.get_description(), 'Synthesis products with Top of Atmosphere (TOA) reflectances composited over defined time frame of 1 day for 333m of spatial resolution.') 
+    
+    def test_get_tags(self):
+        collection = SProbaVCollection(1, ProductType.TOA, Resolution(333, Units.METERS), False)
+        self.assertListEqual(collection.get_tags(), ['Proba-V', 'S1-TOA', '333M'])
+
 METALINK_URL = "https://www.vito-eodata.be/PDF/dataaccess?service=DSEO&request=GetProduct&version=1.0.0&collectionID=1000125&productID=267473044&ProductURI=urn:ogc:def:EOP:VITO:PROBAV_S1-TOA_100M_V001:PROBAV_S1-TOA_20180101_100M:V101&fileIndex=1"
 
 class TestSProbavHarvester(TestCase):
@@ -66,6 +84,49 @@ class TestSProbavHarvester(TestCase):
         lat_min = 55
         self.assertEqual(bbox, [lat_min, lng_min, lat_max, lng_max])
 
+    def test_parse_S_content(self):
+        content = {
+            'opensearch_entry': str(self.entry),
+            'file_entry': str(self.file)
+        }
+        parsed_content = self.harvester._parse_content(json.dumps(content))
+        self.assertIsNotNone(parsed_content.get('uuid'))
+        del parsed_content['uuid']
+        expected_parsed_content = {
+            'title': 'Proba-V S1-TOA (100M)',
+            'description': 'Synthesis products with Top of Atmosphere (TOA) reflectances composited over defined time frame of 1 day for 100m of spatial resolution.',
+            'tags': [
+                {'name': 'Proba-V'},
+                {'name': 'S1-TOA'},
+                {'name': '100M'}
+            ],
+            'identifier': 'PROBAV_S1_TOA_X00Y00_20180101_100M_V101',
+            'StartTime': '2018-01-01T00:00:00Z',
+            'StopTime': '2018-01-01T23:59:59Z',
+            'Collection': 'PROBAV_S1-TOA_100M_V001',
+            'name': 'probav_s1_toa_x00y00_20180101_100m_v101',
+            'filename': 'PROBAV_S1_TOA_X00Y00_20180101_100M_V101.HDF5',
+            'notes': 'Synthesis products with Top of Atmosphere (TOA) reflectances composited over defined time frame of 1 day for 100m of spatial resolution.',
+            'metadata_download': "https://www.vito-eodata.be/PDF/dataaccessMdXML?mdmode=hma&collectionID=1000125&productID=267473044&fileName=PV_S1_TOA-20180101_100M_V101.xml",
+            'product_download': "https://www.vito-eodata.be/PDF/dataaccess?service=DSEO&request=GetProduct&version=1.0.0&collectionID=1000125&productID=267473044&ProductURI=urn:ogc:def:EOP:VITO:PROBAV_S1-TOA_100M_V001:PROBAV_S1-TOA_20180101_100M:V101&fileIndex=1",
+            'thumbnail_download': "https://www.vito-eodata.be/cgi-bin/probav?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&SRS=EPSG:4326&FORMAT=image/png&LAYERS=PROBAV_L3_S1_TOA_100M_Red band&TIME=2018-01-01T00:00:00Z&BBOX=-54.999,-180.0,75.0,179.998992&HEIGHT=200&WIDTH=554"
+        }
+        lng_min = -180
+        lat_min = 65
+        lng_max = -170
+        lat_max = 75
+        bbox = [[lng_min,lat_max],
+                [lng_max,lat_max],
+                [lng_max,lat_min],
+                [lng_min, lat_min],
+                [lng_min,lat_max]]
+        expected_spatial = {"type":"Polygon","crs":{"type":"EPSG","properties":{"code":4326,"coordinate_order":"Long,Lat"}},"coordinates":[bbox]}
+        spatial = json.loads(parsed_content['spatial'])
+        del parsed_content['spatial']
+        self.maxDiff = None
+        self.assertDictEqual(parsed_content, expected_parsed_content)
+        self.assertDictEqual(spatial, expected_spatial)
+
 
 HDF5_FILENAME_REGEX = re.compile('.*\.HDF5$')
 
@@ -74,7 +135,9 @@ def read_first_file(filename):
     filepath = path.join(path.dirname(__file__), filename)
     with open(filepath, 'r') as open_search_file:
         open_search_resp = BeautifulSoup(open_search_file.read(), 'lxml-xml')
-        return open_search_resp.files.find(name='file', attrs={'name': HDF5_FILENAME_REGEX})
+        elem = open_search_resp.files.find(name='file', attrs={'name': HDF5_FILENAME_REGEX})
+        print(str(elem))
+        return elem
 
 
 def read_first_entry(filename):
