@@ -131,9 +131,21 @@ class TestSProbavHarvester(TestCase):
         self.maxDiff = None
         self.assertDictEqual(parsed_content, expected_parsed_content)
         self.assertDictEqual(spatial, expected_spatial)
-
+    
+    def test_get_metalink_file_entries(self):
+        metalinks = read_metalink_file('metalink.xml')
+        metalink_entries = self.harvester._get_metalink_file_entries(metalinks)
+        self.assertEqual(len(list(metalink_entries)), 196)
+        self.assertEqual(metalink_entries[0]['name'], "PROBAV_S1_TOA_X00Y00_20180101_100M_V101.HDF5")
+        self.assertTrue(all(file_entry['name'].endswith('.HDF5') for file_entry in metalink_entries))
 
 HDF5_FILENAME_REGEX = re.compile('.*\.HDF5$')
+
+
+def read_metalink_file(filename):
+    filepath = path.join(path.dirname(__file__), filename)
+    with open(filepath, 'r') as open_search_file:
+        return BeautifulSoup(open_search_file.read(), 'lxml-xml')
 
 
 def read_first_file(filename):

@@ -473,12 +473,17 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         response = self._get_url(metalink_url, auth)
         metalinks = BeautifulSoup(response.text, 'lxml-xml')
         ids = list()
-        for _file in metalinks.find_all('file'):
+        for _file in self._get_metalink_file_entries(metalinks):
             metalink_content = self._merge_contents(content, str(_file))
             opensearch_entry['content'] = metalink_content
             id_list = self._gather_entry(opensearch_entry)
             ids.extend(id_list)
         return ids
+
+    HDF5_FILENAME_REGEX = re.compile('.*\.HDF5$')
+
+    def _get_metalink_file_entries(self, metalinks):
+        return metalinks.files.find_all(name='file', attrs={'name': self.HDF5_FILENAME_REGEX})
 
     def _parse_metalink_url(self, openseach_entry):
         return openseach_entry.find('link', type="application/metalink+xml")['href']
