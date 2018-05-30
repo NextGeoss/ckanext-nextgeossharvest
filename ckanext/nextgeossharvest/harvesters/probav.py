@@ -162,11 +162,7 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
 
         return config
 
-    def gather_stage(self, harvest_job):
-        log = logging.getLogger(__name__ + '.{your_harvester}.gather')
-        log.debug('{your_harvester} gather_stage for job: %r', harvest_job)
-        self.job = harvest_job
-        self._set_source_config(self.job.source.config)
+    def _init(self):
         self.os_id_name = 'atom:id'  # Example
         self.os_id_attr = {'key': None}  # Example
         self.os_guid_name = 'atom:id'  # Example
@@ -174,6 +170,15 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         self.os_restart_date_name = 'atom:updated'
         self.os_restart_date_attr = {'key': None}
         self.flagged_extra = None
+
+    def gather_stage(self, harvest_job):
+        self._init()
+
+        self.job = harvest_job
+
+        self._set_source_config(self.job.source.config)
+
+        log.debug('{your_harvester} gather_stage for job: %r', harvest_job)
 
         # This will be the URL that you'll begin harvesting from
         harvest_url = 'http://www.vito-eodata.be/openSearch/findProducts.atom?collection=urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001&platform=PV01&start=2018-01-01&end=2018-01-02&count=500'
@@ -192,8 +197,8 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
                 config.get('ckanext.nextgeossharvest.nextgeoss_password'))
         auth = ('nextgeoss', 'nextgeoss')
 
-        ids = self._crawl_results(harvest_url, timeout=60, parser='lxml-xml', gather_entry=self._gather_entry, auth=auth)
-        # ids = self._crawl_results(harvest_url, timeout=60, parser='lxml-xml', gather_entry=self._gather_metalink_files, auth=auth)
+        ids = self._crawl_open_search(harvest_url, timeout=60, parser='lxml-xml', gather_entry=self._gather_entry, auth=auth)
+        # ids = self._crawl_open_search(harvest_url, timeout=60, parser='lxml-xml', gather_entry=self._gather_metalink_files, auth=auth)
 
         print(ids)
 
@@ -397,24 +402,70 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         return str(content.find('link', rel='icon')['href'])
     
     def _get_url(self, url, auth=None, **kwargs):
-        log.info('getting %s with user %s', url, auth[0])
+        log.info('getting %s', url)
         if auth:
             kwargs['auth'] = HTTPBasicAuth(*auth)
         response = requests.get(url, **kwargs)
         log.info('got HTTP %d', response.status_code)
         return response
 
-    def _crawl_results(self, harvest_url, limit=100, timeout=5, auth=None, provider=None, parser='lxml', gather_entry=None):  # noqa: E501
+    def _get_xml_from_url(self, url, auth=None, **kwargs):
+        response = self._get_url(url, auth=auth, **kwargs)
+        return BeautifulSoup(response.text, 'lxml-xml')
+
+    def _gather_L2A(self, open_search_url):
+        for open_search_page in self._open_search_pages_from(open_search_url):
+            for open_search_entry in self._parse_open_search_entries(open_search_page):
+                guid = self._parse_identifier_element(open_search_entry)
+                restart_date = self._parse_restart_date(open_search_entry)
+                content = open_search_entry.encode()
+                yield self._create_harvest_object(guid, restart_date, content)
+    
+    def _gather_L3(self, open_search_url):
+        for open_search_page in self._open_search_pages_from(open_search_url):
+            for open_search_entry in self._parse_open_search_entries(open_search_page):
+                metalink_url = self._parse_metalink_url(open_search_entry)
+                metalink_xml = self._get_xml_from_url(metalink_url)
+                for metalink_file_entry in self._get_metalink_file_elements(metalink_xml):
+                    identifier = self._parse_identifier(open_search_entry)
+                    file_name = self._parse_file_name(metalink_file_entry)
+                    guid = self._generate_L3_guid(identifier, file_name)
+                    restart_date = self._parse_restart_date(open_search_entry)
+                    content = open_search_entry.encode()
+                    extras = {
+                        'file_name': file_name,
+                        'file_url': self._parse_file_url(metalink_file_entry)
+                    }
+                    yield self._create_harvest_object(guid, restart_date, content, extras=extras) 
+    
+    def _create_harvest_object(self, guid, restart_date, content, extras={}):
+        return {
+            'identifier': self._parse_name(guid),
+            'guid': guid,
+            'restart_date': restart_date,
+            'content': json.dumps({
+               'content': content,
+               'extras': extras 
+            }),
+        }
+    
+    def _package_name_from_guid(self, guid):
+        return ''
+
+    def _parse_restart_date(self, open_search_entry):
+        return open_search_entry.find('updated').string
+    
+    def _generate_L3_guid(self, identifier, file_name):
+        return '{}:{}'.format(identifier, file_name)
+
+    # lxml was used befor instead of lxml-xml
+    def _open_search_pages_from(self, harvest_url, limit=100, timeout=5, auth=None, provider=None, parser='lxml-xml'):  # noqa: E501
         """
         Iterate through the results, create harvest objects,
         and return the ids.
         """
-        ids = []
-        if gather_entry is None:
-            gather_entry = self._gather_entry
-
-
-        while len(ids) < limit and harvest_url:
+        retrieved_entries = 0
+        while retrieved_entries < limit and harvest_url:
             # We'll limit ourselves to one request per second
             start_request = time.time()
 
@@ -432,41 +483,38 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
                 if hasattr(self, 'provider_logger'):
                     self.provider_logger.info(log_message.format(self.provider,
                         timestamp, status_code, timeout))  # noqa: E128
-                return ids
+                raise StopIteration
             if r.status_code != 200:
                 self._save_gather_error('{} error: {}'.format(r.status_code, r.text), self.job)  # noqa: E501
                 elapsed = 9999
                 if hasattr(self, 'provider_logger'):
                     self.provider_logger.info(log_message.format(self.provider,
                         timestamp, r.status_code, elapsed))  # noqa: E128
-                return ids
+                raise StopIteration
 
             if hasattr(self, 'provider_logger'):
                 self.provider_logger.info(log_message.format(self.provider,
                     timestamp, r.status_code, r.elapsed.total_seconds()))  # noqa: E128, E501
 
-            soup = BeautifulSoup(r.content, parser)
+            soup = BeautifulSoup(r.content, parser) # r.text????
 
+            retrieved_entries += self._parse_items_per_page(soup)
             # Get the URL for the next loop, or None to break the loop
             harvest_url = self._get_next_url(soup)
             log.debug('next url: %s', harvest_url)
-
-            # Get the entries from the results
-            entries = self._get_entries_from_results(soup)
-            log.debug('OpenSearch entries: %d', len(entries))
-
-
-            # Create a harvest object for each entry
-            for entry in entries:
-                ids.extend(gather_entry(entry, auth=auth))
-            
 
             end_request = time.time()
             request_time = end_request - start_request
             if request_time < 1.0:
                 time.sleep(1 - request_time)
+            yield soup
+    
+    def _parse_items_per_page(self, open_search_page):
+        return int(open_search_page.find('itemsPerPage').string)
 
-        return ids
+    def _parse_open_search_entries(self, soup):
+        """Extract the entries from an OpenSearch response."""
+        return soup.find_all('entry')
 
     def _gather_metalink_files(self, opensearch_entry, auth=None):
         content = opensearch_entry['content']
@@ -475,7 +523,7 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         response = self._get_url(metalink_url, auth)
         metalinks = BeautifulSoup(response.text, 'lxml-xml')
         ids = list()
-        for _file in self._get_metalink_file_entries(metalinks):
+        for _file in self._get_metalink_file_elements(metalinks):
             metalink_content = self._create_contents_json(content, str(_file))
             opensearch_entry['content'] = metalink_content
             id_list = self._gather_entry(opensearch_entry)
@@ -484,7 +532,7 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
 
     HDF5_FILENAME_REGEX = re.compile('.*\.HDF5$')
 
-    def _get_metalink_file_entries(self, metalinks):
+    def _get_metalink_file_elements(self, metalinks):
         return metalinks.files.find_all(name='file', attrs={'name': self.HDF5_FILENAME_REGEX})
 
     def _parse_metalink_url(self, openseach_entry):

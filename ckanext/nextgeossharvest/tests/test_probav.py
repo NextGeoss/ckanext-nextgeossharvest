@@ -134,7 +134,7 @@ class TestSProbavHarvester(TestCase):
     
     def test_get_metalink_file_entries(self):
         metalinks = read_metalink_file('metalink.xml')
-        metalink_entries = self.harvester._get_metalink_file_entries(metalinks)
+        metalink_entries = self.harvester._get_metalink_file_elements(metalinks)
         self.assertEqual(len(list(metalink_entries)), 196)
         self.assertEqual(metalink_entries[0]['name'], "PROBAV_S1_TOA_X00Y00_20180101_100M_V101.HDF5")
         self.assertTrue(all(file_entry['name'].endswith('.HDF5') for file_entry in metalink_entries))
@@ -163,12 +163,76 @@ def read_first_entry(filename):
         open_search_resp = BeautifulSoup(open_search_file.read(), 'lxml-xml')
         return open_search_resp.entry
 
+def read_entries(filename):
+    filepath = path.join(path.dirname(__file__), filename)
+    with open(filepath, 'r') as open_search_file:
+        open_search_resp = BeautifulSoup(open_search_file.read(), 'lxml-xml')
+        return open_search_resp
+
 
 class TestProbavHarvester(TestCase):
+
+    def test_get_entries_from_results(self):
+        entries_from_file = read_entries('l2a_500_entries.xml')
+        self.harvester._init()
+        entry_iter = self.harvester._parse_open_search_entries(entries_from_file)
+        self.maxDiff = None
+        self.assertEqual(entry_iter[0].identifier.string, 'urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001:PROBAV_CENTER_L2A_20180101_005544_333M:V101')
+        self.assertEqual(len(entry_iter), 158)
+
 
     def setUp(self):
         self.entry = read_first_entry('l2a_entry.xml')
         self.harvester = PROBAVHarvester()
+    
+    def test_gather_L2A(self):
+        havest_objects_iterator = self.harvester._gather_L2A('http://www.vito-eodata.be/openSearch/findProducts.atom?collection=urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001&platform=PV01&start=2018-01-01&end=2018-01-02&count=500')
+        firts_havest_object = next(havest_objects_iterator)
+        self.assertEqual(firts_havest_object['guid'], 'urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001:PROBAV_CENTER_L2A_20180101_005544_333M:V101')
+        self.assertEqual(len(list(havest_objects_iterator)), 158)
+
+    def test_gather_L3(self):
+        havest_objects_iterator = self.harvester._gather_L3('http://www.vito-eodata.be/openSearch/findProducts.atom?collection=urn:ogc:def:EOP:VITO:PROBAV_S1-TOA_333M_V001&platform=PV01&start=2018-01-01&end=2018-01-02&count=500')
+        firts_havest_object = next(havest_objects_iterator)
+        self.assertEqual(firts_havest_object['guid'], 'urn:ogc:def:EOP:VITO:PROBAV_S1-TOA_333M_V001:PROBAV_S1-TOA_20180101_333M:V101:PROBAV_S1_TOA_20180101_333M_V101')
+        self.assertEqual(len(list(havest_objects_iterator)), 2 * 196)
+
+    def test_create_harvest_object(self):
+        harvest_object = self.harvester._create_harvest_object('GUID:1', 'restart_date', 'content', extras={'k1': 1, 'k2': 2})
+        content = json.loads(harvest_object['content'])
+        del harvest_object['content']
+        self.assertDictEqual(harvest_object, {
+            'identifier': 'guid_1',
+            'guid': 'GUID:1',
+            'restart_date': 'restart_date'
+        })
+        self.assertDictEqual(content, {
+            'content': 'content',
+            'extras': {'k1': 1, 'k2': 2}
+        })
+
+    def test_parse_items_per_page(self):
+        items_per_page = self.harvester._parse_items_per_page(read_entries('l2a_500_entries.xml'))
+        self.assertEqual(items_per_page, 158)
+
+    def test_open_search_pages_from(self):
+        open_search_pages = self.harvester._open_search_pages_from('http://www.vito-eodata.be/openSearch/findProducts.atom?collection=urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001&platform=PV01&start=2018-01-01&end=2018-01-02&count=500')
+        open_search_first_page = next(open_search_pages)
+        self.assertIsInstance(open_search_first_page, BeautifulSoup)
+        self.assertEqual(open_search_first_page.find('totalResults').string, '158')
+
+    def test_get_xml_url(self):
+        xml = self.harvester._get_xml_from_url('https://www.vito-eodata.be/PDF/dataaccess?service=DSEO&request=GetProduct&version=1.0.0&collectionID=1000112&productID=267469925&ProductURI=urn:ogc:def:EOP:VITO:PROBAV_S1-TOA_333M_V001:PROBAV_S1-TOA_20180101_333M:V101&', auth=('nextgeoss', 'nextgeoss'))
+        self.assertIsInstance(xml, BeautifulSoup)
+        self.assertIsNotNone(xml.files.file)
+
+    def test_generate_L3_guid(self):
+        guid = self.harvester._generate_L3_guid('urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001:PROBAV_CENTER_L2A_20180101_005544_333M:V101', 'PROBAV_S1_TOA_20180101_333M_V101')
+        self.assertEqual(guid, 'urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001:PROBAV_CENTER_L2A_20180101_005544_333M:V101:PROBAV_S1_TOA_20180101_333M_V101')
+
+    def test_parse_restart_date(self):
+        restart_date = self.harvester._parse_restart_date(self.entry)
+        self.assertEqual(restart_date, "2018-01-01T04:55:43Z")
 
     def test_create_contents_json(self):
         json_string = self.harvester._create_contents_json('os entry', 'metalink entry')
