@@ -145,8 +145,15 @@ class ESAHarvester(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
 
         limit = self.source_config.get('datasets_per_job', 1000)
 
-        harvest_url = '{base_url}/dhus/search?q=ingestiondate:{date_range}{skip_raw}&orderby=ingestiondate asc&start=0&rows={limit}'.format(base_url=base_url, \
-                        date_range=date_range, skip_raw=skip_raw, limit=limit)  # noqa: E501
+        url_template = ('{base_url}/dhus/search?' +
+                        'q=ingestiondate:{date_range}' +
+                        '{skip_raw}' +
+                        '&orderby=ingestiondate asc' +
+                        '&start=0' +
+                        '&rows={limit}')
+        harvest_url = url_template.format(base_url=base_url,
+                                          date_range=date_range,
+                                          skip_raw=skip_raw, limit=limit)
         log.debug('Harvest URL is {}'.format(harvest_url))
         username = config.get('ckanext.nextgeossharvest.nextgeoss_username')
         password = config.get('ckanext.nextgeossharvest.nextgeoss_password')
