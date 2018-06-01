@@ -1,10 +1,13 @@
 """Tests for nextgeoss_base.py."""
-from ..harvesters.probav import PROBAVHarvester, Units, ProductType, L2AProbaVCollection, SProbaVCollection, Resolution
+from ..harvesters.probav import PROBAVHarvester, Units, ProductType, L2AProbaVCollection, SProbaVCollection, Resolution, Session
 from unittest import TestCase
 from os import path
 from bs4 import BeautifulSoup
 import json
 import re
+import mock
+from ckanext.harvest.model import HarvestObject
+from datetime import date
 
 class TestProvaVCollection(TestCase):
 
@@ -172,6 +175,10 @@ def read_entries(filename):
 
 class TestProbavHarvester(TestCase):
 
+    def test_generate_harvest_url(self):
+        url = self.harvester._generate_harvest_url('PROBAV_L2A_333M_V001', date(2018, 1, 1), date(2018, 1, 2) )
+        self.assertEqual(url, 'http://www.vito-eodata.be/openSearch/findProducts.atom?collection=urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001&platform=PV01&start=2018-01-01&end=2018-01-02&count=500')
+
     def test_get_entries_from_results(self):
         entries_from_file = read_entries('l2a_500_entries.xml')
         self.harvester._init()
@@ -212,6 +219,19 @@ class TestProbavHarvester(TestCase):
             'content': 'content',
             'extras': {'k1': 1, 'k2': 2}
         })
+
+    def test_create_harvest_object_and_gather_entry_integration(self):
+        from sqlalchemy.orm.query import Query
+        # from ckanext.harvest.model import HarvestObject
+    
+        with mock.patch.object(Query, 'first', return_value=None):
+            with mock.patch.object(HarvestObject, 'save'):
+                self.harvester.job = None
+                harvest_object = self.harvester._create_harvest_object('GUID:1', 'restart_date', 'content', extras={'k1': 1, 'k2': 2})
+                ids = self.harvester._gather_entry(harvest_object)
+                self.assertListEqual(ids, ['GUID:1'])
+                
+
 
     def test_parse_items_per_page(self):
         items_per_page = self.harvester._parse_items_per_page(read_entries('l2a_500_entries.xml'))
