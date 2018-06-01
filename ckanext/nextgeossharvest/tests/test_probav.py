@@ -186,16 +186,18 @@ class TestProbavHarvester(TestCase):
         self.harvester = PROBAVHarvester()
     
     def test_gather_L2A(self):
-        havest_objects_iterator = self.harvester._gather_L2A('http://www.vito-eodata.be/openSearch/findProducts.atom?collection=urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001&platform=PV01&start=2018-01-01&end=2018-01-02&count=500')
-        firts_havest_object = next(havest_objects_iterator)
+        harvest_objects_iterator = self.harvester._gather_L2A('http://www.vito-eodata.be/openSearch/findProducts.atom?collection=urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001&platform=PV01&start=2018-01-01&end=2018-01-02&count=500')
+        harvest_objects = list(harvest_objects_iterator)
+        firts_havest_object = harvest_objects[0]
         self.assertEqual(firts_havest_object['guid'], 'urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001:PROBAV_CENTER_L2A_20180101_005544_333M:V101')
-        self.assertEqual(len(list(havest_objects_iterator)), 158)
+        self.assertEqual(len(harvest_objects), 158)
 
     def test_gather_L3(self):
-        havest_objects_iterator = self.harvester._gather_L3('http://www.vito-eodata.be/openSearch/findProducts.atom?collection=urn:ogc:def:EOP:VITO:PROBAV_S1-TOA_333M_V001&platform=PV01&start=2018-01-01&end=2018-01-02&count=500')
-        firts_havest_object = next(havest_objects_iterator)
-        self.assertEqual(firts_havest_object['guid'], 'urn:ogc:def:EOP:VITO:PROBAV_S1-TOA_333M_V001:PROBAV_S1-TOA_20180101_333M:V101:PROBAV_S1_TOA_20180101_333M_V101')
-        self.assertEqual(len(list(havest_objects_iterator)), 2 * 196)
+        harvest_objects_iterator = self.harvester._gather_L3('http://www.vito-eodata.be/openSearch/findProducts.atom?collection=urn:ogc:def:EOP:VITO:PROBAV_S1-TOA_333M_V001&platform=PV01&start=2018-01-01&end=2018-01-02&count=500')
+        harvest_objects = list(harvest_objects_iterator)
+        first_havest_object = harvest_objects[0]
+        self.assertEqual(first_havest_object['guid'], 'urn:ogc:def:EOP:VITO:PROBAV_S1-TOA_333M_V001:PROBAV_S1-TOA_20180101_333M:V101:PROBAV_S1_TOA_X00Y00_20180101_333M_V101.HDF5')
+        self.assertEqual(len(harvest_objects), 331 + 331)
 
     def test_create_harvest_object(self):
         harvest_object = self.harvester._create_harvest_object('GUID:1', 'restart_date', 'content', extras={'k1': 1, 'k2': 2})

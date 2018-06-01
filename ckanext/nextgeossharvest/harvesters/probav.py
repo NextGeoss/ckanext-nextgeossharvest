@@ -406,7 +406,7 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         if auth:
             kwargs['auth'] = HTTPBasicAuth(*auth)
         response = requests.get(url, **kwargs)
-        log.info('got HTTP %d', response.status_code)
+        response.raise_for_status()
         return response
 
     def _get_xml_from_url(self, url, auth=None, **kwargs):
@@ -425,9 +425,9 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         for open_search_page in self._open_search_pages_from(open_search_url):
             for open_search_entry in self._parse_open_search_entries(open_search_page):
                 metalink_url = self._parse_metalink_url(open_search_entry)
-                metalink_xml = self._get_xml_from_url(metalink_url)
+                metalink_xml = self._get_xml_from_url(metalink_url, auth=('nextgeoss', 'nextgeoss'))
                 for metalink_file_entry in self._get_metalink_file_elements(metalink_xml):
-                    identifier = self._parse_identifier(open_search_entry)
+                    identifier = self._parse_identifier_element(open_search_entry)
                     file_name = self._parse_file_name(metalink_file_entry)
                     guid = self._generate_L3_guid(identifier, file_name)
                     restart_date = self._parse_restart_date(open_search_entry)
