@@ -63,7 +63,7 @@ L3_COLLECTIONS = [
     "PROBAV_S5-TOC_100M_V001",
     "PROBAV_S5-TOC-NDVI_100M_V001"
 ]
-URL_TEMPLATE = 'http://www.vito-eodata.be/openSearch/findProducts.atom?collection=urn:ogc:def:EOP:VITO:{}&platform=PV01&start={}&end={}&count=3' #count=500
+URL_TEMPLATE = 'http://www.vito-eodata.be/openSearch/findProducts.atom?collection=urn:ogc:def:EOP:VITO:{}&platform=PV01&start={}&end={}&count=500' #count=500
 DATE_FORMAT = '%Y-%m-%d'
 
 log = logging.getLogger(__name__)
@@ -480,7 +480,7 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         return '{}:{}'.format(identifier, file_name)
 
     # lxml was used befor instead of lxml-xml
-    def _open_search_pages_from(self, harvest_url, limit=3, timeout=5, auth=None, provider=None, parser='lxml-xml'):  # noqa: E501
+    def _open_search_pages_from(self, harvest_url, limit=100, timeout=5, auth=None, provider=None, parser='lxml-xml'):  # noqa: E501
         """
         Iterate through the results, create harvest objects,
         and return the ids.
