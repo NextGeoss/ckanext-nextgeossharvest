@@ -352,6 +352,10 @@ class NextGEOSSHarvester(HarvesterBase):
         # Save a reference (review the utility of this)
         self.obj = harvest_object
 
+        
+        # Provide easy access to the config
+        self._set_source_config(harvest_object.source.config)
+
         if harvest_object.content is None:
             self._save_object_error('Empty content for object {}'
                                     .format(harvest_object.id),

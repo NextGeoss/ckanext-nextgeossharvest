@@ -41,16 +41,15 @@ log = logging.getLogger(__name__)
 
 COLLECTION_TEMPLATE = 'PROBAV_{type}_{resolution}_V001'
 L2A_COLLECTIONS = [
-    "PROBAV_L2A_100M_V001"]
-x = [
+    "PROBAV_L2A_100M_V001",
     "PROBAV_L2A_1KM_V001",
-    "PROBAV_L2A_333M_V001",
-    "PROBAV_P_V001"
+    "PROBAV_L2A_333M_V001"
 ]
+x = ["PROBAV_P_V001"]
+
 L3_COLLECTIONS = [
-    "PROBAV_S1-TOA_100M_V001"
-]
-y = ["PROBAV_S1-TOA_1KM_V001",
+    "PROBAV_S1-TOA_100M_V001",
+    "PROBAV_S1-TOA_1KM_V001",
     "PROBAV_S1-TOA_333M_V001",
     "PROBAV_S1-TOC_100M_V001",
     "PROBAV_S1-TOC_1KM_V001",
@@ -64,14 +63,14 @@ y = ["PROBAV_S1-TOA_1KM_V001",
     "PROBAV_S5-TOC_100M_V001",
     "PROBAV_S5-TOC-NDVI_100M_V001"
 ]
-URL_TEMPLATE = 'http://www.vito-eodata.be/openSearch/findProducts.atom?collection=urn:ogc:def:EOP:VITO:{}&platform=PV01&start={}&end={}&count=1' #count=500
+URL_TEMPLATE = 'http://www.vito-eodata.be/openSearch/findProducts.atom?collection=urn:ogc:def:EOP:VITO:{}&platform=PV01&start={}&end={}&count=3' #count=500
 DATE_FORMAT = '%Y-%m-%d'
 
 log = logging.getLogger(__name__)
 
 class Units(Enum):
     METERS = 'M'
-    KILOMETERS = 'K'
+    KILOMETERS = 'KM'
 
 
 class ProductType(Enum):
@@ -131,7 +130,7 @@ class SProbaVCollection(ProbaVCollection):
     def get_name(self):
         return 'Proba-V S{}-{}{} ({})'.format(str(self.frequency),
                                                self.product_type.value,
-                                               (' NVDI' if self.ndvi else ''),
+                                               (' NDVI' if self.ndvi else ''),
                                                str(self.resolution))
 
 
@@ -481,7 +480,7 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         return '{}:{}'.format(identifier, file_name)
 
     # lxml was used befor instead of lxml-xml
-    def _open_search_pages_from(self, harvest_url, limit=1, timeout=5, auth=None, provider=None, parser='lxml-xml'):  # noqa: E501
+    def _open_search_pages_from(self, harvest_url, limit=3, timeout=5, auth=None, provider=None, parser='lxml-xml'):  # noqa: E501
         """
         Iterate through the results, create harvest objects,
         and return the ids.
