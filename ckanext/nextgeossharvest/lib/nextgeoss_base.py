@@ -5,6 +5,11 @@ import logging
 import os
 import uuid
 from string import Template
+from datetime import datetime
+import requests
+from requests.auth import HTTPBasicAuth
+import requests_ftp
+from requests.exceptions import ConnectTimeout, ReadTimeout
 
 from sqlalchemy.sql import update, bindparam
 import shapely.wkt
@@ -71,13 +76,10 @@ class NextGEOSSHarvester(HarvesterBase):
         context = {
             'model': model,
             'session': model.Session,
-            'user': 'test_user', #self._get_user_name(),
+            'user': self._get_user_name(),
             'ignore_auth': True
         }
-        print package.id
-        print 'user name: {}'.format(context['user'])
-        xx = logic.get_action('package_list')(context, {})
-        print 'package_list: {}'.format(xx)
+
         return logic.get_action('package_show')(context, {'id': package.name})
 
 
@@ -127,6 +129,7 @@ class NextGEOSSHarvester(HarvesterBase):
         package_dict['tags'] = parsed_content['tags']
         package_dict['extras'] = self._get_extras(parsed_content)
         package_dict['resources'] = self._get_resources(parsed_content)
+        package_dict['private'] = self.source_config.get('make_private', False)
 
         return package_dict
 
@@ -165,10 +168,10 @@ class NextGEOSSHarvester(HarvesterBase):
                       .format(package_dict['name']))
             # Tags, extras, and resources are all new, so we add whatever we
             # get from the parsed content.
-            package_dict['id'] = unicode(uuid.uuid4())
+            package_dict['id'] = unicode(uuid.uuid4())  # noqa: F821
             package_dict['owner_org'] = model.Package.get(harvest_object.source.id).owner_org  # noqa: E501
             package_schema = logic.schema.default_create_package_schema()
-            package_schema['id'] = [unicode]
+            package_schema['id'] = [unicode]  # noqa: F821
             action = 'package_create'
 
         # Create context after establishing if we're updating or creating
@@ -177,8 +180,9 @@ class NextGEOSSHarvester(HarvesterBase):
             'session': model.Session,
             'user': self._get_user_name(),
         }
-        tag_schema = logic.schema.tag_schema()
-        default_tags_schema['name'] = [not_empty, unicode]
+
+        tag_schema = logic.schema.default_tags_schema()
+        tag_schema['name'] = [not_empty, unicode]  # noqa: F821
         extras_schema = logic.schema.default_extras_schema()
         package_schema['tags'] = tag_schema
         package_schema['extras'] = extras_schema
@@ -248,6 +252,7 @@ class NextGEOSSHarvester(HarvesterBase):
                     for key, value in parsed_content.items()
                     if key not in skip]
         extras = [{'key': 'dataset_extra', 'value': str(extras_tmp)}]
+        
         return extras
 
     def _update_tags(self, old_tags, new_tags):
@@ -297,3 +302,91 @@ class NextGEOSSHarvester(HarvesterBase):
             logger.addHandler(handler)
 
         return logger
+
+    def _crawl_urls_ftp(self, url, provider):
+        """
+        Check if a file is present on an FTP server and return the appropriate
+        status code.
+        """
+        # We need to be able to mock this for testing and requests-mock doesn't
+        # work with requests-ftp, so this is our workaround. We'll just bypass
+        # this method like so (the real method returns either an int or None):
+        test_ftp_status = self.source_config.get('test_ftp_status')
+        if test_ftp_status == 'ok':
+            return 10000
+        elif test_ftp_status == 'error':
+            return None
+
+        # And now here's the real method:
+        timeout = self.source_config['timeout']
+        username = self.source_config['username']
+        password = self.source_config['password']
+
+        # Make a request to the website
+        timestamp = str(datetime.utcnow())
+        log_message = '{:<12} | {} | {} | {}s'
+        try:
+            requests_ftp.monkeypatch_session()
+            s = requests.Session()
+            r = s.size(url, auth=HTTPBasicAuth(username, password),
+                       timeout=timeout)
+            status_code = r.status_code
+            elapsed = r.elapsed.total_seconds()
+        except (ConnectTimeout, ReadTimeout) as e:
+            self._save_gather_error('Request timed out: {}'.format(e), self.job)  # noqa: E501
+            status_code = 408
+            elapsed = 9999
+
+        if status_code == 213:
+            size = int(r.text)
+        else:
+            size = None
+
+        if status_code not in {213, 408}:
+            self._save_gather_error(
+                '{} error: {}'.format(status_code, r.text), self.job)
+
+        self.provider_logger.info(log_message.format(provider, timestamp,
+                                                     status_code, elapsed))
+        return size
+
+    def import_stage(self, harvest_object):
+        log = logging.getLogger(__name__ + '.import')
+        log.debug('Import stage for harvest object with GUID {}'
+                  .format(harvest_object.id))
+
+        # Save a reference (review the utility of this)
+        self.obj = harvest_object
+
+        # Provide easy access to the config
+        self._set_source_config(harvest_object.source.config)
+
+        if harvest_object.content is None:
+            self._save_object_error('Empty content for object {}'
+                                    .format(harvest_object.id),
+                                    harvest_object, 'Import')
+            return False
+
+        status = self._get_object_extra(harvest_object, 'status')
+
+        # Check if we need to update the dataset
+        if status != 'unchanged':
+            # This can be a hook
+            package = self._create_or_update_dataset(harvest_object, status)
+            # This can be a hook
+            if not package:
+                return False
+            package_id = package['id']
+        else:
+            package_id = harvest_object.package.id
+
+        # Perform the necessary harvester housekeeping
+        self._refresh_harvest_objects(harvest_object, package_id)
+
+        # Finish up
+        if status == 'unchanged':
+            return 'unchanged'
+        else:
+            log.debug('Package {} was successully harvested.'
+                      .format(package['id']))
+            return True

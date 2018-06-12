@@ -81,7 +81,9 @@ setup(
     entry_points='''
         [ckan.plugins]
         nextgeossharvest=ckanext.nextgeossharvest.plugin:NextgeossharvestPlugin
+        cmems=ckanext.nextgeossharvest.harvesters:CMEMSHarvester
         esa=ckanext.nextgeossharvest.harvesters:ESAHarvester
+        gome2=ckanext.nextgeossharvest.harvesters:GOME2Harvester
         itag=ckanext.nextgeossharvest.harvesters:ITagEnricher
         [babel.extractors]
         ckan = ckan.lib.extract:extract_ckan

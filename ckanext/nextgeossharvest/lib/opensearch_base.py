@@ -94,7 +94,7 @@ class OpenSearchHarvester(HarvesterBase):
 
             if hasattr(self, 'provider_logger'):
                 self.provider_logger.info(log_message.format(self.provider,
-                    timestamp, r.status_code, r.elapsed.total_seconds()))  # noqa: E128
+                    timestamp, r.status_code, r.elapsed.total_seconds()))  # noqa: E128, E501
 
             soup = Soup(r.content, 'lxml')
 

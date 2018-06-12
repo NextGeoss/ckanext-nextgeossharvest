@@ -62,6 +62,8 @@ class ESAHarvester(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
                 if key in config_obj:
                     if not isinstance(config_obj[key], bool):
                         raise ValueError('{} must be boolean'.format(key))
+            if type(config_obj.get('make_private', False)) != bool:
+                raise ValueError('make_private must be true or false')
 
         except ValueError as e:
             raise e
@@ -87,7 +89,7 @@ class ESAHarvester(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
         last_object = Session.query(HarvestObject). \
             filter(HarvestObject.harvest_source_id == self.job.source_id,
                    HarvestObject.import_finished != None). \
-            order_by(desc(HarvestObject.import_finished)).limit(1)
+            order_by(desc(HarvestObject.import_finished)).limit(1)  # noqa: E711, E501
         if last_object:
             try:
                 last_object = last_object[0]
@@ -141,15 +143,20 @@ class ESAHarvester(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
         else:
             skip_raw = ''
 
-        limit = self.source_config.get('datasets_per_job', 100)
-        print limit
+        limit = self.source_config.get('datasets_per_job', 1000)
 
-        harvest_url = '{base_url}/dhus/search?q=ingestiondate:{date_range}{skip_raw}&orderby=ingestiondate asc&start=0&rows={limit}'.format(base_url=base_url, date_range=date_range, skip_raw=skip_raw, limit=limit)  # noqa: E501
+        url_template = ('{base_url}/dhus/search?' +
+                        'q=ingestiondate:{date_range}' +
+                        '{skip_raw}' +
+                        '&orderby=ingestiondate asc' +
+                        '&start=0' +
+                        '&rows={limit}')
+        harvest_url = url_template.format(base_url=base_url,
+                                          date_range=date_range,
+                                          skip_raw=skip_raw, limit=limit)
         log.debug('Harvest URL is {}'.format(harvest_url))
         username = config.get('ckanext.nextgeossharvest.nextgeoss_username')
-        print username
         password = config.get('ckanext.nextgeossharvest.nextgeoss_password')
-        print password
 
         # Set the limit for the maximum number of results per job.
         # Since the new harvester jobs will be created on a rolling basis
@@ -173,41 +180,3 @@ class ESAHarvester(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
     def fetch_stage(self, harvest_object):
         """Fetch was completed during gather."""
         return True
-
-    def import_stage(self, harvest_object):
-        log = logging.getLogger(__name__ + '.import')
-        log.debug('Import stage for harvest object with GUID {}'
-                  .format(harvest_object.id))
-
-        # Save a reference (review the utility of this)
-        self.obj = harvest_object
-
-        if harvest_object.content is None:
-            self._save_object_error('Empty content for object {}'
-                                    .format(harvest_object.id),
-                                    harvest_object, 'Import')
-            return False
-
-        status = self._get_object_extra(harvest_object, 'status')
-
-        # Check if we need to update the dataset
-        if status != 'unchanged':
-            # This can be a hook
-            package = self._create_or_update_dataset(harvest_object, status)
-            # This can be a hook
-            if not package:
-                return False
-            package_id = package['id']
-        else:
-            package_id = harvest_object.package.id
-
-        # Perform the necessary harvester housekeeping
-        self._refresh_harvest_objects(harvest_object, package_id)
-
-        # Finish up
-        if status == 'unchanged':
-            return 'unchanged'
-        else:
-            log.debug('Package {} was successully harvested.'
-                      .format(package['id']))
-            return True

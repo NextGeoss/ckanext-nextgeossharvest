@@ -51,12 +51,10 @@ class SentinelHarvester(HarvesterBase):
         item = {}
 
         for subitem_node in item_node.findChildren():
-            key = subitem_node.name
-            value = subitem_node.text
             if subitem_node.name in name_elements:
-                key = normalized_names.get(subitem_node['name'])
+                key = normalized_names.get(subitem_node.get('name'))
                 if key:
-                    item[key] = value
+                    item[key] = subitem_node.text
 
         return item
 
@@ -142,7 +140,7 @@ class SentinelHarvester(HarvesterBase):
                              {'name': 'SAR'}, {'name': 'Altimeter'}])
             elif 'wat' in identifier:
                 tags.extend([{'name': 'Water'}, {'name': 'Level-2'},
-                             {'name': 'SAR'}, {'name': 'Altimete'}])
+                             {'name': 'SAR'}, {'name': 'Altimeter'}])
             elif 'sra' in identifier:
                 tags.extend([{'name': 'SRA'}, {'name': 'Level-1'},
                              {'name': 'SAR'}, {'name': 'Altimeter'}])
@@ -201,7 +199,7 @@ class SentinelHarvester(HarvesterBase):
             item['code_manifest_url'] = self._make_manifest_url(item)
             if thumbnail:
                 item['code_thumbnail'] = thumbnail['href']
-        item['thumbnail'] = item.get('scihub_thumbnail') or item.get('noa_thumbnail') or item.get('code_thumbnail') # noqa: E501
+        item['thumbnail'] = item.get('scihub_thumbnail') or item.get('noa_thumbnail') or item.get('code_thumbnail')  # noqa: E501
 
         # Convert size (298.74 MB to an integer representing bytes)
         item['size'] = int(float(item['size'].split(' ')[0]) * 1000000)

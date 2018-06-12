@@ -15,25 +15,42 @@ This extension contains harvester plugins for harvesting from sources used by Ne
     4. [Sentinel settings (SciHub, NOA & CODE-DE)](#generalsettings)
     5. [Harvesting from more than one Sentinel source](#multi)
     6. [How the three Sentinel harvesters work together](#alltogether)
-4. [Developing new harvesters](#develop)
+4. [Harvesting CMEMS products](#harvesting-cmems)
+    1. [CMEMS Settings](#cmems-settings)
+    2. [Running a CMEMS harvester](#running-cmems)
+5. [Harvesting GOME-2 products](#harvesting-gome2)
+    1. [GOME-2 Settings](#gome2-settings)
+    2. [Running a GOME-2 harvester](#running-gome2)
+6. [Developing new harvesters](#develop)
     1. [The basic harvester workflow](#basicworkflow)
         1. [gather_stage](#gather_stage)
         2. [fetch_stage](#fetch_stage)
         3. [import_stage](#import_stage)
     2. [Example of an OpenSearch-based harvester](#opensearchexample)
-5. [iTag](#itag)
+7. [iTag](#itag)
     1. [How ITagEnricher works](#itagprocess)
     2. [Setting up ITagEnricher](#setupitag)
     3. [Handling iTag errors](#handlingitagerrors)
-6. [Testing testing testing](#tests)
-7. [Suggested cron jobs](#cron)
-8. [Logs](#logs)
+8. [Testing testing testing](#tests)
+9. [Suggested cron jobs](#cron)
+10. [Logs](#logs)
 
 ## <a name="repo"></a>What's in the repository
 The repository contains three plugins:
 1. `nextgeossharvest`, the base CKAN plugin
-2. `esa`, a harvester plugin for harvesting Sentinel datasets from SciHub, NOA, and CODE-DE via their DHuS interfaces
-3. `itag` a harvester plugin for adding additional tags and metadata to datasets that have already been harvested (more on this later)
+2. `esa`, a harvester plugin for harvesting Sentinel products from SciHub, NOA, and CODE-DE via their DHuS interfaces
+3. `cmems`, a harvester plugin for harvesting the following types of CMEMS products:
+    1. Arctic Ocean Physics Analysis and Forecast (OCN)
+    2. Global Observed Sea Surface Temperature (SST)
+    3. Antarctic Ocean Observed Sea Ice Concentration (SIC South)
+    4. Arctic Ocean Observed Sea Ice Concentration (SIC North)
+4. `gome2`, a harvester plugin for harvesting the following types of GOME-2 coverage products:
+    1. GOME2_O3
+    2. GOME2_NO2
+    3. GOME2_TropNO2
+    4. GOME2_SO2
+    5. GOME2_SO2mass
+5. `itag` a harvester plugin for adding additional tags and metadata to datasets that have already been harvested (more on this later)
 
 ## <a name="usage"></a>Basic usage
 1. Run `python setup.py develop` in the `ckanext-nextgeossharvest` directory.
@@ -49,7 +66,7 @@ The repository contains three plugins:
  `0 * * * * paster --plugin=ckanext-harvest harvester run -c /srv/app/production.ini >> /var/log/cron.log 2>&1`
 
 ## <a name="harvesting"></a>Harvesting Sentinel products
-To harvest Sentinel products, activate the `esa` plugin, which you will use to create a harvester that harvest from SciHub, NOA or CODE-DE. To harvest from more than one of those sources, just create more than one harvester and point it at a different source.
+To harvest Sentinel products, activate the `esa` plugin, which you will use to create a harvester that harvests from SciHub, NOA or CODE-DE. To harvest from more than one of those sources, just create more than one harvester and point it at a different source.
 
 ### <a name="scihub"></a>Harvesting from SciHub
 Create a new harvest source and select `ESA Sentinel Harvester New`. The URL does not matter—the harvester only harvests from SciHub, NOA, or CODE-DE, depending on the configuration below.
@@ -86,6 +103,7 @@ After saving the configuration, you can click Reharvest and the job will begin (
 5. `datasets_per_job`: (optional, integer, defaults to 1000) determines the maximum number of products that will be harvested during each job. If a query returns 2,501 results, only the first 1000 will be harvested if you're using the default. This is useful for running the harvester via recurring jobs intended to harvest products incrementally (i.e., you want to start from the beginning and harvest all available products). The harvester will harvest products in groups of 1000, rather than attmepting to harvest all x-hundred-thousand at once. You'll get feedback after each job, so you'll know if there are errors without waiting for the whole job to run. And the harvester will automatically resume from the harvested dataset if you're running it via a recurring cron job.
 6. `timeout`: (optional, integer, defaults to 4) determines the number of seconds to wait before timing out a request.
 7. `skip_raw`: (optional, boolean, defaults to false) determines whether RAW products are skipped or included in the harvest.
+8. `make_private` is optional and defaults to `false`. If `true`, the datasets created by the harvester will be marked private. This setting is not retroactive. It only applies to datasets created by the harvester while the setting is `true`.
 
 Example configuration with all variables present:
 ```
@@ -96,7 +114,8 @@ Example configuration with all variables present:
   "end_date": "2018-01-16T11:00:00.000Z",
   "datasets_per_job": 1000,
   "timeout": 4,
-  "skip_raw": true
+  "skip_raw": true,
+  "make_private: false"
 }
 ```
 Note: you must place your username and password in the `.ini` file as described above.
@@ -122,13 +141,102 @@ The workflow for all the harvesters is:
 #### A note on datasets counts
 The created/updated counts for each harvester job will be accurate. The count that appears in the sidebar on each harvester's page, however, will not be accurate. Besides issues with how Solr updates the `harvest_source_id` associated with each dataset, the fact that up to three harvesters may be creating or updating a single dataset means that only one harvest source can "own" a dataset at any given time. If you need to evaluate the performance of a harvester, use the job reports.
 
+## <a name="harvesting-cmems"></a>Harvesting CMEMS products
+To harvest CMEMS products, activate the `cmems` plugin, which you will use to create a harvester that harvests one of the following types of CMEMS product:
+1. Arctic Ocean Physics Analysis and Forecast (OCN) from ftp://mftp.cmems.met.no/Core/ARCTIC_ANALYSIS_FORECAST_PHYS_002_001_a/dataset-topaz4-arc-myoceanv2-be/
+2. Global Observed Sea Surface Temperature (SST) from ftp://cmems.isac.cnr.it/Core/SST_GLO_SST_L4_NRT_OBSERVATIONS_010_001/METOFFICE-GLO-SST-L4-NRT-OBS-SST-V2/
+3. Antarctic Ocean Observed Sea Ice Concentration (SIC South) from ftp://mftp.cmems.met.no/Core/SEAICE_GLO_SEAICE_L4_NRT_OBSERVATIONS_011_001/METNO-GLO-SEAICE_CONC-SOUTH-L4-NRT-OBS/
+4. Arctic Ocean Observed Sea Ice Concentration (SIC North) from ftp://mftp.cmems.met.no/Core/SEAICE_GLO_SEAICE_L4_NRT_OBSERVATIONS_011_001/METNO-GLO-SEAICE_CONC-NORTH-L4-NRT-OBS/
+
+To harvest more than one of those types of product, just create more than one harvester and configure a different `harvester_type`.
+
+The URL you enter in the harvester GUI does not matter--the plugin determines the correct URL based on the `harvester_type`.
+
+The different products are hosted on different services, so separate harvesters are necessary for ensuring that the harvesting of one is not affected by errors or outages on the others.
+
+### <a name="cmems-settings"></a>CMEMS Settings
+`harvester_type` determines which type of product will be harvested. It must be one of the following four strings: `sst`, `sic_north`, `sic_south`, or `ocn`.
+
+`start_date` determines the start date for the harvester job. It must be the string `YESTERDAY` or a string describing a date in the format `YYYY-MM-DD`, like `2018-01-31`.
+
+`end_date` determines the end date for the harvester job. It must be the string `TODAY` or a string describing a date in the format `YYYY-MM-DD`, like `2018-01-31`.
+
+The harvester will harvest all the products available on the start date and on every date up to but not including the end date. If the start and end dates are `YESTERDAY` and `TODAY`, respectively, then the harvester will harvest all the products available yesterday but not any of the products available today. If the start and end dates are `2018-01-01` and `2018-02-01`, respectively, then the harvester will harvest all the products available in the month of January (and none from the month of February).
+
+`timeout` determines how long the harvester will wait for a response from a server before cancelling the attempt. It must be a postive integer.
+
+`username` and `password` are your username and password for accessing the CMEMS products at the source for the harvester type you selected above.
+
+`make_private` is optional and defaults to `false`. If `true`, the datasets created by the harvester will be marked private. This setting is not retroactive. It only applies to datasets created by the harvester while the setting is `true`.
+
+Example config:
+```
+{
+  "harvester_type": "sic_south",
+  "start_date": "YESTERDAY",
+  "end_date": "TODAY",
+  "timeout": 10,
+  "username": "your_username",
+  "password": "your_password",
+  "make_private": false
+}
+```
+### <a name="running-cmems"></a>Running a CMEMS harvester
+You can run the harvester on a Daily update frequencey with `YESTERDAY` and `TODAY` as the start and end dates. Since requests may time out, you can also run the harvester more than once a day using the Manual update frequency and a cron job. There's no way to recover from outages at the moment; the CMEMS harvester could be more robust.
+
+## <a name="harvesting-gome2"></a>Harvesting GOME-2 products
+The GOME-2 harvester harvests products from the following GOME-2 coverages:
+1. GOME2_O3
+2. GOME2_NO2
+3. GOME2_TropNO2
+4. GOME2_SO2
+5. GOME2_SO2mass
+
+Unlike other harvesters, the GOME-2 harvester only makes requests to verify that a product exists. It programmatically creates datasets and resources for products that do exist within the specified date range.
+
+### <a name="gome2-settings"></a>GOME-2 Settings
+The GOME-2 harvester has two required and one optional setting.
+1. `start_date` (required) determines the date on which the harvesting begins. It must be in the format `YYY-MM-DD` or the string `"YESTERDAY"`. If you want to harvest from the earliest product onwards, use `2007-01-04`. If you will be harvesting on a daily basis, use `"YESTERDAY"`
+2. `end_date` (required) determines the date on which the harvesting ends. It must be in the format `YYY-MM-DD` or the string `"TODAY"`. It is exclusive, i.e., if the end date is `2017-03-2`, then products will be harvested up to _and including_ 2017-03-01 and no products from 2017-03-02 will be included. For daily harvesting use `"TODAY"`.
+3. `make_private` (optional) determines whether the datasets created by the harvester will be private or public. The default is `false`, i.e., by default, all datasets created by the harvester will be public.
+
+#### Example of GOME-2 settings
+```
+{
+    "start_date": "2017-03-01",
+    "end_date": "2017-03-02",
+    "make_private": false
+}
+```
+
+or
+
+```
+{
+    "start_date": "YESTERDAY",
+    "end_date": "TODAY",
+    "make_private": false
+}
+```
+### <a name="running-gome2"></a>Running a GOME-2 harvester
+1. Add `gome2` to the list of plugins in your .ini file.
+2. Create a new harvester via the harvester interface.
+3. The URL you enter does not matter--the GOME-2 harvester only makes requests to a predetermined set of URLs. Select `GOME2` from the list of harvesters.
+4. Add a config as described above.
+5. Select a frequency from the frequencey options. If you want to use a cron job (recommended) to run the harvester, select `Manual`.
+
+#### Known issues
+The GOME-2 harvester, like the CMEMS harvester, does not have a way to automatically recover from outages. If the data hub server or the source server suffers an outage while the harvester is scheduled to run, it will skip whatever products might have been harvested at that time. The assumption is that running the harvester three times a day will be sufficient to prevent any outages from affecting the harvesting, but a better solution would be improving the design of the harvester.
+
 ## <a name="develop"></a>Developing new harvesters
 ### <a name="basicworkflow"></a>The basic harvester workflow
 The basic harvester workflow is divided into three stages. Each stage has a related method, and each method must be included in the harvester plugin.
+
 The three methods are:
 1. `gather_stage()`
 2. `fetch_stage()`
 3. `import_stage()`
+
 While the `fetch_stage()` method _must_ be included, it may be the case that the harvester does not require a fetch stage (for instance, if the source is an OpenSearch service, then the search results in the gather stage may already include the necessary content, so there's no need to fetch it again. In those cases, the `fetch_stage()` method will still be implemented, but it will just return `True`. The `gather_stage()` and `import_stage()` methods, however, will always include some amount of code, as they will always be used.
 #### <a name="gather_stage"></a>gather_stage
 To simplify things, the gather stage is used to create a list of datasets that will be created or updated in the final import stage. That's really all it's for. It is not meant for parsing content into dictionaries for creating or updating datasets (that occurs in the import stage). It also isn't meant for acquiring or storing raw content that will be parsed later (that occurs in the fetch stage)—with certain exceptions, like OpenSearch services, where the content is already provided in the initial search results.
