@@ -170,6 +170,7 @@ class ESAHarvester(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
         self.provider = source
 
         # This can be a hook
+        print harvest_url
         ids = self._crawl_results(harvest_url, limit, timeout, username,
                                   password)
         # This can be a hook
