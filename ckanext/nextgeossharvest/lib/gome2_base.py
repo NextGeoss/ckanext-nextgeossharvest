@@ -27,6 +27,7 @@ class GOME2Base(HarvesterBase):
 
         # The NextGEOSS harvester flow requires content in the import stage.
         content = json.dumps(content_dict)
+        print 'CONTENT ', content
 
         obj = HarvestObject(job=self.job, guid=content_dict['identifier'],
                             extras=extras, content=content)
@@ -43,10 +44,12 @@ class GOME2Base(HarvesterBase):
         ids = []
 
         for coverage in coverages:
+
             content_dicts = self._content_dict_generator(coverage)
+            print content_dicts
             ho_ids = [self._create_harvest_object(content_dict)
                       for content_dict in content_dicts
-                      if not self._missing_or_harvested(coverage, content_dict)]  # noqa: E501
+                      if self._missing_or_harvested(coverage, content_dict)]  # noqa: E501
             ids.extend(ho_ids)
 
         return ids
