@@ -35,20 +35,25 @@ class GOME2Harvester(GOME2Base,
             config_obj = json.loads(config)
 
             start_date = config_obj['start_date']
-            if start_date != 'YESTERDAY':
+
+            if 'start_date' in config_obj:
                 try:
-                    start_date = datetime.strptime(config_obj['start_date'],
-                                                   '%Y-%m-%d')
+                    start_date = config_obj['start_date']
+                    if start_date != 'YESTERDAY':
+                        start_date = datetime.strptime(start_date, '%Y-%m-%d')
+                    else:
+                        start_date = self.convert_date_config(start_date)
                 except ValueError:
                     raise ValueError('start_date format must be yyyy-mm-dd')
             else:
                 raise ValueError('start_date is required')
-
-            end_date = config_obj['end_date']
-            if end_date != 'TODAY':
+            if 'end_date' in config_obj:
                 try:
-                    end_date = datetime.strptime(config_obj['end_date'],
-                                                 '%Y-%m-%d')
+                    end_date = config_obj['end_date']
+                    if end_date != 'TODAY':
+                        end_date = datetime.strptime(end_date, '%Y-%m-%d')
+                    else:
+                        end_date = self.convert_date_config(end_date)
                 except ValueError:
                     raise ValueError('end_date format must be yyyy-mm-dd')
             else:

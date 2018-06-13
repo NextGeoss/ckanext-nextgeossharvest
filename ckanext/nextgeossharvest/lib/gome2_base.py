@@ -278,3 +278,15 @@ class GOME2Base(HarvesterBase):
         )
 
         return resource_dict
+
+
+    def convert_date_config(self, term):
+        """Convert a term into a datetime object."""
+        if term == 'YESTERDAY':
+            date_time = datetime.now() - timedelta(days=1)
+        elif term in {'TODAY', 'NOW'}:
+            date_time = datetime.now()
+
+        print date_time
+
+        return date_time.replace(hour=0, minute=0, second=0, microsecond=0)
