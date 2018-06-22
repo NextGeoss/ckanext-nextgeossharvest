@@ -1,6 +1,5 @@
 import json
-from ckan.plugins.core import SingletonPlugin, implements
-from ckanext.harvest.harvesters.base import HarvesterBase
+from ckan.plugins.core import SingletonPlugin
 from ckanext.spatial.harvesters.base import SpatialHarvester
 from ckan import model
 

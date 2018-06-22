@@ -1,5 +1,12 @@
 """Tests for nextgeoss_base.py."""
-from ..harvesters.probav import PROBAVHarvester, Units, ProductType, L2AProbaVCollection, SProbaVCollection, Resolution, Session
+from ..harvesters.probav import (
+    PROBAVHarvester,
+    Units,
+    ProductType,
+    L2AProbaVCollection,
+    SProbaVCollection,
+    Resolution
+ )
 from unittest import TestCase
 from os import path
 from bs4 import BeautifulSoup
@@ -51,7 +58,7 @@ class TestSProvaVCollection(TestCase):
                                        Resolution(333, Units.METERS), False)
         self.assertEqual(
             collection.get_description(),
-            'Synthesis products with Top of Atmosphere (TOA) reflectances composited over defined time frame of 1 day for 333m of spatial resolution.'
+        'Synthesis products with Top of Atmosphere (TOA) reflectances composited over defined time frame of 1 day for 333m of spatial resolution.' # noqa E501
         )
 
     def test_get_tags(self):

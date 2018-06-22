@@ -11,13 +11,11 @@ from os import path
 from urllib import urlencode, unquote
 from urlparse import urlparse, urlunparse, parse_qsl
 
-from sqlalchemy import desc
 
 import requests
 from requests.auth import HTTPBasicAuth
 from requests.exceptions import Timeout
 
-from ckan.common import config
 from ckan.model import Session
 from ckan.plugins.core import implements
 
@@ -27,11 +25,9 @@ from ckanext.harvest.interfaces import IHarvester
 from ckanext.nextgeossharvest.lib.opensearch_base import OpenSearchHarvester
 from ckanext.nextgeossharvest.lib.nextgeoss_base import NextGEOSSHarvester
 
-from ckan import model
 from ckan.model import Package
 
 from ckanext.harvest.model import HarvestObjectExtra as HOExtra
-from ckanext.harvest.harvesters.base import HarvesterBase
 
 from probav_collections import COLLECTION_DESCRIPTIONS
 
