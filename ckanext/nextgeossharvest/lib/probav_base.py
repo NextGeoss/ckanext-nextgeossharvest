@@ -171,8 +171,7 @@ class PROBAVBase(SpatialHarvester, SingletonPlugin):
         if default_extras:
             override_extras = self.source_config.get('override_extras', False)  # noqa: E501
             for key, value in default_extras.iteritems():
-                #log.debug('Processing extra %s', key)
-                if not key in extras or override_extras:
+                if key not in extras or override_extras:
                     # Look for replacement strings
                     if isinstance(value, basestring):
                         value = value.format(
@@ -206,8 +205,8 @@ class PROBAVBase(SpatialHarvester, SingletonPlugin):
         coords_string = "["
 
         for c in range(0, len(coords)):
-            coords_string += "["+str(coords[c][0]) + \
-                ","+str(coords[c][1])+"]"  # long, lat
+            coords_string += "[" + str(coords[c][0]) + \
+                "," + str(coords[c][1]) + "]"  # long, lat
             if c + 1 != len(coords):
                 coords_string += ','
 

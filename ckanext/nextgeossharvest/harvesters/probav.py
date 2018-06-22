@@ -160,8 +160,6 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
                 config.get('ckanext.nextgeossharvest.nextgeoss_password'))
         auth = ('nextgeoss', 'nextgeoss')
 
-        #restart_date = self._get_restart_date()
-
         start_date_str = config.get('DATE_MIN')
         end_date_str = config.get('DATE_MAX')
         if start_date_str is not None:
@@ -485,7 +483,7 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
                 if hasattr(self, 'provider_logger'):
                     self.provider_logger.info(
                         log_message.format(self.provider, timestamp,
-                                           status_code, timeout))  # noqa: E128  # noqa: E501
+                                           status_code, timeout))  # noqa: E128, E501
                 raise StopIteration
             if r.status_code != 200:
                 self._save_gather_error('{} error: {}'.format(

@@ -6,7 +6,7 @@ from ..harvesters.probav import (
     L2AProbaVCollection,
     SProbaVCollection,
     Resolution
- )
+)
 from unittest import TestCase
 from os import path
 from bs4 import BeautifulSoup
