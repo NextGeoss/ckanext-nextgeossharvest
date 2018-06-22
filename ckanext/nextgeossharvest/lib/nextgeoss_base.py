@@ -352,7 +352,6 @@ class NextGEOSSHarvester(HarvesterBase):
         # Save a reference (review the utility of this)
         self.obj = harvest_object
 
-        
         # Provide easy access to the config
         self._set_source_config(harvest_object.source.config)
 
