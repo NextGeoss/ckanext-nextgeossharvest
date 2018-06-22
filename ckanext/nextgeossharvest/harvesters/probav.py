@@ -63,10 +63,11 @@ L3_COLLECTIONS = [
     "PROBAV_S5-TOC_100M_V001",
     "PROBAV_S5-TOC-NDVI_100M_V001"
 ]
-URL_TEMPLATE = 'http://www.vito-eodata.be/openSearch/findProducts.atom?collection=urn:ogc:def:EOP:VITO:{}&platform=PV01&start={}&end={}&count=500' #count=500
+URL_TEMPLATE = 'http://www.vito-eodata.be/openSearch/findProducts.atom?collection=urn:ogc:def:EOP:VITO:{}&platform=PV01&start={}&end={}&count=500'  # count=500
 DATE_FORMAT = '%Y-%m-%d'
 
 log = logging.getLogger(__name__)
+
 
 class Units(Enum):
     METERS = 'M'
@@ -125,13 +126,13 @@ class SProbaVCollection(ProbaVCollection):
         return 'S{}-{}{}'.format(str(self.frequency),
                                  self.product_type.value,
                                  ('NDVI' if self.ndvi else '')
-                                )
+                                 )
 
     def get_name(self):
         return 'Proba-V S{}-{}{} ({})'.format(str(self.frequency),
-                                               self.product_type.value,
-                                               (' NDVI' if self.ndvi else ''),
-                                               str(self.resolution))
+                                              self.product_type.value,
+                                              (' NDVI' if self.ndvi else ''),
+                                              str(self.resolution))
 
 
 class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
@@ -152,18 +153,6 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         }
 
     def validate_config(self, config):
-        if not config:
-            return config
-
-        try:
-            config_obj = json.loads(config)
-
-            # If your harvester has a config,
-            # validate it here.
-
-        except ValueError as e:
-            raise e
-
         return config
 
     def _init(self):
@@ -175,7 +164,7 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         self.os_restart_date_attr = {'key': None}
         self.flagged_extra = None
 
-    #TODO: define self.provider in logs
+    # TODO: define self.provider in logs
     def gather_stage(self, harvest_job):
         self._init()
         self.job = harvest_job
@@ -200,16 +189,18 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         if end_date_str is not None:
             end_date = datetime.strptime(end_date_str, DATE_FORMAT)
 
-        ids = [] 
-    
+        ids = []
+
         for l2a_collection in L2A_COLLECTIONS:
-            harvest_url = self._generate_harvest_url(l2a_collection, start_date, end_date)
+            harvest_url = self._generate_harvest_url(
+                l2a_collection, start_date, end_date)
             log.info('Harvesting {}'.format(harvest_url))
             for harvest_object in self._gather_L2A(harvest_url):
                 _id = self._gather_entry(harvest_object)
                 ids.append(_id)
         for l3_collection in L3_COLLECTIONS:
-            harvest_url = self._generate_harvest_url(l3_collection, start_date, end_date)
+            harvest_url = self._generate_harvest_url(
+                l3_collection, start_date, end_date)
             log.info('Harvesting {}'.format(harvest_url))
             for harvest_object in self._gather_L3(harvest_url, auth=auth):
                 _id = self._gather_entry(harvest_object)
@@ -220,9 +211,9 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
     def _generate_harvest_url(self, collection, start_date, end_date):
         date_format = '%Y-%m-%d'
         return URL_TEMPLATE.format(collection, start_date.strftime(date_format), end_date.strftime(date_format))
-    
+
     def _get_restart_date(self):
-        return date(2018,1, 1)
+        return date(2018, 1, 1)
 
     def fetch_stage(self, harvest_object):
         """Fetch was completed during gather."""
@@ -271,13 +262,13 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         name = file_name
         parsed_content['identifier'] = self._parse_S_identifier(name)
         parsed_content['name'] = self._parse_S_name(name)
-        parsed_content['filename'] = name 
+        parsed_content['filename'] = name
         bbox = self._generate_bbox(self._parse_coordinates(name))
         parsed_content['spatial'] = json.dumps(self._bbox_to_geojson(bbox))
         parsed_content['metadata_download'] = self._get_metadata_url(content)
         parsed_content['product_download'] = file_url
-        parsed_content['thumbnail_download'] = self._generate_tile_thumbnail_url(self._get_thumbnail_url(content), bbox)
-    
+        parsed_content['thumbnail_download'] = self._generate_tile_thumbnail_url(
+            self._get_thumbnail_url(content), bbox)
 
     def _generate_tile_thumbnail_url(self, thumbnail_url, bbox):
         url_parts = urlparse(thumbnail_url)
@@ -288,10 +279,11 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         query_params['WIDTH'] = 10
         url_parts_list = list(url_parts)
 
-        url_parts_list[4] = urlencode(tuple((key, query_params[key]) for key, _ in query_params_tuple))
+        url_parts_list[4] = urlencode(
+            tuple((key, query_params[key]) for key, _ in query_params_tuple))
 
         return unquote(urlunparse(tuple(url_parts_list)))
-    
+
     def _parse_file_name(self, file_entry):
         return str(file_entry['name'])
 
@@ -301,7 +293,7 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
     def _parse_S_name(self, name):
         return path.splitext(name)[0].lower()
 
-    COORDINATES_REGEX = re.compile('X(\d\d)Y(\d\d)')
+    COORDINATES_REGEX = re.compile(r'X(\d\d)Y(\d\d)')
 
     def _parse_coordinates(self, name):
         match = re.search(self.COORDINATES_REGEX, name)
@@ -354,14 +346,14 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
             },
             'coordinates': [self._bbox_to_polygon(bbox)]
         }
-    
+
     def _bbox_to_polygon(self, bbox):
         lat_min, lng_min, lat_max, lng_max = bbox
-        return [[lng_min,lat_max],
-                [lng_max,lat_max],
-                [lng_max,lat_min],
+        return [[lng_min, lat_max],
+                [lng_max, lat_max],
+                [lng_max, lat_min],
                 [lng_min, lat_min],
-                [lng_min,lat_max]]
+                [lng_min, lat_max]]
 
     def _parse_bbox(self, entry):
         bbox_str = entry.box.string
@@ -421,7 +413,7 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
 
     def _get_thumbnail_url(self, content):
         return str(content.find('link', rel='icon')['href'])
-    
+
     def _get_url(self, url, auth=None, **kwargs):
         log.info('getting %s', url)
         if auth:
@@ -441,14 +433,15 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
                 restart_date = self._parse_restart_date(open_search_entry)
                 content = open_search_entry.encode()
                 yield self._create_harvest_object(guid, restart_date, content)
-    
+
     def _gather_L3(self, open_search_url, auth=None):
         for open_search_page in self._open_search_pages_from(open_search_url, auth=auth):
             for open_search_entry in self._parse_open_search_entries(open_search_page):
                 metalink_url = self._parse_metalink_url(open_search_entry)
                 metalink_xml = self._get_xml_from_url(metalink_url, auth)
                 for metalink_file_entry in self._get_metalink_file_elements(metalink_xml):
-                    identifier = self._parse_identifier_element(open_search_entry)
+                    identifier = self._parse_identifier_element(
+                        open_search_entry)
                     file_name = self._parse_file_name(metalink_file_entry)
                     guid = self._generate_L3_guid(identifier, file_name)
                     restart_date = self._parse_restart_date(open_search_entry)
@@ -457,25 +450,25 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
                         'file_name': file_name,
                         'file_url': self._parse_file_url(metalink_file_entry)
                     }
-                    yield self._create_harvest_object(guid, restart_date, content, extras=extras) 
-    
+                    yield self._create_harvest_object(guid, restart_date, content, extras=extras)
+
     def _create_harvest_object(self, guid, restart_date, content, extras={}):
         return {
             'identifier': self._parse_name(guid),
             'guid': guid,
             'restart_date': restart_date,
             'content': json.dumps({
-               'content': content,
-               'extras': extras 
+                'content': content,
+                'extras': extras
             }),
         }
-    
+
     def _package_name_from_guid(self, guid):
         return ''
 
     def _parse_restart_date(self, open_search_entry):
         return open_search_entry.find('updated').string
-    
+
     def _generate_L3_guid(self, identifier, file_name):
         return '{}:{}'.format(identifier, file_name)
 
@@ -494,8 +487,8 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
             timestamp = str(datetime.utcnow())
             log_message = '{:<12} | {} | {} | {}s'
             try:
-                kwargs = { 'verify': False,
-                           'timeout': timeout }
+                kwargs = {'verify': False,
+                          'timeout': timeout}
                 r = self._get_url(harvest_url, auth=auth, **kwargs)
             except Timeout as e:
                 self._save_gather_error('Request timed out: {}'.format(e), self.job)  # noqa: E501
@@ -517,7 +510,7 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
                 self.provider_logger.info(log_message.format(self.provider,
                     timestamp, r.status_code, r.elapsed.total_seconds()))  # noqa: E128, E501
 
-            soup = BeautifulSoup(r.content, parser) # r.text????
+            soup = BeautifulSoup(r.content, parser)  # r.text????
 
             retrieved_entries += self._parse_items_per_page(soup)
             # Get the URL for the next loop, or None to break the loop
@@ -529,7 +522,7 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
             if request_time < 1.0:
                 time.sleep(1 - request_time)
             yield soup
-    
+
     def _parse_items_per_page(self, open_search_page):
         return int(open_search_page.find('itemsPerPage').string)
 
@@ -551,7 +544,7 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
             ids.extend(id_list)
         return ids
 
-    HDF5_FILENAME_REGEX = re.compile('.*\.HDF5$')
+    HDF5_FILENAME_REGEX = re.compile(r'.*\.HDF5$')
 
     def _get_metalink_file_elements(self, metalinks):
         return metalinks.files.find_all(name='file', attrs={'name': self.HDF5_FILENAME_REGEX})
@@ -559,11 +552,10 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
     def _parse_metalink_url(self, openseach_entry):
         return openseach_entry.find('link', type="application/metalink+xml")['href']
 
-            
     def _create_contents_json(self, opensearch_entry, metalink_file_entry=None):
         content_dict = {'opensearch_entry': opensearch_entry}
         if metalink_file_entry is not None:
-            content_dict['file_entry'] = metalink_file_entry 
+            content_dict['file_entry'] = metalink_file_entry
         return json.dumps(content_dict)
 
     def _gather_entry(self, entry, auth=None, update_all=False):
@@ -576,9 +568,9 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         # package = Session.query(Package) \
         #     .filter(Package.name == entry_name).first()
 
-        package_query =  Session.query(Package)
+        package_query = Session.query(Package)
         query_filtered = package_query.filter(Package.name == entry_name)
-        package =  query_filtered.first()
+        package = query_filtered.first()
 
         if package:
             # Meaning we've previously harvested this,
@@ -605,9 +597,9 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
 
             obj = HarvestObject(guid=entry_guid, job=self.job,
                                 extras=[HOExtra(key='status',
-                                        value=status),
+                                                value=status),
                                         HOExtra(key='restart_date',
-                                        value=entry_restart_date)])
+                                                value=entry_restart_date)])
             obj.content = entry['content']
             obj.package = package
             obj.save()
@@ -617,9 +609,9 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
             log.debug('{} has not been harvested before. Creating a new harvest object.'.format(entry_name))  # noqa: E501
             obj = HarvestObject(guid=entry_guid, job=self.job,
                                 extras=[HOExtra(key='status',
-                                        value='new'),
+                                                value='new'),
                                         HOExtra(key='restart_date',
-                                        value=entry_restart_date)])
+                                                value=entry_restart_date)])
             obj.content = entry['content']
             obj.package = None
             obj.save()
