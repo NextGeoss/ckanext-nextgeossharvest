@@ -6,8 +6,8 @@ from ckan import model
 
 
 class PROBAVBase(SpatialHarvester, SingletonPlugin):
-
-    def get_package_dict(self, metadata, harvest_object, extras_dict, tags_dict):
+    def get_package_dict(self, metadata, harvest_object, extras_dict,
+                         tags_dict):
         '''
         Constructs a package_dict suitable to be passed to package_create or
         package_update. See documentation on
@@ -156,7 +156,8 @@ class PROBAVBase(SpatialHarvester, SingletonPlugin):
                 name = self._gen_new_name(str(uuid))
             if not name:
                 raise Exception(
-                    'Could not generate a unique name from the title or the GUID. Please choose a more unique title.')
+                    'Could not generate a unique name from the title or the GUID. Please choose a more unique title.'
+                )
             package_dict['name'] = name
         else:
             package_dict['name'] = package.name
@@ -175,12 +176,14 @@ class PROBAVBase(SpatialHarvester, SingletonPlugin):
                 if not key in extras or override_extras:
                     # Look for replacement strings
                     if isinstance(value, basestring):
-                        value = value.format(harvest_source_id=harvest_object.job.source.id,
-                                             harvest_source_url=harvest_object.job.source.url.strip(
-                                                 '/'),
-                                             harvest_source_title=harvest_object.job.source.title,
-                                             harvest_job_id=harvest_object.job.id,
-                                             harvest_object_id=harvest_object.id)
+                        value = value.format(
+                            harvest_source_id=harvest_object.job.source.id,
+                            harvest_source_url=harvest_object.job.source.url.
+                            strip('/'),
+                            harvest_source_title=harvest_object.job.source.
+                            title,
+                            harvest_job_id=harvest_object.job.id,
+                            harvest_object_id=harvest_object.id)
                     extras[key] = value
 
         extras_as_dict = []
@@ -194,7 +197,7 @@ class PROBAVBase(SpatialHarvester, SingletonPlugin):
 
     def checkIfCoordsAreCircular(self, coords):
         # check if first and last coords are the same, if not, add first coord to last pos
-        if coords[0] == coords[len(coords)-1]:
+        if coords[0] == coords[len(coords) - 1]:
             return coords
         else:
             coords.append(coords[0])
@@ -206,7 +209,7 @@ class PROBAVBase(SpatialHarvester, SingletonPlugin):
         for c in range(0, len(coords)):
             coords_string += "["+str(coords[c][0]) + \
                 ","+str(coords[c][1])+"]"  # long, lat
-            if c+1 != len(coords):
+            if c + 1 != len(coords):
                 coords_string += ','
 
         coords_string += ']'

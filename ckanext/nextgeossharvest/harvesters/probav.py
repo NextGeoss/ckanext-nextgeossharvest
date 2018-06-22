@@ -33,35 +33,24 @@ from ckan.model import Package
 from ckanext.harvest.model import HarvestObjectExtra as HOExtra
 from ckanext.harvest.harvesters.base import HarvesterBase
 
-
 from probav_collections import COLLECTION_DESCRIPTIONS
 
 log = logging.getLogger(__name__)
 
-
 COLLECTION_TEMPLATE = 'PROBAV_{type}_{resolution}_V001'
 L2A_COLLECTIONS = [
-    "PROBAV_L2A_100M_V001",
-    "PROBAV_L2A_1KM_V001",
-    "PROBAV_L2A_333M_V001"
+    "PROBAV_L2A_100M_V001", "PROBAV_L2A_1KM_V001", "PROBAV_L2A_333M_V001"
 ]
 x = ["PROBAV_P_V001"]
 
 L3_COLLECTIONS = [
-    "PROBAV_S1-TOA_100M_V001",
-    "PROBAV_S1-TOA_1KM_V001",
-    "PROBAV_S1-TOA_333M_V001",
-    "PROBAV_S1-TOC_100M_V001",
-    "PROBAV_S1-TOC_1KM_V001",
-    "PROBAV_S1-TOC_333M_V001",
-    "PROBAV_S1-TOC-NDVI_100M_V001",
-    "PROBAV_S10-TOC_1KM_V001",
-    "PROBAV_S10-TOC_333M_V001",
-    "PROBAV_S10-TOC-NDVI_1KM_V001",
-    "PROBAV_S10-TOC-NDVI_333M_V001",
-    "PROBAV_S5-TOA_100M_V001",
-    "PROBAV_S5-TOC_100M_V001",
-    "PROBAV_S5-TOC-NDVI_100M_V001"
+    "PROBAV_S1-TOA_100M_V001", "PROBAV_S1-TOA_1KM_V001",
+    "PROBAV_S1-TOA_333M_V001", "PROBAV_S1-TOC_100M_V001",
+    "PROBAV_S1-TOC_1KM_V001", "PROBAV_S1-TOC_333M_V001",
+    "PROBAV_S1-TOC-NDVI_100M_V001", "PROBAV_S10-TOC_1KM_V001",
+    "PROBAV_S10-TOC_333M_V001", "PROBAV_S10-TOC-NDVI_1KM_V001",
+    "PROBAV_S10-TOC-NDVI_333M_V001", "PROBAV_S5-TOA_100M_V001",
+    "PROBAV_S5-TOC_100M_V001", "PROBAV_S5-TOC-NDVI_100M_V001"
 ]
 URL_TEMPLATE = 'http://www.vito-eodata.be/openSearch/findProducts.atom?collection=urn:ogc:def:EOP:VITO:{}&platform=PV01&start={}&end={}&count=500'  # count=500
 DATE_FORMAT = '%Y-%m-%d'
@@ -81,7 +70,6 @@ class ProductType(Enum):
 
 
 class Resolution(object):
-
     def __init__(self, value, units):
         self.value = value
         self.units = units
@@ -91,7 +79,6 @@ class Resolution(object):
 
 
 class ProbaVCollection(object):
-
     def __init__(self, product_type, resolution):
         self.product_type = product_type
         self.resolution = resolution
@@ -103,11 +90,11 @@ class ProbaVCollection(object):
         return ['Proba-V', self._type_token(), str(self.resolution)]
 
     def __str__(self):
-        return 'PROBAV_{}_{}_V001'.format(self._type_token(), str(self.resolution))
+        return 'PROBAV_{}_{}_V001'.format(self._type_token(),
+                                          str(self.resolution))
 
 
 class L2AProbaVCollection(ProbaVCollection):
-
     def _type_token(self):
         return 'L2A'
 
@@ -116,23 +103,20 @@ class L2AProbaVCollection(ProbaVCollection):
 
 
 class SProbaVCollection(ProbaVCollection):
-
     def __init__(self, frequency, product_type, resolution, ndvi):
         super(SProbaVCollection, self).__init__(product_type, resolution)
         self.frequency = frequency
         self.ndvi = ndvi
 
     def _type_token(self):
-        return 'S{}-{}{}'.format(str(self.frequency),
-                                 self.product_type.value,
-                                 ('NDVI' if self.ndvi else '')
-                                 )
+        return 'S{}-{}{}'.format(
+            str(self.frequency), self.product_type.value,
+            ('NDVI' if self.ndvi else ''))
 
     def get_name(self):
-        return 'Proba-V S{}-{}{} ({})'.format(str(self.frequency),
-                                              self.product_type.value,
-                                              (' NDVI' if self.ndvi else ''),
-                                              str(self.resolution))
+        return 'Proba-V S{}-{}{} ({})'.format(
+            str(self.frequency), self.product_type.value,
+            (' NDVI' if self.ndvi else ''), str(self.resolution))
 
 
 class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
@@ -192,15 +176,15 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         ids = []
 
         for l2a_collection in L2A_COLLECTIONS:
-            harvest_url = self._generate_harvest_url(
-                l2a_collection, start_date, end_date)
+            harvest_url = self._generate_harvest_url(l2a_collection,
+                                                     start_date, end_date)
             log.info('Harvesting {}'.format(harvest_url))
             for harvest_object in self._gather_L2A(harvest_url):
                 _id = self._gather_entry(harvest_object)
                 ids.append(_id)
         for l3_collection in L3_COLLECTIONS:
-            harvest_url = self._generate_harvest_url(
-                l3_collection, start_date, end_date)
+            harvest_url = self._generate_harvest_url(l3_collection, start_date,
+                                                     end_date)
             log.info('Harvesting {}'.format(harvest_url))
             for harvest_object in self._gather_L3(harvest_url, auth=auth):
                 _id = self._gather_entry(harvest_object)
@@ -210,7 +194,9 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
 
     def _generate_harvest_url(self, collection, start_date, end_date):
         date_format = '%Y-%m-%d'
-        return URL_TEMPLATE.format(collection, start_date.strftime(date_format), end_date.strftime(date_format))
+        return URL_TEMPLATE.format(collection,
+                                   start_date.strftime(date_format),
+                                   end_date.strftime(date_format))
 
     def _get_restart_date(self):
         return date(2018, 1, 1)
@@ -235,8 +221,8 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         parsed_content['description'] = collection.get_description()
         parsed_content['tags'] = self._create_ckan_tags(collection.get_tags())
         parsed_content['uuid'] = str(uuid.uuid4())
-        parsed_content['StartTime'], parsed_content['StopTime'] = self._parse_interval(
-            content)
+        parsed_content['StartTime'], parsed_content[
+            'StopTime'] = self._parse_interval(content)
         parsed_content['Collection'] = str(collection)
         parsed_content['notes'] = parsed_content['description']
         if collection.product_type == ProductType.L2A:
@@ -252,8 +238,8 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         parsed_content['identifier'] = self._parse_identifier(identifier)
         parsed_content['name'] = self._parse_name(identifier)
         parsed_content['filename'] = self._parse_filename(identifier)
-        parsed_content['spatial'] = json.dumps(self._bbox_to_geojson(
-            self._parse_bbox(content)))
+        parsed_content['spatial'] = json.dumps(
+            self._bbox_to_geojson(self._parse_bbox(content)))
         parsed_content['metadata_download'] = self._get_metadata_url(content)
         parsed_content['product_download'] = self._get_product_url(content)
         parsed_content['thumbnail_download'] = self._get_thumbnail_url(content)
@@ -267,8 +253,9 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         parsed_content['spatial'] = json.dumps(self._bbox_to_geojson(bbox))
         parsed_content['metadata_download'] = self._get_metadata_url(content)
         parsed_content['product_download'] = file_url
-        parsed_content['thumbnail_download'] = self._generate_tile_thumbnail_url(
-            self._get_thumbnail_url(content), bbox)
+        parsed_content[
+            'thumbnail_download'] = self._generate_tile_thumbnail_url(
+                self._get_thumbnail_url(content), bbox)
 
     def _generate_tile_thumbnail_url(self, thumbnail_url, bbox):
         url_parts = urlparse(thumbnail_url)
@@ -301,7 +288,7 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
 
     def _generate_bbox(self, coordinates):
         x, y = coordinates
-        lng_min = - 180 + 10 * x
+        lng_min = -180 + 10 * x
         lng_max = lng_min + 10
         lat_max = 75 - 10 * y
         lat_min = lat_max - 10
@@ -349,11 +336,8 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
 
     def _bbox_to_polygon(self, bbox):
         lat_min, lng_min, lat_max, lng_max = bbox
-        return [[lng_min, lat_max],
-                [lng_max, lat_max],
-                [lng_max, lat_min],
-                [lng_min, lat_min],
-                [lng_min, lat_max]]
+        return [[lng_min, lat_max], [lng_max, lat_max], [lng_max, lat_min],
+                [lng_min, lat_min], [lng_min, lat_max]]
 
     def _parse_bbox(self, entry):
         bbox_str = entry.box.string
@@ -384,26 +368,22 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         return Resolution(value, units)
 
     def _get_resources(self, parsed_content):
-        return [
-            {
-                'name': 'Metadata Download',
-                'url': parsed_content['metadata_download'],
-                'format': 'xml',
-                'mimetype': 'application/xml'
-            },
-            {
-                'name': 'Product Download',
-                'url': parsed_content['product_download'],
-                'format': 'hdf5',
-                'mimetype': 'application/x-hdf5'
-            },
-            {
-                'name': 'Thumbnail Download',
-                'url': parsed_content['thumbnail_download'],
-                'format': 'png',
-                'mimetype': 'image/png'
-            }
-        ]
+        return [{
+            'name': 'Metadata Download',
+            'url': parsed_content['metadata_download'],
+            'format': 'xml',
+            'mimetype': 'application/xml'
+        }, {
+            'name': 'Product Download',
+            'url': parsed_content['product_download'],
+            'format': 'hdf5',
+            'mimetype': 'application/x-hdf5'
+        }, {
+            'name': 'Thumbnail Download',
+            'url': parsed_content['thumbnail_download'],
+            'format': 'png',
+            'mimetype': 'image/png'
+        }]
 
     def _get_metadata_url(self, content):
         return str(content.find('link', title='HMA')['href'])
@@ -427,19 +407,24 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         return BeautifulSoup(response.text, 'lxml-xml')
 
     def _gather_L2A(self, open_search_url, auth=None):
-        for open_search_page in self._open_search_pages_from(open_search_url, auth=auth):
-            for open_search_entry in self._parse_open_search_entries(open_search_page):
+        for open_search_page in self._open_search_pages_from(
+                open_search_url, auth=auth):
+            for open_search_entry in self._parse_open_search_entries(
+                    open_search_page):
                 guid = self._parse_identifier_element(open_search_entry)
                 restart_date = self._parse_restart_date(open_search_entry)
                 content = open_search_entry.encode()
                 yield self._create_harvest_object(guid, restart_date, content)
 
     def _gather_L3(self, open_search_url, auth=None):
-        for open_search_page in self._open_search_pages_from(open_search_url, auth=auth):
-            for open_search_entry in self._parse_open_search_entries(open_search_page):
+        for open_search_page in self._open_search_pages_from(
+                open_search_url, auth=auth):
+            for open_search_entry in self._parse_open_search_entries(
+                    open_search_page):
                 metalink_url = self._parse_metalink_url(open_search_entry)
                 metalink_xml = self._get_xml_from_url(metalink_url, auth)
-                for metalink_file_entry in self._get_metalink_file_elements(metalink_xml):
+                for metalink_file_entry in self._get_metalink_file_elements(
+                        metalink_xml):
                     identifier = self._parse_identifier_element(
                         open_search_entry)
                     file_name = self._parse_file_name(metalink_file_entry)
@@ -450,7 +435,8 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
                         'file_name': file_name,
                         'file_url': self._parse_file_url(metalink_file_entry)
                     }
-                    yield self._create_harvest_object(guid, restart_date, content, extras=extras)
+                    yield self._create_harvest_object(
+                        guid, restart_date, content, extras=extras)
 
     def _create_harvest_object(self, guid, restart_date, content, extras={}):
         return {
@@ -473,7 +459,13 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         return '{}:{}'.format(identifier, file_name)
 
     # lxml was used befor instead of lxml-xml
-    def _open_search_pages_from(self, harvest_url, limit=100, timeout=5, auth=None, provider=None, parser='lxml-xml'):  # noqa: E501
+    def _open_search_pages_from(self,
+                                harvest_url,
+                                limit=100,
+                                timeout=5,
+                                auth=None,
+                                provider=None,
+                                parser='lxml-xml'):  # noqa: E501
         """
         Iterate through the results, create harvest objects,
         and return the ids.
@@ -487,28 +479,34 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
             timestamp = str(datetime.utcnow())
             log_message = '{:<12} | {} | {} | {}s'
             try:
-                kwargs = {'verify': False,
-                          'timeout': timeout}
+                kwargs = {'verify': False, 'timeout': timeout}
                 r = self._get_url(harvest_url, auth=auth, **kwargs)
             except Timeout as e:
-                self._save_gather_error('Request timed out: {}'.format(e), self.job)  # noqa: E501
+                self._save_gather_error('Request timed out: {}'.format(e),
+                                        self.job)  # noqa: E501
                 status_code = 408
                 elapsed = 9999
                 if hasattr(self, 'provider_logger'):
-                    self.provider_logger.info(log_message.format(self.provider,
-                        timestamp, status_code, timeout))  # noqa: E128
+                    self.provider_logger.info(
+                        log_message.format(self.provider, timestamp,
+                                           status_code, timeout))  # noqa: E128
                 raise StopIteration
             if r.status_code != 200:
-                self._save_gather_error('{} error: {}'.format(r.status_code, r.text), self.job)  # noqa: E501
+                self._save_gather_error('{} error: {}'.format(
+                    r.status_code, r.text), self.job)  # noqa: E501
                 elapsed = 9999
                 if hasattr(self, 'provider_logger'):
-                    self.provider_logger.info(log_message.format(self.provider,
-                        timestamp, r.status_code, elapsed))  # noqa: E128
+                    self.provider_logger.info(
+                        log_message.format(self.provider, timestamp,
+                                           r.status_code,
+                                           elapsed))  # noqa: E128
                 raise StopIteration
 
             if hasattr(self, 'provider_logger'):
-                self.provider_logger.info(log_message.format(self.provider,
-                    timestamp, r.status_code, r.elapsed.total_seconds()))  # noqa: E128, E501
+                self.provider_logger.info(
+                    log_message.format(
+                        self.provider, timestamp, r.status_code,
+                        r.elapsed.total_seconds()))  # noqa: E128, E501
 
             soup = BeautifulSoup(r.content, parser)  # r.text????
 
@@ -547,12 +545,15 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
     HDF5_FILENAME_REGEX = re.compile(r'.*\.HDF5$')
 
     def _get_metalink_file_elements(self, metalinks):
-        return metalinks.files.find_all(name='file', attrs={'name': self.HDF5_FILENAME_REGEX})
+        return metalinks.files.find_all(
+            name='file', attrs={'name': self.HDF5_FILENAME_REGEX})
 
     def _parse_metalink_url(self, openseach_entry):
-        return openseach_entry.find('link', type="application/metalink+xml")['href']
+        return openseach_entry.find(
+            'link', type="application/metalink+xml")['href']
 
-    def _create_contents_json(self, opensearch_entry, metalink_file_entry=None):
+    def _create_contents_json(self, opensearch_entry,
+                              metalink_file_entry=None):
         content_dict = {'opensearch_entry': opensearch_entry}
         if metalink_file_entry is not None:
             content_dict['file_entry'] = metalink_file_entry
@@ -584,34 +585,44 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
                 previous_obj.save()
 
             if update_all:
-                log.debug('{} already exists and will be updated.'.format(entry_name))  # noqa: E501
+                log.debug('{} already exists and will be updated.'.format(
+                    entry_name))  # noqa: E501
                 status = 'change'
             # E.g., a Sentinel dataset exists,
             # but doesn't have a NOA resource yet.
-            elif self.flagged_extra and not self._get_package_extra(package.as_dict(), self.flagged_extra):  # noqa: E501
-                log.debug('{} already exists and will be extended.'.format(entry_name))  # noqa: E501
+            elif self.flagged_extra and not self._get_package_extra(
+                    package.as_dict(), self.flagged_extra):  # noqa: E501
+                log.debug('{} already exists and will be extended.'.format(
+                    entry_name))  # noqa: E501
                 status = 'change'
             else:
-                log.debug('{} will not be updated.'.format(entry_name))  # noqa: E501
+                log.debug(
+                    '{} will not be updated.'.format(entry_name))  # noqa: E501
                 status = 'unchanged'
 
-            obj = HarvestObject(guid=entry_guid, job=self.job,
-                                extras=[HOExtra(key='status',
-                                                value=status),
-                                        HOExtra(key='restart_date',
-                                                value=entry_restart_date)])
+            obj = HarvestObject(
+                guid=entry_guid,
+                job=self.job,
+                extras=[
+                    HOExtra(key='status', value=status),
+                    HOExtra(key='restart_date', value=entry_restart_date)
+                ])
             obj.content = entry['content']
             obj.package = package
             obj.save()
             return obj.id
         elif not package:
             # It's a product we haven't harvested before.
-            log.debug('{} has not been harvested before. Creating a new harvest object.'.format(entry_name))  # noqa: E501
-            obj = HarvestObject(guid=entry_guid, job=self.job,
-                                extras=[HOExtra(key='status',
-                                                value='new'),
-                                        HOExtra(key='restart_date',
-                                                value=entry_restart_date)])
+            log.debug(
+                '{} has not been harvested before. Creating a new harvest object.'.
+                format(entry_name))  # noqa: E501
+            obj = HarvestObject(
+                guid=entry_guid,
+                job=self.job,
+                extras=[
+                    HOExtra(key='status', value='new'),
+                    HOExtra(key='restart_date', value=entry_restart_date)
+                ])
             obj.content = entry['content']
             obj.package = None
             obj.save()
