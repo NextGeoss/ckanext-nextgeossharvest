@@ -20,10 +20,10 @@ class PROBAVBase(SpatialHarvester, SingletonPlugin):
                 def get_package_dict(self, context, data_dict):
                     package_dict = data_dict['package_dict']
                     package_dict['extras'].append(
-                        {'key': 'my-custom-extra', 'value': 'my-custom-value'}
+                        {'key': 'my-custom-extra', 'value': 'my-custom-value'}  # noqa: E501
                     )
                     return package_dict
-        If a dict is not returned by this function, the import stage will be cancelled.
+        If a dict is not returned by this function, the import stage will be cancelled.  # noqa: E501
         :param iso_values: Dictionary with parsed values from the ISO 19139
             XML document
         :type iso_values: dict
@@ -65,58 +65,58 @@ class PROBAVBase(SpatialHarvester, SingletonPlugin):
                 dataset_name = dataset_name + " (100M)"
 
         if dataset_name == "Proba-V S1-TOC (1KM)":
-            notes = "Synthesis products with Top of Canopy (TOC) reflectances composited over defined time frame of 1 day for 1Km of spatial resolution."
+            notes = "Synthesis products with Top of Canopy (TOC) reflectances composited over defined time frame of 1 day for 1Km of spatial resolution."  # noqa: E501
 
         elif dataset_name == "Proba-V S1-TOA (1KM)":
-            notes = "Synthesis products with Top of Atmosphere (TOA) reflectances composited over defined time frame of 1 day for 1Km of spatial resolution."
+            notes = "Synthesis products with Top of Atmosphere (TOA) reflectances composited over defined time frame of 1 day for 1Km of spatial resolution."  # noqa: E501
 
         elif dataset_name == "Proba-V S10-TOC (1KM)":
-            notes = "Synthesis products with Top of Canopy (TOC) reflectances composited over defined time frame of 10 days for 1Km of spatial resolution."
+            notes = "Synthesis products with Top of Canopy (TOC) reflectances composited over defined time frame of 10 days for 1Km of spatial resolution."  # noqa: E501
 
         elif dataset_name == "Proba-V S10-TOC NDVI (1KM)":
-            notes = "Synthesis products with Top of Canopy (TOC) reflectances composited over defined time frame of 10 days for 1Km of spatial resolution, containing only Normalized Difference Vegetation Index (NDVI)."
+            notes = "Synthesis products with Top of Canopy (TOC) reflectances composited over defined time frame of 10 days for 1Km of spatial resolution, containing only Normalized Difference Vegetation Index (NDVI)."  # noqa: E501
 
         elif dataset_name == "Proba-V Level-2A (1KM)":
-            notes = "PROBA-V Level2A - 1KM segments contain the Level 1C (P product) data projected on a uniform 1Km grid."
+            notes = "PROBA-V Level2A - 1KM segments contain the Level 1C (P product) data projected on a uniform 1Km grid."  # noqa: E501
 
         elif dataset_name == "Proba-V Level-1C":
-            notes = "Raw data which is geo-located and radiometrically calibrated to Top Of Atmosphere (TOA) reflectance values."
+            notes = "Raw data which is geo-located and radiometrically calibrated to Top Of Atmosphere (TOA) reflectance values."  # noqa: E501
 
         elif dataset_name == "Proba-V S1-TOC (333M)":
-            notes = "Synthesis products with Top of Canopy (TOC) reflectances composited over defined time frame of 1 day for 333m of spatial resolution."
+            notes = "Synthesis products with Top of Canopy (TOC) reflectances composited over defined time frame of 1 day for 333m of spatial resolution."  # noqa: E501
 
         elif dataset_name == "Proba-V S1-TOA (333M)":
-            notes = "Synthesis products with Top of Atmosphere (TOA) reflectances composited over defined time frame of 1 day for 333m of spatial resolution."
+            notes = "Synthesis products with Top of Atmosphere (TOA) reflectances composited over defined time frame of 1 day for 333m of spatial resolution."  # noqa: E501
 
         elif dataset_name == "Proba-V S10-TOC (333M)":
-            notes = "Synthesis products with Top of Canopy (TOC) reflectances composited over defined time frame of 10 days for 333m of spatial resolution."
+            notes = "Synthesis products with Top of Canopy (TOC) reflectances composited over defined time frame of 10 days for 333m of spatial resolution."  # noqa: E501
 
         elif dataset_name == "Proba-V S10-TOC NDVI (333M)":
-            notes = "Synthesis products with Top of Canopy (TOC) reflectances composited over defined time frame of 10 days for 333m of spatial resolution, containing only Normalized Difference Vegetation Index (NDVI)."
+            notes = "Synthesis products with Top of Canopy (TOC) reflectances composited over defined time frame of 10 days for 333m of spatial resolution, containing only Normalized Difference Vegetation Index (NDVI)."  # noqa: E501
 
         elif dataset_name == "Proba-V Level-2A (333M)":
-            notes = "PROBA-V Level2A - 333M segments contain the Level 1C (P product) data projected on a uniform 333m grid."
+            notes = "PROBA-V Level2A - 333M segments contain the Level 1C (P product) data projected on a uniform 333m grid."  # noqa: E501
 
         elif dataset_name == "Proba-V S1-TOC (100M)":
-            notes = "Synthesis products with Top of Canopy (TOC) reflectances composited over defined time frame of 1 day for 100m of spatial resolution."
+            notes = "Synthesis products with Top of Canopy (TOC) reflectances composited over defined time frame of 1 day for 100m of spatial resolution."  # noqa: E501
 
         elif dataset_name == "Proba-V S1-TOA (100M)":
-            notes = "Synthesis products with Top of Atmosphere (TOA) reflectances composited over defined time frame of 1 day for 100m of spatial resolution."
+            notes = "Synthesis products with Top of Atmosphere (TOA) reflectances composited over defined time frame of 1 day for 100m of spatial resolution."  # noqa: E501
 
         elif dataset_name == "Proba-V S1-TOC NDVI (100M)":
-            notes = "Synthesis products with Top of Atmosphere (TOA) reflectances composited over defined time frame of 1 day for 100m of spatial resolution, containing only Normalized Difference Vegetation Index (NDVI)."
+            notes = "Synthesis products with Top of Atmosphere (TOA) reflectances composited over defined time frame of 1 day for 100m of spatial resolution, containing only Normalized Difference Vegetation Index (NDVI)."  # noqa: E501
 
         elif dataset_name == "Proba-V S5-TOC (100M)":
-            notes = "Synthesis products with Top of Canopy (TOC) reflectances composited over defined time frame of 5 days for 100m of spatial resolution."
+            notes = "Synthesis products with Top of Canopy (TOC) reflectances composited over defined time frame of 5 days for 100m of spatial resolution."  # noqa: E501
 
         elif dataset_name == "Proba-V S5-TOA (100M)":
-            notes = "Synthesis products with Top of Atmosphere (TOA) reflectances composited over defined time frame of 5 days for 100m of spatial resolution."
+            notes = "Synthesis products with Top of Atmosphere (TOA) reflectances composited over defined time frame of 5 days for 100m of spatial resolution."  # noqa: E501
 
         elif dataset_name == "Proba-V S5-TOC NDVI (100M)":
-            notes = "Synthesis products with Top of Atmosphere (TOA) reflectances composited over defined time frame of 5 days for 100m of spatial resolution, containing only Normalized Difference Vegetation Index (NDVI)."
+            notes = "Synthesis products with Top of Atmosphere (TOA) reflectances composited over defined time frame of 5 days for 100m of spatial resolution, containing only Normalized Difference Vegetation Index (NDVI)."  # noqa: E501
 
         elif dataset_name == "Proba-V Level-2A (100M)":
-            notes = "PROBA-V Level2A - 100M segments contain the Level 1C (P product) data projected on a uniform 100m grid."
+            notes = "PROBA-V Level2A - 100M segments contain the Level 1C (P product) data projected on a uniform 100m grid."  # noqa: E501
 
         uuid = self._get_object_extra(harvest_object, 'uuid')
 
@@ -155,7 +155,7 @@ class PROBAVBase(SpatialHarvester, SingletonPlugin):
                 name = self._gen_new_name(str(uuid))
             if not name:
                 raise Exception(
-                    'Could not generate a unique name from the title or the GUID. Please choose a more unique title.'
+                    'Could not generate a unique name from the title or the GUID. Please choose a more unique title.'  # noqa: E501
                 )
             package_dict['name'] = name
         else:
@@ -169,7 +169,7 @@ class PROBAVBase(SpatialHarvester, SingletonPlugin):
         # Add default_extras from config
         default_extras = self.source_config.get('default_extras', {})
         if default_extras:
-            override_extras = self.source_config.get('override_extras', False)
+            override_extras = self.source_config.get('override_extras', False)  # noqa: E501
             for key, value in default_extras.iteritems():
                 #log.debug('Processing extra %s', key)
                 if not key in extras or override_extras:
@@ -188,14 +188,14 @@ class PROBAVBase(SpatialHarvester, SingletonPlugin):
         extras_as_dict = []
         for key, value in extras.iteritems():
             if isinstance(value, (list, dict)):
-                extras_as_dict.append({'key': key, 'value': json.dumps(value)})
+                extras_as_dict.append({'key': key, 'value': json.dumps(value)})  # noqa: E501
             else:
                 extras_as_dict.append({'key': key, 'value': value})
 
         return package_dict
 
     def checkIfCoordsAreCircular(self, coords):
-        # check if first and last coords are the same, if not, add first coord to last pos
+        # check if first and last coords are the same, if not, add first coord to last pos  # noqa: E501
         if coords[0] == coords[len(coords) - 1]:
             return coords
         else:
@@ -221,6 +221,6 @@ class PROBAVBase(SpatialHarvester, SingletonPlugin):
             extras_dict += [{"value": kwargs[a], "key": a}]
 
         for key, value in metadata.iteritems():
-            if key != 'Coordinates' and key != 'metadataLink' and key != 'downloadLink' and key != 'thumbnail' and key != 'spatial':
+            if key != 'Coordinates' and key != 'metadataLink' and key != 'downloadLink' and key != 'thumbnail' and key != 'spatial':  # noqa: E501
                 extras_dict += [{"value": value, "key": key}]
         return extras_dict

@@ -33,13 +33,13 @@ class TestProvaVCollection(TestCase):
                                          Resolution(333, Units.METERS))
         self.assertEqual(
             collection.get_description(),
-            'PROBA-V Level2A - 333M segments contain the Level 1C (P product) data projected on a uniform 333m grid.'
+            'PROBA-V Level2A - 333M segments contain the Level 1C (P product) data projected on a uniform 333m grid.'  # noqa: E501
         )
 
     def test_get_tags(self):
         collection = L2AProbaVCollection(ProductType.L2A,
                                          Resolution(333, Units.METERS))
-        self.assertListEqual(collection.get_tags(), ['Proba-V', 'L2A', '333M'])
+        self.assertListEqual(collection.get_tags(), ['Proba-V', 'L2A', '333M'])  # noqa: E501
 
 
 class TestSProvaVCollection(TestCase):
@@ -58,7 +58,7 @@ class TestSProvaVCollection(TestCase):
                                        Resolution(333, Units.METERS), False)
         self.assertEqual(
             collection.get_description(),
-        'Synthesis products with Top of Atmosphere (TOA) reflectances composited over defined time frame of 1 day for 333m of spatial resolution.' # noqa E501
+        'Synthesis products with Top of Atmosphere (TOA) reflectances composited over defined time frame of 1 day for 333m of spatial resolution.' # noqa E501  # noqa: E501
         )
 
     def test_get_tags(self):
@@ -68,7 +68,7 @@ class TestSProvaVCollection(TestCase):
                              ['Proba-V', 'S1-TOA', '333M'])
 
 
-METALINK_URL = "https://www.vito-eodata.be/PDF/dataaccess?service=DSEO&request=GetProduct&version=1.0.0&collectionID=1000125&productID=267473044&ProductURI=urn:ogc:def:EOP:VITO:PROBAV_S1-TOA_100M_V001:PROBAV_S1-TOA_20180101_100M:V101&fileIndex=1"
+METALINK_URL = "https://www.vito-eodata.be/PDF/dataaccess?service=DSEO&request=GetProduct&version=1.0.0&collectionID=1000125&productID=267473044&ProductURI=urn:ogc:def:EOP:VITO:PROBAV_S1-TOA_100M_V001:PROBAV_S1-TOA_20180101_100M:V101&fileIndex=1"  # noqa: E501
 
 
 class TestSProbavHarvester(TestCase):
@@ -81,7 +81,7 @@ class TestSProbavHarvester(TestCase):
         url = self.harvester._parse_metalink_url(self.entry)
         self.assertEqual(
             url,
-            "https://www.vito-eodata.be/PDF/dataaccess?service=DSEO&request=GetProduct&version=1.0.0&collectionID=1000125&productID=267473044&ProductURI=urn:ogc:def:EOP:VITO:PROBAV_S1-TOA_100M_V001:PROBAV_S1-TOA_20180101_100M:V101&"
+            "https://www.vito-eodata.be/PDF/dataaccess?service=DSEO&request=GetProduct&version=1.0.0&collectionID=1000125&productID=267473044&ProductURI=urn:ogc:def:EOP:VITO:PROBAV_S1-TOA_100M_V001:PROBAV_S1-TOA_20180101_100M:V101&"  # noqa: E501
         )
 
     def test_parse_file_name(self):
@@ -92,12 +92,12 @@ class TestSProbavHarvester(TestCase):
     def test_parse_S_identifier(self):
         file_name = self.harvester._parse_S_identifier(
             "PROBAV_S1_TOA_X00Y00_20180101_100M_V101.HDF5")
-        self.assertEqual(file_name, "PROBAV_S1_TOA_X00Y00_20180101_100M_V101")
+        self.assertEqual(file_name, "PROBAV_S1_TOA_X00Y00_20180101_100M_V101")  # noqa: E501
 
     def test_parse_S_name(self):
         file_name = self.harvester._parse_S_name(
             "PROBAV_S1_TOA_X00Y00_20180101_100M_V101.HDF5")
-        self.assertEqual(file_name, "probav_s1_toa_x00y00_20180101_100m_v101")
+        self.assertEqual(file_name, "probav_s1_toa_x00y00_20180101_100m_v101")  # noqa: E501
 
     def test_parse_file_url(self):
         url = self.harvester._parse_file_url(self.file)
@@ -118,12 +118,12 @@ class TestSProbavHarvester(TestCase):
         self.assertEqual(bbox, [lat_min, lng_min, lat_max, lng_max])
 
     def test_generate_tile_thumbnail(self):
-        thumbnail_url = "https://www.vito-eodata.be/cgi-bin/probav?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&SRS=EPSG:4326&FORMAT=image/png&LAYERS=PROBAV_L3_S1_TOA_100M_Red band&TIME=2018-01-01T00:00:00Z&BBOX=-54.999,-180.0,75.0,179.998992&HEIGHT=200&WIDTH=554"
+        thumbnail_url = "https://www.vito-eodata.be/cgi-bin/probav?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&SRS=EPSG:4326&FORMAT=image/png&LAYERS=PROBAV_L3_S1_TOA_100M_Red band&TIME=2018-01-01T00:00:00Z&BBOX=-54.999,-180.0,75.0,179.998992&HEIGHT=200&WIDTH=554"  # noqa: E501
         tile_url = self.harvester._generate_tile_thumbnail_url(
             thumbnail_url, [65, -160, 75, -150])
         self.assertEqual(
             tile_url,
-            'https://www.vito-eodata.be/cgi-bin/probav?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&SRS=EPSG:4326&FORMAT=image/png&LAYERS=PROBAV_L3_S1_TOA_100M_Red+band&TIME=2018-01-01T00:00:00Z&BBOX=65,-160,75,-150&HEIGHT=10&WIDTH=10'
+            'https://www.vito-eodata.be/cgi-bin/probav?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&SRS=EPSG:4326&FORMAT=image/png&LAYERS=PROBAV_L3_S1_TOA_100M_Red+band&TIME=2018-01-01T00:00:00Z&BBOX=65,-160,75,-150&HEIGHT=10&WIDTH=10'  # noqa: E501
         )
 
     def test_parse_S_content(self):
@@ -133,7 +133,7 @@ class TestSProbavHarvester(TestCase):
                 'file_name':
                 'PROBAV_S1_TOA_X00Y00_20180101_100M_V101.HDF5',
                 'file_url':
-                'https://www.vito-eodata.be/PDF/dataaccess?service=DSEO&request=GetProduct&version=1.0.0&collectionID=1000125&productID=267473044&ProductURI=urn:ogc:def:EOP:VITO:PROBAV_S1-TOA_100M_V001:PROBAV_S1-TOA_20180101_100M:V101&fileIndex=1'
+                'https://www.vito-eodata.be/PDF/dataaccess?service=DSEO&request=GetProduct&version=1.0.0&collectionID=1000125&productID=267473044&ProductURI=urn:ogc:def:EOP:VITO:PROBAV_S1-TOA_100M_V001:PROBAV_S1-TOA_20180101_100M:V101&fileIndex=1'  # noqa: E501
             }
         }
         parsed_content = self.harvester._parse_content(json.dumps(content))
@@ -143,7 +143,7 @@ class TestSProbavHarvester(TestCase):
             'title':
             'Proba-V S1-TOA (100M)',
             'description':
-            'Synthesis products with Top of Atmosphere (TOA) reflectances composited over defined time frame of 1 day for 100m of spatial resolution.',
+            'Synthesis products with Top of Atmosphere (TOA) reflectances composited over defined time frame of 1 day for 100m of spatial resolution.',  # noqa: E501
             'tags': [{
                 'name': 'Proba-V'
             }, {
@@ -164,13 +164,13 @@ class TestSProbavHarvester(TestCase):
             'filename':
             'PROBAV_S1_TOA_X00Y00_20180101_100M_V101.HDF5',
             'notes':
-            'Synthesis products with Top of Atmosphere (TOA) reflectances composited over defined time frame of 1 day for 100m of spatial resolution.',
+            'Synthesis products with Top of Atmosphere (TOA) reflectances composited over defined time frame of 1 day for 100m of spatial resolution.',  # noqa: E501
             'metadata_download':
-            "https://www.vito-eodata.be/PDF/dataaccessMdXML?mdmode=hma&collectionID=1000125&productID=267473044&fileName=PV_S1_TOA-20180101_100M_V101.xml",
+            "https://www.vito-eodata.be/PDF/dataaccessMdXML?mdmode=hma&collectionID=1000125&productID=267473044&fileName=PV_S1_TOA-20180101_100M_V101.xml",  # noqa: E501
             'product_download':
-            "https://www.vito-eodata.be/PDF/dataaccess?service=DSEO&request=GetProduct&version=1.0.0&collectionID=1000125&productID=267473044&ProductURI=urn:ogc:def:EOP:VITO:PROBAV_S1-TOA_100M_V001:PROBAV_S1-TOA_20180101_100M:V101&fileIndex=1",
+            "https://www.vito-eodata.be/PDF/dataaccess?service=DSEO&request=GetProduct&version=1.0.0&collectionID=1000125&productID=267473044&ProductURI=urn:ogc:def:EOP:VITO:PROBAV_S1-TOA_100M_V001:PROBAV_S1-TOA_20180101_100M:V101&fileIndex=1",  # noqa: E501
             'thumbnail_download':
-            "https://www.vito-eodata.be/cgi-bin/probav?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&SRS=EPSG:4326&FORMAT=image/png&LAYERS=PROBAV_L3_S1_TOA_100M_Red+band&TIME=2018-01-01T00:00:00Z&BBOX=65,-180,75,-170&HEIGHT=10&WIDTH=10"
+            "https://www.vito-eodata.be/cgi-bin/probav?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&SRS=EPSG:4326&FORMAT=image/png&LAYERS=PROBAV_L3_S1_TOA_100M_Red+band&TIME=2018-01-01T00:00:00Z&BBOX=65,-180,75,-170&HEIGHT=10&WIDTH=10"  # noqa: E501
         }
         lng_min = -180
         lat_min = 65
@@ -247,7 +247,7 @@ class TestProbavHarvester(TestCase):
                                                    date(2018, 1, 2))
         self.assertEqual(
             url,
-            'http://www.vito-eodata.be/openSearch/findProducts.atom?collection=urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001&platform=PV01&start=2018-01-01&end=2018-01-02&count=500'
+            'http://www.vito-eodata.be/openSearch/findProducts.atom?collection=urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001&platform=PV01&start=2018-01-01&end=2018-01-02&count=500'  # noqa: E501
         )
 
     def test_get_entries_from_results(self):
@@ -258,7 +258,7 @@ class TestProbavHarvester(TestCase):
         self.maxDiff = None
         self.assertEqual(
             entry_iter[0].identifier.string,
-            'urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001:PROBAV_CENTER_L2A_20180101_005544_333M:V101'
+            'urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001:PROBAV_CENTER_L2A_20180101_005544_333M:V101'  # noqa: E501
         )
         self.assertEqual(len(entry_iter), 158)
 
@@ -268,25 +268,25 @@ class TestProbavHarvester(TestCase):
 
     def test_gather_L2A(self):
         harvest_objects_iterator = self.harvester._gather_L2A(
-            'http://www.vito-eodata.be/openSearch/findProducts.atom?collection=urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001&platform=PV01&start=2018-01-01&end=2018-01-02&count=500'
+            'http://www.vito-eodata.be/openSearch/findProducts.atom?collection=urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001&platform=PV01&start=2018-01-01&end=2018-01-02&count=500'  # noqa: E501
         )
         harvest_objects = list(harvest_objects_iterator)
         firts_havest_object = harvest_objects[0]
         self.assertEqual(
             firts_havest_object['guid'],
-            'urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001:PROBAV_CENTER_L2A_20180101_005544_333M:V101'
+            'urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001:PROBAV_CENTER_L2A_20180101_005544_333M:V101'  # noqa: E501
         )
         self.assertEqual(len(harvest_objects), 158)
 
     def test_gather_L3(self):
         harvest_objects_iterator = self.harvester._gather_L3(
-            'http://www.vito-eodata.be/openSearch/findProducts.atom?collection=urn:ogc:def:EOP:VITO:PROBAV_S1-TOA_333M_V001&platform=PV01&start=2018-01-01&end=2018-01-02&count=500',
+            'http://www.vito-eodata.be/openSearch/findProducts.atom?collection=urn:ogc:def:EOP:VITO:PROBAV_S1-TOA_333M_V001&platform=PV01&start=2018-01-01&end=2018-01-02&count=500',  # noqa: E501
             auth=('nextgeoss', 'nextgeoss'))
         harvest_objects = list(harvest_objects_iterator)
         first_havest_object = harvest_objects[0]
         self.assertEqual(
             first_havest_object['guid'],
-            'urn:ogc:def:EOP:VITO:PROBAV_S1-TOA_333M_V001:PROBAV_S1-TOA_20180101_333M:V101:PROBAV_S1_TOA_X00Y00_20180101_333M_V101.HDF5'
+            'urn:ogc:def:EOP:VITO:PROBAV_S1-TOA_333M_V001:PROBAV_S1-TOA_20180101_333M:V101:PROBAV_S1_TOA_X00Y00_20180101_333M_V101.HDF5'  # noqa: E501
         )
         self.assertEqual(len(harvest_objects), 331 + 331)
 
@@ -331,7 +331,7 @@ class TestProbavHarvester(TestCase):
                     self.harvester._gather_entry(harvest_object)
                 except AttributeError as e:
                     # print(e.message)
-                    if e.message != "'HarvestObject' object has no attribute 'id'":
+                    if e.message != "'HarvestObject' object has no attribute 'id'":  # noqa: E501
                         raise e
 
     def test_parse_items_per_page(self):
@@ -341,7 +341,7 @@ class TestProbavHarvester(TestCase):
 
     def test_open_search_pages_from(self):
         open_search_pages = self.harvester._open_search_pages_from(
-            'http://www.vito-eodata.be/openSearch/findProducts.atom?collection=urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001&platform=PV01&start=2018-01-01&end=2018-01-02&count=500'
+            'http://www.vito-eodata.be/openSearch/findProducts.atom?collection=urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001&platform=PV01&start=2018-01-01&end=2018-01-02&count=500'  # noqa: E501
         )
         open_search_first_page = next(open_search_pages)
         self.assertIsInstance(open_search_first_page, BeautifulSoup)
@@ -350,18 +350,18 @@ class TestProbavHarvester(TestCase):
 
     def test_get_xml_url(self):
         xml = self.harvester._get_xml_from_url(
-            'https://www.vito-eodata.be/PDF/dataaccess?service=DSEO&request=GetProduct&version=1.0.0&collectionID=1000112&productID=267469925&ProductURI=urn:ogc:def:EOP:VITO:PROBAV_S1-TOA_333M_V001:PROBAV_S1-TOA_20180101_333M:V101&',
+            'https://www.vito-eodata.be/PDF/dataaccess?service=DSEO&request=GetProduct&version=1.0.0&collectionID=1000112&productID=267469925&ProductURI=urn:ogc:def:EOP:VITO:PROBAV_S1-TOA_333M_V001:PROBAV_S1-TOA_20180101_333M:V101&',  # noqa: E501
             auth=('nextgeoss', 'nextgeoss'))
         self.assertIsInstance(xml, BeautifulSoup)
         self.assertIsNotNone(xml.files.file)
 
     def test_generate_L3_guid(self):
         guid = self.harvester._generate_L3_guid(
-            'urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001:PROBAV_CENTER_L2A_20180101_005544_333M:V101',
+            'urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001:PROBAV_CENTER_L2A_20180101_005544_333M:V101',  # noqa: E501
             'PROBAV_S1_TOA_20180101_333M_V101')
         self.assertEqual(
             guid,
-            'urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001:PROBAV_CENTER_L2A_20180101_005544_333M:V101:PROBAV_S1_TOA_20180101_333M_V101'
+            'urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001:PROBAV_CENTER_L2A_20180101_005544_333M:V101:PROBAV_S1_TOA_20180101_333M_V101'  # noqa: E501
         )
 
     def test_parse_restart_date(self):
@@ -381,7 +381,7 @@ class TestProbavHarvester(TestCase):
         identifier = self.harvester._parse_identifier_element(self.entry)
         self.assertEqual(
             identifier,
-            'urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001:PROBAV_CENTER_L2A_20180101_005544_333M:V101'
+            'urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001:PROBAV_CENTER_L2A_20180101_005544_333M:V101'  # noqa: E501
         )
 
     def test_parse_interval(self):
@@ -390,18 +390,18 @@ class TestProbavHarvester(TestCase):
         self.assertEqual(end, "2018-01-01T01:02:21Z")
 
     def test_parse_identifier(self):
-        identifier = 'urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001:PROBAV_CENTER_L2A_20180101_005544_333M:V101'
+        identifier = 'urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001:PROBAV_CENTER_L2A_20180101_005544_333M:V101'  # noqa: E501
         identifier = self.harvester._parse_identifier(identifier)
         self.assertEqual(identifier,
                          'PROBAV_CENTER_L2A_20180101_005544_333M_V101')
 
     def test_parse_name(self):
-        identifier = 'urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001:PROBAV_CENTER_L2A_20180101_005544_333M:V101'
+        identifier = 'urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001:PROBAV_CENTER_L2A_20180101_005544_333M:V101'  # noqa: E501
         name = self.harvester._parse_name(identifier)
         self.assertEqual(name, 'probav_center_l2a_20180101_005544_333m_v101')
 
     def test_parse_filename(self):
-        identifier = 'urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001:PROBAV_CENTER_L2A_20180101_005544_333M:V101'
+        identifier = 'urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001:PROBAV_CENTER_L2A_20180101_005544_333M:V101'  # noqa: E501
         filename = self.harvester._parse_filename(identifier)
         self.assertEqual(filename,
                          'PROBAV_CENTER_L2A_20180101_005544_333M_V101.HDF5')
@@ -438,7 +438,7 @@ class TestProbavHarvester(TestCase):
              [145.476, 40.341], [145.476, 65.071]])
 
     def test_parse_L2A_collection_from_identifier(self):
-        identifier = 'urn:ogc:def:EOP:VITO:PROBAV_L2A_100M_V001:PROBAV_CENTER_L2A_20180101_005544_100M:V101'
+        identifier = 'urn:ogc:def:EOP:VITO:PROBAV_L2A_100M_V001:PROBAV_CENTER_L2A_20180101_005544_100M:V101'  # noqa: E501
         collection = self.harvester._parse_collection_from_identifier(
             identifier)
         self.assertIsInstance(collection, L2AProbaVCollection)
@@ -447,7 +447,7 @@ class TestProbavHarvester(TestCase):
         self.assertEqual(collection.resolution.value, 100)
 
     def test_parse_S1_TOC_NDVI_collection_from_identifier(self):
-        identifier = 'urn:ogc:def:EOP:VITO:PROBAV_S1-TOC-NDVI_100M_V001:PROBAV_S1-TOC-NDVI_20180101_100M:V101'
+        identifier = 'urn:ogc:def:EOP:VITO:PROBAV_S1-TOC-NDVI_100M_V001:PROBAV_S1-TOC-NDVI_20180101_100M:V101'  # noqa: E501
         collection = self.harvester._parse_collection_from_identifier(
             identifier)
         self.assertIsInstance(collection, SProbaVCollection)
@@ -465,7 +465,7 @@ class TestProbavHarvester(TestCase):
             'title':
             'Proba-V Level-2A (333M)',
             'description':
-            'PROBA-V Level2A - 333M segments contain the Level 1C (P product) data projected on a uniform 333m grid.',
+            'PROBA-V Level2A - 333M segments contain the Level 1C (P product) data projected on a uniform 333m grid.',  # noqa: E501
             'tags': [{
                 'name': 'Proba-V'
             }, {
@@ -486,13 +486,13 @@ class TestProbavHarvester(TestCase):
             'filename':
             'PROBAV_CENTER_L2A_20180101_005544_333M_V101.HDF5',
             'notes':
-            'PROBA-V Level2A - 333M segments contain the Level 1C (P product) data projected on a uniform 333m grid.',
+            'PROBA-V Level2A - 333M segments contain the Level 1C (P product) data projected on a uniform 333m grid.',  # noqa: E501
             'metadata_download':
-            "https://www.vito-eodata.be/PDF/dataaccessMdXML?mdmode=hma&collectionID=1000126&productID=267446487&fileName=PV_CENTER_L2A-20180101005544_333M_V101.xml",
+            "https://www.vito-eodata.be/PDF/dataaccessMdXML?mdmode=hma&collectionID=1000126&productID=267446487&fileName=PV_CENTER_L2A-20180101005544_333M_V101.xml",  # noqa: E501
             'product_download':
-            "https://www.vito-eodata.be/PDF/dataaccess?service=DSEO&request=GetProduct&version=1.0.0&collectionID=1000126&productID=267446487&ProductURI=urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001:PROBAV_CENTER_L2A_20180101_005544_333M:V101&",
+            "https://www.vito-eodata.be/PDF/dataaccess?service=DSEO&request=GetProduct&version=1.0.0&collectionID=1000126&productID=267446487&ProductURI=urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001:PROBAV_CENTER_L2A_20180101_005544_333M:V101&",  # noqa: E501
             'thumbnail_download':
-            "https://www.vito-eodata.be/cgi-bin/probav?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&SRS=EPSG:4326&FORMAT=image/png&LAYERS=PROBAV_L2A_333M_Red band&TIME=2018-01-01T00:55:44Z&BBOX=40.341,145.476,65.071,165.962992&HEIGHT=200&WIDTH=166"
+            "https://www.vito-eodata.be/cgi-bin/probav?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&SRS=EPSG:4326&FORMAT=image/png&LAYERS=PROBAV_L2A_333M_Red band&TIME=2018-01-01T00:55:44Z&BBOX=40.341,145.476,65.071,165.962992&HEIGHT=200&WIDTH=166"  # noqa: E501
         }
         expected_spatial = {
             "type":
@@ -505,7 +505,7 @@ class TestProbavHarvester(TestCase):
                 }
             },
             "coordinates": [[[145.476, 65.071], [165.962992,
-                                                 65.071], [165.962992, 40.341],
+                                                 65.071], [165.962992, 40.341],  # noqa: E501
                              [145.476, 40.341], [145.476, 65.071]]]
         }
         spatial = json.loads(parsed_content['spatial'])
@@ -518,21 +518,21 @@ class TestProbavHarvester(TestCase):
         metadata_url = self.harvester._get_metadata_url(self.entry)
         self.assertEqual(
             metadata_url,
-            "https://www.vito-eodata.be/PDF/dataaccessMdXML?mdmode=hma&collectionID=1000126&productID=267446487&fileName=PV_CENTER_L2A-20180101005544_333M_V101.xml"
+            "https://www.vito-eodata.be/PDF/dataaccessMdXML?mdmode=hma&collectionID=1000126&productID=267446487&fileName=PV_CENTER_L2A-20180101005544_333M_V101.xml"  # noqa: E501
         )
 
     def test_get_product_url(self):
         product_url = self.harvester._get_product_url(self.entry)
         self.assertEqual(
             product_url,
-            "https://www.vito-eodata.be/PDF/dataaccess?service=DSEO&request=GetProduct&version=1.0.0&collectionID=1000126&productID=267446487&ProductURI=urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001:PROBAV_CENTER_L2A_20180101_005544_333M:V101&"
+            "https://www.vito-eodata.be/PDF/dataaccess?service=DSEO&request=GetProduct&version=1.0.0&collectionID=1000126&productID=267446487&ProductURI=urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001:PROBAV_CENTER_L2A_20180101_005544_333M:V101&"  # noqa: E501
         )
 
     def test_get_thumbnail_url(self):
         thumbnail_url = self.harvester._get_thumbnail_url(self.entry)
         self.assertEqual(
             thumbnail_url,
-            "https://www.vito-eodata.be/cgi-bin/probav?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&SRS=EPSG:4326&FORMAT=image/png&LAYERS=PROBAV_L2A_333M_Red band&TIME=2018-01-01T00:55:44Z&BBOX=40.341,145.476,65.071,165.962992&HEIGHT=200&WIDTH=166"
+            "https://www.vito-eodata.be/cgi-bin/probav?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&SRS=EPSG:4326&FORMAT=image/png&LAYERS=PROBAV_L2A_333M_Red band&TIME=2018-01-01T00:55:44Z&BBOX=40.341,145.476,65.071,165.962992&HEIGHT=200&WIDTH=166"  # noqa: E501
         )
 
     def test_get_resources(self):
@@ -543,7 +543,7 @@ class TestProbavHarvester(TestCase):
             'name':
             'Metadata Download',
             'url':
-            "https://www.vito-eodata.be/PDF/dataaccessMdXML?mdmode=hma&collectionID=1000126&productID=267446487&fileName=PV_CENTER_L2A-20180101005544_333M_V101.xml",
+            "https://www.vito-eodata.be/PDF/dataaccessMdXML?mdmode=hma&collectionID=1000126&productID=267446487&fileName=PV_CENTER_L2A-20180101005544_333M_V101.xml",  # noqa: E501
             'format':
             'xml',
             'mimetype':
@@ -552,7 +552,7 @@ class TestProbavHarvester(TestCase):
             'name':
             'Product Download',
             'url':
-            "https://www.vito-eodata.be/PDF/dataaccess?service=DSEO&request=GetProduct&version=1.0.0&collectionID=1000126&productID=267446487&ProductURI=urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001:PROBAV_CENTER_L2A_20180101_005544_333M:V101&",
+            "https://www.vito-eodata.be/PDF/dataaccess?service=DSEO&request=GetProduct&version=1.0.0&collectionID=1000126&productID=267446487&ProductURI=urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001:PROBAV_CENTER_L2A_20180101_005544_333M:V101&",  # noqa: E501
             'format':
             'hdf5',
             'mimetype':
@@ -561,7 +561,7 @@ class TestProbavHarvester(TestCase):
             'name':
             'Thumbnail Download',
             'url':
-            "https://www.vito-eodata.be/cgi-bin/probav?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&SRS=EPSG:4326&FORMAT=image/png&LAYERS=PROBAV_L2A_333M_Red band&TIME=2018-01-01T00:55:44Z&BBOX=40.341,145.476,65.071,165.962992&HEIGHT=200&WIDTH=166",
+            "https://www.vito-eodata.be/cgi-bin/probav?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&SRS=EPSG:4326&FORMAT=image/png&LAYERS=PROBAV_L2A_333M_Red band&TIME=2018-01-01T00:55:44Z&BBOX=40.341,145.476,65.071,165.962992&HEIGHT=200&WIDTH=166",  # noqa: E501
             'format':
             'png',
             'mimetype':

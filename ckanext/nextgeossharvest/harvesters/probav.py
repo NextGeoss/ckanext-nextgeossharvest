@@ -48,7 +48,7 @@ L3_COLLECTIONS = [
     "PROBAV_S10-TOC-NDVI_333M_V001", "PROBAV_S5-TOA_100M_V001",
     "PROBAV_S5-TOC_100M_V001", "PROBAV_S5-TOC-NDVI_100M_V001"
 ]
-URL_TEMPLATE = 'http://www.vito-eodata.be/openSearch/findProducts.atom?collection=urn:ogc:def:EOP:VITO:{}&platform=PV01&start={}&end={}&count=500'  # count=500
+URL_TEMPLATE = 'http://www.vito-eodata.be/openSearch/findProducts.atom?collection=urn:ogc:def:EOP:VITO:{}&platform=PV01&start={}&end={}&count=500'  # count=500  # noqa: E501
 DATE_FORMAT = '%Y-%m-%d'
 
 log = logging.getLogger(__name__)
@@ -179,7 +179,7 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
                 _id = self._gather_entry(harvest_object)
                 ids.append(_id)
         for l3_collection in L3_COLLECTIONS:
-            harvest_url = self._generate_harvest_url(l3_collection, start_date,
+            harvest_url = self._generate_harvest_url(l3_collection, start_date,  # noqa: E501
                                                      end_date)
             log.info('Harvesting {}'.format(harvest_url))
             for harvest_object in self._gather_L3(harvest_url, auth=auth):
@@ -200,7 +200,7 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
     def fetch_stage(self, harvest_object):
         """Fetch was completed during gather."""
 
-        # We don't need to fetch anything—the OpenSearch entries contain all
+        # We don't need to fetch anything—the OpenSearch entries contain all  # noqa: E501
         # the content we need for the import stage.
 
         return True
@@ -215,7 +215,7 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         parsed_content = {}
         parsed_content['title'] = collection.get_name()
         parsed_content['description'] = collection.get_description()
-        parsed_content['tags'] = self._create_ckan_tags(collection.get_tags())
+        parsed_content['tags'] = self._create_ckan_tags(collection.get_tags())  # noqa: E501
         parsed_content['uuid'] = str(uuid.uuid4())
         parsed_content['StartTime'], parsed_content[
             'StopTime'] = self._parse_interval(content)
@@ -227,7 +227,7 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
             extras = content_json['extras']
             file_name = extras['file_name']
             file_url = extras['file_url']
-            self._parse_S_content(parsed_content, content, file_name, file_url)
+            self._parse_S_content(parsed_content, content, file_name, file_url)  # noqa: E501
         return parsed_content
 
     def _parse_L2A_content(self, parsed_content, identifier, content):
@@ -238,7 +238,7 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
             self._bbox_to_geojson(self._parse_bbox(content)))
         parsed_content['metadata_download'] = self._get_metadata_url(content)
         parsed_content['product_download'] = self._get_product_url(content)
-        parsed_content['thumbnail_download'] = self._get_thumbnail_url(content)
+        parsed_content['thumbnail_download'] = self._get_thumbnail_url(content)  # noqa: E501
 
     def _parse_S_content(self, parsed_content, content, file_name, file_url):
         name = file_name
@@ -410,7 +410,7 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
                 guid = self._parse_identifier_element(open_search_entry)
                 restart_date = self._parse_restart_date(open_search_entry)
                 content = open_search_entry.encode()
-                yield self._create_harvest_object(guid, restart_date, content)
+                yield self._create_harvest_object(guid, restart_date, content)  # noqa: E501
 
     def _gather_L3(self, open_search_url, auth=None):
         for open_search_page in self._open_search_pages_from(
@@ -425,7 +425,7 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
                         open_search_entry)
                     file_name = self._parse_file_name(metalink_file_entry)
                     guid = self._generate_L3_guid(identifier, file_name)
-                    restart_date = self._parse_restart_date(open_search_entry)
+                    restart_date = self._parse_restart_date(open_search_entry)  # noqa: E501
                     content = open_search_entry.encode()
                     extras = {
                         'file_name': file_name,
@@ -485,7 +485,7 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
                 if hasattr(self, 'provider_logger'):
                     self.provider_logger.info(
                         log_message.format(self.provider, timestamp,
-                                           status_code, timeout))  # noqa: E128
+                                           status_code, timeout))  # noqa: E128  # noqa: E501
                 raise StopIteration
             if r.status_code != 200:
                 self._save_gather_error('{} error: {}'.format(
@@ -532,7 +532,7 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         metalinks = BeautifulSoup(response.text, 'lxml-xml')
         ids = list()
         for _file in self._get_metalink_file_elements(metalinks):
-            metalink_content = self._create_contents_json(content, str(_file))
+            metalink_content = self._create_contents_json(content, str(_file))  # noqa: E501
             opensearch_entry['content'] = metalink_content
             id_list = self._gather_entry(opensearch_entry)
             ids.extend(id_list)
@@ -593,7 +593,7 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
                 status = 'change'
             else:
                 log.debug(
-                    '{} will not be updated.'.format(entry_name))  # noqa: E501
+                    '{} will not be updated.'.format(entry_name))  # noqa: E501  # noqa: E501
                 status = 'unchanged'
 
             obj = HarvestObject(
@@ -610,7 +610,7 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         elif not package:
             # It's a product we haven't harvested before.
             log.debug(
-                '{} has not been harvested before. Creating a new harvest object.'.
+                '{} has not been harvested before. Creating a new harvest object.'.  # noqa: E501
                 format(entry_name))  # noqa: E501
             obj = HarvestObject(
                 guid=entry_guid,
