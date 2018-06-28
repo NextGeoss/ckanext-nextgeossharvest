@@ -33,8 +33,8 @@ class CMEMSHarvester(CMEMSBase,
         try:
             config_obj = json.loads(config)
 
-            if config_obj.get('harvester_type') not in {'sst', 'sic_north', 'sic_south', 'ocn'}:  # noqa: E501
-                raise ValueError('harvester type is required and must be "sst" or "sic_north" or "sic_south" or "ocn"')  # noqa: E501
+            if config_obj.get('harvester_type') not in {'sst', 'sic_north', 'sic_south', 'ocn', 'slv'}:  # noqa: E501
+                raise ValueError('harvester type is required and must be "sst" or "sic_north" or "sic_south" or "ocn" or "slv"')  # noqa: E501
             if 'start_date' in config_obj:
                 try:
                     start_date = config_obj['start_date']
@@ -99,7 +99,10 @@ class CMEMSHarvester(CMEMSBase,
             end_date = datetime.strptime(end_date, '%Y-%m-%d')
         self.end_date = end_date
 
-        ids = self._get_metadata_create_objects()
+        if self.harvester_type == 'slv':
+            ids = self._get_metadata_create_objects_slv()
+        else:
+            ids = self._get_metadata_create_objects()
 
         return ids
 
