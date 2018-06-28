@@ -229,8 +229,6 @@ class CMEMSBase(HarvesterBase):
 
         ftp.login('ngeoss', 'NextCMEMS2017')
 
-        print('YEAR: ', year)
-        print('MONTH: ', month)
         directory = ('/Core/'
                      'SEALEVEL_GLO_PHY_L4_NRT_OBSERVATIONS_008_046/'
                      'dataset-duacs-nrt-global-merged-allsat-phy-l4/'
