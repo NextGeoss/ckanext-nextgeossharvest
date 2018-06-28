@@ -59,11 +59,6 @@ class CMEMSBase(HarvesterBase):
                 forecast_date = self.start_date + timedelta(days=i)
                 fday, fmonth, fyear = self._format_date_separed(
                     forecast_date)
-            elif self.harvester_type == 'slv':
-                forecast_date = self.start_date + timedelta(days=6)
-                fday, fmonth, fyear = self._format_date_separed(
-                    forecast_date)
-                forecast_date = None
             else:
                 forecast_date = fday = fmonth = fyear = None
 
@@ -160,23 +155,6 @@ class CMEMSBase(HarvesterBase):
                     month +
                     day +
                     "-fv02.0.nc")
-        elif self.harvester_type == 'slv':
-            return ("ftp://nrt.cmems-du.eu/Core/"
-                    "SEALEVEL_GLO_PHY_L4_NRT_OBSERVATIONS_008_046/"
-                    "dataset-duacs-nrt-global-merged-allsat-phy-l4/" +
-                    year +
-                    "/" +
-                    month +
-                    "/" +
-                    "nrt_global_allsat_phy_l4_" +
-                    year +
-                    month +
-                    day +
-                    '_' +
-                    fyear +
-                    fmonth +
-                    fday +
-                    ".nc")
 
     def _make_stop_time(self, start_date):
         stop_date = start_date + timedelta(days=1)
@@ -564,13 +542,6 @@ class CMEMSBase(HarvesterBase):
         elif self.harvester_type == 'ocn':
             return 'ARCTIC-FORECAST-{}{}{}-PHYS-002-001-{}{}{}'.format(
                 fyear, fmonth, fday, year, month, day)
-        elif self.harvester_type == 'slv':
-            return 'nrt_global_allsat_phy_l4_{}{}{}_{}{}{}'.format(year,
-                                                                   month,
-                                                                   day,
-                                                                   fyear,
-                                                                   fmonth,
-                                                                   fday)
 
     # Required by NextGEOSS base harvester
     def _get_resources(self, metadata):
@@ -582,7 +553,7 @@ class CMEMSBase(HarvesterBase):
                                                  'Product Download',
                                                  metadata['size']))
         else:
-            resources.append(self._make_resource(metadata['downloadLinkEas'],
+            resources.append(self._make_resource(metadata['downloadLinkEase'],
                                                  'Product Download (EASE GRID)',  # noqa: E501,
                                                  metadata['size']))
             resources.append(self._make_resource(metadata['downloadLinkPolstere'],  # noqa: E501
