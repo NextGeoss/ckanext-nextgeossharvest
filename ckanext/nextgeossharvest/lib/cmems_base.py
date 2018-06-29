@@ -5,6 +5,7 @@ import json
 from datetime import timedelta, datetime
 import uuid
 from ftplib import FTP
+from os import path
 
 from dateutil.relativedelta import relativedelta
 
@@ -191,11 +192,9 @@ class CMEMSBase(HarvesterBase):
     def _get_products_slv(self, year, month):
         harvest_object_ids = list()
         ftp = self._connect_ftp(year, month)
-        identifier_list = list()
         for filename in ftp.nlst():
-            identifier_list.append(filename[:-3])  # strip '.nc'
+            identifier = path.splitext(filename)[0]
 
-        for identifier in identifier_list:
             if not self._was_harvested(identifier):
                 ftp_link = self._make_ftp_link_slv(year, month, identifier)
 
