@@ -223,6 +223,12 @@ class CMEMSBase(HarvesterBase):
             current_date += relativedelta(months=1)
         return dates_list
 
+    def _date_from_identifier_slv(self, identifier):
+        identifier_parts = identifier.split('_')
+        date_str = identifier_parts[5]
+        date = datetime.strptime(date_str, '%Y%m%d')
+        return date.strftime('%Y-%m-%d')
+
     def _connect_ftp(self, year, month):
         ftp = FTP('nrt.cmems-du.eu')
 
@@ -455,6 +461,9 @@ class CMEMSBase(HarvesterBase):
                                      "&time=" +
                                      start_date_string +
                                      "T00:00:00.000Z")
+            slv_date = self._date_from_identifier_slv(content['identifier'])
+            metadata['StartTime'] = '{}T00:00:00.000Z'.format(slv_date)  # noqa E501
+            metadata['StopTime'] = metadata['StartTime']
 
         elif self.harvester_type == 'ocn':
             metadata['collection_id'] = 'ARCTIC_ANALYSIS_FORECAST_PHYS_002_001_A'  # noqa E501
@@ -495,8 +504,9 @@ class CMEMSBase(HarvesterBase):
         # Add common metadata
         metadata['identifier'] = content['identifier']
         metadata['name'] = metadata['identifier'].lower()
-        metadata['StartTime'] = '{}T00:00:00.000Z'.format(start_date_string)
-        metadata['StopTime'] = self._make_stop_time(start_date)
+        if self.harvester_type != 'slv':
+            metadata['StartTime'] = '{}T00:00:00.000Z'.format(start_date_string)  # noqa E501
+            metadata['StopTime'] = self._make_stop_time(start_date)
         metadata['size'] = content['size']
 
         # For now, the collection name and description are the same as the
