@@ -4,7 +4,7 @@ import logging
 import json
 from datetime import timedelta, datetime
 import uuid
-from ftplib import FTP
+from ftplib import FTP, error_perm as Ftp5xxErrors
 from os import path
 
 from dateutil.relativedelta import relativedelta
@@ -114,6 +114,7 @@ class CMEMSBase(HarvesterBase):
                     year +
                     month +
                     day +
+
                     "120000-UKMO-L4_GHRSST-SSTfnd-OSTIA-GLOB-v02.0-fv02.0.nc")
 
         elif self.harvester_type == 'sic_north':
@@ -191,19 +192,21 @@ class CMEMSBase(HarvesterBase):
 
     def _get_products_slv(self, year, month):
         harvest_object_ids = list()
-        ftp = self._connect_ftp(year, month)
-        for filename in ftp.nlst():
-            identifier = path.splitext(filename)[0]
+        try:
+            ftp = self._connect_ftp(year, month)
+            for filename in ftp.nlst():
+                identifier = path.splitext(filename)[0]
 
-            if not self._was_harvested(identifier):
-                ftp_link = self._make_ftp_link_slv(year, month, identifier)
+                if not self._was_harvested(identifier):
+                    ftp_link = self._make_ftp_link_slv(year, month, identifier)
 
-                harvest_object_id = self._create_object(identifier,
-                                                        ftp_link,
-                                                        0,
-                                                        None)
-                harvest_object_ids.append(harvest_object_id)
-
+                    harvest_object_id = self._create_object(identifier,
+                                                            ftp_link,
+                                                            0,
+                                                            None)
+                    harvest_object_ids.append(harvest_object_id)
+        except Ftp5xxErrors:
+            pass
         return harvest_object_ids
 
     def _make_ftp_link_slv(self, year, month, identifier):
@@ -232,13 +235,14 @@ class CMEMSBase(HarvesterBase):
     def _connect_ftp(self, year, month):
         ftp = FTP('nrt.cmems-du.eu')
 
-        ftp.login('ngeoss', 'NextCMEMS2017')
+        username = self.source_config['username']
+        password = self.source_config['password']
 
+        ftp.login(username, password)
         directory = ('/Core/'
                      'SEALEVEL_GLO_PHY_L4_NRT_OBSERVATIONS_008_046/'
                      'dataset-duacs-nrt-global-merged-allsat-phy-l4/'
                      '{}/{}').format(year, month)
-
         ftp.cwd(directory)
         return ftp
 
