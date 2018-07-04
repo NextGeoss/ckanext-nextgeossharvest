@@ -3,6 +3,7 @@
 import json
 import logging
 from datetime import datetime
+from ftplib import all_errors as FtpException
 
 from ckan.plugins.core import implements
 
@@ -33,8 +34,12 @@ class CMEMSHarvester(CMEMSBase,
         try:
             config_obj = json.loads(config)
 
-            if config_obj.get('harvester_type') not in {'sst', 'sic_north', 'sic_south', 'ocn'}:  # noqa: E501
-                raise ValueError('harvester type is required and must be "sst" or "sic_north" or "sic_south" or "ocn"')  # noqa: E501
+            if config_obj.get('harvester_type') not in {'sst',
+                                                        'sic_north',
+                                                        'sic_south',
+                                                        'ocn',
+                                                        'slv'}:
+                raise ValueError('harvester type is required and must be "sst" or "sic_north" or "sic_south" or "ocn" or "slv"')  # noqa: E501
             if 'start_date' in config_obj:
                 try:
                     start_date = config_obj['start_date']
@@ -99,7 +104,28 @@ class CMEMSHarvester(CMEMSBase,
             end_date = datetime.strptime(end_date, '%Y-%m-%d')
         self.end_date = end_date
 
-        ids = self._get_metadata_create_objects()
+        if self.harvester_type == 'slv':
+            try:
+                log_message = '{:<12} | {} | {} | {}s'
+                request_start_time = datetime.utcnow()
+                ids = self._get_metadata_create_objects_slv()
+                status_code = '200'
+            except FtpException as e:
+                error_message = str(e).split(None)
+                status_code = error_message[0]
+                error_text = error_message[1:]
+                self._save_gather_error(
+                    '{} error: {}'.format(status_code, error_text, self.job))
+                ids = []
+            finally:
+                request_end_time = datetime.utcnow()
+                elapsed_time = request_end_time - request_start_time
+                self.provider_logger.info(log_message.format('cmems',
+                                                             str(request_start_time),  # noqa: E501
+                                                             status_code,
+                                                             str(elapsed_time)))  # noqa: E501
+        else:
+            ids = self._get_metadata_create_objects()
 
         return ids
 

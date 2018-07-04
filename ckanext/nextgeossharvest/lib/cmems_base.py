@@ -4,6 +4,10 @@ import logging
 import json
 from datetime import timedelta, datetime
 import uuid
+from ftplib import FTP, error_perm as Ftp5xxErrors
+from os import path
+
+from dateutil.relativedelta import relativedelta
 
 from ckan.model import Session
 from ckan.model import Package
@@ -110,6 +114,7 @@ class CMEMSBase(HarvesterBase):
                     year +
                     month +
                     day +
+
                     "120000-UKMO-L4_GHRSST-SSTfnd-OSTIA-GLOB-v02.0-fv02.0.nc")
 
         elif self.harvester_type == 'sic_north':
@@ -176,6 +181,71 @@ class CMEMSBase(HarvesterBase):
 
         return ids
 
+    def _get_metadata_create_objects_slv(self):
+        year_month_list = self._create_months_years_list()
+        ids = []
+        for year, month in year_month_list:
+            new_ids = self._get_products_slv(year, month)
+            ids.extend(new_ids)
+
+        return ids
+
+    def _get_products_slv(self, year, month):
+        harvest_object_ids = list()
+        try:
+            ftp = self._connect_ftp(year, month)
+            for filename in ftp.nlst():
+                identifier = path.splitext(filename)[0]
+
+                if not self._was_harvested(identifier):
+                    ftp_link = self._make_ftp_link_slv(year, month, identifier)
+
+                    harvest_object_id = self._create_object(identifier,
+                                                            ftp_link,
+                                                            0,
+                                                            None)
+                    harvest_object_ids.append(harvest_object_id)
+        except Ftp5xxErrors:
+            pass
+        return harvest_object_ids
+
+    def _make_ftp_link_slv(self, year, month, identifier):
+        link = ('/Core/'
+                'SEALEVEL_GLO_PHY_L4_NRT_OBSERVATIONS_008_046/'
+                'dataset-duacs-nrt-global-merged-allsat-phy-l4/'
+                '{}/{}/{}.nc').format(year, month, identifier)
+        return link
+
+    def _create_months_years_list(self):
+        dates_list = list()
+
+        current_date = self.start_date
+        while current_date < self.end_date:
+            dates_list.append((current_date.strftime('%Y'),
+                               current_date.strftime('%m')))
+            current_date += relativedelta(months=1)
+        return dates_list
+
+    def _date_from_identifier_slv(self, identifier):
+        identifier_parts = identifier.split('_')
+        date_str = identifier_parts[5]
+        date = datetime.strptime(date_str, '%Y%m%d')
+        return date.strftime('%Y-%m-%d')
+
+    def _connect_ftp(self, year, month):
+        ftp = FTP('nrt.cmems-du.eu')
+
+        username = self.source_config['username']
+        password = self.source_config['password']
+
+        ftp.login(username, password)
+        directory = ('/Core/'
+                     'SEALEVEL_GLO_PHY_L4_NRT_OBSERVATIONS_008_046/'
+                     'dataset-duacs-nrt-global-merged-allsat-phy-l4/'
+                     '{}/{}').format(year, month)
+        ftp.cwd(directory)
+        return ftp
+
     def _create_tags(self):
         """Create a list of tags based on the type of harvester."""
         tags_list = [{"name": "CMEMS"}]
@@ -202,7 +272,12 @@ class CMEMSBase(HarvesterBase):
                               {"name": "sea ice thickness"},
                               {"name": "sea ice velocity"},
                               {"name": "sea ice type"}])
-
+        elif self.harvester_type == 'slv':
+            tags_list.extend([{"name": "sea level"},
+                              {"name": "geostrophic"},
+                              {"name": "sea"},
+                              {"name": "currents"},
+                              {"name": "velocity"}])
         else:
             tags_list.extend([{"name": "sea ice"},
                               {"name": "ice"},
@@ -359,6 +434,40 @@ class CMEMSBase(HarvesterBase):
                                      "&time=" +
                                      start_date_string +
                                      "T12:00:00.000Z")
+        elif self.harvester_type == 'slv':
+            metadata['collection_id'] = ('SEALEVEL_GLO_PHY_L4_NRT_OBSERVATIONS_008_046')  # noqa E501
+            metadata['title'] = ("Global Ocean Gridded L4 Sea Surface"
+                                 " Heights and Derived Variables NRT")
+            metadata['notes'] = ("Daily products processed by the DUACS multimission altimeter"  # noqa E501
+                                 " data processing system. The geostrophic currents are derived"  # noqa E501
+                                 " from sla (geostrophic velocities anomalies, ugosa and vgosa"  # noqa E501
+                                 " variables) and from adt (absolute geostrophic velicities,"  # noqa E501
+                                 " ugos and vgos variables")
+            metadata['spatial'] = spatial_template.format([[-180, 90],
+                                                           [180, 90],
+                                                           [180, -90],
+                                                           [-180, -90],
+                                                           [-180, 90]])
+            metadata['downloadLink'] = ftp_link
+
+            metadata['thumbnail'] = ("http://nrt.cmems-du.eu/thredds/wms/"
+                                     "dataset-duacs-nrt-global-merged-allsat-phy-l4"  # noqa E501
+                                     "?request=GetMap"
+                                     "&service=WMS"
+                                     "&version=1.3.0"
+                                     "&layers=surface_geostrophic_sea_water_velocity"  # noqa E501
+                                     "&crs=CRS:84"
+                                     "&bbox=-180,-90,180,90"
+                                     "&WIDTH=800"
+                                     "&HEIGHT=800"
+                                     "&styles=vector/rainbow"
+                                     "&format=image/png"
+                                     "&time=" +
+                                     start_date_string +
+                                     "T00:00:00.000Z")
+            slv_date = self._date_from_identifier_slv(content['identifier'])
+            metadata['StartTime'] = '{}T00:00:00.000Z'.format(slv_date)  # noqa E501
+            metadata['StopTime'] = metadata['StartTime']
 
         elif self.harvester_type == 'ocn':
             metadata['collection_id'] = 'ARCTIC_ANALYSIS_FORECAST_PHYS_002_001_A'  # noqa E501
@@ -399,8 +508,9 @@ class CMEMSBase(HarvesterBase):
         # Add common metadata
         metadata['identifier'] = content['identifier']
         metadata['name'] = metadata['identifier'].lower()
-        metadata['StartTime'] = '{}T00:00:00.000Z'.format(start_date_string)
-        metadata['StopTime'] = self._make_stop_time(start_date)
+        if self.harvester_type != 'slv':
+            metadata['StartTime'] = '{}T00:00:00.000Z'.format(start_date_string)  # noqa E501
+            metadata['StopTime'] = self._make_stop_time(start_date)
         metadata['size'] = content['size']
 
         # For now, the collection name and description are the same as the
@@ -449,7 +559,7 @@ class CMEMSBase(HarvesterBase):
         """Return a list of resource dictionaries."""
         resources = []
 
-        if self.harvester_type in {'sst', 'ocn'}:
+        if self.harvester_type in {'sst', 'ocn', 'slv'}:
             resources.append(self._make_resource(metadata['downloadLink'],
                                                  'Product Download',
                                                  metadata['size']))
