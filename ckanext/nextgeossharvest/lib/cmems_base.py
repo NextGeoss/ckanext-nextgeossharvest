@@ -216,6 +216,13 @@ class CMEMSBase(HarvesterBase):
                 '{}/{}/{}.nc').format(year, month, identifier)
         return link
 
+    def _make_ftp_link_gpaf(self, year, month, identifier):
+        link = ('/Core/'
+                'GLOBAL_ANALYSIS_FORECAST_PHY_001_024/'
+                'global-analysis-forecast-phy-001-024-hourly-t-u-v-ssh/'
+                '{}/{}/{}.nc').format(year, month, identifier)
+        return link
+
     def _create_months_years_list(self):
         dates_list = list()
 
