@@ -285,6 +285,14 @@ class CMEMSBase(HarvesterBase):
                               {"name": "sea"},
                               {"name": "currents"},
                               {"name": "velocity"}])
+        elif self.harvester_type == 'gpaf':
+            tags_list.extend([{"name": "sea"},
+                              {"name": "currents"},
+                              {"name": "velocity"},
+                              {"name": "SST"},
+                              {"name": "sea surface temperature"},
+                              {"name": "forecast"},
+                              {"name": "temperature"}])
         else:
             tags_list.extend([{"name": "sea ice"},
                               {"name": "ice"},

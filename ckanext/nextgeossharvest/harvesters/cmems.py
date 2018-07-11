@@ -38,8 +38,9 @@ class CMEMSHarvester(CMEMSBase,
                                                         'sic_north',
                                                         'sic_south',
                                                         'ocn',
-                                                        'slv'}:
-                raise ValueError('harvester type is required and must be "sst" or "sic_north" or "sic_south" or "ocn" or "slv"')  # noqa: E501
+                                                        'slv',
+                                                        'gpaf'}:
+                raise ValueError('harvester type is required and must be "sst" or "sic_north" or "sic_south" or "ocn" or "slv" or "gpaf"')  # noqa: E501
             if 'start_date' in config_obj:
                 try:
                     start_date = config_obj['start_date']
