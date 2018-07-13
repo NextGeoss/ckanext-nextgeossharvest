@@ -462,6 +462,39 @@ class CMEMSBase(HarvesterBase):
                                      "&time=" +
                                      start_date_string +
                                      "T12:00:00.000Z")
+
+        elif self.harvester_type == 'ocn':
+            metadata['collection_id'] = 'ARCTIC_ANALYSIS_FORECAST_PHYS_002_001_A'  # noqa E501
+            metadata['title'] = "Arctic Ocean Physics Analysis and Forecast"
+            metadata['notes'] = ("Daily Arctic Ocean physics analysis to provide 10"  # noqa E501
+                                 " days of forecast of the 3D physical ocean,"
+                                 " including temperature, salinity, sea ice"
+                                 " concentration, sea ice thickness, sea ice velocity"  # noqa E501
+                                 " and sea ice type.")
+            metadata['BulletinDate'] = start_date_string
+            metadata['ForecastDate'] = datetime.strftime(forecast_date,
+                                                         '%Y-%m-%d')
+            metadata['spatial'] = spatial_template.format([[-180, 90],
+                                                           [180, 90],
+                                                           [180, 63],
+                                                           [-180, 63],
+                                                           [-180, 90]])
+            metadata['downloadLink'] = ftp_link
+            metadata['thumbnail'] = ("http://thredds.met.no/thredds/wms/"  # noqa
+                                     "topaz/"
+                                     "dataset-topaz4-arc-1hr-myoceanv2-be"  # noqa
+                                     "?request=GetMap"
+                                     "&version=1.3.0"
+                                     "&layers=temperature"
+                                     "&CRS=CRS:84"
+                                     "&bbox=-180,0,180,90"
+                                     "&WIDTH=800"
+                                     "&HEIGHT=800"
+                                     "&styles=boxfill/rainbow"
+                                     "&format=image/png"
+                                     "&time=" +
+                                     start_date_string)
+
         elif self.harvester_type == 'slv':
             metadata['collection_id'] = ('SEALEVEL_GLO_PHY_L4_NRT_OBSERVATIONS_008_046')  # noqa E501
             metadata['title'] = ("Global Ocean Gridded L4 Sea Surface"
