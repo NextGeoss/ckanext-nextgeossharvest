@@ -224,7 +224,7 @@ class CMEMSBase(HarvesterBase):
     def _create_months_years_list(self):
         dates_list = list()
 
-        current_date = self.start_date
+        current_date = self.start_date - timedelta(days=31)
         while current_date < self.end_date:
             dates_list.append((current_date.strftime('%Y'),
                                current_date.strftime('%m')))
