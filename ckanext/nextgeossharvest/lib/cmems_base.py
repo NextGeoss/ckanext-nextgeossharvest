@@ -185,7 +185,10 @@ class CMEMSBase(HarvesterBase):
         year_month_list = self._create_months_years_list()
         ids = []
         for year, month in year_month_list:
-            new_ids = self._get_products_slv(year, month)
+            if self.harvester_type == 'slv':
+                new_ids = self._get_products_slv(year, month)
+            if self.harvester_type == 'gpaf':
+                new_ids = self._get_products_gpaf(year, month)
             ids.extend(new_ids)
 
         return ids
@@ -209,15 +212,35 @@ class CMEMSBase(HarvesterBase):
             pass
         return harvest_object_ids
 
+    def _get_products_gpaf(self, year, month):
+        harvest_object_ids = list()
+        try:
+            ftp = self._connect_ftp(year, month)
+            for filename in ftp.nlst():
+                identifier = path.splitext(filename)[0]
+
+                if not self._was_harvested(identifier):
+                    ftp_link = self._make_ftp_link_gpaf(year, month, identifier)
+
+                    harvest_object_id = self._create_object(identifier,
+                                                            ftp_link,
+                                                            0,
+                                                            None)
+                    harvest_object_ids.append(harvest_object_id)
+        except Ftp5xxErrors:
+            pass
+        return harvest_object_ids
+
     def _make_ftp_link_slv(self, year, month, identifier):
-        link = ('/Core/'
+        link = ('ftp://nrt.cmems-du.eu/Core/'
                 'SEALEVEL_GLO_PHY_L4_NRT_OBSERVATIONS_008_046/'
                 'dataset-duacs-nrt-global-merged-allsat-phy-l4/'
                 '{}/{}/{}.nc').format(year, month, identifier)
         return link
 
     def _make_ftp_link_gpaf(self, year, month, identifier):
-        link = ('/Core/'
+        # if self.harvester_type == 'gpaf':
+        link = ('ftp://nrt.cmems-du.eu/Core/'
                 'GLOBAL_ANALYSIS_FORECAST_PHY_001_024/'
                 'global-analysis-forecast-phy-001-024-hourly-t-u-v-ssh/'
                 '{}/{}/{}.nc').format(year, month, identifier)
@@ -235,9 +258,20 @@ class CMEMSBase(HarvesterBase):
 
     def _date_from_identifier_slv(self, identifier):
         identifier_parts = identifier.split('_')
-        date_str = identifier_parts[5]
+        if self.harvester_type == 'slv':
+            date_str = identifier_parts[5]
+        else:
+            date_str = identifier_parts[3]
         date = datetime.strptime(date_str, '%Y%m%d')
         return date.strftime('%Y-%m-%d')
+
+    def _date_from_identifier_gpaf(self, identifier):
+        identifier_parts = identifier.split('_')
+        date_str_start = identifier_parts[3]
+        date_str_end = identifier_parts[4]
+        date_start = datetime.strptime(date_str_start, '%Y%m%d')
+        date_end = datetime.strptime(date_str_end[1:], '%Y%m%d')
+        return date_start.strftime('%Y-%m-%d'), date_end.strftime('%Y-%m-%d')
 
     def _connect_ftp(self, year, month):
         ftp = FTP('nrt.cmems-du.eu')
@@ -246,10 +280,17 @@ class CMEMSBase(HarvesterBase):
         password = self.source_config['password']
 
         ftp.login(username, password)
-        directory = ('/Core/'
-                     'SEALEVEL_GLO_PHY_L4_NRT_OBSERVATIONS_008_046/'
-                     'dataset-duacs-nrt-global-merged-allsat-phy-l4/'
-                     '{}/{}').format(year, month)
+
+        if self.harvester_type == 'slv':
+            directory = ('/Core/'
+                         'SEALEVEL_GLO_PHY_L4_NRT_OBSERVATIONS_008_046/'
+                         'dataset-duacs-nrt-global-merged-allsat-phy-l4/'
+                         '{}/{}').format(year, month)
+        else:
+            directory = ('/Core/'
+                         'GLOBAL_ANALYSIS_FORECAST_PHY_001_024/'
+                         'global-analysis-forecast-phy-001-024-hourly-t-u-v-ssh/'
+                         '{}/{}').format(year, month)
         ftp.cwd(directory)
         return ftp
 
@@ -484,38 +525,44 @@ class CMEMSBase(HarvesterBase):
             metadata['StartTime'] = '{}T00:00:00.000Z'.format(slv_date)  # noqa E501
             metadata['StopTime'] = metadata['StartTime']
 
-        elif self.harvester_type == 'ocn':
-            metadata['collection_id'] = 'ARCTIC_ANALYSIS_FORECAST_PHYS_002_001_A'  # noqa E501
-            metadata['title'] = "Arctic Ocean Physics Analysis and Forecast"
-            metadata['notes'] = ("Daily Arctic Ocean physics analysis to provide 10"  # noqa E501
-                                 " days of forecast of the 3D physical ocean,"
-                                 " including temperature, salinity, sea ice"
-                                 " concentration, sea ice thickness, sea ice velocity"  # noqa E501
-                                 " and sea ice type.")
-            metadata['BulletinDate'] = start_date_string
-            metadata['ForecastDate'] = datetime.strftime(forecast_date,
-                                                         '%Y-%m-%d')
+        elif self.harvester_type == 'gpaf':
+            metadata['collection_id'] = 'GLOBAL_ANALYSIS_FORECAST_PHY_001_024'  # noqa E501
+            metadata['title'] = "Global Ocean Physics Analysis and Forecast (Hourly)"
+            metadata['notes'] = (" Daily global ocean analysis and forecast system at 1/12 degree providing 10"  # noqa E501
+                                 " days of 3D global ocean forecasts."
+                                 " These datasets include hourly mean surface fields for sea level height,"
+                                 " temperature and currents (eastward sea water velocity, northward sea water velocity).")  # noqa E501
+
             metadata['spatial'] = spatial_template.format([[-180, 90],
                                                            [180, 90],
-                                                           [180, 63],
-                                                           [-180, 63],
+                                                           [180, -90],
+                                                           [-180, -90],
                                                            [-180, 90]])
             metadata['downloadLink'] = ftp_link
-            metadata['thumbnail'] = ("http://thredds.met.no/thredds/wms/"  # noqa
-                                     "topaz/"
-                                     "dataset-topaz4-arc-1hr-myoceanv2-be"  # noqa
+            gpaf_date_start, gpaf_date_end = self._date_from_identifier_gpaf(content['identifier'])
+            metadata['thumbnail'] = ("http://nrt.cmems-du.eu/thredds/wms/"
+                                     "global-analysis-forecast-phy-001-024-hourly-t-u-v-ssh"
                                      "?request=GetMap"
+                                     "&service=WMS"
                                      "&version=1.3.0"
-                                     "&layers=temperature"
-                                     "&CRS=CRS:84"
-                                     "&bbox=-180,0,180,90"
+                                     "&layers=thetao"
+                                     "&crs=CRS:84"
+                                     "&bbox=-180,-90,180,90"
                                      "&WIDTH=800"
                                      "&HEIGHT=800"
                                      "&styles=boxfill/rainbow"
-                                     "&format=image/png"
-                                     "&time=" +
-                                     start_date_string)
+                                     "&format=image/gif"
+                                     "&&time=" +
+                                     str(gpaf_date_start) +
+                                     "T00:30:00.000Z" +
+                                     "/" +
+                                     str(gpaf_date_start) +
+                                     "T23:30:00.000Z")
+            metadata['StartTime'] = '{}T00:30:00.000Z'.format(gpaf_date_start)  # noqa E501
+            metadata['StopTime'] = '{}T23:30:00.000Z'.format(gpaf_date_start)  # noqa E501
 
+            metadata['BulletinDate'] = str(gpaf_date_end)
+            metadata['FieldDate'] = str(gpaf_date_start)
         # Is there any way to determine the size of the downloads?
         # Would be good to have (or possibly required) in some cases, like
         # OpenSearch
@@ -523,7 +570,7 @@ class CMEMSBase(HarvesterBase):
         # Add common metadata
         metadata['identifier'] = content['identifier']
         metadata['name'] = metadata['identifier'].lower()
-        if self.harvester_type != 'slv':
+        if self.harvester_type != 'slv' and self.harvester_type != 'gpaf':
             metadata['StartTime'] = '{}T00:00:00.000Z'.format(start_date_string)  # noqa E501
             metadata['StopTime'] = self._make_stop_time(start_date)
         metadata['size'] = content['size']
@@ -574,7 +621,7 @@ class CMEMSBase(HarvesterBase):
         """Return a list of resource dictionaries."""
         resources = []
 
-        if self.harvester_type in {'sst', 'ocn', 'slv'}:
+        if self.harvester_type in {'sst', 'ocn', 'slv', 'gpaf'}:
             resources.append(self._make_resource(metadata['downloadLink'],
                                                  'Product Download',
                                                  metadata['size']))

@@ -105,7 +105,7 @@ class CMEMSHarvester(CMEMSBase,
             end_date = datetime.strptime(end_date, '%Y-%m-%d')
         self.end_date = end_date
 
-        if self.harvester_type == 'slv':
+        if self.harvester_type == 'slv' or 'gpaf':
             try:
                 log_message = '{:<12} | {} | {} | {}s'
                 request_start_time = datetime.utcnow()
