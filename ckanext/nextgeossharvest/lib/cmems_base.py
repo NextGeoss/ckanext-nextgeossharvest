@@ -542,7 +542,7 @@ class CMEMSBase(HarvesterBase):
         # Add common metadata
         metadata['identifier'] = content['identifier']
         metadata['name'] = metadata['identifier'].lower()
-        if self.harvester_type != 'slv' and self.harvester_type != 'gpaf':
+        if self.harvester_type not in ('slv', 'gpaf'):
             metadata['StartTime'] = '{}T00:00:00.000Z'.format(start_date_string)  # noqa E501
             metadata['StopTime'] = self._make_stop_time(start_date)
         metadata['size'] = content['size']
