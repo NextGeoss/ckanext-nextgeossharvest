@@ -105,11 +105,11 @@ class CMEMSHarvester(CMEMSBase,
             end_date = datetime.strptime(end_date, '%Y-%m-%d')
         self.end_date = end_date
 
-        if self.harvester_type == 'slv' or 'gpaf':
+        if self.harvester_type in ('slv', 'gpaf'):
             try:
                 log_message = '{:<12} | {} | {} | {}s'
                 request_start_time = datetime.utcnow()
-                ids = self._get_metadata_create_objects_slv()
+                ids = self._get_metadata_create_objects_ftp_dir()
                 status_code = '200'
             except FtpException as e:
                 error_message = str(e).split(None)

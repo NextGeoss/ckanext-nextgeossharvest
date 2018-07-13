@@ -181,19 +181,15 @@ class CMEMSBase(HarvesterBase):
 
         return ids
 
-    def _get_metadata_create_objects_slv(self):
+    def _get_metadata_create_objects_ftp_dir(self):
         year_month_list = self._create_months_years_list()
         ids = []
         for year, month in year_month_list:
-            if self.harvester_type == 'slv':
-                new_ids = self._get_products_slv(year, month)
-            if self.harvester_type == 'gpaf':
-                new_ids = self._get_products_gpaf(year, month)
+            new_ids = self._get_products_ftp_dir(year, month)
             ids.extend(new_ids)
-
         return ids
 
-    def _get_products_slv(self, year, month):
+    def _get_products_ftp_dir(self, year, month):
         harvest_object_ids = list()
         try:
             ftp = self._connect_ftp(year, month)
@@ -201,7 +197,7 @@ class CMEMSBase(HarvesterBase):
                 identifier = path.splitext(filename)[0]
 
                 if not self._was_harvested(identifier):
-                    ftp_link = self._make_ftp_link_slv(year, month, identifier)
+                    ftp_link = self._make_ftp_link_ftp_dir(year, month, identifier)  # noqa: E501
 
                     harvest_object_id = self._create_object(identifier,
                                                             ftp_link,
@@ -212,38 +208,17 @@ class CMEMSBase(HarvesterBase):
             pass
         return harvest_object_ids
 
-    def _get_products_gpaf(self, year, month):
-        harvest_object_ids = list()
-        try:
-            ftp = self._connect_ftp(year, month)
-            for filename in ftp.nlst():
-                identifier = path.splitext(filename)[0]
-
-                if not self._was_harvested(identifier):
-                    ftp_link = self._make_ftp_link_gpaf(year, month, identifier)
-
-                    harvest_object_id = self._create_object(identifier,
-                                                            ftp_link,
-                                                            0,
-                                                            None)
-                    harvest_object_ids.append(harvest_object_id)
-        except Ftp5xxErrors:
-            pass
-        return harvest_object_ids
-
-    def _make_ftp_link_slv(self, year, month, identifier):
-        link = ('ftp://nrt.cmems-du.eu/Core/'
-                'SEALEVEL_GLO_PHY_L4_NRT_OBSERVATIONS_008_046/'
-                'dataset-duacs-nrt-global-merged-allsat-phy-l4/'
-                '{}/{}/{}.nc').format(year, month, identifier)
-        return link
-
-    def _make_ftp_link_gpaf(self, year, month, identifier):
-        # if self.harvester_type == 'gpaf':
-        link = ('ftp://nrt.cmems-du.eu/Core/'
-                'GLOBAL_ANALYSIS_FORECAST_PHY_001_024/'
-                'global-analysis-forecast-phy-001-024-hourly-t-u-v-ssh/'
-                '{}/{}/{}.nc').format(year, month, identifier)
+    def _make_ftp_link_ftp_dir(self, year, month, identifier):
+        if self.harvester_type == 'slv':
+            link = ('ftp://nrt.cmems-du.eu/Core/'
+                    'SEALEVEL_GLO_PHY_L4_NRT_OBSERVATIONS_008_046/'
+                    'dataset-duacs-nrt-global-merged-allsat-phy-l4/'
+                    '{}/{}/{}.nc').format(year, month, identifier)
+        if self.harvester_type == 'gpaf':
+            link = ('ftp://nrt.cmems-du.eu/Core/'
+                    'GLOBAL_ANALYSIS_FORECAST_PHY_001_024/'
+                    'global-analysis-forecast-phy-001-024-hourly-t-u-v-ssh/'
+                    '{}/{}/{}.nc').format(year, month, identifier)
         return link
 
     def _create_months_years_list(self):
@@ -258,10 +233,7 @@ class CMEMSBase(HarvesterBase):
 
     def _date_from_identifier_slv(self, identifier):
         identifier_parts = identifier.split('_')
-        if self.harvester_type == 'slv':
-            date_str = identifier_parts[5]
-        else:
-            date_str = identifier_parts[3]
+        date_str = identifier_parts[5]
         date = datetime.strptime(date_str, '%Y%m%d')
         return date.strftime('%Y-%m-%d')
 
@@ -286,10 +258,10 @@ class CMEMSBase(HarvesterBase):
                          'SEALEVEL_GLO_PHY_L4_NRT_OBSERVATIONS_008_046/'
                          'dataset-duacs-nrt-global-merged-allsat-phy-l4/'
                          '{}/{}').format(year, month)
-        else:
+        elif self.harvester_type == 'gpaf':
             directory = ('/Core/'
                          'GLOBAL_ANALYSIS_FORECAST_PHY_001_024/'
-                         'global-analysis-forecast-phy-001-024-hourly-t-u-v-ssh/'
+                         'global-analysis-forecast-phy-001-024-hourly-t-u-v-ssh/'  # noqa: E501
                          '{}/{}').format(year, month)
         ftp.cwd(directory)
         return ftp
@@ -527,10 +499,10 @@ class CMEMSBase(HarvesterBase):
 
         elif self.harvester_type == 'gpaf':
             metadata['collection_id'] = 'GLOBAL_ANALYSIS_FORECAST_PHY_001_024'  # noqa E501
-            metadata['title'] = "Global Ocean Physics Analysis and Forecast (Hourly)"
+            metadata['title'] = "Global Ocean Physics Analysis and Forecast (Hourly)"   # noqa E501
             metadata['notes'] = (" Daily global ocean analysis and forecast system at 1/12 degree providing 10"  # noqa E501
                                  " days of 3D global ocean forecasts."
-                                 " These datasets include hourly mean surface fields for sea level height,"
+                                 " These datasets include hourly mean surface fields for sea level height,"   # noqa E501
                                  " temperature and currents (eastward sea water velocity, northward sea water velocity).")  # noqa E501
 
             metadata['spatial'] = spatial_template.format([[-180, 90],
@@ -539,9 +511,9 @@ class CMEMSBase(HarvesterBase):
                                                            [-180, -90],
                                                            [-180, 90]])
             metadata['downloadLink'] = ftp_link
-            gpaf_date_start, gpaf_date_end = self._date_from_identifier_gpaf(content['identifier'])
+            gpaf_date_start, gpaf_date_end = self._date_from_identifier_gpaf(content['identifier'])   # noqa E501
             metadata['thumbnail'] = ("http://nrt.cmems-du.eu/thredds/wms/"
-                                     "global-analysis-forecast-phy-001-024-hourly-t-u-v-ssh"
+                                     "global-analysis-forecast-phy-001-024-hourly-t-u-v-ssh"   # noqa E501
                                      "?request=GetMap"
                                      "&service=WMS"
                                      "&version=1.3.0"
