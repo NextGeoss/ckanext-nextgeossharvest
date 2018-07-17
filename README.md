@@ -18,19 +18,22 @@ This extension contains harvester plugins for harvesting from sources used by Ne
 4. [Harvesting CMEMS products](#harvesting-cmems)
     1. [CMEMS Settings](#cmems-settings)
     2. [Running a CMEMS harvester](#running-cmems)
-5. [Developing new harvesters](#develop)
+5. [Harvesting GOME-2 products](#harvesting-gome2)
+    1. [GOME-2 Settings](#gome2-settings)
+    2. [Running a GOME-2 harvester](#running-gome2)
+6. [Developing new harvesters](#develop)
     1. [The basic harvester workflow](#basicworkflow)
         1. [gather_stage](#gather_stage)
         2. [fetch_stage](#fetch_stage)
         3. [import_stage](#import_stage)
     2. [Example of an OpenSearch-based harvester](#opensearchexample)
-6. [iTag](#itag)
+7. [iTag](#itag)
     1. [How ITagEnricher works](#itagprocess)
     2. [Setting up ITagEnricher](#setupitag)
     3. [Handling iTag errors](#handlingitagerrors)
-7. [Testing testing testing](#tests)
-8. [Suggested cron jobs](#cron)
-9. [Logs](#logs)
+8. [Testing testing testing](#tests)
+9. [Suggested cron jobs](#cron)
+10. [Logs](#logs)
 
 ## <a name="repo"></a>What's in the repository
 The repository contains three plugins:
@@ -41,7 +44,13 @@ The repository contains three plugins:
     2. Global Observed Sea Surface Temperature (SST)
     3. Antarctic Ocean Observed Sea Ice Concentration (SIC South)
     4. Arctic Ocean Observed Sea Ice Concentration (SIC North)
-3. `itag` a harvester plugin for adding additional tags and metadata to datasets that have already been harvested (more on this later)
+4. `gome2`, a harvester plugin for harvesting the following types of GOME-2 coverage products:
+    1. GOME2_O3
+    2. GOME2_NO2
+    3. GOME2_TropNO2
+    4. GOME2_SO2
+    5. GOME2_SO2mass
+5. `itag` a harvester plugin for adding additional tags and metadata to datasets that have already been harvested (more on this later)
 
 ## <a name="usage"></a>Basic usage
 1. Run `python setup.py develop` in the `ckanext-nextgeossharvest` directory.
@@ -175,13 +184,59 @@ Example config:
 ### <a name="running-cmems"></a>Running a CMEMS harvester
 You can run the harvester on a Daily update frequencey with `YESTERDAY` and `TODAY` as the start and end dates. Since requests may time out, you can also run the harvester more than once a day using the Manual update frequency and a cron job. There's no way to recover from outages at the moment; the CMEMS harvester could be more robust.
 
+## <a name="harvesting-gome2"></a>Harvesting GOME-2 products
+The GOME-2 harvester harvests products from the following GOME-2 coverages:
+1. GOME2_O3
+2. GOME2_NO2
+3. GOME2_TropNO2
+4. GOME2_SO2
+5. GOME2_SO2mass
+
+Unlike other harvesters, the GOME-2 harvester only makes requests to verify that a product exists. It programmatically creates datasets and resources for products that do exist within the specified date range.
+
+### <a name="gome2-settings"></a>GOME-2 Settings
+The GOME-2 harvester has two required and one optional setting.
+1. `start_date` (required) determines the date on which the harvesting begins. It must be in the format `YYY-MM-DD` or the string `"YESTERDAY"`. If you want to harvest from the earliest product onwards, use `2007-01-04`. If you will be harvesting on a daily basis, use `"YESTERDAY"`
+2. `end_date` (required) determines the date on which the harvesting ends. It must be in the format `YYY-MM-DD` or the string `"TODAY"`. It is exclusive, i.e., if the end date is `2017-03-2`, then products will be harvested up to _and including_ 2017-03-01 and no products from 2017-03-02 will be included. For daily harvesting use `"TODAY"`.
+3. `make_private` (optional) determines whether the datasets created by the harvester will be private or public. The default is `false`, i.e., by default, all datasets created by the harvester will be public.
+
+#### Example of GOME-2 settings
+```
+{
+    "start_date": "2017-03-01",
+    "end_date": "2017-03-02",
+    "make_private": false
+}
+```
+
+or
+
+```
+{
+    "start_date": "YESTERDAY",
+    "end_date": "TODAY",
+    "make_private": false
+}
+```
+### <a name="running-gome2"></a>Running a GOME-2 harvester
+1. Add `gome2` to the list of plugins in your .ini file.
+2. Create a new harvester via the harvester interface.
+3. The URL you enter does not matter--the GOME-2 harvester only makes requests to a predetermined set of URLs. Select `GOME2` from the list of harvesters.
+4. Add a config as described above.
+5. Select a frequency from the frequencey options. If you want to use a cron job (recommended) to run the harvester, select `Manual`.
+
+#### Known issues
+The GOME-2 harvester, like the CMEMS harvester, does not have a way to automatically recover from outages. If the data hub server or the source server suffers an outage while the harvester is scheduled to run, it will skip whatever products might have been harvested at that time. The assumption is that running the harvester three times a day will be sufficient to prevent any outages from affecting the harvesting, but a better solution would be improving the design of the harvester.
+
 ## <a name="develop"></a>Developing new harvesters
 ### <a name="basicworkflow"></a>The basic harvester workflow
 The basic harvester workflow is divided into three stages. Each stage has a related method, and each method must be included in the harvester plugin.
+
 The three methods are:
 1. `gather_stage()`
 2. `fetch_stage()`
 3. `import_stage()`
+
 While the `fetch_stage()` method _must_ be included, it may be the case that the harvester does not require a fetch stage (for instance, if the source is an OpenSearch service, then the search results in the gather stage may already include the necessary content, so there's no need to fetch it again. In those cases, the `fetch_stage()` method will still be implemented, but it will just return `True`. The `gather_stage()` and `import_stage()` methods, however, will always include some amount of code, as they will always be used.
 #### <a name="gather_stage"></a>gather_stage
 To simplify things, the gather stage is used to create a list of datasets that will be created or updated in the final import stage. That's really all it's for. It is not meant for parsing content into dictionaries for creating or updating datasets (that occurs in the import stage). It also isn't meant for acquiring or storing raw content that will be parsed later (that occurs in the fetch stage)—with certain exceptions, like OpenSearch services, where the content is already provided in the initial search results.
