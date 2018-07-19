@@ -215,19 +215,16 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         self._set_source_config(self.job.source.config)
         log.debug('ProbaV Harvester gather_stage for job: %r', harvest_job)
 
-        self.provider = ''
+        self.provider = 'vito'
         if not hasattr(self, 'provider_logger'):
             self.provider_logger = self.make_provider_logger()
 
         config = json.loads(harvest_job.source.config)
-        auth = (self.source_config['user'], self.source_config['password'])
 
-        start_date_str = config.get('DATE_MIN')
-        end_date_str = config.get('DATE_MAX')
-        if start_date_str is not None:
-            start_date = datetime.strptime(start_date_str, DATE_FORMAT)
-        if end_date_str is not None:
-            end_date = datetime.strptime(end_date_str, DATE_FORMAT)
+        auth = (self.source_config['username'],
+                self.source_config['password'])
+
+        start_date, end_date = self._get_dates_from_config(config)
 
         ids = []
 
