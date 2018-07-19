@@ -190,9 +190,6 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
                                    start_date.strftime(date_format),
                                    end_date.strftime(date_format))
 
-    def _get_restart_date(self):
-        return date(2018, 1, 1)
-
     def fetch_stage(self, harvest_object):
         """Fetch was completed during gather."""
 
