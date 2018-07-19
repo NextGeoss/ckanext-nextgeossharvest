@@ -156,9 +156,7 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
             self.provider_logger = self.make_provider_logger()
 
         config = json.loads(harvest_job.source.config)
-        auth = (config.get('ckanext.nextgeossharvest.nextgeoss_username'),
-                config.get('ckanext.nextgeossharvest.nextgeoss_password'))
-        auth = ('nextgeoss', 'nextgeoss')
+        auth = (self.source_config['user'], self.source_config['password'])
 
         start_date_str = config.get('DATE_MIN')
         end_date_str = config.get('DATE_MAX')
