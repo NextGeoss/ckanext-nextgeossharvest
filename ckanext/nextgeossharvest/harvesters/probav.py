@@ -133,7 +133,71 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         }
 
     def validate_config(self, config):
+        if not config:
+            return config
+        try:
+            config_obj = json.loads(config)
+
+            if 'start_date' in config_obj:
+                try:
+                    start_date = config_obj['start_date']
+                    if start_date != 'YESTERDAY':
+                        start_date = datetime.strptime(start_date, '%Y-%m-%d')
+                    else:
+                        start_date = self.convert_date_config(start_date)
+                except ValueError:
+                    raise ValueError("start_date must have the format yyyy-mm-dd or be the string 'YESTERDAY'")  # noqa: E501
+            else:
+                raise ValueError('start_date is required')
+            if 'end_date' in config_obj:
+                try:
+                    end_date = config_obj['end_date']
+                    if end_date != 'TODAY':
+                        end_date = datetime.strptime(end_date, '%Y-%m-%d')
+                    else:
+                        end_date = self.convert_date_config(end_date)
+                except ValueError:
+                    raise ValueError("end_date must have the format yyyy-mm-dd or be the string 'TODAY'")  # noqa E501
+            else:
+                raise ValueError('end_date is required')
+            if not end_date > start_date:
+                raise ValueError('end_date must be after start_date')
+            if 'timeout' in config_obj:
+                timeout = config_obj['timeout']
+                if not isinstance(timeout, int) and not timeout > 0:
+                    raise ValueError('timeout must be a positive integer')
+            if type(config_obj.get('password', None)) != unicode:
+                raise ValueError('password is required and must be a string')
+            if type(config_obj.get('username', None)) != unicode:
+                raise ValueError('username is requred and must be a string')
+        except ValueError as e:
+            raise e
+
         return config
+
+    def convert_date_config(self, term):
+        """Convert a term into a datetime object."""
+        if term == 'YESTERDAY':
+            date_time = datetime.now() - timedelta(days=1)
+        elif term in {'TODAY', 'NOW'}:
+            date_time = datetime.now()
+
+        return date_time.replace(hour=0, minute=0, second=0, microsecond=0)
+
+    def _get_dates_from_config(self, config):
+        start_date_str = config['start_date']
+        end_date_str = config['end_date']
+
+        if start_date_str != 'YESTERDAY':
+            start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
+        else:
+            start_date = self.convert_date_config(start_date_str)
+        if end_date_str != 'TODAY':
+            end_date = datetime.strptime(end_date_str, '%Y-%m-%d')
+        else:
+            end_date = self.convert_date_config(end_date_str)
+
+        return start_date, end_date
 
     def _init(self):
         self.os_id_name = 'atom:id'  # Example
