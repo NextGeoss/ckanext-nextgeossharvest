@@ -4,7 +4,7 @@ from enum import Enum
 import logging
 import json
 import uuid
-from datetime import datetime, date, timedelta
+from datetime import datetime, timedelta
 import time
 from bs4 import BeautifulSoup
 from os import path
