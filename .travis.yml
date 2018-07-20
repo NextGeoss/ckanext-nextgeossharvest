@@ -15,7 +15,8 @@ install:
     - pip install --no-cache-dir -r https://raw.githubusercontent.com/ViderumGlobal/ckanext-spatial/v0.0.1/pip-requirements.txt
     - bash bin/travis-build.bash
     - pip install flake8
+    - pip install nose
 script:
     - sh bin/travis-run.sh
-    - flake8 ./ckanext/nextgeossharvest --exclude ./ckanext/nextgeossharvest/harvesters/opensearch_example.py --ignore E127,E128
+    - flake8 ./ckanext/nextgeossharvest --exclude ./ckanext/nextgeossharvest/harvesters/opensearch_example.py ./ckanext/nextgeossharvest/tests --ignore E127,E128
 
