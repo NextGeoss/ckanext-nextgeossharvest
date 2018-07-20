@@ -499,9 +499,6 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
             }),
         }
 
-    def _package_name_from_guid(self, guid):
-        return ''
-
     def _parse_restart_date(self, open_search_entry):
         return open_search_entry.find('updated').string
 
@@ -577,20 +574,6 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
     def _parse_open_search_entries(self, soup):
         """Extract the entries from an OpenSearch response."""
         return soup.find_all('entry')
-
-    def _gather_metalink_files(self, opensearch_entry, auth=None):
-        content = opensearch_entry['content']
-        content_soup = BeautifulSoup(content, 'lxml-xml')
-        metalink_url = self._parse_metalink_url(content_soup)
-        response = self._get_url(metalink_url, auth)
-        metalinks = BeautifulSoup(response.text, 'lxml-xml')
-        ids = list()
-        for _file in self._get_metalink_file_elements(metalinks):
-            metalink_content = self._create_contents_json(content, str(_file))  # noqa: E501
-            opensearch_entry['content'] = metalink_content
-            id_list = self._gather_entry(opensearch_entry)
-            ids.extend(id_list)
-        return ids
 
     HDF5_FILENAME_REGEX = re.compile(r'.*\.HDF5$')
 
