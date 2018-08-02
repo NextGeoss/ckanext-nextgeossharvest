@@ -87,16 +87,20 @@ class GOME2Harvester(GOME2Base,
 
         end_date = self.source_config.get('end_date', 'NOW')
         self.end_date = datetime.strptime(end_date, '%Y-%m-%d')
-        
+
         if self.get_last_harvesting_date() == '*':
            self.start_date = self.start_date
 
         else:
             self.start_date = self.get_last_harvesting_date()
 
+        if self.end_date > datetime.now():
+            self.end_date = datetime.now()
+
         if self.end_date > self.start_date + timedelta(days=10):
             self.end_date = self.start_date + timedelta(days=10)     
         
+         
 
         date = self.start_date
         date_strings = []
