@@ -7,10 +7,13 @@ from datetime import datetime, timedelta
 
 from ckan.plugins.core import implements
 
+from ckanext.harvest.model import HarvestObject
 from ckanext.harvest.interfaces import IHarvester
-
 from ckanext.nextgeossharvest.lib.gome2_base import GOME2Base
 from ckanext.nextgeossharvest.lib.nextgeoss_base import NextGEOSSHarvester
+
+from ckan.model import Session
+from sqlalchemy import desc
 
 
 class GOME2Harvester(GOME2Base,
@@ -85,6 +88,13 @@ class GOME2Harvester(GOME2Base,
         end_date = self.source_config.get('end_date', 'NOW')
         self.end_date = datetime.strptime(end_date, '%Y-%m-%d')
 
+        if self.get_last_harvesting_date() == '*':
+           self.start_date = self.start_date
+
+        else:
+            self.start_date = self.get_last_harvesting_date()
+            
+
         date = self.start_date
         date_strings = []
         while date < self.end_date:
@@ -98,3 +108,19 @@ class GOME2Harvester(GOME2Base,
 
     def fetch_stage(self, harvest_object):
         return True
+
+    def get_last_harvesting_date(self):
+        last_object = Session.query(HarvestObject). \
+                filter(HarvestObject.harvest_source_id == self.job.source_id,
+                    HarvestObject.import_finished != None). \
+                order_by(desc(HarvestObject.import_finished)).limit(1)  # noqa: E711, E501
+        if last_object:
+            try:
+                last_object = last_object[0]
+                restart_date = self._get_object_extra(last_object,
+                                                      'restart_date', '*')
+            except IndexError:
+                restart_date = '*'
+        else:
+            restart_date = '*'
+        return restart_date
