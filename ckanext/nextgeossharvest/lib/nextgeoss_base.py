@@ -82,7 +82,6 @@ class NextGEOSSHarvester(HarvesterBase):
 
         return logic.get_action('package_show')(context, {'id': package.name})
 
-
     def _refresh_harvest_objects(self, harvest_object, package_id):
         """
         Perform harvester housekeeping:
@@ -114,7 +113,6 @@ class NextGEOSSHarvester(HarvesterBase):
 
         harvest_object.save()
 
-
     def _create_package_dict(self, parsed_content):
         """
         Create a package dictionary using the parsed content.
@@ -132,7 +130,6 @@ class NextGEOSSHarvester(HarvesterBase):
         package_dict['private'] = self.source_config.get('make_private', False)
 
         return package_dict
-
 
     def _create_or_update_dataset(self, harvest_object, status):
         """
@@ -249,10 +246,10 @@ class NextGEOSSHarvester(HarvesterBase):
         """Return a list of CKAN extras."""
         skip = {'id', 'title', 'tags', 'status', 'notes', 'name', 'resource'}
         extras_tmp = [{'key': key, 'value': value}
-                    for key, value in parsed_content.items()
-                    if key not in skip]
+                      for key, value in parsed_content.items()
+                      if key not in skip]
         extras = [{'key': 'dataset_extra', 'value': str(extras_tmp)}]
-        
+
         return extras
 
     def _update_tags(self, old_tags, new_tags):
