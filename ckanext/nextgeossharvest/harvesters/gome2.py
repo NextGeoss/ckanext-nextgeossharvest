@@ -80,10 +80,16 @@ class GOME2Harvester(GOME2Base,
         self._set_source_config(harvest_job.source.config)
 
         start_date = self.source_config.get('start_date')
-        self.start_date = datetime.strptime(start_date, '%Y-%m-%d')
+        if start_date == "YESTERDAY":
+            self.start_date = self.convert_date_config(start_date)
+        else:
+            self.start_date = datetime.strptime(start_date, '%Y-%m-%d')
 
         end_date = self.source_config.get('end_date', 'NOW')
-        self.end_date = datetime.strptime(end_date, '%Y-%m-%d')
+        if end_date in {"TODAY", "NOW"}:
+            self.end_date = self.convert_date_config(end_date)
+        else:
+            self.end_date = datetime.strptime(end_date, '%Y-%m-%d')
 
         date = self.start_date
         date_strings = []

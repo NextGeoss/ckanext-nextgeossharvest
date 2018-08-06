@@ -287,6 +287,4 @@ class GOME2Base(HarvesterBase):
         elif term in {'TODAY', 'NOW'}:
             date_time = datetime.now()
 
-        print date_time
-
         return date_time.replace(hour=0, minute=0, second=0, microsecond=0)
