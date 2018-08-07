@@ -139,4 +139,7 @@ class GOME2Harvester(GOME2Base,
                 restart_date = '*'
         else:
             restart_date = '*'
-        return restart_date
+        if restart_date == '*':
+            return '*'
+        else:
+            return datetime.strptime(restart_date, '%Y-%m-%d')
