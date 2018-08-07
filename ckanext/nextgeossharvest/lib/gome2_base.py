@@ -23,7 +23,9 @@ class GOME2Base(HarvesterBase):
     def _create_harvest_object(self, content_dict):
 
         extras = [HOExtra(key='status',
-                          value='new')]
+                          value='new'),
+                HOExtra(key='restart_date',
+                        value=content_dict['date_string'])]
 
         # The NextGEOSS harvester flow requires content in the import stage.
         content = json.dumps(content_dict)
