@@ -62,9 +62,8 @@ echo "Installing ckanext-nextgeossharvest and its requirements..."
 pip install -r requirements.txt
 pip install -r dev-requirements.txt
 # We need the harvester as well
-pip install -e git+https://github.com/NextGeoss/ckanext-harvest.git@v0.0.50#egg=ckanext-harvest
-pip install -r https://raw.githubusercontent.com/ViderumGlobal/ckanext-harvest/sentinel/pip-requirements.txt
-
+pip install -e git+https://github.com/NextGeoss/ckanext-harvest.git@many-jobs#egg=ckanext-harvest
+pip install -r https://raw.githubusercontent.com/ckan/ckanext-harvest/master/pip-requirements.txt
 
 python setup.py develop
 
