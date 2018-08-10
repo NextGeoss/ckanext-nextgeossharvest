@@ -92,9 +92,8 @@ class GOME2Harvester(GOME2Base,
         else:
             self.end_date = datetime.now()
 
-
         if self.get_last_harvesting_date() is None:
-           self.start_date = self.start_date
+            self.start_date = self.start_date
         else:
             self.start_date = self.get_last_harvesting_date()
 
@@ -102,9 +101,7 @@ class GOME2Harvester(GOME2Base,
             self.end_date = datetime.now()
 
         if self.end_date > self.start_date + timedelta(days=10):
-            self.end_date = self.start_date + timedelta(days=10)     
-        
-         
+            self.end_date = self.start_date + timedelta(days=10)
 
         date = self.start_date
         date_strings = []
@@ -122,12 +119,11 @@ class GOME2Harvester(GOME2Base,
         return True
 
     def get_last_harvesting_date(self):
-        last_object = Session.query(HarvestObject).\
-                        filter(
-                               HarvestObject.harvest_source_id == self.job.source_id,
-                               HarvestObject.import_finished != None).\
-                        order_by(desc(HarvestObject.import_finished)).\
-                        limit(1).first()
+        last_object = Session.query(HarvestObject).filter(
+            HarvestObject.harvest_source_id == self.job.source_id,
+            HarvestObject.import_finished is not None).\
+            order_by(desc(HarvestObject.import_finished)).\
+            limit(1).first()
         if last_object is not None:
             restart_date = self._get_object_extra(last_object,
                                                   'restart_date')

@@ -284,7 +284,6 @@ class GOME2Base(HarvesterBase):
 
         return resource_dict
 
-
     def convert_date_config(self, term):
         """Convert a term into a datetime object."""
         if term == 'YESTERDAY':
