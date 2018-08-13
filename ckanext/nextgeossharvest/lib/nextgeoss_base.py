@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import ast
 import json
 import logging
 import os
@@ -49,10 +50,24 @@ class NextGEOSSHarvester(HarvesterBase):
         """
         Helper method for retrieving the value from a package's extras list.
         """
-        for key, value in package_dict['extras'].items():
-            if key == flagged_extra:
-                return value
+        extras = self.convert_string_extras(package_dict['extras'])
+
+        if "dataset_extra" in extras:
+            extras = ast.literal_eval(extras["dataset_extra"])
+
+        for extra in extras:
+            if extra["key"] == flagged_extra:
+                return extra["value"]
         return default
+
+    def convert_string_extras(self, extras_list):
+        """Convert extras stored as a string back into a normal extras list."""
+        try:
+            extras = ast.literal_eval(extras_list[0]["value"])
+            assert type(extras) == list
+            return extras
+        except (Exception, AssertionError):
+            return extras_list
 
     def _set_source_config(self, config_str):
         '''
@@ -137,7 +152,6 @@ class NextGEOSSHarvester(HarvesterBase):
         """
         parsed_content = self._parse_content(harvest_object.content)
         package_dict = self._create_package_dict(parsed_content)
-        print package_dict
 
         # Add the harvester ID to the extras so that CKAN can find the
         # harvested datasets in searches for stats, etc.
