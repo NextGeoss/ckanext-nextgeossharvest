@@ -219,6 +219,26 @@ class CMEMSBase(HarvesterBase):
                     'GLOBAL_ANALYSIS_FORECAST_PHY_001_024/'
                     'global-analysis-forecast-phy-001-024-hourly-t-u-v-ssh/'
                     '{}/{}/{}.nc').format(year, month, identifier)
+        if self.harvester_type == 'sst':
+            link = ('ftp://cmems.isac.cnr.it/Core/'
+                    'SST_GLO_SST_L4_NRT_OBSERVATIONS_010_001/'
+                    'METOFFICE-GLO-SST-L4-NRT-OBS-SST-V2/'
+                    '{}/{}/{}.nc').format(year, month, identifier)
+        if self.harvester_type == 'sic_north':
+            link = ('ftp://mftp.cmems.met.no/Core/'
+                    'SEAICE_GLO_SEAICE_L4_NRT_OBSERVATIONS_011_001/'
+                    'METNO-GLO-SEAICE_CONC-NORTH-L4-NRT-OBS/'
+                    '{}/{}/{}.nc').format(year, month, identifier)
+        if self.harvester_type == 'sic_south':
+            link = ('ftp://mftp.cmems.met.no/Core/'
+                    'SEAICE_GLO_SEAICE_L4_NRT_OBSERVATIONS_011_001/'
+                    'METNO-GLO-SEAICE_CONC-SOUTH-L4-NRT-OBS/'
+                    '{}/{}/{}.nc').format(year, month, identifier)
+        if self.harvester_type == 'ocn':
+            link = ('ftp://mftp.cmems.met.no/Core/'
+                    'ARCTIC_ANALYSIS_FORECAST_PHYS_002_001_a/'
+                    'dataset-topaz4-arc-myoceanv2-be/'
+                    '{}/{}/{}.nc').format(year, month, identifier)
         return link
 
     def _create_months_years_list(self):
@@ -262,6 +282,26 @@ class CMEMSBase(HarvesterBase):
             directory = ('/Core/'
                          'GLOBAL_ANALYSIS_FORECAST_PHY_001_024/'
                          'global-analysis-forecast-phy-001-024-hourly-t-u-v-ssh/'  # noqa: E501
+                         '{}/{}').format(year, month)
+        elif self.harvester_type == 'sst':
+            directory = ('ftp://cmems.isac.cnr.it/Core/'
+                         'SST_GLO_SST_L4_NRT_OBSERVATIONS_010_001/'
+                         'METOFFICE-GLO-SST-L4-NRT-OBS-SST-V2/'
+                         '{}/{}').format(year, month)
+        elif self.harvester_type == 'sic_north':
+            directory = ('ftp://mftp.cmems.met.no/Core/'
+                         'SEAICE_GLO_SEAICE_L4_NRT_OBSERVATIONS_011_001/'
+                         'METNO-GLO-SEAICE_CONC-NORTH-L4-NRT-OBS/'
+                         '{}/{}').format(year, month)
+        elif self.harvester_type == 'sic_south':
+            directory = ('ftp://mftp.cmems.met.no/Core/'
+                         'SEAICE_GLO_SEAICE_L4_NRT_OBSERVATIONS_011_001/'
+                         'METNO-GLO-SEAICE_CONC-SOUTH-L4-NRT-OBS/'
+                         '{}/{}').format(year, month)
+        elif self.harvester_type == 'ocn':
+            directory = ('ftp://mftp.cmems.met.no/Core/'
+                         'ARCTIC_ANALYSIS_FORECAST_PHYS_002_001_a/'
+                         'dataset-topaz4-arc-myoceanv2-be/'
                          '{}/{}').format(year, month)
         ftp.cwd(directory)
         return ftp
