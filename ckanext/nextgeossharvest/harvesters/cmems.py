@@ -2,15 +2,19 @@
 
 import json
 import logging
-from datetime import datetime
-from ftplib import all_errors as FtpException
+from datetime import datetime, timedelta
 
 from ckan.plugins.core import implements
+from ckan.model import Session
 
 from ckanext.harvest.interfaces import IHarvester
-
+from ckanext.harvest.model import HarvestObject
 from ckanext.nextgeossharvest.lib.cmems_base import CMEMSBase
 from ckanext.nextgeossharvest.lib.nextgeoss_base import NextGEOSSHarvester
+
+from sqlalchemy import desc
+
+from ftplib import all_errors as FtpException
 
 
 class CMEMSHarvester(CMEMSBase,
@@ -91,19 +95,8 @@ class CMEMSHarvester(CMEMSBase,
         self._set_source_config(harvest_job.source.config)
         self.harvester_type = self.source_config['harvester_type']
 
-        start_date = self.source_config.get('start_date')
-        if start_date == 'YESTERDAY':
-            start_date = self.convert_date_config(start_date)
-        else:
-            start_date = datetime.strptime(start_date, '%Y-%m-%d')
-        self.start_date = start_date
-
-        end_date = self.source_config.get('end_date', 'NOW')
-        if end_date in {'TODAY', 'NOW'}:
-            end_date = self.convert_date_config(end_date)
-        else:
-            end_date = datetime.strptime(end_date, '%Y-%m-%d')
-        self.end_date = end_date
+        self.start_date = self.get_start_date()
+        self.end_date = self.get_end_date(self.start_date)
 
         if self.harvester_type in ('slv', 'gpaf'):
             try:
@@ -132,3 +125,44 @@ class CMEMSHarvester(CMEMSBase,
 
     def fetch_stage(self, harvest_object):
         return True
+
+    def get_start_date(self):
+        start_date = self.source_config.get('start_date')
+        last_product_date = self.get_last_harvesting_date()
+        if last_product_date is not None:
+            start_date = last_product_date
+        elif start_date == 'BEGINNING':
+            start_date = self.get_ftp_start_date()
+        else:
+            start_date = datetime.strptime(start_date, '%Y-%m-%d')
+
+        return start_date
+
+    def get_end_date(self, start_date):
+        config_end_date = self.source_config.get('end_date')
+        if config_end_date:
+            config_end_date = datetime.strptime(config_end_date, '%Y-%m-%d')
+        
+        end_date = start_date + timedelta(weeks=12)
+
+        if end_date > datetime.now():
+            end_date = datetime.now()
+        elif config_end_date and end_date > config_end_date:
+            end_date = config_end_date
+        return end_date
+
+    def get_last_harvesting_date(self):
+        last_object = Session.query(HarvestObject).filter(
+            HarvestObject.harvest_source_id == self.job.source_id,
+            HarvestObject.import_finished is not None).\
+            order_by(desc(HarvestObject.import_finished)).\
+            limit(1).first()
+        if last_object is not None:
+            restart_date = self._get_object_extra(last_object,
+                                                  'restart_date')
+            return datetime.strptime(restart_date, '%Y-%m-%d')
+        else:
+            return None
+
+    def get_ftp_start_date(self):
+        return datetime(2017, 1, 7)
