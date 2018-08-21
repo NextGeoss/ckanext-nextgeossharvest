@@ -60,7 +60,7 @@ class GOME2Harvester(GOME2Base,
                 except ValueError:
                     raise ValueError('end_date format must be yyyy-mm-dd')
             else:
-                raise ValueError('end_date is required')
+                end_date = self.convert_date_config('TODAY')
 
             if not (end_date > start_date) or (start_date == 'YESTERDAY' and end_date == 'TODAY'):  # noqa: E501
                 raise ValueError('end_date must be > start_date')
