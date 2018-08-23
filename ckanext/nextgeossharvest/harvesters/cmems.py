@@ -4,25 +4,38 @@ import json
 import logging
 from datetime import datetime, timedelta
 
+
+from ftplib import FTP
+
 from ckan.plugins.core import implements
 from ckan.model import Session
+
 
 from ckanext.harvest.interfaces import IHarvester
 from ckanext.harvest.model import HarvestObject
 from ckanext.nextgeossharvest.lib.cmems_base import CMEMSBase
 from ckanext.nextgeossharvest.lib.nextgeoss_base import NextGEOSSHarvester
 
+from ckanext.harvest.model import HarvestObjectExtra as HOExtra
+
 from sqlalchemy import desc
 
 from ftplib import all_errors as FtpException
 
 
-class CMEMSHarvester(CMEMSBase,
-                     NextGEOSSHarvester):
+def parse_filename(url):
+    return url.split('/')[-1].split('.')[0]
+
+class CMEMSHarvester(NextGEOSSHarvester, CMEMSBase):
     '''
     A Harvester for CMEMS Products.
     '''
     implements(IHarvester)
+
+    def __init__(self, *args, **kwargs):
+        super(type(self), self).__init__(*args, **kwargs)
+        self.overlap = timedelta(days=30)
+        self.interval = timedelta(days=3*30)
 
     def info(self):
         return {
@@ -85,84 +98,127 @@ class CMEMSHarvester(CMEMSBase,
         return config
 
     def gather_stage(self, harvest_job):
-        log = logging.getLogger(__name__ + '.gather')
-        log.debug('CMEMS Harvester gather_stage for job: %r', harvest_job)
-
-        if not hasattr(self, 'provider_logger'):
-            self.provider_logger = self.make_provider_logger()
-
-        self.job = harvest_job
-        self._set_source_config(harvest_job.source.config)
-        self.harvester_type = self.source_config['harvester_type']
-
-        self.start_date = self.get_start_date()
-        self.end_date = self.get_end_date(self.start_date)
-
-        if self.harvester_type in ('slv', 'gpaf'):
-            try:
-                log_message = '{:<12} | {} | {} | {}s'
-                request_start_time = datetime.utcnow()
-                ids = self._get_metadata_create_objects_ftp_dir()
-                status_code = '200'
-            except FtpException as e:
-                error_message = str(e).split(None)
-                status_code = error_message[0]
-                error_text = error_message[1:]
-                self._save_gather_error(
-                    '{} error: {}'.format(status_code, error_text, self.job))
-                ids = []
-            finally:
-                request_end_time = datetime.utcnow()
-                elapsed_time = request_end_time - request_start_time
-                self.provider_logger.info(log_message.format('cmems',
-                                                             str(request_start_time),  # noqa: E501
-                                                             status_code,
-                                                             str(elapsed_time)))  # noqa: E501
+        self.log = logging.getLogger(__file__)
+        self.log.debug('CMEMS Harvester gather_stage for job: %r', harvest_job)
+        config = self._get_config(harvest_job)
+        last_product_date = self._get_last_harvesting_date(harvest_job.source_id)
+        if last_product_date is not None:
+            start_date = last_product_date
         else:
-            ids = self._get_metadata_create_objects()
+            start_date = self._parse_date(config['start_date'])
+        end_date = min(start_date + self.interval,
+                       datetime.now(),
+                       self._parse_date(config.get('end_date')))
+        ids = self._gather(harvest_job, start_date, end_date, harvest_job.source_id, config)
+        print('ids', ids)
+        return ids
 
+    def _gather(self, job, start_date, end_date, source_id, config):
+        ftp_user = config['username']
+        ftp_passwd = config['password']
+        source = config['harvester_type']
+        ftp_source = FtpSource()
+        existing_files = self._get_ftp_urls(start_date, end_date, ftp_source, ftp_user, ftp_passwd)
+        print('Found in FTP: %s', existing_files)
+        harvested_files = self._get_ckan_guids(start_date, end_date, source_id)
+        print('harvest files', harvested_files)
+        non_harvested_files = existing_files - harvested_files
+        print('non harvested', non_harvested_files)
+        ids = []
+        for ftp_url in non_harvested_files:
+            size = 0
+            ids.append(self._gather_object(job, ftp_url, size, ftp_source))
         return ids
 
     def fetch_stage(self, harvest_object):
         return True
 
-    def get_start_date(self):
-        start_date = self.source_config.get('start_date')
-        last_product_date = self.get_last_harvesting_date()
-        if last_product_date is not None:
-            start_date = last_product_date
-        elif start_date == 'BEGINNING':
-            start_date = self.get_ftp_start_date()
-        else:
-            start_date = datetime.strptime(start_date, '%Y-%m-%d')
+    def _get_ckan_guids(self, start_date, end_date, source_id):
+        objects = self._get_imported_harvest_objects_by_source(source_id)
+        return set(obj.guid for obj in objects)
 
-        return start_date
-
-    def get_end_date(self, start_date):
-        config_end_date = self.source_config.get('end_date')
-        if config_end_date:
-            config_end_date = datetime.strptime(config_end_date, '%Y-%m-%d')
-        
-        end_date = start_date + timedelta(weeks=12)
-
-        if end_date > datetime.now():
-            end_date = datetime.now()
-        elif config_end_date and end_date > config_end_date:
-            end_date = config_end_date
-        return end_date
-
-    def get_last_harvesting_date(self):
-        last_object = Session.query(HarvestObject).filter(
-            HarvestObject.harvest_source_id == self.job.source_id,
-            HarvestObject.import_finished is not None).\
-            order_by(desc(HarvestObject.import_finished)).\
-            limit(1).first()
+    def _get_last_harvesting_date(self, source_id):
+        objects = self._get_imported_harvest_objects_by_source(source_id)
+        sorted_objets = objects.order_by(desc(HarvestObject.import_finished))
+        last_object = sorted_objets.limit(1).first()
         if last_object is not None:
             restart_date = self._get_object_extra(last_object,
                                                   'restart_date')
+            restart_date = '2017-10-01' 
             return datetime.strptime(restart_date, '%Y-%m-%d')
         else:
             return None
 
-    def get_ftp_start_date(self):
-        return datetime(2017, 1, 7)
+    def _get_imported_harvest_objects_by_source(self, source_id):
+        return Session.query(HarvestObject).filter(
+            HarvestObject.harvest_source_id == source_id,
+            HarvestObject.import_finished is not None)
+
+    def _get_config(self, harvest_job):
+        return json.loads(harvest_job.source.config)
+
+    def _parse_date(self, date_str):
+        if date_str:
+            return datetime.strptime(date_str, '%Y-%m-%d')
+        else:
+            return None
+
+    def _get_ftp_urls(self, start_date, end_date, ftp_source, user, passwd):
+        ftp_urls = set()
+        ftp = FTP(ftp_source._get_ftp_domain(), user, passwd)
+        ftp.cwd(ftp_source._get_ftp_path())
+        for directory in ftp_source._get_ftp_directories():
+            ftp.cwd(directory)
+            ftp_urls |= set(ftp_source._ftp_url(directory, fname) for fname in ftp.nlst())
+        return ftp_urls
+
+    def _gather_object(self, job, url, size, ftp_source):
+        filename = parse_filename(url)
+        print('gathering %s', filename)
+        extras = [HOExtra(key='status', value='new')]
+        content = json.dumps({
+                'identifier': filename,
+                'ftp_link': url,
+                'size': size,
+                'start_date': ftp_source.parse_date(url),
+                'forecast_date': ftp_source.parse_forecast_date(url)
+            },
+            default=str)
+        obj = HarvestObject(job=job, 
+                            guid=url,
+                            extras=extras, 
+                            content=content)
+        obj.save()
+        return obj.id
+
+class FtpSource(object):
+
+    def _ftp_url(self, directory, filename):
+        return 'ftp://{}/{}/{}/{}'.format(self._get_ftp_domain(), 
+                                          self._get_ftp_path(), 
+                                          directory, 
+                                          filename)
+
+    def _get_ftp_domain(self):
+        return 'nrt.cmems-du.eu'
+
+    def _get_ftp_path(self):
+        return 'Core/SEALEVEL_GLO_PHY_L4_NRT_OBSERVATIONS_008_046/dataset-duacs-nrt-global-merged-allsat-phy-l4'
+
+    def _get_ftp_directories(self):
+        return ['2017/01']
+
+    def parse_date(self, ftp_url):
+        filename = parse_filename(ftp_url)
+        filename_parts = filename.split('_')
+        date_str = filename_parts[5]
+        date = datetime.strptime(date_str, '%Y%m%d')
+        return date
+
+    def parse_forecast_date(self, ftp_url):
+        return None
+   
+    
+   
+class SlvFtpSource(FtpSource):
+    pass
