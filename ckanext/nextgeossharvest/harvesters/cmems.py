@@ -222,7 +222,8 @@ class FtpSource(object):
 
     def parse_date(self, ftp_url):
         filename = parse_filename(ftp_url)
-        date = datetime.strptime(filename, self.data_pattern)
+        date_str = self.fname_pattern.match(filename + '.nc').group(1)
+        date = datetime.strptime(date_str, '%Y%m%d')
         return date
 
     def parse_forecast_date(self, ftp_url):
@@ -238,7 +239,7 @@ FTP_SOURCE_CONF = {
     'sic_north': {
         'domain': 'mftp.cmems.met.no',
         'path': 'Core/SEAICE_GLO_SEAICE_L4_NRT_OBSERVATIONS_011_001/METNO-GLO-SEAICE_CONC-NORTH-L4-NRT-OBS',
-        'fname_pattern': r'ice_conc_nh_ease-125_multi_\d{8,8}1200.nc',
+        'fname_pattern': r'ice_conc_nh_ease-125_multi_(\d{8,8})1200.nc',
         'date_pattern': 'ice_conc_nh_ease-125_multi_%Y%m%d1200'
     },
     'sic_south': {
