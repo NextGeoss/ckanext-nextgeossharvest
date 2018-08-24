@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import re
+import os
 
 import json
 import logging
@@ -25,7 +26,8 @@ from ftplib import all_errors as FtpException
 
 
 def parse_filename(url):
-    return url.split('/')[-1].split('.')[0]
+    fname = url.split('/')[-1]
+    return os.path.splitext(fname)[0]
 
 class CMEMSHarvester(NextGEOSSHarvester, CMEMSBase):
     '''
@@ -231,7 +233,7 @@ class FtpSource(object):
 FTP_SOURCE_CONF = {
     'sst': {
         'domain': 'cmems.isac.cnr.it',
-        'path': 'SST_GLO_SST_L4_NRT_OBSERVATIONS_010_001/METOFFICE-GLO-SST-L4-NRT-OBS-SST-V2',
+        'path': 'Core/SST_GLO_SST_L4_NRT_OBSERVATIONS_010_001/METOFFICE-GLO-SST-L4-NRT-OBS-SST-V2',
         'fname_pattern': r'(?P<date>\d{8,8})120000-UKMO-L4_GHRSST-SSTfnd-OSTIA-GLOB-v02.0-fv02.0.nc',
     },
     'sic_north': {
@@ -257,7 +259,7 @@ FTP_SOURCE_CONF = {
     'gpaf': {
         'domain': 'nrt.cmems-du.eu',
         'path': 'Core/GLOBAL_ANALYSIS_FORECAST_PHY_001_024/global-analysis-forecast-phy-001-024-hourly-t-u-v-ssh',
-        'fname_pattern': r'mercatorpsy4v3r1_gl12_hrly_(?P<date>\d{8,8})_\d{8,8}.nc',
+        'fname_pattern': r'mercatorpsy4v3r1_gl12_hrly_(?P<date>\d{8,8})_R\d{8,8}.nc',
     }
 
 }
