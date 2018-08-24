@@ -116,8 +116,8 @@ class CMEMSHarvester(NextGEOSSHarvester, CMEMSBase):
     def _gather(self, job, start_date, end_date, source_id, config):
         ftp_user = config['username']
         ftp_passwd = config['password']
-        source = config['harvester_type']
-        ftp_source = FtpSource()
+        source_type = config['harvester_type']
+        ftp_source = create_ftp_source(source_type) 
         existing_files = ftp_source._get_ftp_urls(start_date, end_date, ftp_user, ftp_passwd)
         print('Found in FTP: %s', existing_files)
         harvested_files = self._get_ckan_guids(start_date, end_date, source_id)
@@ -184,6 +184,9 @@ class CMEMSHarvester(NextGEOSSHarvester, CMEMSBase):
         obj.save()
         return obj.id
 
+def create_ftp_source(source_type):
+    return FTP_SOURCE_CLS[source_type]()
+
 class FtpSource(object):
 
     def _get_ftp_urls(self, start_date, end_date, user, passwd):
@@ -200,6 +203,8 @@ class FtpSource(object):
                                           self._get_ftp_path(), 
                                           directory, 
                                           filename)
+
+class SlvFtpSource(FtpSource):
 
     def _get_ftp_domain(self):
         return 'nrt.cmems-du.eu'
@@ -219,8 +224,7 @@ class FtpSource(object):
 
     def parse_forecast_date(self, ftp_url):
         return None
-   
-    
-   
-class SlvFtpSource(FtpSource):
-    pass
+
+FTP_SOURCE_CLS = {
+    'slv': SlvFtpSource
+}
