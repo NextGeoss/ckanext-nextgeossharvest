@@ -190,8 +190,9 @@ def create_ftp_source(source_type):
 class FtpSource(object):
 
     def _get_ftp_urls(self, start_date, end_date, user, passwd):
-        ftp_urls = set()
+        ftp_urls =set()
         ftp = FTP(self._get_ftp_domain(), user, passwd)
+        print(self._get_ftp_path())
         ftp.cwd(self._get_ftp_path())
         for directory in self._get_ftp_directories():
             ftp.cwd(directory)
@@ -203,6 +204,26 @@ class FtpSource(object):
                                           self._get_ftp_path(), 
                                           directory, 
                                           filename)
+
+class SstFtpSource(FtpSource):
+
+    def _get_ftp_domain(self):
+        return 'cmems.isac.cnr.it'
+
+    def _get_ftp_path(self):
+        return 'Core/SST_GLO_SST_L4_NRT_OBSERVATIONS_010_001/METOFFICE-GLO-SST-L4-NRT-OBS-SST-V2'
+
+    def _get_ftp_directories(self):
+        return ['2017/01']
+
+    def parse_date(self, ftp_url):
+        filename = parse_filename(ftp_url)
+        date_str = filename[:8]
+        date = datetime.strptime(date_str, '%Y%m%d')
+        return date
+
+    def parse_forecast_date(self, ftp_url):
+        return None
 
 class SlvFtpSource(FtpSource):
 
@@ -226,5 +247,6 @@ class SlvFtpSource(FtpSource):
         return None
 
 FTP_SOURCE_CLS = {
+    'sst': SstFtpSource,
     'slv': SlvFtpSource
 }
