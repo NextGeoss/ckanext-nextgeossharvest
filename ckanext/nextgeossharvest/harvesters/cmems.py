@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import re
 
 import json
 import logging
@@ -189,6 +190,9 @@ def create_ftp_source(source_type):
 
 class FtpSource(object):
 
+    def __init__(self):
+        self.fname_pattern = re.compile(r'*')
+
     def _get_ftp_urls(self, start_date, end_date, user, passwd):
         ftp_urls =set()
         ftp = FTP(self._get_ftp_domain(), user, passwd)
@@ -196,7 +200,7 @@ class FtpSource(object):
         ftp.cwd(self._get_ftp_path())
         for directory in self._get_ftp_directories():
             ftp.cwd(directory)
-            ftp_urls |= set(self._ftp_url(directory, fname) for fname in ftp.nlst())
+            ftp_urls |= set(self._ftp_url(directory, fname) for fname in ftp.nlst() if self.fname_pattern.match(fname))
         return ftp_urls
 
     def _ftp_url(self, directory, filename):
@@ -225,6 +229,48 @@ class SstFtpSource(FtpSource):
     def parse_forecast_date(self, ftp_url):
         return None
 
+class SicNorthFtpSource(FtpSource):
+
+    def __init__(self):
+        self.fname_pattern = re.compile(r'ice_conc_nh_ease-125_multi_\d{8,8}1200.nc')
+
+    def _get_ftp_domain(self):
+        return 'mftp.cmems.met.no'
+
+    def _get_ftp_path(self):
+        return 'Core/SEAICE_GLO_SEAICE_L4_NRT_OBSERVATIONS_011_001/METNO-GLO-SEAICE_CONC-NORTH-L4-NRT-OBS'
+
+    def _get_ftp_directories(self):
+        return ['2017/01']
+
+    def parse_date(self, ftp_url):
+        filename = parse_filename(ftp_url)
+        date = datetime.strptime(filename, 'ice_conc_nh_ease-125_multi_%Y%m%d1200')
+        return date
+
+    def parse_forecast_date(self, ftp_url):
+        return None
+
+class SicSouthFtpSource(FtpSource):
+
+    def _get_ftp_domain(self):
+        return 'mftp.cmems.met.no'
+
+    def _get_ftp_path(self):
+        return 'Core/SEAICE_GLO_SEAICE_L4_NRT_OBSERVATIONS_011_001/METNO-GLO-SEAICE_CONC-SOUTH-L4-NRT-OBS'
+
+    def _get_ftp_directories(self):
+        return ['2017/01']
+
+    def parse_date(self, ftp_url):
+        filename = parse_filename(ftp_url)
+        date = datetime.strptime(filename, 'ice_conc_sh_ease-125_multi_%Y%m%d1200.nc')
+        return date
+
+    def parse_forecast_date(self, ftp_url):
+        return None
+
+
 class SlvFtpSource(FtpSource):
 
     def _get_ftp_domain(self):
@@ -248,5 +294,6 @@ class SlvFtpSource(FtpSource):
 
 FTP_SOURCE_CLS = {
     'sst': SstFtpSource,
-    'slv': SlvFtpSource
+    'slv': SlvFtpSource,
+    'sic_north': SicNorthFtpSource
 }
