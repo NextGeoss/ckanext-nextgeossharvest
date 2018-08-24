@@ -186,12 +186,14 @@ class CMEMSHarvester(NextGEOSSHarvester, CMEMSBase):
         return obj.id
 
 def create_ftp_source(source_type):
-    return FTP_SOURCE_CLS[source_type]()
-
+    return FtpSource(**FTP_SOURCE_CONF[source_type])
 class FtpSource(object):
 
-    def __init__(self):
-        self.fname_pattern = re.compile(r'*')
+    def __init__(self, domain, path, fname_pattern, date_pattern):
+        self.fname_pattern = re.compile(fname_pattern)
+        self.domain = domain
+        self.path = path
+        self.data_pattern = date_pattern
 
     def _get_ftp_urls(self, start_date, end_date, user, passwd):
         ftp_urls =set()
@@ -208,6 +210,24 @@ class FtpSource(object):
                                           self._get_ftp_path(), 
                                           directory, 
                                           filename)
+
+    def _get_ftp_domain(self):
+        return self.domain
+
+    def _get_ftp_path(self):
+        return self.path 
+
+    def _get_ftp_directories(self):
+        return ['2017/01']
+
+    def parse_date(self, ftp_url):
+        filename = parse_filename(ftp_url)
+        date = datetime.strptime(filename, self.data_pattern)
+        return date
+
+    def parse_forecast_date(self, ftp_url):
+        return None
+    
 
 class SstFtpSource(FtpSource):
 
@@ -292,8 +312,11 @@ class SlvFtpSource(FtpSource):
     def parse_forecast_date(self, ftp_url):
         return None
 
-FTP_SOURCE_CLS = {
-    'sst': SstFtpSource,
-    'slv': SlvFtpSource,
-    'sic_north': SicNorthFtpSource
+FTP_SOURCE_CONF = {
+    'sic_north': {
+        'domain': 'mftp.cmems.met.no',
+        'path': 'Core/SEAICE_GLO_SEAICE_L4_NRT_OBSERVATIONS_011_001/METNO-GLO-SEAICE_CONC-NORTH-L4-NRT-OBS',
+        'fname_pattern': r'ice_conc_nh_ease-125_multi_\d{8,8}1200.nc',
+        'date_pattern': 'ice_conc_nh_ease-125_multi_%Y%m%d1200'
+    }
 }
