@@ -118,7 +118,7 @@ class CMEMSHarvester(NextGEOSSHarvester, CMEMSBase):
         ftp_passwd = config['password']
         source = config['harvester_type']
         ftp_source = FtpSource()
-        existing_files = self._get_ftp_urls(start_date, end_date, ftp_source, ftp_user, ftp_passwd)
+        existing_files = ftp_source._get_ftp_urls(start_date, end_date, ftp_user, ftp_passwd)
         print('Found in FTP: %s', existing_files)
         harvested_files = self._get_ckan_guids(start_date, end_date, source_id)
         print('harvest files', harvested_files)
@@ -127,7 +127,9 @@ class CMEMSHarvester(NextGEOSSHarvester, CMEMSBase):
         ids = []
         for ftp_url in non_harvested_files:
             size = 0
-            ids.append(self._gather_object(job, ftp_url, size, ftp_source))
+            start_date = ftp_source.parse_date(ftp_url)
+            forecast_date = ftp_source.parse_forecast_date(ftp_url)
+            ids.append(self._gather_object(job, ftp_url, size, start_date, forecast_date))
         return ids
 
     def fetch_stage(self, harvest_object):
@@ -163,16 +165,7 @@ class CMEMSHarvester(NextGEOSSHarvester, CMEMSBase):
         else:
             return None
 
-    def _get_ftp_urls(self, start_date, end_date, ftp_source, user, passwd):
-        ftp_urls = set()
-        ftp = FTP(ftp_source._get_ftp_domain(), user, passwd)
-        ftp.cwd(ftp_source._get_ftp_path())
-        for directory in ftp_source._get_ftp_directories():
-            ftp.cwd(directory)
-            ftp_urls |= set(ftp_source._ftp_url(directory, fname) for fname in ftp.nlst())
-        return ftp_urls
-
-    def _gather_object(self, job, url, size, ftp_source):
+    def _gather_object(self, job, url, size, start_date, forecast_date):
         filename = parse_filename(url)
         print('gathering %s', filename)
         extras = [HOExtra(key='status', value='new')]
@@ -180,8 +173,8 @@ class CMEMSHarvester(NextGEOSSHarvester, CMEMSBase):
                 'identifier': filename,
                 'ftp_link': url,
                 'size': size,
-                'start_date': ftp_source.parse_date(url),
-                'forecast_date': ftp_source.parse_forecast_date(url)
+                'start_date': start_date,
+                'forecast_date': forecast_date
             },
             default=str)
         obj = HarvestObject(job=job, 
@@ -192,6 +185,15 @@ class CMEMSHarvester(NextGEOSSHarvester, CMEMSBase):
         return obj.id
 
 class FtpSource(object):
+
+    def _get_ftp_urls(self, start_date, end_date, user, passwd):
+        ftp_urls = set()
+        ftp = FTP(self._get_ftp_domain(), user, passwd)
+        ftp.cwd(self._get_ftp_path())
+        for directory in self._get_ftp_directories():
+            ftp.cwd(directory)
+            ftp_urls |= set(self._ftp_url(directory, fname) for fname in ftp.nlst())
+        return ftp_urls
 
     def _ftp_url(self, directory, filename):
         return 'ftp://{}/{}/{}/{}'.format(self._get_ftp_domain(), 
