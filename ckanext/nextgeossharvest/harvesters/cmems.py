@@ -227,96 +227,43 @@ class FtpSource(object):
 
     def parse_forecast_date(self, ftp_url):
         return None
-    
-
-class SstFtpSource(FtpSource):
-
-    def _get_ftp_domain(self):
-        return 'cmems.isac.cnr.it'
-
-    def _get_ftp_path(self):
-        return 'Core/SST_GLO_SST_L4_NRT_OBSERVATIONS_010_001/METOFFICE-GLO-SST-L4-NRT-OBS-SST-V2'
-
-    def _get_ftp_directories(self):
-        return ['2017/01']
-
-    def parse_date(self, ftp_url):
-        filename = parse_filename(ftp_url)
-        date_str = filename[:8]
-        date = datetime.strptime(date_str, '%Y%m%d')
-        return date
-
-    def parse_forecast_date(self, ftp_url):
-        return None
-
-class SicNorthFtpSource(FtpSource):
-
-    def __init__(self):
-        self.fname_pattern = re.compile(r'ice_conc_nh_ease-125_multi_\d{8,8}1200.nc')
-
-    def _get_ftp_domain(self):
-        return 'mftp.cmems.met.no'
-
-    def _get_ftp_path(self):
-        return 'Core/SEAICE_GLO_SEAICE_L4_NRT_OBSERVATIONS_011_001/METNO-GLO-SEAICE_CONC-NORTH-L4-NRT-OBS'
-
-    def _get_ftp_directories(self):
-        return ['2017/01']
-
-    def parse_date(self, ftp_url):
-        filename = parse_filename(ftp_url)
-        date = datetime.strptime(filename, 'ice_conc_nh_ease-125_multi_%Y%m%d1200')
-        return date
-
-    def parse_forecast_date(self, ftp_url):
-        return None
-
-class SicSouthFtpSource(FtpSource):
-
-    def _get_ftp_domain(self):
-        return 'mftp.cmems.met.no'
-
-    def _get_ftp_path(self):
-        return 'Core/SEAICE_GLO_SEAICE_L4_NRT_OBSERVATIONS_011_001/METNO-GLO-SEAICE_CONC-SOUTH-L4-NRT-OBS'
-
-    def _get_ftp_directories(self):
-        return ['2017/01']
-
-    def parse_date(self, ftp_url):
-        filename = parse_filename(ftp_url)
-        date = datetime.strptime(filename, 'ice_conc_sh_ease-125_multi_%Y%m%d1200.nc')
-        return date
-
-    def parse_forecast_date(self, ftp_url):
-        return None
-
-
-class SlvFtpSource(FtpSource):
-
-    def _get_ftp_domain(self):
-        return 'nrt.cmems-du.eu'
-
-    def _get_ftp_path(self):
-        return 'Core/SEALEVEL_GLO_PHY_L4_NRT_OBSERVATIONS_008_046/dataset-duacs-nrt-global-merged-allsat-phy-l4'
-
-    def _get_ftp_directories(self):
-        return ['2017/01']
-
-    def parse_date(self, ftp_url):
-        filename = parse_filename(ftp_url)
-        filename_parts = filename.split('_')
-        date_str = filename_parts[5]
-        date = datetime.strptime(date_str, '%Y%m%d')
-        return date
-
-    def parse_forecast_date(self, ftp_url):
-        return None
 
 FTP_SOURCE_CONF = {
+    'sst': {
+        'domain': 'cmems.isac.cnr.it',
+        'path': 'SST_GLO_SST_L4_NRT_OBSERVATIONS_010_001/METOFFICE-GLO-SST-L4-NRT-OBS-SST-V2',
+        'fname_pattern': r'\d{8,8}120000-UKMO-L4_GHRSST-SSTfnd-OSTIA-GLOB-v02.0-fv02.0.nc',
+        'date_pattern': '%Y%m%d120000-UKMO-L4_GHRSST-SSTfnd-OSTIA-GLOB-v02.0-fv02.0'
+    },
     'sic_north': {
         'domain': 'mftp.cmems.met.no',
         'path': 'Core/SEAICE_GLO_SEAICE_L4_NRT_OBSERVATIONS_011_001/METNO-GLO-SEAICE_CONC-NORTH-L4-NRT-OBS',
         'fname_pattern': r'ice_conc_nh_ease-125_multi_\d{8,8}1200.nc',
         'date_pattern': 'ice_conc_nh_ease-125_multi_%Y%m%d1200'
+    },
+    'sic_south': {
+        'domain': 'mftp.cmems.met.no',
+        'path': 'Core/SEAICE_GLO_SEAICE_L4_NRT_OBSERVATIONS_011_001/METNO-GLO-SEAICE_CONC-SOUTH-L4-NRT-OBS',
+        'fname_pattern': r'ice_conc_sh_ease-125_multi_\d{8,8}1200.nc',
+        'date_pattern': 'ice_conc_sh_ease-125_multi_%Y%m%d1200'
+    },
+    'ocn': {
+        'domain': 'mftp.cmems.met.no',
+        'path': 'Core/ARCTIC_ANALYSIS_FORECAST_PHYS_002_001_a/dataset-topaz4-arc-myoceanv2-be',
+        'fname_pattern': r'\d{8,8}_dm-metno-MODEL-topaz4-ARC-b\d{8,8}-fv02.0.nc',
+        'date_pattern': r'\d{8,8}_dm-metno-MODEL-topaz4-ARC-b%Y%m%d-fv02.0'
+    },
+    'slv': {
+        'domain': 'nrt.cmems-du.eu',
+        'path': 'Core/SEALEVEL_GLO_PHY_L4_NRT_OBSERVATIONS_008_046/dataset-duacs-nrt-global-merged-allsat-phy-l4',
+        'fname_pattern': r'nrt_global_allsat_phy_l4_\d{8,8}_\d{8,8}.nc',
+        'date_pattern': 'nrt_global_allsat_phy_l4_%Y%m%d_20170113'
+    },
+    'gpaf': {
+        'domain': 'nrt.cmems-du.eu',
+        'path': 'Core/GLOBAL_ANALYSIS_FORECAST_PHY_001_024/global-analysis-forecast-phy-001-024-hourly-t-u-v-ssh',
+        'fname_pattern': r'mercatorpsy4v3r1_gl12_hrly_\d{8,8}_\d{8,8}.nc',
+        'date_pattern': 'mercatorpsy4v3r1_gl12_hrly_%Y%m%d_R20160106'
     }
+
 }
