@@ -228,7 +228,12 @@ class FtpSource(object):
         return date
 
     def parse_forecast_date(self, ftp_url):
-        return None
+        filename = parse_filename(ftp_url)
+        try:
+            date_str = self.fname_pattern.match(filename + '.nc').group('forecast_date')
+            return datetime.strptime(date_str, '%Y%m%d')
+        except IndexError:
+            return None
 
 FTP_SOURCE_CONF = {
     'sst': {
@@ -249,7 +254,7 @@ FTP_SOURCE_CONF = {
     'ocn': {
         'domain': 'mftp.cmems.met.no',
         'path': 'Core/ARCTIC_ANALYSIS_FORECAST_PHYS_002_001_a/dataset-topaz4-arc-myoceanv2-be',
-        'fname_pattern': r'\d{8,8}_dm-metno-MODEL-topaz4-ARC-b(?P<date>\d{8,8})-fv02.0.nc',
+        'fname_pattern': r'(?P<forecast_date>\d{8,8})_dm-metno-MODEL-topaz4-ARC-b(?P<date>\d{8,8})-fv02.0.nc',
     },
     'slv': {
         'domain': 'nrt.cmems-du.eu',
@@ -259,7 +264,7 @@ FTP_SOURCE_CONF = {
     'gpaf': {
         'domain': 'nrt.cmems-du.eu',
         'path': 'Core/GLOBAL_ANALYSIS_FORECAST_PHY_001_024/global-analysis-forecast-phy-001-024-hourly-t-u-v-ssh',
-        'fname_pattern': r'mercatorpsy4v3r1_gl12_hrly_(?P<date>\d{8,8})_R\d{8,8}.nc',
+        'fname_pattern': r'mercatorpsy4v3r1_gl12_hrly_(?P<forecast_date>\d{8,8})_R(?P<date>\d{8,8}).nc',
     }
 
 }
