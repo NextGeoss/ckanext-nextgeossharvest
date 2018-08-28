@@ -55,9 +55,15 @@ class NextGEOSSHarvester(HarvesterBase):
         if "dataset_extra" in extras:
             extras = ast.literal_eval(extras["dataset_extra"])
 
-        for extra in extras:
-            if extra["key"] == flagged_extra:
-                return extra["value"]
+        if type(extras) == list:
+            for extra in extras:
+                if extra["key"] == flagged_extra:
+                    return extra["value"]
+        elif type(extras) == dict:
+            value = extras.get(flagged_extra)
+            if value:
+                return value
+
         return default
 
     def convert_string_extras(self, extras_list):
