@@ -5,7 +5,7 @@ import os
 import json
 import logging
 from datetime import datetime, timedelta
-
+from monthdelta import monthdelta
 
 from ftplib import FTP
 
@@ -27,7 +27,7 @@ from ftplib import all_errors as FtpException
 
 def parse_filename(url):
     fname = url.split('/')[-1]
-    return os.path.splitext(fname)[0]
+    return os.path.splitext(fname)[0]    
 
 class CMEMSHarvester(NextGEOSSHarvester, CMEMSBase):
     '''
@@ -59,8 +59,9 @@ class CMEMSHarvester(NextGEOSSHarvester, CMEMSBase):
                                                         'sic_south',
                                                         'ocn',
                                                         'slv',
-                                                        'gpaf'}:
-                raise ValueError('harvester type is required and must be "sst" or "sic_north" or "sic_south" or "ocn" or "slv" or "gpaf"')  # noqa: E501
+                                                        'gpaf',
+                                                        'mog'}:
+                raise ValueError('harvester type is required and must be "sst" or "sic_north" or "sic_south" or "ocn" or "slv" or "gpaf" or "mog"')  # noqa: E501
             if 'start_date' in config_obj:
                 try:
                     start_date = config_obj['start_date']
@@ -82,7 +83,7 @@ class CMEMSHarvester(NextGEOSSHarvester, CMEMSBase):
                 except ValueError:
                     raise ValueError('end_date format must be yyyy-mm-dd')
             else:
-                raise ValueError('end_date is required')
+                end_date = self.convert_date_config('TODAY')    
             if not end_date > start_date:
                 raise ValueError('end_date must be after start_date')
             if 'timeout' in config_obj:
@@ -111,9 +112,9 @@ class CMEMSHarvester(NextGEOSSHarvester, CMEMSBase):
             start_date = self._parse_date(config['start_date'])
         end_date = min(start_date + self.interval,
                        datetime.now(),
-                       self._parse_date(config.get('end_date')))
+                       self._parse_date(config.get('end_date') if config.get('end_date') is not None else self.convert_date_config('TODAY').strftime("%Y-%m-%d")))
         ids = self._gather(harvest_job, start_date, end_date, harvest_job.source_id, config)
-        print('ids', ids)
+
         return ids
 
     def _gather(self, job, start_date, end_date, source_id, config):
@@ -122,15 +123,13 @@ class CMEMSHarvester(NextGEOSSHarvester, CMEMSBase):
         source_type = config['harvester_type']
         ftp_source = create_ftp_source(source_type) 
         existing_files = ftp_source._get_ftp_urls(start_date, end_date, ftp_user, ftp_passwd)
-        print('Found in FTP: %s', existing_files)
         harvested_files = self._get_ckan_guids(start_date, end_date, source_id)
-        print('harvest files', harvested_files)
         non_harvested_files = existing_files - harvested_files
-        print('non harvested', non_harvested_files)
         ids = []
         for ftp_url in non_harvested_files:
             size = 0
             start_date = ftp_source.parse_date(ftp_url)
+            assert start_date
             forecast_date = ftp_source.parse_forecast_date(ftp_url)
             ids.append(self._gather_object(job, ftp_url, size, start_date, forecast_date))
         return ids
@@ -144,13 +143,11 @@ class CMEMSHarvester(NextGEOSSHarvester, CMEMSBase):
 
     def _get_last_harvesting_date(self, source_id):
         objects = self._get_imported_harvest_objects_by_source(source_id)
-        sorted_objets = objects.order_by(desc(HarvestObject.import_finished))
-        last_object = sorted_objets.limit(1).first()
+        sorted_objects = objects.order_by(desc(HarvestObject.import_finished))
+        last_object = sorted_objects.limit(1).first()
         if last_object is not None:
-            restart_date = self._get_object_extra(last_object,
-                                                  'restart_date')
-            restart_date = '2017-10-01' 
-            return datetime.strptime(restart_date, '%Y-%m-%d')
+            restart_date = json.loads(last_object.content)['restart_date']
+            return datetime.strptime(restart_date, '%Y-%m-%d %H:%M:%S')
         else:
             return None
 
@@ -164,20 +161,27 @@ class CMEMSHarvester(NextGEOSSHarvester, CMEMSBase):
 
     def _parse_date(self, date_str):
         if date_str:
-            return datetime.strptime(date_str, '%Y-%m-%d')
+            
+            if date_str != 'TODAY':
+                return datetime.strptime(date_str, '%Y-%m-%d')
+            else:
+                return self.convert_date_config(date_str)
         else:
             return None
 
     def _gather_object(self, job, url, size, start_date, forecast_date):
         filename = parse_filename(url)
+        filename_id = filename.replace('-v02.0-fv02.0', '').replace('-fv02.0', '')
         print('gathering %s', filename)
         extras = [HOExtra(key='status', value='new')]
+        assert start_date
         content = json.dumps({
-                'identifier': filename,
+                'identifier': filename_id,
                 'ftp_link': url,
                 'size': size,
                 'start_date': start_date,
-                'forecast_date': forecast_date
+                'forecast_date': forecast_date,
+                'restart_date': start_date
             },
             default=str)
         obj = HarvestObject(job=job, 
@@ -189,22 +193,27 @@ class CMEMSHarvester(NextGEOSSHarvester, CMEMSBase):
 
 def create_ftp_source(source_type):
     return FtpSource(**FTP_SOURCE_CONF[source_type])
+
 class FtpSource(object):
 
-    def __init__(self, domain, path, fname_pattern):
+    def __init__(self, domain, path, fname_pattern, date_dir=True):
         self.fname_pattern = re.compile(fname_pattern)
         self.domain = domain
         self.path = path
+        self.date_dir = date_dir
 
     def _get_ftp_urls(self, start_date, end_date, user, passwd):
-        ftp_urls =set()
+        ftp_urls = set()
         ftp = FTP(self._get_ftp_domain(), user, passwd)
-        print(self._get_ftp_path())
-        ftp.cwd(self._get_ftp_path())
-        for directory in self._get_ftp_directories():
-            ftp.cwd(directory)
-            ftp_urls |= set(self._ftp_url(directory, fname) for fname in ftp.nlst() if self.fname_pattern.match(fname))
+        for directory in self._get_ftp_directories(start_date, end_date):
+            ftp.cwd('/{}/{}'.format(self._get_ftp_path(), directory))
+            ftp_urls |= set(self._ftp_url(directory, fname) for fname in ftp.nlst() if
+                                self.fname_pattern.match(fname) and self._to_harvest(fname, start_date, end_date))
         return ftp_urls
+    
+    def _to_harvest(self, fname, start_date, end_date):
+        date = self._parse_date(fname)
+        return date >= start_date and date <= end_date
 
     def _ftp_url(self, directory, filename):
         return 'ftp://{}/{}/{}/{}'.format(self._get_ftp_domain(), 
@@ -218,11 +227,27 @@ class FtpSource(object):
     def _get_ftp_path(self):
         return self.path 
 
-    def _get_ftp_directories(self):
-        return ['2017/01']
+    def _get_ftp_directories(self, start_date, end_date):
+        if self.date_dir:
+            directories = []
+            date = start_date
+            while date <= end_date:
+                directories.append(self._date_path(date))
+                date += monthdelta(1)
+            if (self._date_path(date) == self._date_path(end_date)) and (self._date_path(date) not in directories):
+                directories.append(self._date_path(date))
+            return directories
+        else:
+            return ['/']
+        
+    def _date_path(self, date):
+        return date.strftime('%Y/%m')
 
-    def parse_date(self, ftp_url):
+    def parse_date(self, ftp_url): 
         filename = parse_filename(ftp_url)
+        return self._parse_date(filename)
+    
+    def _parse_date(self, filename):
         date_str = self.fname_pattern.match(filename + '.nc').group('date')
         date = datetime.strptime(date_str, '%Y%m%d')
         return date
@@ -235,9 +260,17 @@ class FtpSource(object):
         except IndexError:
             return None
 
+# Configuration for the harvester providers:
+# '<harvester_type as in config>': {
+#   'domain': url domain of the source,
+#   'path': the path where all the files to be collected are,
+#   'fname_pattern': a regex expression to match the name of all file names included in the collection;
+#                    with a group <date> to extract the product date and, optionally, <forecast_date>.
+#   'data_dir': specifies if the files are structured in directories by date, YYYY/mm, or directly inside path
+# }
 FTP_SOURCE_CONF = {
     'sst': {
-        'domain': 'cmems.isac.cnr.it',
+        'domain': 'nrt.cmems-du.eu',
         'path': 'Core/SST_GLO_SST_L4_NRT_OBSERVATIONS_010_001/METOFFICE-GLO-SST-L4-NRT-OBS-SST-V2',
         'fname_pattern': r'(?P<date>\d{8,8})120000-UKMO-L4_GHRSST-SSTfnd-OSTIA-GLOB-v02.0-fv02.0.nc',
     },
@@ -255,6 +288,7 @@ FTP_SOURCE_CONF = {
         'domain': 'mftp.cmems.met.no',
         'path': 'Core/ARCTIC_ANALYSIS_FORECAST_PHYS_002_001_a/dataset-topaz4-arc-myoceanv2-be',
         'fname_pattern': r'(?P<forecast_date>\d{8,8})_dm-metno-MODEL-topaz4-ARC-b(?P<date>\d{8,8})-fv02.0.nc',
+        'date_dir': False,
     },
     'slv': {
         'domain': 'nrt.cmems-du.eu',
@@ -265,6 +299,11 @@ FTP_SOURCE_CONF = {
         'domain': 'nrt.cmems-du.eu',
         'path': 'Core/GLOBAL_ANALYSIS_FORECAST_PHY_001_024/global-analysis-forecast-phy-001-024-hourly-t-u-v-ssh',
         'fname_pattern': r'mercatorpsy4v3r1_gl12_hrly_(?P<forecast_date>\d{8,8})_R(?P<date>\d{8,8}).nc',
+    },
+    'mog': {
+        'domain': 'nrt.cmems-du.eu',
+        'path': 'Core/MULTIOBS_GLO_PHY_NRT_015_003/dataset-uv-nrt-hourly',
+        'fname_pattern': r'dataset-uv-nrt-hourly_(?P<date>\d{8,8})T0000Z_P\d{8,8}T\d{4}Z.nc',
     }
 
 }

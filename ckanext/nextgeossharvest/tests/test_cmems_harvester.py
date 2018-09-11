@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the CMEMS harvester."""
+from unittest import TestCase
 
 import json
 
@@ -124,7 +125,6 @@ test_auth = {
     'username': 'testuser',
     'password': 'testpass'
 }
-
 
 @parameterized([
     # Run for one-day interval

@@ -188,6 +188,7 @@ class NextGEOSSHarvester(HarvesterBase):
         # IMPROVE: I think ckan.logic.ValidationError is the only Exception we
         # really need to worry about. #########################################
         except Exception as e:
+            print e
             # Name/URL already in use may just mean that another harvester
             # created the dataset in the meantime. Retry with status 'change'.
             if status == 'new':
