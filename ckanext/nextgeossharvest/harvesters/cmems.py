@@ -36,8 +36,8 @@ class CMEMSHarvester(NextGEOSSHarvester, CMEMSBase):
 
     def __init__(self, *args, **kwargs):
         super(type(self), self).__init__(*args, **kwargs)
-        self.overlap = timedelta(days = 30)
-        self.interval = timedelta(days = 3*30)
+        self.overlap = timedelta(days=30)
+        self.interval = timedelta(days=3 * 30)
 
     def info(self):
         return {
@@ -105,8 +105,8 @@ class CMEMSHarvester(NextGEOSSHarvester, CMEMSBase):
         self.log.debug('CMEMS Harvester gather_stage for job: %r', harvest_job)
         config = self._get_config(harvest_job)
         last_product_date = (
-                    self._get_last_harvesting_date(harvest_job.source_id)
-                    )
+            self._get_last_harvesting_date(harvest_job.source_id)
+        )
         if last_product_date is not None:
             start_date = last_product_date
         else:
@@ -190,13 +190,14 @@ class CMEMSHarvester(NextGEOSSHarvester, CMEMSBase):
         extras = [HOExtra(key='status', value='new')]
         assert start_date
         content = json.dumps({
-                'identifier': filename_id,
-                'ftp_link': url,
-                'size': size,
-                'start_date': start_date,
-                'forecast_date': forecast_date,
-                'restart_date': start_date
-                }, default=str)
+            'identifier': filename_id,
+            'ftp_link': url,
+            'size': size,
+            'start_date': start_date,
+            'forecast_date': forecast_date,
+            'restart_date': start_date
+            }, default=str
+        )
         obj = HarvestObject(job=job,
                             guid=url,
                             extras=extras,
