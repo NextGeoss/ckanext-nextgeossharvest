@@ -121,8 +121,8 @@ ocn_3 = {
 }
 
 test_auth = {
-    'username': 'testuser',
-    'password': 'testpass'
+    'username': 'ngeoss',
+    'password': 'NextCMEMS2017'
 }
 
 
