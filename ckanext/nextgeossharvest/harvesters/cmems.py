@@ -225,7 +225,7 @@ class FtpSource(object):
             ftp.cwd('/{}/{}'.format(self._get_ftp_path(), directory))
             ftp_urls |= set(self._ftp_url(directory, fname)
                             for fname in ftp.nlst(
-                            ) if self.fname_pattern.match(
+                                ) if self.fname_pattern.match(
                                 fname) and self._to_harvest(
                                     fname, start_date, end_date)
                             )
