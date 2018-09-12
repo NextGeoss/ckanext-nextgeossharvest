@@ -97,26 +97,22 @@ class NextGEOSSHarvester(HarvesterBase):
             .values(current=False)
         Session.execute(u, params={'pkg_id': package_id})
         Session.commit()
-
         # Refresh current object from session, otherwise the
         # import paster command fails
         # (Copied from the Gemini harvester--not sure if necessary)
         Session.remove()
         Session.add(harvest_object)
         Session.refresh(harvest_object)
-
         # Set reference to package in the HarvestObject and flag it as
         # the current one
         if not harvest_object.package_id:
             harvest_object.package_id = package_id
         harvest_object.current = True
-
         harvest_object.save()
 
     def _create_package_dict(self, parsed_content):
         """
         Create a package dictionary using the parsed content.
-
         The id and owner org will be added later as they are not derived from
         the content.
         """
@@ -128,7 +124,6 @@ class NextGEOSSHarvester(HarvesterBase):
         package_dict['extras'] = self._get_extras(parsed_content)
         package_dict['resources'] = self._get_resources(parsed_content)
         package_dict['private'] = self.source_config.get('make_private', False)
-
         return package_dict
 
     def _create_or_update_dataset(self, harvest_object, status):
@@ -137,7 +132,6 @@ class NextGEOSSHarvester(HarvesterBase):
         """
         parsed_content = self._parse_content(harvest_object.content)
         package_dict = self._create_package_dict(parsed_content)
-
         # Add the harvester ID to the extras so that CKAN can find the
         # harvested datasets in searches for stats, etc.
 
@@ -259,7 +253,6 @@ class NextGEOSSHarvester(HarvesterBase):
         for tag in new_tags:
             if tag['name'] not in old_tag_names:
                 old_tags.append(tag)
-
         return old_tags
 
     def _update_extras(self, old_extras, new_extras):

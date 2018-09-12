@@ -36,8 +36,8 @@ class CMEMSHarvester(NextGEOSSHarvester, CMEMSBase):
 
     def __init__(self, *args, **kwargs):
         super(type(self), self).__init__(*args, **kwargs)
-        self.overlap = timedelta(days=30)
-        self.interval = timedelta(days=3*30)
+        self.overlap = timedelta(days = 30)
+        self.interval = timedelta(days = 3*30)
 
     def info(self):
         return {
@@ -105,7 +105,7 @@ class CMEMSHarvester(NextGEOSSHarvester, CMEMSBase):
         self.log.debug('CMEMS Harvester gather_stage for job: %r', harvest_job)
         config = self._get_config(harvest_job)
         last_product_date = (
-                        self._get_last_harvesting_date(harvest_job.source_id)
+                    self._get_last_harvesting_date(harvest_job.source_id)
                     )
         if last_product_date is not None:
             start_date = last_product_date
@@ -196,8 +196,7 @@ class CMEMSHarvester(NextGEOSSHarvester, CMEMSBase):
                 'start_date': start_date,
                 'forecast_date': forecast_date,
                 'restart_date': start_date
-            },
-            default=str)
+                }, default=str)
         obj = HarvestObject(job=job,
                             guid=url,
                             extras=extras,
@@ -227,7 +226,8 @@ class FtpSource(object):
                             for fname in ftp.nlst(
                                 ) if self.fname_pattern.match(
                                     fname) and self._to_harvest(
-                                        fname, start_date, end_date))
+                                        fname, start_date, end_date)
+                            )
         return ftp_urls
 
     def _to_harvest(self, fname, start_date, end_date):
@@ -276,8 +276,9 @@ class FtpSource(object):
         filename = parse_filename(ftp_url)
         try:
             date_str = (
-                self.fname_pattern.match(filename
-                                         + '.nc').group('forecast_date')
+                self.fname_pattern.match(
+                    filename + '.nc'
+                ).group('forecast_date')
             )
             return datetime.strptime(date_str, '%Y%m%d')
         except IndexError:
