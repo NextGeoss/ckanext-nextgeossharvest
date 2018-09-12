@@ -174,7 +174,7 @@ class CMEMSHarvester(NextGEOSSHarvester, CMEMSBase):
 
     def _parse_date(self, date_str):
         if date_str:
-            if date_str != 'TODAY':
+            if date_str != 'TODAY' and date_str != 'YESTERDAY':
                 return datetime.strptime(date_str, '%Y-%m-%d')
             else:
                 return self.convert_date_config(date_str)
