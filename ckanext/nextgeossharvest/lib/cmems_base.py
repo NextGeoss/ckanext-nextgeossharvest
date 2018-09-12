@@ -267,7 +267,7 @@ class CMEMSBase(HarvesterBase):
         date_start = datetime.strptime(date_str_start, '%Y%m%d')
         date_end = datetime.strptime(date_str_end[1:], '%Y%m%d')
         return date_start.strftime('%Y-%m-%d'), date_end.strftime('%Y-%m-%d')
-    
+
     def _date_from_identifier_mog(self, identifier):
         identifier_parts = identifier.split('_')
         date_str = identifier_parts[1]
@@ -674,7 +674,7 @@ class CMEMSBase(HarvesterBase):
             mog_date = self._date_from_identifier_mog(content['identifier'])
             metadata['StartTime'] = '{}T00:00:00.000Z'.format(mog_date)  # noqa E501
             metadata['StopTime'] = '{}T18:00:00.000Z'.format(mog_date)  # noqa E501
-            
+
         # Is there any way to determine the size of the downloads?
         # Would be good to have (or possibly required) in some cases, like
         # OpenSearch
