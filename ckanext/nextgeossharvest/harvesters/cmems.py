@@ -196,7 +196,7 @@ class CMEMSHarvester(NextGEOSSHarvester, CMEMSBase):
             'start_date': start_date,
             'forecast_date': forecast_date,
             'restart_date': start_date
-            }, default=str
+        }, default=str
         )
         obj = HarvestObject(job=job,
                             guid=url,
@@ -225,9 +225,9 @@ class FtpSource(object):
             ftp.cwd('/{}/{}'.format(self._get_ftp_path(), directory))
             ftp_urls |= set(self._ftp_url(directory, fname)
                             for fname in ftp.nlst(
-                                ) if self.fname_pattern.match(
-                                    fname) and self._to_harvest(
-                                        fname, start_date, end_date)
+                            ) if self.fname_pattern.match(
+                                fname) and self._to_harvest(
+                                    fname, start_date, end_date)
                             )
         return ftp_urls
 
