@@ -37,7 +37,8 @@ COLLECTION_TEMPLATE = 'PROBAV_{type}_{resolution}_V001'
 L2A_COLLECTIONS = [
     "PROBAV_L2A_100M_V001", "PROBAV_L2A_1KM_V001", "PROBAV_L2A_333M_V001"
 ]
-x = ["PROBAV_P_V001"]
+
+l1c_collection = "PROBAV_P_V001"
 
 L3_COLLECTIONS = [
     "PROBAV_S1-TOA_100M_V001", "PROBAV_S1-TOA_1KM_V001",
@@ -63,6 +64,7 @@ class ProductType(Enum):
     TOA = 'TOA'
     TOC = 'TOC'
     L2A = 'L2A'
+    L1C = 'P'
 
 
 class Resolution(object):
@@ -90,6 +92,28 @@ class ProbaVCollection(object):
                                           str(self.resolution))
 
 
+class ProbaVCollectionP(object):
+    def __init__(self, product_type):
+        self.product_type = product_type
+
+    def get_description(self):
+        return COLLECTION_DESCRIPTIONS[self.get_name()]
+
+    def get_tags(self):
+        return ['Proba-V', 'L1C']
+
+    def __str__(self):
+        return 'PROBAV_{}_V001'.format(self._type_token())
+
+
+class L1CProbaVCollection(ProbaVCollectionP):
+    def _type_token(self):
+        return 'P'
+
+    def get_name(self):
+        return 'Proba-V Level-1C'
+
+
 class L2AProbaVCollection(ProbaVCollection):
     def _type_token(self):
         return 'L2A'
@@ -107,7 +131,7 @@ class SProbaVCollection(ProbaVCollection):
     def _type_token(self):
         return 'S{}-{}{}'.format(
             str(self.frequency), self.product_type.value,
-            ('NDVI' if self.ndvi else ''))
+            ('-NDVI' if self.ndvi else ''))
 
     def get_name(self):
         return 'Proba-V S{}-{}{} ({})'.format(
@@ -159,7 +183,7 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
                 except ValueError:
                     raise ValueError("end_date must have the format yyyy-mm-dd or be the string 'TODAY'")  # noqa E501
             else:
-                raise ValueError('end_date is required')
+                end_date = self.convert_date_config('TODAY')
             if not end_date > start_date:
                 raise ValueError('end_date must be after start_date')
             if 'timeout' in config_obj:
@@ -169,7 +193,9 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
             if type(config_obj.get('password', None)) != unicode:
                 raise ValueError('password is required and must be a string')
             if type(config_obj.get('username', None)) != unicode:
-                raise ValueError('username is requred and must be a string')
+                raise ValueError('username is required and must be a string')
+            if type(config_obj.get('make_private', False)) != bool:
+                raise ValueError('make_private must be true or false')
         except ValueError as e:
             raise e
 
@@ -185,8 +211,12 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         return date_time.replace(hour=0, minute=0, second=0, microsecond=0)
 
     def _get_dates_from_config(self, config):
+
         start_date_str = config['start_date']
-        end_date_str = config['end_date']
+        if 'end_date' in config:
+            end_date_str = config['end_date']
+        else:
+            end_date_str = 'TODAY'
 
         if start_date_str != 'YESTERDAY':
             start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
@@ -232,9 +262,16 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
             harvest_url = self._generate_harvest_url(l2a_collection,
                                                      start_date, end_date)
             log.info('Harvesting {}'.format(harvest_url))
-            for harvest_object in self._gather_L2A(harvest_url):
+            for harvest_object in self._gather_L2A_L1C(harvest_url):
                 _id = self._gather_entry(harvest_object)
                 ids.append(_id)
+
+        harvest_url = self._generate_harvest_url(l1c_collection,
+                                                 start_date, end_date)
+        for harvest_object in self._gather_L2A_L1C(harvest_url):
+            _id = self._gather_entry(harvest_object)
+            ids.append(_id)
+
         for l3_collection in L3_COLLECTIONS:
             harvest_url = self._generate_harvest_url(l3_collection, start_date,  # noqa: E501
                                                      end_date)
@@ -275,8 +312,9 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
             'StopTime'] = self._parse_interval(content)
         parsed_content['Collection'] = str(collection)
         parsed_content['notes'] = parsed_content['description']
-        if collection.product_type == ProductType.L2A:
-            self._parse_L2A_content(parsed_content, identifier, content)
+        if collection.product_type == ProductType.L2A or \
+                collection.product_type == ProductType.L1C:
+            self._parse_L2A_L1C_content(parsed_content, identifier, content)
         else:
             extras = content_json['extras']
             file_name = extras['file_name']
@@ -284,7 +322,7 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
             self._parse_S_content(parsed_content, content, file_name, file_url)  # noqa: E501
         return parsed_content
 
-    def _parse_L2A_content(self, parsed_content, identifier, content):
+    def _parse_L2A_L1C_content(self, parsed_content, identifier, content):
         parsed_content['identifier'] = self._parse_identifier(identifier)
         parsed_content['name'] = self._parse_name(identifier)
         parsed_content['filename'] = self._parse_filename(identifier)
@@ -312,8 +350,8 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         query_params_tuple = parse_qsl(url_parts.query)
         query_params = dict(query_params_tuple)
         query_params['BBOX'] = ','.join(str(n) for n in bbox)
-        query_params['HEIGHT'] = 10
-        query_params['WIDTH'] = 10
+        query_params['HEIGHT'] = 200
+        query_params['WIDTH'] = 200
         url_parts_list = list(url_parts)
 
         url_parts_list[4] = urlencode(
@@ -396,10 +434,15 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
 
     def _parse_collection_from_identifier(self, identifier):
         collection_name = identifier.split(':')[5]
-        _, product_type, resolution_str, _ = collection_name.split('_')
-        resolution = self._parse_resolution(resolution_str)
+        if '_P_' in collection_name:
+            _, product_type, _ = collection_name.split('_')
+        else:
+            _, product_type, resolution_str, _ = collection_name.split('_')
+            resolution = self._parse_resolution(resolution_str)
         if product_type == 'L2A':
             return L2AProbaVCollection(ProductType.L2A, resolution)
+        elif product_type == 'P':
+            return L1CProbaVCollection(ProductType.L1C)
         else:
             product_parts = product_type.split('-')
             frequency = int(product_parts[0][1:])
@@ -456,7 +499,7 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         response = self._get_url(url, auth=auth, **kwargs)
         return BeautifulSoup(response.text, 'lxml-xml')
 
-    def _gather_L2A(self, open_search_url, auth=None):
+    def _gather_L2A_L1C(self, open_search_url, auth=None):
         for open_search_page in self._open_search_pages_from(
                 open_search_url, auth=auth):
             for open_search_entry in self._parse_open_search_entries(
@@ -509,7 +552,7 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
     def _open_search_pages_from(self,
                                 harvest_url,
                                 limit=100,
-                                timeout=5,
+                                timeout=10,
                                 auth=None,
                                 provider=None,
                                 parser='lxml-xml'):  # noqa: E501

@@ -20,7 +20,7 @@ COLLECTION_DESCRIPTIONS = {
     ("PROBA-V Level2A - 1KM segments contain the "
      "Level 1C (P product) data projected on a uniform 1Km grid"
      "."),
-    "Proba-V Level-1C ":
+    "Proba-V Level-1C":
     ("Raw data which is geo-located and "
      "radiometrically calibrated to Top Of Atmosphere (TOA) reflectance "
      "values."),
