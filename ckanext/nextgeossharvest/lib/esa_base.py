@@ -51,12 +51,10 @@ class SentinelHarvester(HarvesterBase):
         item = {}
 
         for subitem_node in item_node.findChildren():
-            key = subitem_node.name
-            value = subitem_node.text
             if subitem_node.name in name_elements:
-                key = normalized_names.get(subitem_node['name'])
+                key = normalized_names.get(subitem_node.get('name'))
                 if key:
-                    item[key] = value
+                    item[key] = subitem_node.text
 
         return item
 

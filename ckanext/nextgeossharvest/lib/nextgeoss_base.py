@@ -82,6 +82,7 @@ class NextGEOSSHarvester(HarvesterBase):
 
         return logic.get_action('package_show')(context, {'id': package.name})
 
+
     def _refresh_harvest_objects(self, harvest_object, package_id):
         """
         Perform harvester housekeeping:
@@ -110,6 +111,7 @@ class NextGEOSSHarvester(HarvesterBase):
         harvest_object.current = True
         harvest_object.save()
 
+
     def _create_package_dict(self, parsed_content):
         """
         Create a package dictionary using the parsed content.
@@ -126,12 +128,14 @@ class NextGEOSSHarvester(HarvesterBase):
         package_dict['private'] = self.source_config.get('make_private', False)
         return package_dict
 
+
     def _create_or_update_dataset(self, harvest_object, status):
         """
         Create a data dictionary and then create or update a dataset.
         """
         parsed_content = self._parse_content(harvest_object.content)
         package_dict = self._create_package_dict(parsed_content)
+
         # Add the harvester ID to the extras so that CKAN can find the
         # harvested datasets in searches for stats, etc.
 
@@ -170,6 +174,7 @@ class NextGEOSSHarvester(HarvesterBase):
             'session': model.Session,
             'user': self._get_user_name(),
         }
+
         tag_schema = logic.schema.default_tags_schema()
         tag_schema['name'] = [not_empty, unicode]  # noqa: F821
         extras_schema = logic.schema.default_extras_schema()
@@ -237,11 +242,12 @@ class NextGEOSSHarvester(HarvesterBase):
 
     def _get_extras(self, parsed_content):
         """Return a list of CKAN extras."""
-        skip = {'id', 'title', 'tags', 'status', 'notes', 'name', 'resource',
-                'private'}
-        extras = [{'key': key, 'value': value}
-                  for key, value in parsed_content.items()
-                  if key not in skip]
+        skip = {'id', 'title', 'tags', 'status', 'notes', 'name', 'resource'}
+        extras_tmp = [{'key': key, 'value': value}
+                    for key, value in parsed_content.items()
+                    if key not in skip]
+        extras = [{'key': 'dataset_extra', 'value': str(extras_tmp)}]
+        
         return extras
 
     def _update_tags(self, old_tags, new_tags):
