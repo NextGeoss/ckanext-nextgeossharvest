@@ -1,12 +1,10 @@
-from pylons import request
-from ckan import logic
-from ckan import model
-import ckan.lib.helpers as h
-import ckan.plugins as p
 import ast
 
+from ckan.common import config
 
-def harvest_sorted_extras(package_extras, auto_clean=False, subs=None, exclude=None):
+
+def harvest_sorted_extras(package_extras, auto_clean=False, subs=None,
+                          exclude=None):
     ''' Used for outputting package extras
 
     :param package_extras: the package extras
