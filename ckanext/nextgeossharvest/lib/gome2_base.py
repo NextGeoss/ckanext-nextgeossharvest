@@ -23,11 +23,12 @@ class GOME2Base(HarvesterBase):
     def _create_harvest_object(self, content_dict):
 
         extras = [HOExtra(key='status',
-                          value='new')]
+                          value='new'),
+                HOExtra(key='restart_date',
+                        value=content_dict['date_string'])]
 
         # The NextGEOSS harvester flow requires content in the import stage.
         content = json.dumps(content_dict)
-        print 'CONTENT ', content
 
         obj = HarvestObject(job=self.job, guid=content_dict['identifier'],
                             extras=extras, content=content)
@@ -46,10 +47,9 @@ class GOME2Base(HarvesterBase):
         for coverage in coverages:
 
             content_dicts = self._content_dict_generator(coverage)
-            print content_dicts
             ho_ids = [self._create_harvest_object(content_dict)
                       for content_dict in content_dicts
-                      if self._missing_or_harvested(coverage, content_dict)]  # noqa: E501
+                      if not self._missing_or_harvested(coverage, content_dict)]  # noqa: E501
             ids.extend(ho_ids)
 
         return ids
@@ -282,14 +282,11 @@ class GOME2Base(HarvesterBase):
 
         return resource_dict
 
-
     def convert_date_config(self, term):
         """Convert a term into a datetime object."""
         if term == 'YESTERDAY':
             date_time = datetime.now() - timedelta(days=1)
         elif term in {'TODAY', 'NOW'}:
             date_time = datetime.now()
-
-        print date_time
 
         return date_time.replace(hour=0, minute=0, second=0, microsecond=0)

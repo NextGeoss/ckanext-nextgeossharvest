@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import ast
 import json
 import logging
 import os
@@ -49,10 +50,30 @@ class NextGEOSSHarvester(HarvesterBase):
         """
         Helper method for retrieving the value from a package's extras list.
         """
-        for key, value in package_dict['extras'].items():
-            if key == flagged_extra:
+        extras = self.convert_string_extras(package_dict['extras'])
+
+        if "dataset_extra" in extras:
+            extras = ast.literal_eval(extras["dataset_extra"])
+
+        if type(extras) == list:
+            for extra in extras:
+                if extra["key"] == flagged_extra:
+                    return extra["value"]
+        elif type(extras) == dict:
+            value = extras.get(flagged_extra)
+            if value:
                 return value
+
         return default
+
+    def convert_string_extras(self, extras_list):
+        """Convert extras stored as a string back into a normal extras list."""
+        try:
+            extras = ast.literal_eval(extras_list[0]["value"])
+            assert type(extras) == list
+            return extras
+        except (Exception, AssertionError):
+            return extras_list
 
     def _set_source_config(self, config_str):
         '''
@@ -82,7 +103,6 @@ class NextGEOSSHarvester(HarvesterBase):
 
         return logic.get_action('package_show')(context, {'id': package.name})
 
-
     def _refresh_harvest_objects(self, harvest_object, package_id):
         """
         Perform harvester housekeeping:
@@ -111,7 +131,6 @@ class NextGEOSSHarvester(HarvesterBase):
         harvest_object.current = True
         harvest_object.save()
 
-
     def _create_package_dict(self, parsed_content):
         """
         Create a package dictionary using the parsed content.
@@ -127,7 +146,6 @@ class NextGEOSSHarvester(HarvesterBase):
         package_dict['resources'] = self._get_resources(parsed_content)
         package_dict['private'] = self.source_config.get('make_private', False)
         return package_dict
-
 
     def _create_or_update_dataset(self, harvest_object, status):
         """
@@ -244,10 +262,10 @@ class NextGEOSSHarvester(HarvesterBase):
         """Return a list of CKAN extras."""
         skip = {'id', 'title', 'tags', 'status', 'notes', 'name', 'resource'}
         extras_tmp = [{'key': key, 'value': value}
-                    for key, value in parsed_content.items()
-                    if key not in skip]
+                      for key, value in parsed_content.items()
+                      if key not in skip]
         extras = [{'key': 'dataset_extra', 'value': str(extras_tmp)}]
-        
+
         return extras
 
     def _update_tags(self, old_tags, new_tags):
