@@ -35,14 +35,6 @@ log = logging.getLogger(__name__)
 
 COLLECTION_TEMPLATE = 'PROBAV_{type}_{resolution}_V001'
 
-l2A_COLLECTIONS = "PROBAV_L2A_1KM_V001"
-
-l2a_collection_delayed_100m = "PROBAV_L2A_100M_V001"
-
-L2A_COLLECTIONS_DELAYED_333M = [
-    "PROBAV_L2A_333M_V001"
-]
-
 l1c_collection = "PROBAV_P_V001"
 
 L3_COLLECTIONS = [
