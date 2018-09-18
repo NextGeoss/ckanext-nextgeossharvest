@@ -10,7 +10,7 @@ from bs4 import BeautifulSoup
 from os import path
 from urllib import urlencode, unquote
 from urlparse import urlparse, urlunparse, parse_qsl
-
+from sqlalchemy import desc
 
 import requests
 from requests.auth import HTTPBasicAuth
@@ -34,21 +34,32 @@ from probav_collections import COLLECTION_DESCRIPTIONS
 log = logging.getLogger(__name__)
 
 COLLECTION_TEMPLATE = 'PROBAV_{type}_{resolution}_V001'
-L2A_COLLECTIONS = [
-    "PROBAV_L2A_100M_V001", "PROBAV_L2A_1KM_V001", "PROBAV_L2A_333M_V001"
+
+l2A_COLLECTIONS = "PROBAV_L2A_1KM_V001"
+
+l2a_collection_delayed_100m = "PROBAV_L2A_100M_V001"
+
+L2A_COLLECTIONS_DELAYED_333M = [
+    "PROBAV_L2A_333M_V001"
 ]
 
 l1c_collection = "PROBAV_P_V001"
 
 L3_COLLECTIONS = [
-    "PROBAV_S1-TOA_100M_V001", "PROBAV_S1-TOA_1KM_V001",
-    "PROBAV_S1-TOA_333M_V001", "PROBAV_S1-TOC_100M_V001",
-    "PROBAV_S1-TOC_1KM_V001", "PROBAV_S1-TOC_333M_V001",
-    "PROBAV_S1-TOC-NDVI_100M_V001", "PROBAV_S10-TOC_1KM_V001",
-    "PROBAV_S10-TOC_333M_V001", "PROBAV_S10-TOC-NDVI_1KM_V001",
-    "PROBAV_S10-TOC-NDVI_333M_V001", "PROBAV_S5-TOA_100M_V001",
-    "PROBAV_S5-TOC_100M_V001", "PROBAV_S5-TOC-NDVI_100M_V001"
+    "PROBAV_S1-TOA_1KM_V001", "PROBAV_S1-TOC_1KM_V001",
+    "PROBAV_S10-TOC_1KM_V001", "PROBAV_S10-TOC-NDVI_1KM_V001"
 ]
+L3_COLLECTIONS_DELAYED_100 = [
+    "PROBAV_S1-TOA_100M_V001", "PROBAV_S1-TOC-NDVI_100M_V001",
+    "PROBAV_S5-TOC-NDVI_100M_V001", "PROBAV_S5-TOA_100M_V001",
+    "PROBAV_S5-TOC_100M_V001", "PROBAV_S1-TOC_100M_V001"
+]
+
+L3_COLLECTIONS_DELAYED_333 = [
+    "PROBAV_S1-TOA_333M_V001", "PROBAV_S1-TOC_333M_V001",
+    "PROBAV_S10-TOC_333M_V001", "PROBAV_S10-TOC-NDVI_333M_V001"
+]
+
 URL_TEMPLATE = 'http://www.vito-eodata.be/openSearch/findProducts.atom?collection=urn:ogc:def:EOP:VITO:{}&platform=PV01&start={}&end={}&count=500'  # count=500  # noqa: E501
 DATE_FORMAT = '%Y-%m-%d'
 
@@ -194,6 +205,13 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
                 raise ValueError('password is required and must be a string')
             if type(config_obj.get('username', None)) != unicode:
                 raise ValueError('username is required and must be a string')
+            if config_obj.get('collections_type') not in {'current',
+                                                          'delayed'}:
+                raise ValueError('collections_type is required and must be a "current" or "delayed"')  # noqa E501
+            if config_obj.get('collections_type') == 'delayed':
+                if config_obj.get('resolution') not in {'100',
+                                                        '333'}:
+                    raise ValueError('resolution is required and must be a "100" or "333"')  # noqa E501
             if type(config_obj.get('make_private', False)) != bool:
                 raise ValueError('make_private must be true or false')
         except ValueError as e:
@@ -213,19 +231,21 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
     def _get_dates_from_config(self, config):
 
         start_date_str = config['start_date']
-        if 'end_date' in config:
-            end_date_str = config['end_date']
-        else:
-            end_date_str = 'TODAY'
-
         if start_date_str != 'YESTERDAY':
             start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
         else:
             start_date = self.convert_date_config(start_date_str)
-        if end_date_str != 'TODAY':
-            end_date = datetime.strptime(end_date_str, '%Y-%m-%d')
+
+        if 'end_date' in config:
+            end_date_str = config['end_date']
+            if end_date_str != 'TODAY':
+                end_date = datetime.strptime(end_date_str, '%Y-%m-%d')
+            else:
+                end_date = self.convert_date_config(end_date_str)
+            if start_date + timedelta(days=1) != end_date:
+                end_date = start_date + timedelta(days=1)
         else:
-            end_date = self.convert_date_config(end_date_str)
+            end_date = start_date + timedelta(days=1)
 
         return start_date, end_date
 
@@ -254,33 +274,73 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         auth = (self.source_config['username'],
                 self.source_config['password'])
 
-        start_date, end_date = self._get_dates_from_config(config)
+        collections_type = self.source_config['collections_type']
+
+        last_product_date = (
+            self._get_last_harvesting_date(harvest_job.source_id)
+        )
+        if last_product_date is not None:
+            start_date = last_product_date
+            end_date = start_date + timedelta(days=1)
+        else:
+            start_date, end_date = self._get_dates_from_config(config)
 
         ids = []
 
-        for l2a_collection in L2A_COLLECTIONS:
-            harvest_url = self._generate_harvest_url(l2a_collection,
-                                                     start_date, end_date)
-            log.info('Harvesting {}'.format(harvest_url))
-            for harvest_object in self._gather_L2A_L1C(harvest_url):
-                _id = self._gather_entry(harvest_object)
-                ids.append(_id)
+        if collections_type == 'current':
+            l2a_collection = "PROBAV_L2A_1KM_V001"
+            l3Collections = L3_COLLECTIONS
+        elif collections_type == 'delayed':
+            resolution = self.source_config['resolution']
+            if resolution == '100':
+                l2a_collection = "PROBAV_L2A_100M_V001"
+                l3Collections = L3_COLLECTIONS_DELAYED_100
+            elif resolution == '333':
+                l2a_collection = "PROBAV_L2A_333M_V001"
+                l3Collections = L3_COLLECTIONS_DELAYED_333
 
-        harvest_url = self._generate_harvest_url(l1c_collection,
-                                                 start_date, end_date)
-        for harvest_object in self._gather_L2A_L1C(harvest_url):
-            _id = self._gather_entry(harvest_object)
-            ids.append(_id)
-
-        for l3_collection in L3_COLLECTIONS:
+        for l3_collection in l3Collections:
             harvest_url = self._generate_harvest_url(l3_collection, start_date,  # noqa: E501
                                                      end_date)
             log.info('Harvesting {}'.format(harvest_url))
             for harvest_object in self._gather_L3(harvest_url, auth=auth):
                 _id = self._gather_entry(harvest_object)
+                if _id:
+                    ids.append(_id)
+
+        if collections_type == 'current':
+            harvest_url = self._generate_harvest_url(l1c_collection,
+                                                     start_date, end_date)
+            for harvest_object in self._gather_L2A_L1C(harvest_url):
+                _id = self._gather_entry(harvest_object)
+                if _id:
+                    ids.append(_id)
+
+        harvest_url = self._generate_harvest_url(l2a_collection,
+                                                 start_date, end_date)
+        log.info('Harvesting {}'.format(harvest_url))
+        for harvest_object in self._gather_L2A_L1C(harvest_url):
+            _id = self._gather_entry(harvest_object)
+            if _id:
                 ids.append(_id)
 
         return ids
+
+    def _get_last_harvesting_date(self, source_id):
+        objects = self._get_imported_harvest_objects_by_source(source_id)
+        sorted_objects = objects.order_by(desc(HarvestObject.import_finished))
+        last_object = sorted_objects.limit(1).first()
+        if last_object is not None:
+            soup = BeautifulSoup(last_object.content)
+            restart_date = soup.find('dc:date').string.split('/')[1].split('T')[0]  # noqa: E501
+            return datetime.strptime(restart_date, '%Y-%m-%d')
+        else:
+            return None
+
+    def _get_imported_harvest_objects_by_source(self, source_id):
+        return Session.query(HarvestObject).filter(
+            HarvestObject.harvest_source_id == source_id,
+            HarvestObject.import_finished is not None)
 
     def _generate_harvest_url(self, collection, start_date, end_date):
         date_format = '%Y-%m-%d'
@@ -290,10 +350,6 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
 
     def fetch_stage(self, harvest_object):
         """Fetch was completed during gather."""
-
-        # We don't need to fetch anything—the OpenSearch entries contain all  # noqa: E501
-        # the content we need for the import stage.
-
         return True
 
     def _parse_content(self, content_str):
@@ -639,11 +695,8 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         # Create a harvest object for each entry
         entry_guid = entry['guid']
         log.debug('gathering %s', entry_guid)
-        entry_name = entry['identifier']
+        entry_name = entry['identifier'].replace('v101_', '').replace('.hdf5', '')  # noqa: E501
         entry_restart_date = entry['restart_date']
-
-        # package = Session.query(Package) \
-        #     .filter(Package.name == entry_name).first()
 
         package_query = Session.query(Package)
         query_filtered = package_query.filter(Package.name == entry_name)
@@ -664,29 +717,39 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
                 log.debug('{} already exists and will be updated.'.format(
                     entry_name))  # noqa: E501
                 status = 'change'
-            # E.g., a Sentinel dataset exists,
-            # but doesn't have a NOA resource yet.
+                obj = HarvestObject(
+                    guid=entry_guid,
+                    job=self.job,
+                    extras=[
+                        HOExtra(key='status', value=status),
+                        HOExtra(key='restart_date', value=entry_restart_date)
+                    ])
+                obj.content = entry['content']
+                obj.package = package
+                obj.save()
+                return obj.id
             elif self.flagged_extra and not self._get_package_extra(
                     package.as_dict(), self.flagged_extra):  # noqa: E501
                 log.debug('{} already exists and will be extended.'.format(
                     entry_name))  # noqa: E501
                 status = 'change'
+                obj = HarvestObject(
+                    guid=entry_guid,
+                    job=self.job,
+                    extras=[
+                        HOExtra(key='status', value=status),
+                        HOExtra(key='restart_date', value=entry_restart_date)
+                    ])
+                obj.content = entry['content']
+                obj.package = package
+                obj.save()
+                return obj.id
             else:
                 log.debug(
                     '{} will not be updated.'.format(entry_name))  # noqa: E501  # noqa: E501
                 status = 'unchanged'
+                return
 
-            obj = HarvestObject(
-                guid=entry_guid,
-                job=self.job,
-                extras=[
-                    HOExtra(key='status', value=status),
-                    HOExtra(key='restart_date', value=entry_restart_date)
-                ])
-            obj.content = entry['content']
-            obj.package = package
-            obj.save()
-            return obj.id
         elif not package:
             # It's a product we haven't harvested before.
             log.debug(
