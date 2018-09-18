@@ -266,6 +266,7 @@ The PROBA-V harvester has configuration has:
 6. `make_private` (optional) determines whether the datasets created by the harvester will be private or public. The default is `false`, i.e., by default, all datasets created by the harvester will be public.
 
 #### Examples of PROVA-V settings
+```
 {
 "start_date":"2018-08-01",
 "collections_type":"current",
@@ -273,7 +274,8 @@ The PROBA-V harvester has configuration has:
 "password":"nextgeoss",
 "make_private":false
 }
-
+```
+```
 {
 "start_date":"2018-08-01",
 "collections_type":"delayed",
@@ -282,7 +284,8 @@ The PROBA-V harvester has configuration has:
 "password":"nextgeoss",
 "make_private":false
 }
-
+```
+```
 {
 "start_date":"2018-08-01",
 "collections_type":"delayed",
@@ -291,6 +294,7 @@ The PROBA-V harvester has configuration has:
 "password":"nextgeoss",
 "make_private":false
 }
+```
 
 The start_date for the delayed collections can be any date before the current_day - 1 month. For the current collections the start_date can be any date.
 
