@@ -21,6 +21,9 @@ This extension contains harvester plugins for harvesting from sources used by Ne
 5. [Harvesting GOME-2 products](#harvesting-gome2)
     1. [GOME-2 Settings](#gome2-settings)
     2. [Running a GOME-2 harvester](#running-gome2)
+5. [Harvesting PROBA-V products](#harvesting-proba-v)]
+    1. [PROBA-V Settings](#proba-v-settings)
+    2. [Running a PROBA-V harvester](#running-proba-v)
 6. [Developing new harvesters](#develop)
     1. [The basic harvester workflow](#basicworkflow)
         1. [gather_stage](#gather_stage)
@@ -291,7 +294,7 @@ The PROBA-V harvester has configuration has:
 
 The start_date for the delayed collections can be any date before the current_day - 1 month. For the current collections the start_date can be any date.
 
-### <a name="running-probav"></a>Running a PROBA-V harvester
+### <a name="running-proba-v"></a>Running a PROBA-V harvester
 1. Add `probav` to the list of plugins in your .ini file.
 2. Create a new harvester via the harvester interface.
 3. Select `Proba-V Harvester` from the list of harvesters.
