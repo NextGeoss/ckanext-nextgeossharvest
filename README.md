@@ -21,7 +21,7 @@ This extension contains harvester plugins for harvesting from sources used by Ne
 5. [Harvesting GOME-2 products](#harvesting-gome2)
     1. [GOME-2 Settings](#gome2-settings)
     2. [Running a GOME-2 harvester](#running-gome2)
-5. [Harvesting PROBA-V products](#harvesting-proba-v)]
+5. [Harvesting PROBA-V products](#harvesting-proba-v)
     1. [PROBA-V Settings](#proba-v-settings)
     2. [Running a PROBA-V harvester](#running-proba-v)
 6. [Developing new harvesters](#develop)
