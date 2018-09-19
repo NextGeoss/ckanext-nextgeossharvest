@@ -71,10 +71,13 @@ class GOME2Base(HarvesterBase):
         been harvested. Return False if neither is the case.
         """
         if self._was_harvested(content_dict['identifier']):
+            log.debug('{} will not be updated.'.format(content_dict['identifier']))
             return True
         elif self._is_missing(coverage, content_dict['date_string']):
+            log.debug('{} is missing on the original Data Source so it will not be harvested.'.format(content_dict['identifier']))  # noqa: E501
             return True
         else:
+            log.debug('{} has not been harvested before. Attempting to harvest it.'.format(content_dict['identifier']))  # noqa: E501
             return False
 
     def _was_harvested(self, identifier):
@@ -85,10 +88,8 @@ class GOME2Base(HarvesterBase):
             .filter(Package.name == identifier.lower()).first()
 
         if package:
-            log.debug('{} will not be updated.'.format(identifier))
             return True
         else:
-            log.debug('{} has not been harvested before. Attempting to harvest it.'.format(identifier))  # noqa: E501
             return False
 
     def _is_missing(self, coverage, date_string):
