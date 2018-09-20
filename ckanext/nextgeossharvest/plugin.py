@@ -1,9 +1,11 @@
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
+from ckanext.nextgeossharvest import helpers
 
 
 class NextgeossharvestPlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IConfigurer)
+    plugins.implements(plugins.ITemplateHelpers, inherit=True)
 
     # IConfigurer
 
@@ -11,3 +13,10 @@ class NextgeossharvestPlugin(plugins.SingletonPlugin):
         toolkit.add_template_directory(config_, 'templates')
         toolkit.add_public_directory(config_, 'public')
         toolkit.add_resource('fanstatic', 'nextgeossharvest')
+
+    # ITemplateHelpers
+
+    def get_helpers(self):
+        return {
+            'harvest_sorted_extras': helpers.harvest_sorted_extras,
+        }

@@ -51,12 +51,10 @@ class SentinelHarvester(HarvesterBase):
         item = {}
 
         for subitem_node in item_node.findChildren():
-            key = subitem_node.name
-            value = subitem_node.text
             if subitem_node.name in name_elements:
-                key = normalized_names.get(subitem_node['name'])
+                key = normalized_names.get(subitem_node.get('name'))
                 if key:
-                    item[key] = value
+                    item[key] = subitem_node.text
 
         return item
 
@@ -81,7 +79,10 @@ class SentinelHarvester(HarvesterBase):
                 item['collection_name'] = 'Sentinel-3 SRAL Level-2 Water'
                 item['collection_description'] = 'SENTINEL-3 is the first Earth Observation Altimetry mission to provide 100% SAR altimetry coverage where LRM is maintained as a back-up operating mode. This is a product of Level 2 processing and geographical coverage over water.'  # noqa: E501
             else:
-                log.warning('No collection for Sentinel-3 product {}'.format(identifier))  # noqa: E501
+                message = 'No collection for Sentinel-3 product {}'.format(
+                    item["identifier"])
+                log.warning(message)
+                self._save_object_error(message, self.obj, "Import")
         elif identifier.startswith('s2'):
             if 'msil1c' in identifier:
                 item['collection_id'] = 'SENTINEL2_L1C'

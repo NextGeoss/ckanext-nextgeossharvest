@@ -195,34 +195,41 @@ The GOME-2 harvester harvests products from the following GOME-2 coverages:
 4. GOME2_SO2
 5. GOME2_SO2mass
 
-The GOME-2 program has ceased creating those coverages. The earliest is from 2007-01-04 and the latest is from 2018-02-17.
-
-Unlike other harvesters, the GOME-2 harvester doesn't make any requests at all. It programmatically creates datasets and resources for products in those collections. There's no central registry to query, and the URL schemas are known.
-
-For that reason, the harvester (also unlike other harvesters) only needs to be run once in order to "harvest" all the products. The start and end dates are configurable, so it's possible to harvest the products in smaller chunks.
-
-Since no requests are made, there will never be any failures do to the source being unavailable and thus no need to retry failed requests, etc. There's no reason not to just harvest all the products at once. Harvesting a smaller date range is useful for generating a limited number of datasets for testing the portal, though.
+Unlike other harvesters, the GOME-2 harvester only makes requests to verify that a product exists. It programmatically creates datasets and resources for products that do exist within the specified date range.
 
 ### <a name="gome2-settings"></a>GOME-2 Settings
 The GOME-2 harvester has two required and one optional setting.
-1. `start_date` (required) determines the date on which the harvesting begins. It must be in the format `YYY-MM-DD`. If you want to harvest from the earliest product onwards, use `2007-01-04`
-2. `end_date` (required) determines the date on which the harvesting ends. It is inclusive, i.e., if the end date is `2017-03-2`, then products will be harvested up to _and including_ that date. If you want to harvest up to and including the very last GOME-2 product, use `2018-02-17`.
+1. `start_date` (required) determines the date on which the harvesting begins. It must be in the format `YYY-MM-DD` or the string `"YESTERDAY"`. If you want to harvest from the earliest product onwards, use `2007-01-04`. If you will be harvesting on a daily basis, use `"YESTERDAY"`
+2. `end_date` (required) determines the date on which the harvesting ends. It must be in the format `YYY-MM-DD` or the string `"TODAY"`. It is exclusive, i.e., if the end date is `2017-03-2`, then products will be harvested up to _and including_ 2017-03-01 and no products from 2017-03-02 will be included. For daily harvesting use `"TODAY"`.
 3. `make_private` (optional) determines whether the datasets created by the harvester will be private or public. The default is `false`, i.e., by default, all datasets created by the harvester will be public.
 
 #### Example of GOME-2 settings
+```
 {
     "start_date": "2017-03-01",
     "end_date": "2017-03-02",
     "make_private": false
 }
+```
 
+or
+
+```
+{
+    "start_date": "YESTERDAY",
+    "end_date": "TODAY",
+    "make_private": false
+}
+```
 ### <a name="running-gome2"></a>Running a GOME-2 harvester
 1. Add `gome2` to the list of plugins in your .ini file.
 2. Create a new harvester via the harvester interface.
-3. The URL you enter does not matter--as mentioned above, the GOME-2 harvester does not make any requests. Select `GOME2` from the list of harvesters.
+3. The URL you enter does not matter--the GOME-2 harvester only makes requests to a predetermined set of URLs. Select `GOME2` from the list of harvesters.
 4. Add a config as described above.
-5. Select `Manual` from the freuqency options. The harvester only needs to run once; the datasets are created programmatically and the program that produced the products has ended, so there are no updates or new products that you'll need to harvest later.
-6. Run the harvester. It will programmatically create datasets representing all the GOME-2 products.
+5. Select a frequency from the frequencey options. If you want to use a cron job (recommended) to run the harvester, select `Manual`.
+
+#### Known issues
+The GOME-2 harvester, like the CMEMS harvester, does not have a way to automatically recover from outages. If the data hub server or the source server suffers an outage while the harvester is scheduled to run, it will skip whatever products might have been harvested at that time. The assumption is that running the harvester three times a day will be sufficient to prevent any outages from affecting the harvesting, but a better solution would be improving the design of the harvester.
 
 ## <a name="harvesting-proba-v"></a>Harvesting PROBA-V products
 The PROBA-V harvester harvests products from the following collections:

@@ -3,14 +3,17 @@
 
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from ckan.plugins.core import implements
 
+from ckanext.harvest.model import HarvestObject
 from ckanext.harvest.interfaces import IHarvester
-
 from ckanext.nextgeossharvest.lib.gome2_base import GOME2Base
 from ckanext.nextgeossharvest.lib.nextgeoss_base import NextGEOSSHarvester
+
+from ckan.model import Session
+from sqlalchemy import desc
 
 
 class GOME2Harvester(GOME2Base,
@@ -34,24 +37,34 @@ class GOME2Harvester(GOME2Base,
         try:
             config_obj = json.loads(config)
 
+            start_date = config_obj['start_date']
+
             if 'start_date' in config_obj:
                 try:
-                    start_date = datetime.strptime(config_obj['start_date'],
-                                                   '%Y-%m-%d')
+                    start_date = config_obj['start_date']
+                    if start_date != 'YESTERDAY':
+                        start_date = datetime.strptime(start_date, '%Y-%m-%d')
+                    else:
+                        start_date = self.convert_date_config(start_date)
                 except ValueError:
                     raise ValueError('start_date format must be yyyy-mm-dd')
             else:
                 raise ValueError('start_date is required')
             if 'end_date' in config_obj:
                 try:
-                    end_date = datetime.strptime(config_obj['end_date'],
-                                                 '%Y-%m-%d')
+                    end_date = config_obj['end_date']
+                    if end_date != 'TODAY':
+                        end_date = datetime.strptime(end_date, '%Y-%m-%d')
+                    else:
+                        end_date = self.convert_date_config(end_date)
                 except ValueError:
                     raise ValueError('end_date format must be yyyy-mm-dd')
             else:
-                raise ValueError('end_date is required')
-            if not end_date >= start_date:
-                raise ValueError('end_date must be >= start_date')
+                end_date = self.convert_date_config('TODAY')
+
+            if not (end_date > start_date) or (start_date == 'YESTERDAY' and end_date == 'TODAY'):  # noqa: E501
+                raise ValueError('end_date must be > start_date')
+
             if type(config_obj.get('make_private', False)) != bool:
                 raise ValueError('make_private must be true or false')
         except ValueError as e:
@@ -63,14 +76,43 @@ class GOME2Harvester(GOME2Base,
         log = logging.getLogger(__name__ + '.gather')
         log.debug('GOME2 Harvester gather_stage for job: %r', harvest_job)
 
+        if not hasattr(self, 'provider_logger'):
+            self.provider_logger = self.make_provider_logger()
+
         self.job = harvest_job
         self._set_source_config(harvest_job.source.config)
 
         start_date = self.source_config.get('start_date')
-        self.start_date = datetime.strptime(start_date, '%Y-%m-%d')
+        if start_date == "YESTERDAY":
+            self.start_date = self.convert_date_config(start_date)
+        else:
+            self.start_date = datetime.strptime(start_date, '%Y-%m-%d')
 
-        end_date = self.source_config.get('end_date', 'NOW')
-        self.end_date = datetime.strptime(end_date, '%Y-%m-%d')
+        end_date = self.source_config.get('end_date')
+
+        if end_date is not None:
+            self.end_date = datetime.strptime(end_date, '%Y-%m-%d')
+        else:
+            self.end_date = datetime.now()
+
+        if self.get_last_harvesting_date() is None:
+            self.start_date = self.start_date
+        else:
+            self.start_date = self.get_last_harvesting_date()
+
+        if self.end_date > datetime.now():
+            self.end_date = datetime.now()
+
+        if self.end_date > self.start_date + timedelta(days=10):
+            self.end_date = self.start_date + timedelta(days=10)
+
+        date = self.start_date
+        date_strings = []
+        while date < self.end_date:
+            date_strings.append(datetime.strftime(date, '%Y-%m-%d'))
+            date += timedelta(days=1)
+        self.date_strings = date_strings
+        print('DateList: {}'.format(str(date_strings)))
 
         ids = self._create_harvest_objects()
 
@@ -78,3 +120,16 @@ class GOME2Harvester(GOME2Base,
 
     def fetch_stage(self, harvest_object):
         return True
+
+    def get_last_harvesting_date(self):
+        last_object = Session.query(HarvestObject).filter(
+            HarvestObject.harvest_source_id == self.job.source_id,
+            HarvestObject.import_finished is not None).\
+            order_by(desc(HarvestObject.import_finished)).\
+            limit(1).first()
+        if last_object is not None:
+            restart_date = self._get_object_extra(last_object,
+                                                  'restart_date')
+            return datetime.strptime(restart_date, '%Y-%m-%d')
+        else:
+            return None
