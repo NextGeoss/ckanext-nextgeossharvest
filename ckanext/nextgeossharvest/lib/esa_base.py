@@ -82,7 +82,6 @@ class SentinelHarvester(HarvesterBase):
                 message = 'No collection for Sentinel-3 product {}'.format(
                     item["identifier"])
                 log.warning(message)
-                self._save_object_error(message, self.obj, "Import")
         elif identifier.startswith('s2'):
             if 'msil1c' in identifier:
                 item['collection_id'] = 'SENTINEL2_L1C'
