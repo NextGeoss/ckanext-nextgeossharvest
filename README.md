@@ -36,7 +36,7 @@ This extension contains harvester plugins for harvesting from sources used by Ne
 10. [Logs](#logs)
 
 ## <a name="repo"></a>What's in the repository
-The repository contains three plugins:
+The repository contains four plugins:
 1. `nextgeossharvest`, the base CKAN plugin
 2. `esa`, a harvester plugin for harvesting Sentinel products from SciHub, NOA, and CODE-DE via their DHuS interfaces
 3. `cmems`, a harvester plugin for harvesting the following types of CMEMS products:
