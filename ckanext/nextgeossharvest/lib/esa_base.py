@@ -62,7 +62,31 @@ class SentinelHarvester(HarvesterBase):
         """Return the item with collection ID, name, and description."""
         identifier = item['identifier'].lower()
         if identifier.startswith('s3'):
-            if 'cal' in identifier:
+            if 'efr' in identifier:
+                item['collection_id'] = 'SENTINEL3_OLCI_L1_EFR'
+                item['collection_name'] = 'Sentinel-3 OLCI Level-1 Full Resolution'  # noqa: E501
+                item['collection_description'] = 'SENTINEL-3 OLCI Level-1 product provides radiances for each pixel in the instrument grid, each view and each OLCI channel, plus annotation data associated to OLCI pixels. The output of this product is during EO processing mode for Full Resolution.'  # noqa: E501
+            elif 'err' in identifier:
+                item['collection_id'] = 'SENTINEL3_OLCI_L1_ERR'
+                item['collection_name'] = 'Sentinel-3 OLCI Level-1 Reduced Resolution'  # noqa: E501
+                item['collection_description'] = 'SENTINEL-3 OLCI Level-1 product provides radiances for each pixel in the instrument grid, each view and each OLCI channel, plus annotation data associated to OLCI pixels. The output of this product is during EO processing mode for Reduced Resolution.'  # noqa: E501
+            elif 'lfr' in identifier:
+                item['collection_id'] = 'SENTINEL3_OLCI_L2_LFR'
+                item['collection_name'] = 'Sentinel-3 OLCI Level-2 Land Full Resolution'  # noqa: E501
+                item['collection_description'] = 'SENTINEL-3 OLCI level-2 land product provides land and atmospheric geophysical parameters computed for full Resolution.'  # noqa: E501
+            elif 'lrr' in identifier:
+                item['collection_id'] = 'SENTINEL3_OLCI_L2_LRR'
+                item['collection_name'] = 'Sentinel-3 OLCI Level-2 Land Reduced Resolution'  # noqa: E501
+                item['collection_description'] = 'SENTINEL-3 OLCI level-2 land product provides land and atmospheric geophysical parameters computed for reduced Resolution.'  # noqa: E501
+            elif 'rbt' in identifier:
+                item['collection_id'] = 'SENTINEL3_SLSTR_L1_RBT'
+                item['collection_name'] = 'Sentinel-3 SLSTR Level-1 Radiances and Brightness Temperatures'  # noqa: E501
+                item['collection_description'] = 'SENTINEL-3 SLSTR Level-1 product provides radiances and brightness temperatures for each pixel in a regular image grid, each view and each SLSTR channel, plus annotations data associated with SLSTR pixels.'  # noqa: E501
+            elif 'lst' in identifier:
+                item['collection_id'] = 'SENTINEL3_SLSTR_L2_LST'
+                item['collection_name'] = 'Sentinel-3 SLSTR Level-2 Land Surface Temperature'  # noqa: E501
+                item['collection_description'] = 'SENTINEL-3 SLSTR Level-2 LST product provides land surface parameters generated on the wide 1 km measurement grid.'  # noqa: E501
+            elif 'cal' in identifier:
                 item['collection_id'] = 'SENTINEL3_SRAL_L1_CAL'
                 item['collection_name'] = 'Sentinel-3 SRAL Level-1 Calibration'
                 item['collection_description'] = 'SENTINEL-3 is the first Earth Observation Altimetry mission to provide 100% SAR altimetry coverage where LRM is maintained as a back-up operating mode. This is a Level 1 Calibration product.'  # noqa: E501
@@ -82,7 +106,6 @@ class SentinelHarvester(HarvesterBase):
                 message = 'No collection for Sentinel-3 product {}'.format(
                     item["identifier"])
                 log.warning(message)
-                self._save_object_error(message, self.obj, "Import")
         elif identifier.startswith('s2'):
             if 'msil1c' in identifier:
                 item['collection_id'] = 'SENTINEL2_L1C'
