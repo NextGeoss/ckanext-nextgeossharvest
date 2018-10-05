@@ -146,10 +146,13 @@ The created/updated counts for each harvester job will be accurate. The count th
 
 ## <a name="harvesting-cmems"></a>Harvesting CMEMS products
 To harvest CMEMS products, activate the `cmems` plugin, which you will use to create a harvester that harvests one of the following types of CMEMS product:
-1. Arctic Ocean Physics Analysis and Forecast (OCN) from ftp://mftp.cmems.met.no/Core/ARCTIC_ANALYSIS_FORECAST_PHYS_002_001_a/dataset-topaz4-arc-myoceanv2-be/
-2. Global Observed Sea Surface Temperature (SST) from ftp://cmems.isac.cnr.it/Core/SST_GLO_SST_L4_NRT_OBSERVATIONS_010_001/METOFFICE-GLO-SST-L4-NRT-OBS-SST-V2/
-3. Antarctic Ocean Observed Sea Ice Concentration (SIC South) from ftp://mftp.cmems.met.no/Core/SEAICE_GLO_SEAICE_L4_NRT_OBSERVATIONS_011_001/METNO-GLO-SEAICE_CONC-SOUTH-L4-NRT-OBS/
-4. Arctic Ocean Observed Sea Ice Concentration (SIC North) from ftp://mftp.cmems.met.no/Core/SEAICE_GLO_SEAICE_L4_NRT_OBSERVATIONS_011_001/METNO-GLO-SEAICE_CONC-NORTH-L4-NRT-OBS/
+1. Global Observed Sea Surface Temperature (sst) from ftp://nrt.cmems-du.eu/Core/SST_GLO_SST_L4_NRT_OBSERVATIONS_010_001/METOFFICE-GLO-SST-L4-NRT-OBS-SST-V2/
+2. Arctic Ocean Observed Sea Ice Concentration (sic_north) from ftp://mftp.cmems.met.no/Core/SEAICE_GLO_SEAICE_L4_NRT_OBSERVATIONS_011_001/METNO-GLO-SEAICE_CONC-NORTH-L4-NRT-OBS/
+3. Antarctic Ocean Observed Sea Ice Concentration (sic_south) from ftp://mftp.cmems.met.no/Core/SEAICE_GLO_SEAICE_L4_NRT_OBSERVATIONS_011_001/METNO-GLO-SEAICE_CONC-SOUTH-L4-NRT-OBS/
+4. Arctic Ocean Physics Analysis and Forecast (ocn) from ftp://mftp.cmems.met.no/Core/ARCTIC_ANALYSIS_FORECAST_PHYS_002_001_a/dataset-topaz4-arc-myoceanv2-be/
+5. Global Ocean Gridded L4 Sea Surface Heights and Derived Variables NRT (slv) from ftp://nrt.cmems-du.eu/Core/SEALEVEL_GLO_PHY_L4_NRT_OBSERVATIONS_008_046/dataset-duacs-nrt-global-merged-allsat-phy-l4
+6. Global Ocean Physics Analysis and Forecast - Hourly (gpaf) from ftp://nrt.cmems-du.eu/Core/GLOBAL_ANALYSIS_FORECAST_PHY_001_024/global-analysis-forecast-phy-001-024-hourly-t-u-v-ssh
+7. Global Total Surface and 15m Current - Hourly (mog) from ftp://nrt.cmems-du.eu/Core/MULTIOBS_GLO_PHY_NRT_015_003/dataset-uv-nrt-hourly
 
 To harvest more than one of those types of product, just create more than one harvester and configure a different `harvester_type`.
 
@@ -158,25 +161,34 @@ The URL you enter in the harvester GUI does not matter--the plugin determines th
 The different products are hosted on different services, so separate harvesters are necessary for ensuring that the harvesting of one is not affected by errors or outages on the others.
 
 ### <a name="cmems-settings"></a>CMEMS Settings
-`harvester_type` determines which type of product will be harvested. It must be one of the following four strings: `sst`, `sic_north`, `sic_south`, or `ocn`.
+`harvester_type` determines which type of product will be harvested. It must be one of the following four strings: `sst`, `sic_north`, `sic_south`, `ocn`, `gpaf`, `slv` or `mog`.
 
-`start_date` determines the start date for the harvester job. It must be the string `YESTERDAY` or a string describing a date in the format `YYYY-MM-DD`, like `2018-01-31`.
+`start_date` determines the start date for the harvester job. It must be the string `YESTERDAY` or a string describing a date in the format `YYYY-MM-DD`, like `2017-01-01`.
 
-`end_date` determines the end date for the harvester job. It must be the string `TODAY` or a string describing a date in the format `YYYY-MM-DD`, like `2018-01-31`.
+`end_date` determines the end date for the harvester job. It must be the string `TODAY` or a string describing a date in the format `YYYY-MM-DD`, like `2017-01-01`. The end_date is not mandatory and if not included the harvester will run until catch up the current day.
 
 The harvester will harvest all the products available on the start date and on every date up to but not including the end date. If the start and end dates are `YESTERDAY` and `TODAY`, respectively, then the harvester will harvest all the products available yesterday but not any of the products available today. If the start and end dates are `2018-01-01` and `2018-02-01`, respectively, then the harvester will harvest all the products available in the month of January (and none from the month of February).
 
-`timeout` determines how long the harvester will wait for a response from a server before cancelling the attempt. It must be a postive integer.
+`timeout` determines how long the harvester will wait for a response from a server before cancelling the attempt. It must be a postive integer. Not mandatory.
 
 `username` and `password` are your username and password for accessing the CMEMS products at the source for the harvester type you selected above.
 
 `make_private` is optional and defaults to `false`. If `true`, the datasets created by the harvester will be marked private. This setting is not retroactive. It only applies to datasets created by the harvester while the setting is `true`.
 
-Example config:
+Examples of config:
+```
+{
+"harvester_type":"slv",
+"start_date":"2017-01-01",
+"username":"your_username",
+"password":"your_password",
+"make_private":false
+}
+```
 ```
 {
   "harvester_type": "sic_south",
-  "start_date": "YESTERDAY",
+  "start_date": "2017-01-01",
   "end_date": "TODAY",
   "timeout": 10,
   "username": "your_username",

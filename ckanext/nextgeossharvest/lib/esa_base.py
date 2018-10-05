@@ -192,6 +192,8 @@ class SentinelHarvester(HarvesterBase):
                 item['noa_thumbnail'] = thumbnail['href']
             ingestion_date = soup.find('date',
                                        {'name': 'ingestiondate'}).text
+            if '.' not in ingestion_date:
+                ingestion_date = ingestion_date.replace('Z', '.000Z')
             ingestion_date = datetime.datetime.strptime(ingestion_date,
                                                         '%Y-%m-%dT%H:%M:%S.%fZ')  # noqa: E501
             expiration_date = ingestion_date + datetime.timedelta(days=30)

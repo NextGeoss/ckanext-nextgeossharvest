@@ -91,7 +91,10 @@ class GOME2Harvester(GOME2Base,
         end_date = self.source_config.get('end_date')
 
         if end_date is not None:
-            self.end_date = datetime.strptime(end_date, '%Y-%m-%d')
+            if end_date != 'TODAY':
+                self.end_date = datetime.strptime(end_date, '%Y-%m-%d')
+            else:
+                self.end_date = self.convert_date_config(end_date)
         else:
             self.end_date = datetime.now()
 
