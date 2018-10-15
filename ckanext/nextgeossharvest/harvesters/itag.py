@@ -27,8 +27,8 @@ from ckanext.nextgeossharvest.lib.opensearch_base import OpenSearchHarvester
 from ckanext.nextgeossharvest.lib.nextgeoss_base import NextGEOSSHarvester
 
 
-log_dir = log_dir = config.get('ckanext.nextgeossharvest.itag_log_dir',
-                               '/tmp/storage/logs')
+log_dir = log_dir = config.get('ckanext.nextgeossharvest.itag_log_dir')
+
 if log_dir:
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
