@@ -1,0 +1,307 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<atom:feed xmlns:atom="http://www.w3.org/2005/Atom" xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:param="http://a9.com/-/spec/opensearch/extensions/parameters/1.0/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:georss="http://www.georss.org/georss/11" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:score="http://a9.com/-/opensearch/extensions/relevance/1.0/" xmlns:media="http://tools.search.yahoo.com/mrss/" xmlns:ns1="http://purl.org/dc/terms/" xmlns:os="http://a9.com/-/spec/opensearch/1.1/" xmlns:time="http://a9.com/-/opensearch/extensions/time/1.0/" xmlns:geo="http://a9.com/-/opensearch/extensions/geo/1.0/" xmlns:eo="http://a9.com/-/opensearch/extensions/eo/1.0/" xmlns:vito="http://www.opengis.net/vito/1.0" xmlns:sru="http://a9.com/-/opensearch/extensions/sru/2.0/" xmlns:esipdiscovery="http://commons.esipfed.org/ns/discovery/1.2/" xmlns:referrer="http://www.opensearch.org/Specifications/OpenSearch/Extensions/Referrer/1.0" esipdiscovery:version="1.2">
+    <atom:title>Product Search result;</atom:title>
+    <atom:subtitle>Number of results: 158</atom:subtitle>
+    <atom:id>https://www.vito-eodata.be/openSearch/findProducts.atom?collection=urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001&amp;count=1&amp;platform=PV01&amp;start=2018-01-01&amp;end=2018-01-02</atom:id>
+    <atom:generator uri="https://www.vito-eodata.be/openSearch/findProducts.atom?collection=urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001&amp;platform=PV01&amp;start=2018-01-01&amp;end=2018-01-02&amp;count=1" version="0.1">L2A - 300  m [C1] collection search result</atom:generator>
+    <atom:author>
+        <atom:name>VITO</atom:name>
+    </atom:author>
+    <atom:updated>2018-05-17T10:56:23.715Z</atom:updated>
+    <os:totalResults>158</os:totalResults>
+    <os:startIndex>1</os:startIndex>
+    <os:itemsPerPage>1</os:itemsPerPage>
+    <os:Query role="request" os:count="1" time:start="2018-01-01" time:end="2018-01-02" eo:platform="PV01"/>
+    <atom:link href="https://www.vito-eodata.be/openSearch/description.xml?collection=urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001" rel="search" type="application/opensearchdescription+xml" title="Collection description"/>
+    <atom:link href="https://www.vito-eodata.be/openSearch/findProducts.atom?collection=urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001&amp;count=1&amp;platform=PV01&amp;start=2018-01-01&amp;end=2018-01-02" rel="self" type="application/atom+xml" title="self"/>
+    <atom:link href="https://www.vito-eodata.be/openSearch/findProducts.atom?collection=urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001&amp;count=1&amp;platform=PV01&amp;start=2018-01-01&amp;end=2018-01-02&amp;startIndex=1" rel="first" type="application/atom+xml" title="first"/>
+    <atom:link href="https://www.vito-eodata.be/openSearch/findProducts.atom?collection=urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001&amp;count=1&amp;platform=PV01&amp;start=2018-01-01&amp;end=2018-01-02&amp;startIndex=2" rel="next" type="application/atom+xml" title="next"/>
+    <atom:link href="https://www.vito-eodata.be/openSearch/findProducts.atom?collection=urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001&amp;count=1&amp;platform=PV01&amp;start=2018-01-01&amp;end=2018-01-02&amp;startIndex=158" rel="last" type="application/atom+xml" title="last"/>
+    <atom:entry>
+        <atom:title>urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001:PROBAV_CENTER_L2A_20180101_005544_333M:V101</atom:title>
+        <atom:id>urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001:PROBAV_CENTER_L2A_20180101_005544_333M:V101</atom:id>
+        <dc:identifier>urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001:PROBAV_CENTER_L2A_20180101_005544_333M:V101</dc:identifier>
+        <atom:published>2018-01-01T04:55:43Z</atom:published>
+        <atom:updated>2018-01-01T04:55:43Z</atom:updated>
+        <atom:summary>Product belonging to collection L2A - 300  m [C1].  It was ingested on the 2018-01-01T04:55:43Z.</atom:summary>
+        <dc:date>2018-01-01T00:55:44Z/2018-01-01T01:02:21Z</dc:date>
+        <georss:box>40.341 145.476 65.071 165.962992</georss:box>
+        <georss:polygon>64.57 158.931 64.65 158.999 64.499 159.931 64.344 160.85 64.225 161.533 64.019 162.663 63.94 162.586 63.851 163.062 63.72 163.737 63.538 164.636 63.394 165.306 63.244 165.963 62.726 165.406 62.206 164.867 61.684 164.346 61.475 164.142 61.16 163.841 60.95 163.643 60.424 163.16 60.001 162.783 59.684 162.507 59.048 161.969 58.409 161.449 57.876 161.029 57.342 160.621 56.913 160.302 56.591 160.068 55.947 159.61 55.408 159.239 54.653 158.735 54.004 158.317 53.244 157.843 52.81 157.58 52.048 157.13 51.395 156.756 50.522 156.272 49.975 155.978 49.318 155.633 48.441 155.186 47.672 154.806 46.681 154.332 45.689 153.874 44.806 153.479 44.033 153.142 43.59 152.953 42.704 152.583 41.928 152.266 40.928 151.87 40.976 151.673 40.341 151.429 40.524 150.598 40.675 149.871 40.82 149.154 40.96 148.44 41.229 146.995 41.36 146.252 41.486 145.489 42.132 145.678 42.161 145.476 42.836 145.673 43.621 145.907 44.631 146.214 45.416 146.457 46.536 146.813 46.985 146.958 47.88 147.253 48.551 147.479 49.446 147.787 50.34 148.103 51.457 148.511 52.127 148.762 52.796 149.019 53.464 149.282 54.021 149.506 54.8 149.827 55.357 150.062 56.024 150.351 56.801 150.698 57.356 150.953 57.91 151.214 58.464 151.481 59.239 151.867 59.682 152.094 60.124 152.326 60.787 152.683 61.339 152.991 61.779 153.242 62.22 153.501 62.66 153.765 62.99 153.968 63.429 154.245 63.868 154.528 64.306 154.819 64.853 155.194 65.071 155.348 65.012 155.85 64.948 156.35 64.846 157.093 64.704 158.064 64.57 158.931</georss:polygon>
+        <atom:link href="https://www.vito-eodata.be/cgi-bin/probav?SERVICE=WMS&amp;VERSION=1.3.0&amp;REQUEST=GetMap&amp;SRS=EPSG:4326&amp;FORMAT=image/png&amp;LAYERS=PROBAV_L2A_333M_Red band&amp;TIME=2018-01-01T00:55:44Z&amp;BBOX=40.341,145.476,65.071,165.962992&amp;HEIGHT=200&amp;WIDTH=166" rel="icon" type="image/png" title="Red band"/>
+        <atom:link href="https://www.vito-eodata.be/PDF/dataaccessMdXML??mdmode=Inspire&amp;collectionID=1000126&amp;productID=267446487&amp;fileName=inspire.xml" rel="alternate" type="application/vnd.iso.19139+xml" title="Inspire"/>
+        <atom:link href="https://www.vito-eodata.be/openSearch/findProducts?collection=urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001&amp;uid=urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001:PROBAV_CENTER_L2A_20180101_005544_333M:V101&amp;mdDetail=full" rel="alternate" type="application/atom+xml" title="URL for retrieving full details of the product: urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001:PROBAV_CENTER_L2A_20180101_005544_333M:V101"/>
+        <atom:link href="https://www.vito-eodata.be/PDF/dataaccessMdXML?mdmode=hma&amp;collectionID=1000126&amp;productID=267446487&amp;fileName=PV_CENTER_L2A-20180101005544_333M_V101.xml" rel="via" type="application/gml+xml" title="HMA"/>
+        <atom:link href="https://www.vito-eodata.be/PDF/dataaccess?service=DSEO&amp;request=GetProduct&amp;version=1.0.0&amp;collectionID=1000126&amp;productID=267446487&amp;ProductURI=urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001:PROBAV_CENTER_L2A_20180101_005544_333M:V101&amp;" rel="enclosure" type="application/octet-stream" title="PV_CENTER_L2A-20180101005544_333M_V101"/>
+        <atom:link href="https://www.vito-eodata.be/ordering/webservice?wsdl" rel="enclosure" type="application/vnd.ogc.oseo.capabilities.response_xml" title="HMA ordering"/>
+        <atom:link href="https://www.vito-eodata.be/PDF/dataaccessorder?service=DSEO&amp;request=GetProduct&amp;version=1.0.0&amp;collectionID=1000126&amp;productID=267446487&amp;ProductURI=urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001:PROBAV_CENTER_L2A_20180101_005544_333M:V101&amp;" rel="enclosure" type="text/html" title="HTML ordering"/>
+        <atom:link href="https://www.vito-eodata.be/collections/srv/eng/main.home?uuid=urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001" rel="describedBy" type="text/html"/>
+        <atom:content>Referenced as PV_CENTER_L2A-20180101005544_333M_V101</atom:content>
+        <media:group>
+            <media:content url="https://www.vito-eodata.be/cgi-bin/probav?SERVICE=WMS&amp;VERSION=1.3.0&amp;REQUEST=GetMap&amp;SRS=EPSG:4326&amp;FORMAT=image/png&amp;LAYERS=PROBAV_L2A_333M_Red band&amp;TIME=2018-01-01T00:55:44Z&amp;BBOX=40.341,145.476,65.071,165.962992&amp;HEIGHT=200&amp;WIDTH=166" type="image/png" medium="image">
+                <media:title>Red band</media:title>
+                <media:category scheme="http://www.opengis.net/spec/EOMPOM/1.1">QUICKLOOK</media:category>
+            </media:content>
+        </media:group>
+        
+<opt:EarthObservation xmlns:eop="http://www.opengis.net/eop/2.1" xmlns:ows="http://www.opengis.net/ows/2.0" xmlns:om="http://www.opengis.net/om/2.0" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:opt="http://www.opengis.net/opt/2.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" gml:id="eopr_267446487" xsi:schemaLocation="http://www.opengis.net/eop/2.1 http://schemas.opengis.net/eompom/1.1/xsd/eop.xsd http://www.opengis.net/opt/2.1 http://schemas.opengis.net/eompom/1.1/xsd/opt.xsd http://www.opengis.net/om/2.0 http://schemas.opengis.net/om/2.0/observation.xsd">
+   <om:phenomenonTime>
+		<gml:TimePeriod gml:id="tp_267446487">
+			<gml:beginPosition>2018-01-01T00:55:44Z</gml:beginPosition>
+			<gml:endPosition>2018-01-01T01:02:21Z</gml:endPosition>
+		</gml:TimePeriod>
+   </om:phenomenonTime>
+   <om:resultTime>
+		<gml:TimeInstant gml:id="ti_267446487">
+			<gml:timePosition>2018-05-17T10:56:23.732Z</gml:timePosition>
+		</gml:TimeInstant>
+   </om:resultTime>
+   <om:procedure>
+	<eop:EarthObservationEquipment gml:id="eoe_267446487">
+		<eop:platform>
+			<eop:Platform>
+				<eop:shortName>PV01</eop:shortName>
+			</eop:Platform>
+		</eop:platform>
+		<eop:instrument>
+			<eop:Instrument>
+				<eop:shortName>VGT</eop:shortName>
+			</eop:Instrument>
+		</eop:instrument>
+		<eop:sensor>
+			<eop:Sensor>
+				<eop:sensorType>OPTICAL</eop:sensorType>
+			</eop:Sensor>
+		</eop:sensor>
+		<eop:acquisitionParameters>
+			<eop:Acquisition>
+				<eop:orbitNumber>1</eop:orbitNumber>
+				<eop:orbitDirection>DESCENDING</eop:orbitDirection>
+			</eop:Acquisition>
+		</eop:acquisitionParameters>
+	</eop:EarthObservationEquipment>
+   </om:procedure>
+
+   <om:observedProperty xlink:href="#params1"/>
+	<om:featureOfInterest>
+		<eop:Footprint gml:id="fp_267446487">
+			<eop:multiExtentOf>
+				<gml:MultiSurface gml:id="ms_267446487" srsName="EPSG:4326">
+					<gml:surfaceMembers>
+						<gml:Polygon gml:id="fppoly_267446487">
+							<gml:exterior>
+								<gml:LinearRing>
+									<gml:posList>64.57 158.931 64.65 158.999 64.499 159.931 64.344 160.85 64.225 161.533 64.019 162.663 63.94 162.586 63.851 163.062 63.72 163.737 63.538 164.636 63.394 165.306 63.244 165.963 62.726 165.406 62.206 164.867 61.684 164.346 61.475 164.142 61.16 163.841 60.95 163.643 60.424 163.16 60.001 162.783 59.684 162.507 59.048 161.969 58.409 161.449 57.876 161.029 57.342 160.621 56.913 160.302 56.591 160.068 55.947 159.61 55.408 159.239 54.653 158.735 54.004 158.317 53.244 157.843 52.81 157.58 52.048 157.13 51.395 156.756 50.522 156.272 49.975 155.978 49.318 155.633 48.441 155.186 47.672 154.806 46.681 154.332 45.689 153.874 44.806 153.479 44.033 153.142 43.59 152.953 42.704 152.583 41.928 152.266 40.928 151.87 40.976 151.673 40.341 151.429 40.524 150.598 40.675 149.871 40.82 149.154 40.96 148.44 41.229 146.995 41.36 146.252 41.486 145.489 42.132 145.678 42.161 145.476 42.836 145.673 43.621 145.907 44.631 146.214 45.416 146.457 46.536 146.813 46.985 146.958 47.88 147.253 48.551 147.479 49.446 147.787 50.34 148.103 51.457 148.511 52.127 148.762 52.796 149.019 53.464 149.282 54.021 149.506 54.8 149.827 55.357 150.062 56.024 150.351 56.801 150.698 57.356 150.953 57.91 151.214 58.464 151.481 59.239 151.867 59.682 152.094 60.124 152.326 60.787 152.683 61.339 152.991 61.779 153.242 62.22 153.501 62.66 153.765 62.99 153.968 63.429 154.245 63.868 154.528 64.306 154.819 64.853 155.194 65.071 155.348 65.012 155.85 64.948 156.35 64.846 157.093 64.704 158.064 64.57 158.931</gml:posList>
+								</gml:LinearRing>
+							</gml:exterior>
+						</gml:Polygon>
+					</gml:surfaceMembers>
+				</gml:MultiSurface>
+			</eop:multiExtentOf>
+			<eop:centerOf>
+				<gml:Point gml:id="pt_267446487" srsName="EPSG:4326">
+					<gml:pos>52.705 155.7185</gml:pos>
+				</gml:Point>
+			</eop:centerOf>
+		</eop:Footprint>
+	</om:featureOfInterest>
+	<om:result>
+		<opt:EarthObservationResult gml:id="optr_267446487">
+		    
+		    <eop:browse>
+	            <eop:BrowseInformation>
+	               	<eop:type>QUICKLOOK</eop:type>
+	               	<eop:referenceSystemIdentifier codeSpace="EPSG">epsg:4326</eop:referenceSystemIdentifier>
+	               	<eop:fileName>
+						<ows:ServiceReference xlink:href="https://www.vito-eodata.be/cgi-bin/probav?SERVICE=WMS&amp;VERSION=1.3.0&amp;REQUEST=GetMap&amp;SRS=EPSG:4326&amp;FORMAT=image/png&amp;LAYERS=PROBAV_L2A_333M_Red band&amp;TIME=2018-01-01T00:55:44Z&amp;BBOX=40.341,145.476,65.071,165.962992&amp;HEIGHT=200&amp;WIDTH=166">
+							<ows:RequestMessage/>
+						</ows:ServiceReference>
+					</eop:fileName>
+	            </eop:BrowseInformation>
+         	</eop:browse>
+            
+            
+			<eop:product>
+				<eop:ProductInformation>
+					<eop:fileName>
+						<ows:ServiceReference xlink:href="https://www.vito-eodata.be/PDF/dataaccess?service=DSEO&amp;request=GetProduct&amp;version=1.0.0&amp;collectionID=1000126&amp;productID=267446487&amp;ProductURI=267446487">
+							<ows:RequestMessage/>
+						</ows:ServiceReference>
+					</eop:fileName>
+				<eop:size uom="Bytes">99862758</eop:size></eop:ProductInformation>
+			</eop:product>
+	        
+            <opt:cloudCoverPercentage uom="%">66.849</opt:cloudCoverPercentage>
+            
+			
+            <opt:snowCoverPercentage uom="%">17.844</opt:snowCoverPercentage>
+            
+      </opt:EarthObservationResult>
+	</om:result>
+   <eop:metaDataProperty>
+      <eop:EarthObservationMetaData>
+         <eop:identifier>urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001:PROBAV_CENTER_L2A_20180101_005544_333M:V101</eop:identifier>
+         <eop:parentIdentifier>urn:ogc:def:EOP:VITO:PROBAV_L2A_333M_V001</eop:parentIdentifier>
+         <eop:acquisitionType>NOMINAL</eop:acquisitionType>
+         <eop:productType>PROBAV_L2A_333M</eop:productType>
+         <eop:status>ARCHIVED</eop:status>
+         
+             <eop:vendorSpecific>
+				<eop:SpecificInformation>
+					<eop:localAttribute>BoundingBox</eop:localAttribute>
+                    <eop:localValue>65.068 145.476 40.342 145.476 40.342 165.961 65.068 165.961 65.068 145.476</eop:localValue>
+				</eop:SpecificInformation>
+			</eop:vendorSpecific>
+         
+             <eop:vendorSpecific>
+				<eop:SpecificInformation>
+					<eop:localAttribute>ProductReference</eop:localAttribute>
+                    <eop:localValue>PV_CENTER_L2A-20180101005544_333M_V101</eop:localValue>
+				</eop:SpecificInformation>
+			</eop:vendorSpecific>
+         
+             <eop:vendorSpecific>
+				<eop:SpecificInformation>
+					<eop:localAttribute>ProductDescription</eop:localAttribute>
+                    <eop:localValue>PROBA-VEGETATION Level2A Top Of Atmosphere Segment at 333M resolution</eop:localValue>
+				</eop:SpecificInformation>
+			</eop:vendorSpecific>
+         
+             <eop:vendorSpecific>
+				<eop:SpecificInformation>
+					<eop:localAttribute>ProductVersion</eop:localAttribute>
+                    <eop:localValue>V101</eop:localValue>
+				</eop:SpecificInformation>
+			</eop:vendorSpecific>
+         
+             <eop:vendorSpecific>
+				<eop:SpecificInformation>
+					<eop:localAttribute>OverpassNumber</eop:localAttribute>
+                    <eop:localValue>15720</eop:localValue>
+				</eop:SpecificInformation>
+			</eop:vendorSpecific>
+         
+             <eop:vendorSpecific>
+				<eop:SpecificInformation>
+					<eop:localAttribute>DatelineCrossingIndicator</eop:localAttribute>
+                    <eop:localValue>FALSE</eop:localValue>
+				</eop:SpecificInformation>
+			</eop:vendorSpecific>
+         
+             <eop:vendorSpecific>
+				<eop:SpecificInformation>
+					<eop:localAttribute>NorthPoleIndicator</eop:localAttribute>
+                    <eop:localValue>FALSE</eop:localValue>
+				</eop:SpecificInformation>
+			</eop:vendorSpecific>
+         
+             <eop:vendorSpecific>
+				<eop:SpecificInformation>
+					<eop:localAttribute>SouthPoleIndicator</eop:localAttribute>
+                    <eop:localValue>FALSE</eop:localValue>
+				</eop:SpecificInformation>
+			</eop:vendorSpecific>
+         
+             <eop:vendorSpecific>
+				<eop:SpecificInformation>
+					<eop:localAttribute>ICPGeometric</eop:localAttribute>
+                    <eop:localValue>PROBAV_ICP_GEOMETRIC#CENTER_20160901_V01</eop:localValue>
+				</eop:SpecificInformation>
+			</eop:vendorSpecific>
+         
+             <eop:vendorSpecific>
+				<eop:SpecificInformation>
+					<eop:localAttribute>ICPGeometricValidity</eop:localAttribute>
+                    <eop:localValue>2016-09-01T00:00:00Z</eop:localValue>
+				</eop:SpecificInformation>
+			</eop:vendorSpecific>
+         
+             <eop:vendorSpecific>
+				<eop:SpecificInformation>
+					<eop:localAttribute>ICPGeometricVersion</eop:localAttribute>
+                    <eop:localValue>01</eop:localValue>
+				</eop:SpecificInformation>
+			</eop:vendorSpecific>
+         
+             <eop:vendorSpecific>
+				<eop:SpecificInformation>
+					<eop:localAttribute>ICPRadiometric</eop:localAttribute>
+                    <eop:localValue>PROBAV_ICP_RADIOMETRIC#CENTER_20180101_V01</eop:localValue>
+				</eop:SpecificInformation>
+			</eop:vendorSpecific>
+         
+             <eop:vendorSpecific>
+				<eop:SpecificInformation>
+					<eop:localAttribute>ICPRadiometricValidity</eop:localAttribute>
+                    <eop:localValue>2018-01-01T00:00:00Z</eop:localValue>
+				</eop:SpecificInformation>
+			</eop:vendorSpecific>
+         
+             <eop:vendorSpecific>
+				<eop:SpecificInformation>
+					<eop:localAttribute>ICPRadiometricVersion</eop:localAttribute>
+                    <eop:localValue>01</eop:localValue>
+				</eop:SpecificInformation>
+			</eop:vendorSpecific>
+         
+             <eop:vendorSpecific>
+				<eop:SpecificInformation>
+					<eop:localAttribute>LandPercentage</eop:localAttribute>
+                    <eop:localValue>29.486</eop:localValue>
+				</eop:SpecificInformation>
+			</eop:vendorSpecific>
+         
+             <eop:vendorSpecific>
+				<eop:SpecificInformation>
+					<eop:localAttribute>MissingDataPercentage</eop:localAttribute>
+                    <eop:localValue>0.000</eop:localValue>
+				</eop:SpecificInformation>
+			</eop:vendorSpecific>
+         
+             <eop:vendorSpecific>
+				<eop:SpecificInformation>
+					<eop:localAttribute>MapProjectionName</eop:localAttribute>
+                    <eop:localValue>Geographic Lat/Lon</eop:localValue>
+				</eop:SpecificInformation>
+			</eop:vendorSpecific>
+         
+             <eop:vendorSpecific>
+				<eop:SpecificInformation>
+					<eop:localAttribute>MapProjectionFamily</eop:localAttribute>
+                    <eop:localValue>Equirectangular projection</eop:localValue>
+				</eop:SpecificInformation>
+			</eop:vendorSpecific>
+         
+             <eop:vendorSpecific>
+				<eop:SpecificInformation>
+					<eop:localAttribute>MapProjectionUnit</eop:localAttribute>
+                    <eop:localValue>DEGREES</eop:localValue>
+				</eop:SpecificInformation>
+			</eop:vendorSpecific>
+         
+             <eop:vendorSpecific>
+				<eop:SpecificInformation>
+					<eop:localAttribute>CameraID</eop:localAttribute>
+                    <eop:localValue>CENTER</eop:localValue>
+				</eop:SpecificInformation>
+			</eop:vendorSpecific>
+         
+             <eop:vendorSpecific>
+				<eop:SpecificInformation>
+					<eop:localAttribute>IsSampleImage</eop:localAttribute>
+                    <eop:localValue>FALSE</eop:localValue>
+				</eop:SpecificInformation>
+			</eop:vendorSpecific>
+         
+             <eop:vendorSpecific>
+				<eop:SpecificInformation>
+					<eop:localAttribute>MapProjectionReference</eop:localAttribute>
+                    <eop:localValue>GEOGRAPHIC_LAT_LON</eop:localValue>
+				</eop:SpecificInformation>
+			</eop:vendorSpecific>
+         
+      </eop:EarthObservationMetaData>
+   </eop:metaDataProperty>
+</opt:EarthObservation><!-- OM11 timestamp is 144 ms. -->
+    </atom:entry>
+</atom:feed>
+<!-- Computed in 145 ms. -->

@@ -1,0 +1,13 @@
+alias env=". /usr/lib/ckan/default/bin/activate"
+alias server="paster serve /etc/ckan/default/development.ini"
+
+ckh () {
+paster --plugin=ckanext-harvest harvester $@ --config=/etc/ckan/default/development.ini
+}
+
+alias ckhgather="ckh gather_consumer"
+alias ckhfetch="ckh fetch_consumer"
+
+ckhtest () {
+ckh run_test $1 | tee $1_test.log --output-error=warn 2>&1
+}
