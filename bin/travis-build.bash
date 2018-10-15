@@ -65,7 +65,6 @@ pip install -r dev-requirements.txt
 pip install -e git+https://github.com/NextGeoss/ckanext-harvest.git@many-jobs#egg=ckanext-harvest
 pip install -r https://raw.githubusercontent.com/ckan/ckanext-harvest/master/pip-requirements.txt
 
-
 python setup.py develop
 
 paster --plugin=ckanext-harvest harvester initdb -c ckan/test-core.ini
