@@ -10,6 +10,7 @@ from requests.exceptions import Timeout
 from bs4 import BeautifulSoup as Soup
 
 from ckan import model
+from ckan.lib.helpers import get_pkg_dict_extra
 from ckan.model import Session
 from ckan.model import Package
 
@@ -129,7 +130,7 @@ class OpenSearchHarvester(HarvesterBase):
                         status = 'change'
                     # E.g., a Sentinel dataset exists,
                     # but doesn't have a NOA resource yet.
-                    elif self.flagged_extra and not self._get_package_extra(package.as_dict(), self.flagged_extra):  # noqa: E501
+                    elif self.flagged_extra and not get_pkg_dict_extra(package.as_dict(), self.flagged_extra):  # noqa: E501
                         log.debug('{} already exists and will be extended.'.format(entry_name))  # noqa: E501
                         status = 'change'
                     else:
