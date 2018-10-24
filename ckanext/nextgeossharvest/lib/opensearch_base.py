@@ -10,6 +10,7 @@ from requests.exceptions import Timeout
 from bs4 import BeautifulSoup as Soup
 
 from ckan import model
+import ckan.logic as logic
 from ckan.lib.helpers import get_pkg_dict_extra
 from ckan.model import Session
 from ckan.model import Package
@@ -117,6 +118,11 @@ class OpenSearchHarvester(HarvesterBase):
                 if package:
                     # Meaning we've previously harvested this,
                     # but we may want to reharvest it now.
+                    # We need package_show to ensure that all the conversions
+                    # are carried out.
+                    context = {"user": "test_user", "ignore_auth": True,
+                               "model": model, "session": Session}
+                    pkg_dict = logic.get_action('package_show')(context,{"id": package.name})  # noqa: E501
                     previous_obj = model.Session.query(HarvestObject) \
                         .filter(HarvestObject.guid == entry_guid) \
                         .filter(HarvestObject.current == True) \
@@ -130,7 +136,7 @@ class OpenSearchHarvester(HarvesterBase):
                         status = 'change'
                     # E.g., a Sentinel dataset exists,
                     # but doesn't have a NOA resource yet.
-                    elif self.flagged_extra and not get_pkg_dict_extra(package.as_dict(), self.flagged_extra):  # noqa: E501
+                    elif self.flagged_extra and not get_pkg_dict_extra(pkg_dict, self.flagged_extra):  # noqa: E501
                         log.debug('{} already exists and will be extended.'.format(entry_name))  # noqa: E501
                         status = 'change'
                     else:
