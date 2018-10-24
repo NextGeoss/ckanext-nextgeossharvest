@@ -122,7 +122,7 @@ class OpenSearchHarvester(HarvesterBase):
                     # are carried out.
                     context = {"user": "test_user", "ignore_auth": True,
                                "model": model, "session": Session}
-                    pkg_dict = logic.get_action('package_show')(context,{"id": package.name})  # noqa: E501
+                    pkg_dict = logic.get_action('package_show')(context, {"id": package.name})  # noqa: E501
                     previous_obj = model.Session.query(HarvestObject) \
                         .filter(HarvestObject.guid == entry_guid) \
                         .filter(HarvestObject.current == True) \

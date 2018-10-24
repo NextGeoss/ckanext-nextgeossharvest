@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import ast
 import json
 import logging
 import os
