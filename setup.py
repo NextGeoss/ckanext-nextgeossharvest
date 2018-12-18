@@ -85,6 +85,7 @@ setup(
         esa=ckanext.nextgeossharvest.harvesters:ESAHarvester
         gome2=ckanext.nextgeossharvest.harvesters:GOME2Harvester
         probav=ckanext.nextgeossharvest.harvesters:PROBAVHarvester
+        glass_lai=ckanext.nextgeossharvest.harvesters:GLASS_LAI_Harvester
         itag=ckanext.nextgeossharvest.harvesters:ITagEnricher
         [babel.extractors]
         ckan = ckan.lib.extract:extract_ckan
