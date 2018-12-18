@@ -105,9 +105,9 @@ class GLASS_LAI_Base(HarvesterBase):
                           value='new')]
 
         if sensor == 'avhrr':
-            collectionID = 'LAI_1Km_AVHRR_8Days_GL'
+            collectionID = 'LAI_1KM_AVHRR_8DAYS_GL'
         elif sensor == 'modis':
-            collectionID = 'LAI_1Km_MODIS_8Days_GL'
+            collectionID = 'LAI_1KM_MODIS_8DAYS_GL'
         title = dataset_info[0]
         description = dataset_info[1]
         start_date = dataset_info[2]
