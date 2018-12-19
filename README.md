@@ -25,7 +25,7 @@ This extension contains harvester plugins for harvesting from sources used by Ne
     1. [PROBA-V Settings](#proba-v-settings)
     2. [Running a PROBA-V harvester](#running-proba-v)
 6. [Harvesting Static EBVs](#harvesting-static-ebvs)
-    1. [Static EBVs](#static-ebvs-settings)
+    1. [Static EBVs Settings](#static-ebvs-settings)
     2. [Running a static EBVs harvester](#running-static-ebvs)
 7. [Developing new harvesters](#develop)
     1. [The basic harvester workflow](#basicworkflow)
