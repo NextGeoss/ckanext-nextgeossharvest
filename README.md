@@ -325,7 +325,7 @@ The start_date for the delayed collections can be any date before the current_da
 2. Create a new harvester via the harvester interface.
 3. Select `Proba-V Harvester` from the list of harvesters.
 4. Add a config as described above.
-5. Select `Manual` from the frequency options. The harvester only needs to run once; the datasets are created programmatically and the program that produced the products has ended, so there are no updates or new products that you'll need to harvest later.
+5. Select a frequency from the frequencey options. If you want to use a cron job (recommended) to run the harvester, select `Manual`.
 6. Run the harvester. It will programmatically create datasets.
 
 ## <a name="harvesting-glass-lai"></a>Harvesting GLASS LAI products
@@ -358,7 +358,7 @@ The GLASS LAI harvester has configuration as:
 2. Create a new harvester via the harvester interface.
 3. Select `GLASS LAI Harvester` from the list of harvesters.
 4. Add a config as described above.
-5. Select `Manual` from the frequency options. The harvester only needs to run twice (with two different configurations); the datasets are created programmatically and the program that produced the products has ended, so there are no updates or new products that you'll need to harvest later.
+5. Select `Manual` from the frequency options. The harvester only needs to run twice (with two different configurations).
 6. Run the harvester. It will programmatically create datasets.
 
 ## <a name="develop"></a>Developing new harvesters
