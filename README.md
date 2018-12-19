@@ -325,6 +325,33 @@ The start_date for the delayed collections can be any date before the current_da
 5. Select `Manual` from the freuqency options. The harvester only needs to run once; the datasets are created programmatically and the program that produced the products has ended, so there are no updates or new products that you'll need to harvest later.
 6. Run the harvester. It will programmatically create datasets.
 
+## <a name="harvesting-static-ebvs"></a>Harvesting static EBVs
+The static EBVs harvester harvests products from the following collections:
+
+- TREE_SPECIES_DISTRIBUTION_HABITAT_SUITABILITY
+- FLOOD_HAZARD_EU_GL
+- RSP_AVHRR_1KM_ANNUAL_USA
+- EMODIS_PHENOLOGY_250M_ANNUAL_USA
+
+### <a name="static-ebvs-settings"></a>Static EBVs Settings
+The Static EBVs harvester has configuration as:
+1. `make_private` (optional) determines whether the datasets created by the harvester will be private or public. The default is `false`, i.e., by default, all datasets created by the harvester will be public.
+
+#### Examples of GLASS LAI settings
+```
+{
+"make_private":false
+}
+```
+
+### <a name="running-static-ebvs"></a>Running a static EBVs harvester
+1. Add `ebvs` to the list of plugins in your .ini file.
+2. Create a new harvester via the harvester interface.
+3. Select `EBVs` from the list of harvesters.
+4. Add a config as described above.
+5. Select `Manual` from the frequency options. The harvester only needs to run once because the datasets are static.
+6. Run the harvester. It will programmatically create datasets.
+
 ## <a name="develop"></a>Developing new harvesters
 ### <a name="basicworkflow"></a>The basic harvester workflow
 The basic harvester workflow is divided into three stages. Each stage has a related method, and each method must be included in the harvester plugin.
