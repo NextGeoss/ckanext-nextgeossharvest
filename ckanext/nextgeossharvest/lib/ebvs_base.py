@@ -34,8 +34,8 @@ class EBVSBase(HarvesterBase):
             baseline_url = url_base + filename_baseline
             future_url = url_base + filename_future
 
-            baseline_products.append([title_baseline, description_baseline, '2000-01-01', '2000-12-31', spatial, filename_baseline, baseline_id, baseline_url, [{'name': 'europe'}, {'name': 'tree'}, {'name': 'tree species'}, {'name': 'tree species distribution'}, {'name': 'species'}, {'name': 'habitat suitability'}, {'name': 'habitat'}, {'name': 'suitability'}, {'name': 'biodiversity'}, {'name': 'EBV'}, {'name': i}, {'name': '2000'}, {'name': 'baseline'}]])  # noqa: E501
-            future_products.append([title_future, description_future, '2020-01-01', '2080-12-31', spatial, filename_future, future_id, future_url, [{'name': 'europe'}, {'name': 'tree'}, {'name': 'tree species'}, {'name': 'tree species distribution'}, {'name': 'species'}, {'name': 'habitat suitability'}, {'name': 'habitat'}, {'name': 'suitability'}, {'name': 'biodiversity'}, {'name': 'EBV'}, {'name': i}, {'name': '2020'}, {'name': '2050'}, {'name': '2080'}, {'name': 'future'}, {'name': 'ENS'}, {'name': 'CCCMA'}, {'name': 'CSIRO'}, {'name': 'HADCM3'}]])  # noqa: E501
+            baseline_products.append([title_baseline, description_baseline, '2000-01-01', '2000-12-31', spatial, filename_baseline, baseline_id, baseline_url, [{'name': 'europe'}, {'name': 'tree'}, {'name': 'tree species'}, {'name': 'tree species distribution'}, {'name': 'species'}, {'name': 'habitat suitability'}, {'name': 'habitat'}, {'name': 'suitability'}, {'name': 'biodiversity'}, {'name': 'EBV'}, {'name': 'JRC'}, {'name': i}, {'name': '2000'}, {'name': 'baseline'}]])  # noqa: E501
+            future_products.append([title_future, description_future, '2020-01-01', '2080-12-31', spatial, filename_future, future_id, future_url, [{'name': 'europe'}, {'name': 'tree'}, {'name': 'tree species'}, {'name': 'tree species distribution'}, {'name': 'species'}, {'name': 'habitat suitability'}, {'name': 'habitat'}, {'name': 'suitability'}, {'name': 'biodiversity'}, {'name': 'EBV'}, {'name': 'JRC'}, {'name': i}, {'name': '2020'}, {'name': '2050'}, {'name': '2080'}, {'name': 'future'}, {'name': 'ENS'}, {'name': 'CCCMA'}, {'name': 'CSIRO'}, {'name': 'HADCM3'}]])  # noqa: E501
 
         tree_species_products = baseline_products + future_products
         return tree_species_products
@@ -61,7 +61,7 @@ class EBVSBase(HarvesterBase):
                 url = url_base + 'GlobalMaps/' + filename
                 spatial = spatial_gl
                 date = '2016-11-04'
-                tags = [{'name': 'flood hazard'}, {'name': 'global'}, {'name': 'map'}, {'name': 'flood'}, {'name': 'biodiversity'}, {'name': 'EBV'}]  # noqa: E501
+                tags = [{'name': 'flood hazard'}, {'name': 'global'}, {'name': 'map'}, {'name': 'flood'}, {'name': 'biodiversity'}, {'name': 'EBV'}, {'name': 'JRC'}]  # noqa: E501
             elif 'Europe' in i:
                 title = 'Flood hazard map for Europe - ' + flood_hazards[i] + '-year return period'  # noqa: E501
                 description = 'The map depicts flood prone areas in Europe for flood events with ' + flood_hazards[i] + '-year return period. Cell values indicate water depth (in m). The map can be used to assess flood exposure and risk of population and assets. NOTE: this dataset is based on JRC elaborations and is not an official flood hazard map.'  # noqa: E501
@@ -70,7 +70,7 @@ class EBVSBase(HarvesterBase):
                 url = url_base + 'EuropeanMaps/' + filename
                 spatial = spatial_eu
                 date = '2016-11-02'
-                tags = [{'name': 'Europe'}, {'name': 'flood hazard'}, {'name': 'map'}, {'name': 'flood'}, {'name': 'biodiversity'}, {'name': 'EBV'}]  # noqa: E501
+                tags = [{'name': 'Europe'}, {'name': 'flood hazard'}, {'name': 'map'}, {'name': 'flood'}, {'name': 'biodiversity'}, {'name': 'EBV'}, {'name': 'JRC'}]  # noqa: E501
             elif 'World' in i:
                 title = 'Flood hazard map of the World - ' + flood_hazards[i] + '-year return period'  # noqa: E501
                 description = 'The map depicts flood prone areas at global scale for flood events with ' + flood_hazards[i] + '-year return period. Resolution is 30 arcseconds (approx. 1km). Cell values indicate water depth (in m). The map can be used to assess flood exposure and risk of population and assets. NOTE: this dataset is based on JRC elaborations and is not an official flood hazard map.'  # noqa: E501
@@ -79,7 +79,7 @@ class EBVSBase(HarvesterBase):
                 url = url_base + 'GlobalMaps/' + filename
                 spatial = spatial_gl
                 date = '2016-11-02'
-                tags = [{'name': 'flood hazard'}, {'name': 'global'}, {'name': 'map'}, {'name': 'flood'}, {'name': 'biodiversity'}, {'name': 'EBV'}]  # noqa: E501
+                tags = [{'name': 'flood hazard'}, {'name': 'global'}, {'name': 'map'}, {'name': 'flood'}, {'name': 'biodiversity'}, {'name': 'EBV'}, {'name': 'JRC'}]  # noqa: E501
 
             flood_products.append([title, description, date, date, spatial, filename, identifier, url, tags])  # noqa: E501
         return flood_products
@@ -127,7 +127,7 @@ class EBVSBase(HarvesterBase):
             url_envi = url_base + avhrr_data[i][1] + '&ver=production'
             start_date = i + '-01-01'
             end_date = i + '-12-31'
-            tags = [{'name': 'phenology'}, {'name': 'avhrr'}, {'name': 'USA'}, {'name': 'annual'}, {'name': '1KM'}, {'name': 'biodiversity'}, {'name': 'EBV'}]  # noqa: E501
+            tags = [{'name': 'phenology'}, {'name': 'avhrr'}, {'name': 'USA'}, {'name': 'NOAA'}, {'name': 'annual'}, {'name': '1KM'}, {'name': 'biodiversity'}, {'name': 'EBV'}]  # noqa: E501
 
             avhrr_products.append([identifier, filename_tif, filename_envi, url_tif, url_envi, start_date, end_date, spatial, tags])  # noqa: E501
         return avhrr_products
@@ -182,13 +182,13 @@ class EBVSBase(HarvesterBase):
                 coord = 'SE'
                 year = i.replace(coord, '')
                 identifier = 'PHEMUSE' + year + 'V01'
-                tags = [{'name': 'phenology'}, {'name': 'emodis'}, {'name': 'USA'}, {'name': 'annual'}, {'name': '250M'}, {'name': 'SE'}, {'name': 'biodiversity'}, {'name': 'EBV'}]  # noqa: E501
+                tags = [{'name': 'phenology'}, {'name': 'emodis'}, {'name': 'USA'}, {'name': 'NOAA'}, {'name': 'annual'}, {'name': '250M'}, {'name': 'SE'}, {'name': 'biodiversity'}, {'name': 'EBV'}]  # noqa: E501
                 spatial = spatial_se
             elif 'SW' in i:
                 coord = 'SW'
                 year = i.replace(coord, '')
                 identifier = 'PHEMUSW' + year + 'V01'
-                tags = [{'name': 'phenology'}, {'name': 'emodis'}, {'name': 'USA'}, {'name': 'annual'}, {'name': '250M'}, {'name': 'SW'}, {'name': 'biodiversity'}, {'name': 'EBV'}]  # noqa: E501
+                tags = [{'name': 'phenology'}, {'name': 'emodis'}, {'name': 'USA'}, {'name': 'NOAA'}, {'name': 'annual'}, {'name': '250M'}, {'name': 'SW'}, {'name': 'biodiversity'}, {'name': 'EBV'}]  # noqa: E501
                 spatial = spatial_sw
 
             filename_tif = identifier + '_TIF.ZIP'
