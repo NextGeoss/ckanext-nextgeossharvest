@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 
 from ckanext.harvest.harvesters.base import HarvesterBase
-import datetime
 import logging
 from string import Template
 
 from bs4 import BeautifulSoup as Soup
-from sqlalchemy.sql.expression import false
 
 
 log = logging.getLogger(__name__)
@@ -27,52 +25,51 @@ class OLUHarvester(HarvesterBase):
         scihub results, will not be added to item as they are not part of the
         list of elements added in the original version.
         """
-        spatial_dict={'gmd:westboundlongitude':None, 'gmd:eastboundlongitude':None,
-                      'gmd:southboundlatitude':None, 'gmd:northboundlatitude':None}
-        
+        spatial_dict = {'gmd:westboundlongitude': None,
+                        'gmd:eastboundlongitude': None,
+                        'gmd:southboundlatitude': None,
+                        'gmd:northboundlatitude': None}
+
+        # Since Micka Catalogue datasets refer to an entire day,
+        # there is only one datastamp. Thus, this value will be
+        # added to both StartTime and StopTime, and later pos-processed
         normalized_names = {
-            # Since Micka Catalogue datasets refer to an entire day, there is only one datastamp,
-            # Thus, this value will be added to both StartTime and StopTime, and later pos-processed
             'gmd:datestamp': 'StartTime',
             'gmd:westboundlongitude': 'spatial',
             'gmd:eastboundlongitude': 'spatial',
             'gmd:southboundlatitude': 'spatial',
-            'gmd:northboundlatitude': 'spatial',         
+            'gmd:northboundlatitude': 'spatial',
             'gmd:fileidentifier': 'identifier',
             'gmd:title': 'title',
             'gmd:abstract': 'notes',
-            'gmd:parentidentifier':'parent_identifier'
+            'gmd:parentidentifier': 'parent_identifier'
         }
         item = {'spatial': spatial_dict}
 
-
         for subitem_node in item_node.findChildren():
             if subitem_node.name in normalized_names:
-                
                 key = normalized_names[subitem_node.name]
-
                 if key:
                     if key is 'spatial':
                         item[key][subitem_node.name] = subitem_node.text
-                    elif key in ['identifier','notes', 'title']:
+                    elif key in ['identifier', 'notes', 'title']:
                         item[key] = subitem_node.text
                     else:
                         item[key] = subitem_node.text.lower()
-                    
-        
-        # Since the spatial field is composed by 4 values, if either of the values is None ()
+
+        # Since the spatial field is composed by 4 values,
+        # if either of the values is None, then the whole field is dismissed
         for key in item['spatial']:
             if item['spatial'][key] is None:
                 del item['spatial']
                 break
-                
+
         if ('StartTime' in item) and ('StopTime' not in item):
             item['StopTime'] = item['StartTime']
-            
+
             if not item['StartTime'].endswith('Z'):
                 item['StartTime'] += 'T00:00:00.000Z'
                 item['StopTime'] += 'T23:59:59.999Z'
-            
 
         return item
 
@@ -83,7 +80,6 @@ class OLUHarvester(HarvesterBase):
             item['collection_name'] = 'Open Land Use Map'  # noqa: E501
             item['collection_description'] = 'The main idea is to put Open Land Use dataset and also its metadata (from micka.lesprojekt.cz) in RDF format into Virtuoso and explore SPARQL queries that would combine data with metadata. For instance: Show me the datasets (municipalities) where more than 50% of the area is covered by residential areas and data were collected not later than 5 years ago? This query combines some metadata (such as year of data collection and municipality which data covers) with data itself  (object features with residential land use). For automatization of such queries it is necessary to have both data and metadata available for querying and interconnected. In ideal case the output will be endpoint where it will be possible to query both OLU data and metadata, some model queries and possibly some visualization of query results.'  # noqa: E501
             item['collection_id'] = 'OPEN_LAND_USE_MAP'
-            
 
         return item
 
@@ -91,9 +87,10 @@ class OLUHarvester(HarvesterBase):
         """Creates a list of tag dictionaries based on a product's metadata."""
         identifier = item['identifier'].lower()
         if identifier.startswith('olu'):
-            tags = [{'name': 'OLU'}, {'name': 'open land use'}, {'name': 'LULC'}, {'name': 'land use'}, {'name': 'land cover'}, {'name': 'agriculture'}] 
-            #if 'slc' in identifier:
-            #    tags.extend([{'name': 'SLC'}])
+            tags = [{'name': 'OLU'}, {'name': 'open land use'},
+                    {'name': 'LULC'}, {'name': 'land use'},
+                    {'name': 'land cover'}, {'name': 'agriculture'}]
+
         else:
             tags = []
             log.debug('No tags for {}'.format(identifier))
@@ -112,36 +109,33 @@ class OLUHarvester(HarvesterBase):
 
         # If there's a spatial element, convert it to GeoJSON
         # Remove it if it's invalid
-        
-        # To be passed to class function
         spatial_data = item.pop('spatial', None)
         if spatial_data:
             template = Template('''{"type": "Polygon", "coordinates": [$coords_list]}''')  # noqa: E501
-            coords_NW = [spatial_data['gmd:westboundlongitude'],spatial_data['gmd:northboundlatitude']]
-            coords_NE = [spatial_data['gmd:eastboundlongitude'],spatial_data['gmd:northboundlatitude']]
-            coords_SE = [spatial_data['gmd:eastboundlongitude'],spatial_data['gmd:southboundlatitude']]
-            coords_SW = [spatial_data['gmd:westboundlongitude'],spatial_data['gmd:southboundlatitude']]
-            coords_list = [coords_NW, coords_NE, coords_SE, coords_SW, coords_NW]
-           
+            coords_NW = [spatial_data['gmd:westboundlongitude'], spatial_data['gmd:northboundlatitude']]  # noqa: E501
+            coords_NE = [spatial_data['gmd:eastboundlongitude'], spatial_data['gmd:northboundlatitude']]  # noqa: E501
+            coords_SE = [spatial_data['gmd:eastboundlongitude'], spatial_data['gmd:southboundlatitude']]  # noqa: E501
+            coords_SW = [spatial_data['gmd:westboundlongitude'], spatial_data['gmd:southboundlatitude']]  # noqa: E501
+            coords_list = [coords_NW, coords_NE, coords_SE, coords_SW, coords_NW]  # noqa: E501
+
             geojson = template.substitute(coords_list=coords_list)
             item['spatial'] = geojson
 
         if 'identifier' in item:
             item['identifier'] = item['identifier'].replace('.', '_')
-            item['Filename'] = item['identifier'].lower() 
-            
+            item['Filename'] = item['identifier'].lower()
+
         if 'parent_identifier' in item:
-            item['parent_identifier'] = item['parent_identifier'].replace('.', '_')
-               
+            item['parent_identifier'] = item['parent_identifier'].replace('.', '_')  # noqa: E501
+
         item['name'] = item['identifier'].lower()
-         
+
         # Thumbnail, alternative and enclosure
         quick_look = soup.find('gmd:md_browsegraphic')
-        
+
         if quick_look:
             item['thumbnail'] = quick_look.find('gmd:filename').text
-        
-        
+
         resources_list = soup.find_all('gmd:online')
         for resource in resources_list:
             name = resource.find('gmd:name').text.replace(' ', '_')
@@ -152,10 +146,8 @@ class OLUHarvester(HarvesterBase):
             elif 'WMS' in name:
                 pass
             else:
-                # LOG new data type
-                print 'New Data Type: {}'.format(name)
-        
-        
+                pass
+
         # Add the collection info
         item = self._add_collection(item)
 
@@ -167,40 +159,32 @@ class OLUHarvester(HarvesterBase):
 
         return item
 
-    def _make_thumbnail_url(self, item):
-        """Create the URL for manifests on SciHub, NOA, or CODE-DE."""
-        
-
-        return None
-
-    def _make_manifest_resource(self, item):
+    def _make_geojson_resource(self, item):
         """
-        Return a manifest resource dictionary
+        Return a geojson resource dictionary
         """
         if item.get('geojsonLink'):
             name = 'GeoJSON Download from Plan4All'
-            description = 'Download the geojson manifest from Plan4All.'  # noqa: E501
+            description = 'Download the geojson file from Plan4All.'  # noqa: E501
             url = item['geojsonLink']
             order = 1
             _type = 'plan4all_geojson'
 
+            geojson = {'name': name,
+                       'description': description,
+                       'url': url,
+                       'format': 'JSON',
+                       'mimetype': 'application/json',
+                       'resource_type': _type,
+                       'order': order}
 
-            manifest = {'name': name,
-                        'description': description,
-                        'url': url,
-                        'format': 'JSON',
-                        'mimetype': 'application/json',
-                        'resource_type': _type,
-                        'order': order}
-            
-            return manifest
-        
+            return geojson
         else:
             return None
 
-    def _make_product_resource(self, item):
+    def _make_shapefile_resource(self, item):
         """
-        Return a product resource dictionary depending on the harvest source.
+        Return a shapefile resource dictionary depending on the harvest source.
         """
         if item.get('shapefileLink'):
             name = 'ShapeFile Download from Plan4All'
@@ -208,17 +192,16 @@ class OLUHarvester(HarvesterBase):
             url = item['shapefileLink']
             order = 2
             _type = 'plan4all_shapefile'
-        
 
-            product = {'name': name,
-                       'description': description,
-                       'url': url,
-                       'format': 'ZIP',
-                       'mimetype': 'application/zip',
-                       'resource_type': _type,
-                       'order': order}
-    
-            return product    
+            shapefile = {'name': name,
+                         'description': description,
+                         'url': url,
+                         'format': 'ZIP',
+                         'mimetype': 'application/zip',
+                         'resource_type': _type,
+                         'order': order}
+
+            return shapefile
         else:
             return None
 
@@ -232,7 +215,7 @@ class OLUHarvester(HarvesterBase):
             url = item['thumbnail']
             order = 3
             _type = 'thumbnail'
-            
+
         else:
             return None
 
@@ -246,8 +229,6 @@ class OLUHarvester(HarvesterBase):
 
         return thumbnail
 
-    
-
     def _get_resources(self, parsed_content):
         """Return a list of resource dicts."""
         if self.obj.package and self.obj.package.resources:
@@ -255,11 +236,11 @@ class OLUHarvester(HarvesterBase):
         else:
             old_resources = None
 
-        product = self._make_product_resource(parsed_content)
-        manifest = self._make_manifest_resource(parsed_content)
+        shapefile = self._make_shapefile_resource(parsed_content)
+        geojson = self._make_geojson_resource(parsed_content)
         thumbnail = self._make_thumbnail_resource(parsed_content)
 
-        new_resources = [x for x in [product, manifest, thumbnail] if x]
+        new_resources = [x for x in [shapefile, geojson, thumbnail] if x]
         if not old_resources:
             resources = new_resources
         else:

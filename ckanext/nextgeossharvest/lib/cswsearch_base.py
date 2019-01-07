@@ -14,7 +14,6 @@ import time
 import uuid
 
 from bs4 import BeautifulSoup as Soup
-from requests.auth import HTTPBasicAuth
 
 
 log = logging.getLogger(__name__)
@@ -31,22 +30,22 @@ class CSWSearchHarvester(HarvesterBase):
             content = entry.encode()
             # The lowercase identifier will serve as the dataset's name,
             # so we need the lowercase version for the lookup in the next step.
-            
-            identifier = entry.find(['gmd:fileidentifier','gco:characterstring']).text.lower()
+
+            identifier = entry.find(['gmd:fileidentifier', 'gco:characterstring']).text.lower()   # noqa: E501
             identifier = identifier.replace('.', '_')
-            
-            # TO BE CONFIRMED if this is the one to be "extracted"
+
             guid = unicode(uuid.uuid4())
-            
-            # This selection is TO BE CONFIRMED (some resources do not follow the same structure)
+
             if identifier.startswith('olu'):
                 entries.append({'content': content, 'identifier': identifier,
-                                'guid': guid, 'restart_record': restart_record})
+                                'guid': guid, 'restart_record': restart_record})  # noqa: E501
 
-        # If this job is interrupted mid-way, then the new job will re-harvest the collections of this job (restart_record is the initial record)
-        # If the job is finished (gone through all the entries), then the new job will harvest new collections (restart_record is the next record)
+        # If this job is interrupted mid-way, then the new job will re-harvest
+        # the collections of this job (restart_record is the initial record)
+        # If the job is finished (gone through all the entries), then the new
+        # job will harvest new collections (restart_record is the next record)
         entries[-1]['restart_record'] = next_record
-        
+
         return entries
 
     def _get_next_url(self, harvest_url, records_returned, next_record, limit):
@@ -62,7 +61,7 @@ class CSWSearchHarvester(HarvesterBase):
         else:
             return None
 
-    def _crawl_results(self, harvest_url, limit=100, timeout=5, username=None, password=None, provider=None):  # noqa: E501
+    def _crawl_results(self, harvest_url, limit=100, timeout=5):  # noqa: E501
         """
         Iterate through the results, create harvest objects,
         and return the ids.
@@ -104,27 +103,24 @@ class CSWSearchHarvester(HarvesterBase):
             records_returned = next_url['numberofrecordsreturned']
             next_record = next_url['nextrecord']
             number_records_matched = next_url['numberofrecordsmatched']
-            
+
             if next_record is not '0':
-                current_record = str(eval(next_record) - eval(records_returned))
+                current_record = str(eval(next_record) - eval(records_returned))  # noqa: E501
             else:
-                current_record = str(eval(number_records_matched) - eval(records_returned))
-                
+                current_record = str(eval(number_records_matched) - eval(records_returned))  # noqa: E501
+
             # Get the URL for the next loop, or None to break the loop
             # Only works if StartPosition is last URL parameter
-            harvest_url = self._get_next_url(harvest_url, records_returned, next_record, limit)
-            
+            harvest_url = self._get_next_url(harvest_url, records_returned, next_record, limit)  # noqa: E501
+
             # Get the entries from the results
-            entries = self._get_entries_from_results(soup, current_record, next_record)
+            entries = self._get_entries_from_results(soup, current_record, next_record)  # noqa: E501
 
             # Create a harvest object for each entry
             for entry in entries:
-                    
                 entry_guid = entry['guid']
                 entry_name = entry['identifier']
-                
-                 
-                
+
                 package = Session.query(Package) \
                     .filter(Package.name == entry_name).first()
 
@@ -146,7 +142,7 @@ class CSWSearchHarvester(HarvesterBase):
                                         extras=[HOExtra(key='status',
                                                 value=status),
                                                 HOExtra(key='restart_record',
-                                                value=entry['restart_record'])])
+                                                value=entry['restart_record'])])  # noqa: E501
                     obj.content = entry['content']
                     obj.package = package
                     obj.save()
@@ -158,7 +154,7 @@ class CSWSearchHarvester(HarvesterBase):
                                         extras=[HOExtra(key='status',
                                                 value='new'),
                                                 HOExtra(key='restart_record',
-                                                value=entry['restart_record'])])
+                                                value=entry['restart_record'])])  # noqa: E501
                     obj.content = entry['content']
                     obj.package = None
                     obj.save()
