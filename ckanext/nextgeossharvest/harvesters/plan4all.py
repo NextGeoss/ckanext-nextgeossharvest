@@ -46,10 +46,6 @@ class Plan4AllHarvester(OLUHarvester, CSWSearchHarvester, NextGEOSSHarvester):
                 timeout = config_obj['timeout']
                 if not isinstance(timeout, int) and not timeout > 0:
                     raise ValueError('timeout must be a positive integer')
-            key ='update_all'
-            if key in config_obj:
-                if not isinstance(config_obj[key], bool):
-                    raise ValueError('{} must be boolean'.format(key))
                 
             if type(config_obj.get('make_private', False)) != bool:
                 raise ValueError('make_private must be true or false')
@@ -68,7 +64,6 @@ class Plan4AllHarvester(OLUHarvester, CSWSearchHarvester, NextGEOSSHarvester):
 
         self._set_source_config(self.job.source.config)
 
-        self.update_all = self.source_config.get('update_all', False)
 
         # If we need to restart, we can do so from the ingestion timestamp
         # of the last harvest object for the source. So, query the harvest
@@ -118,7 +113,7 @@ class Plan4AllHarvester(OLUHarvester, CSWSearchHarvester, NextGEOSSHarvester):
         if not hasattr(self, 'provider_logger'):
             self.provider_logger = self.make_provider_logger()
          
-        self.provider = 'micka_olu'   
+        self.provider = 'plan4all'   
 
         # This can be a hook
         

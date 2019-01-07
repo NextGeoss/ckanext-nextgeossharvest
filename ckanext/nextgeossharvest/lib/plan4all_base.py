@@ -40,7 +40,8 @@ class OLUHarvester(HarvesterBase):
             'gmd:northboundlatitude': 'spatial',         
             'gmd:fileidentifier': 'identifier',
             'gmd:title': 'title',
-            'gmd:abstract': 'notes'
+            'gmd:abstract': 'notes',
+            'gmd:parentidentifier':'parent_identifier'
         }
         item = {'spatial': spatial_dict}
 
@@ -79,9 +80,9 @@ class OLUHarvester(HarvesterBase):
         """Return the item with collection ID, name, and description."""
         identifier = item['identifier'].lower()
         if identifier.startswith('olu'):
-            item['collection_name'] = item['title']  # noqa: E501
-            item['collection_description'] = item['notes']  # noqa: E501
-            item['collection_id'] = (item['title'].replace(' ', '_')).upper()
+            item['collection_name'] = 'Open Land Use Map'  # noqa: E501
+            item['collection_description'] = 'The main idea is to put Open Land Use dataset and also its metadata (from micka.lesprojekt.cz) in RDF format into Virtuoso and explore SPARQL queries that would combine data with metadata. For instance: Show me the datasets (municipalities) where more than 50% of the area is covered by residential areas and data were collected not later than 5 years ago? This query combines some metadata (such as year of data collection and municipality which data covers) with data itself  (object features with residential land use). For automatization of such queries it is necessary to have both data and metadata available for querying and interconnected. In ideal case the output will be endpoint where it will be possible to query both OLU data and metadata, some model queries and possibly some visualization of query results.'  # noqa: E501
+            item['collection_id'] = 'OPEN_LAND_USE_MAP'
             
 
         return item
@@ -90,7 +91,7 @@ class OLUHarvester(HarvesterBase):
         """Creates a list of tag dictionaries based on a product's metadata."""
         identifier = item['identifier'].lower()
         if identifier.startswith('olu'):
-            tags = [{'name': 'OLU'}]
+            tags = [{'name': 'OLU'}, {'name': 'open land use'}, {'name': 'LULC'}, {'name': 'land use'}, {'name': 'land cover'}, {'name': 'agriculture'}] 
             #if 'slc' in identifier:
             #    tags.extend([{'name': 'SLC'}])
         else:
@@ -125,29 +126,18 @@ class OLUHarvester(HarvesterBase):
             geojson = template.substitute(coords_list=coords_list)
             item['spatial'] = geojson
 
-        if item['identifier']:
+        if 'identifier' in item:
             item['identifier'] = item['identifier'].replace('.', '_')
             item['Filename'] = item['identifier'].lower() 
             
-        
-            
-        ''' -------------------------------------------------- '''   
-        ''' item['name'] to be confirmed as identifier.lower() ''' 
-        ''' -------------------------------------------------- '''    
+        if 'parent_identifier' in item:
+            item['parent_identifier'] = item['parent_identifier'].replace('.', '_')
+               
         item['name'] = item['identifier'].lower()
-        ''' -------------------------------------------------- ''' 
-
-
-        ''' -------------------------------------------------- '''   
-        '''  At this stage the Thumbnail will be disregarded,  '''
-        '''        but the code will be saved for later        '''
-        ''' -------------------------------------------------- ''' 
-        '''  If there is a link, it is only partial, and thus  '''
-        '''                it needs to be built                '''
-        ''' -------------------------------------------------- ''' 
          
         # Thumbnail, alternative and enclosure
         quick_look = soup.find('gmd:md_browsegraphic')
+        
         if quick_look:
             item['thumbnail'] = quick_look.find('gmd:filename').text
         
@@ -156,11 +146,11 @@ class OLUHarvester(HarvesterBase):
         for resource in resources_list:
             name = resource.find('gmd:name').text.replace(' ', '_')
             if 'GeoJSON' in name:
-                item['GeoJSON'] = resource.find('gmd:linkage').text
+                item['geojsonLink'] = resource.find('gmd:linkage').text
             elif 'SHP' in name:
-                item['SHP'] = resource.find('gmd:linkage').text
+                item['shapefileLink'] = resource.find('gmd:linkage').text
             elif 'WMS' in name:
-                item['WMS'] = item.pop('thumbnail')
+                pass
             else:
                 # LOG new data type
                 print 'New Data Type: {}'.format(name)
@@ -187,19 +177,19 @@ class OLUHarvester(HarvesterBase):
         """
         Return a manifest resource dictionary
         """
-        if item.get('GeoJSON'):
-            name = 'GeoJSON Download from Micka'
-            description = 'Download the geojson manifest from Micka.'  # noqa: E501
-            url = item['GeoJSON']
+        if item.get('geojsonLink'):
+            name = 'GeoJSON Download from Plan4All'
+            description = 'Download the geojson manifest from Plan4All.'  # noqa: E501
+            url = item['geojsonLink']
             order = 1
-            _type = 'micka_manifest'
+            _type = 'plan4all_geojson'
 
 
             manifest = {'name': name,
                         'description': description,
                         'url': url,
-                        'format': 'XML',
-                        'mimetype': 'application/xml',
+                        'format': 'JSON',
+                        'mimetype': 'application/json',
                         'resource_type': _type,
                         'order': order}
             
@@ -212,18 +202,18 @@ class OLUHarvester(HarvesterBase):
         """
         Return a product resource dictionary depending on the harvest source.
         """
-        if item.get('SHP'):
-            name = 'ShapeFile Download from Micka'
-            description = 'Download the shapefile from Micka.'  # noqa: E501
-            url = item['SHP']
+        if item.get('shapefileLink'):
+            name = 'ShapeFile Download from Plan4All'
+            description = 'Download ESRI shapefile as zip from Plan4All.'  # noqa: E501
+            url = item['shapefileLink']
             order = 2
-            _type = 'micka_product'
+            _type = 'plan4all_shapefile'
         
 
             product = {'name': name,
                        'description': description,
                        'url': url,
-                       'format': 'SHP',
+                       'format': 'ZIP',
                        'mimetype': 'application/zip',
                        'resource_type': _type,
                        'order': order}
@@ -236,12 +226,12 @@ class OLUHarvester(HarvesterBase):
         """
         Return a thumbnail resource dictionary
         """
-        if item.get('WMS'):
-            name = 'Thumbnail Download from Micka'
-            description = 'Download the thumbnail from Micka.'  # noqa: E501
-            url = item['WMS']
+        if item.get('thumbnail'):
+            name = 'Thumbnail Download'
+            description = 'Download a PNG quicklook.'  # noqa: E501
+            url = item['thumbnail']
             order = 3
-            _type = 'micka_thumbnail'
+            _type = 'thumbnail'
             
         else:
             return None
@@ -249,8 +239,8 @@ class OLUHarvester(HarvesterBase):
         thumbnail = {'name': name,
                      'description': description,
                      'url': url,
-                     'format': 'JPEG',
-                     'mimetype': 'image/jpeg',
+                     'format': 'PNG',
+                     'mimetype': 'image/png',
                      'resource_type': _type,
                      'order': order}
 

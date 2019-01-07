@@ -33,6 +33,7 @@ class CSWSearchHarvester(HarvesterBase):
             # so we need the lowercase version for the lookup in the next step.
             
             identifier = entry.find(['gmd:fileidentifier','gco:characterstring']).text.lower()
+            identifier = identifier.replace('.', '_')
             
             # TO BE CONFIRMED if this is the one to be "extracted"
             guid = unicode(uuid.uuid4())
@@ -121,7 +122,9 @@ class CSWSearchHarvester(HarvesterBase):
                     
                 entry_guid = entry['guid']
                 entry_name = entry['identifier']
-
+                
+                 
+                
                 package = Session.query(Package) \
                     .filter(Package.name == entry_name).first()
 
@@ -136,13 +139,8 @@ class CSWSearchHarvester(HarvesterBase):
                         previous_obj.current = False
                         previous_obj.save()
 
-                    if self.update_all:
-                        log.debug('{} already exists and will be updated.'.format(entry_name))  # noqa: E501
-                        status = 'change'
-
-                    else:
-                        log.debug('{} will not be updated.'.format(entry_name))  # noqa: E501
-                        status = 'unchanged'
+                    log.debug('{} will not be updated.'.format(entry_name))  # noqa: E501
+                    status = 'unchanged'
 
                     obj = HarvestObject(guid=entry_guid, job=self.job,
                                         extras=[HOExtra(key='status',
