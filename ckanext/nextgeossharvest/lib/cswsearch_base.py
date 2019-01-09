@@ -26,7 +26,7 @@ class CSWSearchHarvester(HarvesterBase):
         """Extract the entries from an CSWSearch response."""
         entries = []
 
-        for entry in soup.find_all('gmd:md_metadata'):
+        for entry in soup.find_all({'gmd:md_metadata'}):
             content = entry.encode()
             # The lowercase identifier will serve as the dataset's name,
             # so we need the lowercase version for the lookup in the next step.
