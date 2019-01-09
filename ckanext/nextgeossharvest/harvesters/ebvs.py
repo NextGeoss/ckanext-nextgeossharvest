@@ -51,8 +51,6 @@ class EBVSHarvester(EBVSBase, OpenSearchHarvester, NextGEOSSHarvester):
 
         tree_species_prods = self.treeSpecies()
         flood_hazards_prods = self.floodHazards()
-        phen_avhrr_prods = self.phenology_avhrr()
-        phen_emodis_prods = self.phenology_emodis()
 
         for result in tree_species_prods:
             _id = self._create_object('tree_species', result)
@@ -61,16 +59,6 @@ class EBVSHarvester(EBVSBase, OpenSearchHarvester, NextGEOSSHarvester):
 
         for result in flood_hazards_prods:
             _id = self._create_object('flood_hazards', result)
-            if _id:
-                ids.append(_id)
-
-        for result in phen_avhrr_prods:
-            _id = self._create_object('phen_avhrr', result)
-            if _id:
-                ids.append(_id)
-
-        for result in phen_emodis_prods:
-            _id = self._create_object('phen_emodis', result)
             if _id:
                 ids.append(_id)
 
