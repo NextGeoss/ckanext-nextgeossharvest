@@ -136,7 +136,7 @@ class OLUHarvester(HarvesterBase):
         if quick_look:
             item['thumbnail'] = quick_look.find('gmd:filename').text
 
-        resources_list = soup.find_all('gmd:online')
+        resources_list = soup.find_all({'gmd:online'})
         for resource in resources_list:
             name = resource.find('gmd:name').text.replace(' ', '_')
             if 'GeoJSON' in name:
