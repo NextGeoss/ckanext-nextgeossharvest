@@ -112,10 +112,10 @@ class OLUHarvester(HarvesterBase):
         spatial_data = item.pop('spatial', None)
         if spatial_data:
             template = Template('''{"type": "Polygon", "coordinates": [$coords_list]}''')  # noqa: E501
-            coords_NW = [float(spatial_data['gmd:westboundlongitude']), float(spatial_data['gmd:northboundlatitude'])]  # noqa: E501
-            coords_NE = [float(spatial_data['gmd:eastboundlongitude']), float(spatial_data['gmd:northboundlatitude'])]  # noqa: E501
-            coords_SE = [float(spatial_data['gmd:eastboundlongitude']), float(spatial_data['gmd:southboundlatitude'])]  # noqa: E501
-            coords_SW = [float(spatial_data['gmd:westboundlongitude']), float(spatial_data['gmd:southboundlatitude'])]  # noqa: E501
+            coords_NW = [spatial_data['gmd:westboundlongitude'], spatial_data['gmd:northboundlatitude']]  # noqa: E501
+            coords_NE = [spatial_data['gmd:eastboundlongitude'], spatial_data['gmd:northboundlatitude']]  # noqa: E501
+            coords_SE = [spatial_data['gmd:eastboundlongitude'], spatial_data['gmd:southboundlatitude']]  # noqa: E501
+            coords_SW = [spatial_data['gmd:westboundlongitude'], spatial_data['gmd:southboundlatitude']]  # noqa: E501
             coords_list = [coords_NW, coords_NE, coords_SE, coords_SW, coords_NW]  # noqa: E501
 
             geojson = template.substitute(coords_list=coords_list)
