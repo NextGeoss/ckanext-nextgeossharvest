@@ -24,26 +24,29 @@ This extension contains harvester plugins for harvesting from sources used by Ne
 5. [Harvesting PROBA-V products](#harvesting-proba-v)
     1. [PROBA-V Settings](#proba-v-settings)
     2. [Running a PROBA-V harvester](#running-proba-v)
-6. [Harvesting GLASS LAI products](#harvesting-glass-lai)
+6. [Harvesting Static EBVs](#harvesting-static-ebvs)
+    1. [Static EBVs Settings](#static-ebvs-settings)
+    2. [Running a static EBVs harvester](#running-static-ebvs)
+7. [Harvesting GLASS LAI products](#harvesting-glass-lai)
     1. [GLASS LAI Settings](#glass-lai-settings)
     2. [Running a GLASS LAI harvester](#running-glass-lai)
-7. [Developing new harvesters](#develop)
-8. [Harvesting Plan4All products](#harvesting-plan4all)
+8. [Developing new harvesters](#develop)
+9. [Harvesting Plan4All products](#harvesting-plan4all)
     1. [Plan4All Settings](#plan4all-settings)
     2. [Running a Plan4All harvester](#running-plan4all)
-9. [Developing new harvesters](#develop)
+10. [Developing new harvesters](#develop)
     1. [The basic harvester workflow](#basicworkflow)
         1. [gather_stage](#gather_stage)
         2. [fetch_stage](#fetch_stage)
         3. [import_stage](#import_stage)
     2. [Example of an OpenSearch-based harvester](#opensearchexample)
-10. [iTag](#itag)
+11. [iTag](#itag)
     1. [How ITagEnricher works](#itagprocess)
     2. [Setting up ITagEnricher](#setupitag)
     3. [Handling iTag errors](#handlingitagerrors)
-11. [Testing testing testing](#tests)
-12. [Suggested cron jobs](#cron)
-13. [Logs](#logs)
+12. [Testing testing testing](#tests)
+13. [Suggested cron jobs](#cron)
+14. [Logs](#logs)
 
 ## <a name="repo"></a>What's in the repository
 The repository contains four plugins:
@@ -364,6 +367,33 @@ The GLASS LAI harvester has configuration as:
 4. Add a config as described above.
 5. Select `Manual` from the frequency options. The harvester only needs to run twice (with two different configurations).
 6. Run the harvester. It will programmatically create datasets.
+
+## <a name="harvesting-static-ebvs"></a>Harvesting static EBVs
+The static EBVs harvester harvests products from the following collections:
+
+- TREE_SPECIES_DISTRIBUTION_HABITAT_SUITABILITY
+- FLOOD_HAZARD_EU_GL
+- RSP_AVHRR_1KM_ANNUAL_USA
+- EMODIS_PHENOLOGY_250M_ANNUAL_USA
+
+### <a name="static-ebvs-settings"></a>Static EBVs Settings
+The Static EBVs harvester has configuration as:
+1. `make_private` (optional) determines whether the datasets created by the harvester will be private or public. The default is `false`, i.e., by default, all datasets created by the harvester will be public.
+
+#### Examples of GLASS LAI settings
+```
+{
+"make_private":false
+}
+```
+
+### <a name="running-static-ebvs"></a>Running a static EBVs harvester
+1. Add `ebvs` to the list of plugins in your .ini file.
+2. Create a new harvester via the harvester interface.
+3. Select `EBVs` from the list of harvesters.
+4. Add a config as described above.
+5. Select `Manual` from the frequency options. The harvester only needs to run once because the datasets are static.
+
 
 ## <a name="harvesting-plan4all"></a>Harvesting Plan4All products
 The Plan4All harvester harvests products from the following collections:
