@@ -27,23 +27,26 @@ This extension contains harvester plugins for harvesting from sources used by Ne
 6. [Harvesting Static EBVs](#harvesting-static-ebvs)
     1. [Static EBVs Settings](#static-ebvs-settings)
     2. [Running a static EBVs harvester](#running-static-ebvs)
-7. [Developing new harvesters](#develop)
-8. [Harvesting Plan4All products](#harvesting-plan4all)
+7. [Harvesting GLASS LAI products](#harvesting-glass-lai)
+    1. [GLASS LAI Settings](#glass-lai-settings)
+    2. [Running a GLASS LAI harvester](#running-glass-lai)
+8. [Developing new harvesters](#develop)
+9. [Harvesting Plan4All products](#harvesting-plan4all)
     1. [Plan4All Settings](#plan4all-settings)
     2. [Running a Plan4All harvester](#running-plan4all)
-9. [Developing new harvesters](#develop)
+10. [Developing new harvesters](#develop)
     1. [The basic harvester workflow](#basicworkflow)
         1. [gather_stage](#gather_stage)
         2. [fetch_stage](#fetch_stage)
         3. [import_stage](#import_stage)
     2. [Example of an OpenSearch-based harvester](#opensearchexample)
-10. [iTag](#itag)
+11. [iTag](#itag)
     1. [How ITagEnricher works](#itagprocess)
     2. [Setting up ITagEnricher](#setupitag)
     3. [Handling iTag errors](#handlingitagerrors)
-11. [Testing testing testing](#tests)
-12. [Suggested cron jobs](#cron)
-13. [Logs](#logs)
+12. [Testing testing testing](#tests)
+13. [Suggested cron jobs](#cron)
+14. [Logs](#logs)
 
 ## <a name="repo"></a>What's in the repository
 The repository contains four plugins:
@@ -283,7 +286,7 @@ L1C, L2A and S1 products are published daily. S5 products are published every 5 
 S1, S5 and S10 products are tiles covering almost the entire world. Each dataset correspond to a single tile.
 
 ### <a name="proba-v-settings"></a>PROBA-V Settings
-The PROBA-V harvester has configuration has:
+The PROBA-V harvester has configuration as:
 1. `start_date` (required) determines the date on which the harvesting begins. It must be in the format `YYYY-MM-DD`. If you want to harvest from the earliest product onwards, use `2018-01-01`
 2. `end_date` (optional) determines the end date for the harvester job. It must be a string describing a date in the format `YYYY-MM-DD`, like 2018-01-31. The end_date is not mandatory and if not included the harvester will run until catch up the current day. To limit the number of datasets per job each job will harvest a maximum of 2 days of data.
 3. `username` and `password` are your username and password for accessing the PROBA-V products at the source.
@@ -329,10 +332,42 @@ The start_date for the delayed collections can be any date before the current_da
 2. Create a new harvester via the harvester interface.
 3. Select `Proba-V Harvester` from the list of harvesters.
 4. Add a config as described above.
-5. Select `Manual` from the freuqency options. The harvester only needs to run once; the datasets are created programmatically and the program that produced the products has ended, so there are no updates or new products that you'll need to harvest later.
+5. Select a frequency from the frequencey options. If you want to use a cron job (recommended) to run the harvester, select `Manual`.
 6. Run the harvester. It will programmatically create datasets.
 
-<<<<<<< HEAD
+## <a name="harvesting-glass-lai"></a>Harvesting GLASS LAI products
+The GLASS LAI harvester harvests products from the following collections:
+
+- LAI_1KM_AVHRR_8DAYS_GL (from 1982 to 2015)
+- LAI_1KM_MODIS_8DAYS_GL (from 2001 to 2015)
+
+### <a name="glass-lai-settings"></a>GLASS LAI Settings
+The GLASS LAI harvester has configuration as:
+1. `sensor` to define if the harvester will collect products based on AVHRR (`avhrr`) or MODIS (`modis`).
+6. `make_private` (optional) determines whether the datasets created by the harvester will be private or public. The default is `false`, i.e., by default, all datasets created by the harvester will be public.
+
+#### Examples of GLASS LAI settings
+```
+{
+"sensor":"avhrr",
+"make_private":false
+}
+```
+```
+{
+"sensor":"modis",
+"make_private":false
+}
+```
+
+### <a name="running-glass-lai"></a>Running a GLASS LAI harvester
+1. Add `glass_lai` to the list of plugins in your .ini file.
+2. Create a new harvester via the harvester interface.
+3. Select `GLASS LAI Harvester` from the list of harvesters.
+4. Add a config as described above.
+5. Select `Manual` from the frequency options. The harvester only needs to run twice (with two different configurations).
+6. Run the harvester. It will programmatically create datasets.
+
 ## <a name="harvesting-static-ebvs"></a>Harvesting static EBVs
 The static EBVs harvester harvests products from the following collections:
 
@@ -358,7 +393,8 @@ The Static EBVs harvester has configuration as:
 3. Select `EBVs` from the list of harvesters.
 4. Add a config as described above.
 5. Select `Manual` from the frequency options. The harvester only needs to run once because the datasets are static.
-=======
+
+
 ## <a name="harvesting-plan4all"></a>Harvesting Plan4All products
 The Plan4All harvester harvests products from the following collections:
 
@@ -385,7 +421,6 @@ The Plan4All harvester has configuration as:
 3. Select `Plan4All Harvester` from the list of harvesters.
 4. Add a config as described above.
 5. Select `Manual` from the frequency options. 
->>>>>>> master
 6. Run the harvester. It will programmatically create datasets.
 
 ## <a name="develop"></a>Developing new harvesters
