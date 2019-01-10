@@ -28,18 +28,22 @@ This extension contains harvester plugins for harvesting from sources used by Ne
     1. [Static EBVs Settings](#static-ebvs-settings)
     2. [Running a static EBVs harvester](#running-static-ebvs)
 7. [Developing new harvesters](#develop)
+8. [Harvesting Plan4All products](#harvesting-plan4all)
+    1. [Plan4All Settings](#plan4all-settings)
+    2. [Running a Plan4All harvester](#running-plan4all)
+9. [Developing new harvesters](#develop)
     1. [The basic harvester workflow](#basicworkflow)
         1. [gather_stage](#gather_stage)
         2. [fetch_stage](#fetch_stage)
         3. [import_stage](#import_stage)
     2. [Example of an OpenSearch-based harvester](#opensearchexample)
-8. [iTag](#itag)
+10. [iTag](#itag)
     1. [How ITagEnricher works](#itagprocess)
     2. [Setting up ITagEnricher](#setupitag)
     3. [Handling iTag errors](#handlingitagerrors)
-9. [Testing testing testing](#tests)
-10. [Suggested cron jobs](#cron)
-11. [Logs](#logs)
+11. [Testing testing testing](#tests)
+12. [Suggested cron jobs](#cron)
+13. [Logs](#logs)
 
 ## <a name="repo"></a>What's in the repository
 The repository contains four plugins:
@@ -328,6 +332,7 @@ The start_date for the delayed collections can be any date before the current_da
 5. Select `Manual` from the freuqency options. The harvester only needs to run once; the datasets are created programmatically and the program that produced the products has ended, so there are no updates or new products that you'll need to harvest later.
 6. Run the harvester. It will programmatically create datasets.
 
+<<<<<<< HEAD
 ## <a name="harvesting-static-ebvs"></a>Harvesting static EBVs
 The static EBVs harvester harvests products from the following collections:
 
@@ -353,6 +358,34 @@ The Static EBVs harvester has configuration as:
 3. Select `EBVs` from the list of harvesters.
 4. Add a config as described above.
 5. Select `Manual` from the frequency options. The harvester only needs to run once because the datasets are static.
+=======
+## <a name="harvesting-plan4all"></a>Harvesting Plan4All products
+The Plan4All harvester harvests products from the following collections:
+
+- Open Land Use Map (from the European Project: Plan4All)
+
+### <a name="plan4all-settings"></a>Plan4All Settings
+The Plan4All harvester has configuration as:
+1. `datasets_per_job` (optional, integer, defaults to 100) determines the maximum number of products that will be harvested during each job. If a query returns 2,501 results, only the first 100 will be harvested if you're using the default. This is useful for running the harvester via recurring jobs intended to harvest products incrementally (i.e., you want to start from the beginning and harvest all available products). The harvester will harvest products in groups of 100, rather than attmepting to harvest all x-hundred-thousand at once. You'll get feedback after each job, so you'll know if there are errors without waiting for the whole job to run. And the harvester will automatically resume from the harvested dataset if you're running it via a recurring cron job.
+2. `timeout` (optional, integer, defaults to 60) determines the number of seconds to wait before timing out a request.
+3. `make_private` (optional) determines whether the datasets created by the harvester will be private or public. The default is `false`, i.e., by default, all datasets created by the harvester will be public.
+
+#### Examples of Plan4All settings
+```
+{
+  "datasets_per_job": 10,
+  "timeout": 60,
+  "make_private": false
+}
+```
+
+### <a name="running-plan4all"></a>Running a Plan4All harvester
+1. Add `plan4all` to the list of plugins in your .ini file.
+2. Create a new harvester via the harvester interface.
+3. Select `Plan4All Harvester` from the list of harvesters.
+4. Add a config as described above.
+5. Select `Manual` from the frequency options. 
+>>>>>>> master
 6. Run the harvester. It will programmatically create datasets.
 
 ## <a name="develop"></a>Developing new harvesters
