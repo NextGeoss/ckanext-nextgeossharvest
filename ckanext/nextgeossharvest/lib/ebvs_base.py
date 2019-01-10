@@ -48,7 +48,7 @@ class EBVSBase(HarvesterBase):
 
         spatial_template = '{{"type":"Polygon", "coordinates":[{}]}}'
         spatial_eu = spatial_template.format([[-31.949603, 67.342906], [51.229700, 67.538050], [27.855047, 34.096753], [-8.254897, 34.016522], [-31.949603, 67.342906]])  # noqa: E501
-        spatial_gl = spatial_template.format([[-180, 90], [180, 90], [180, -90], [-189, -90], [-180, 90]])  # noqa: E501
+        spatial_gl = spatial_template.format([[-180, 90], [180, 90], [180, -90], [-180, -90], [-180, 90]])  # noqa: E501
 
         flood_products = []
 
