@@ -352,14 +352,14 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         collection = self._parse_collection_from_identifier(identifier)
 
         parsed_content = {}
-        parsed_content['title'] = collection.get_name()
-        parsed_content['description'] = collection.get_description()
+        parsed_content['collection_name'] = collection.get_name()
+        parsed_content['collection_description'] = collection.get_description()
         parsed_content['tags'] = self._create_ckan_tags(collection.get_tags())  # noqa: E501
         parsed_content['uuid'] = str(uuid.uuid4())
         parsed_content['StartTime'], parsed_content[
             'StopTime'] = self._parse_interval(content)
-        parsed_content['Collection'] = str(collection)
-        parsed_content['notes'] = parsed_content['description']
+        parsed_content['collection_id'] = str(collection)
+        parsed_content['notes'] = parsed_content['collection_description']
         if collection.product_type == ProductType.L2A or \
                 collection.product_type == ProductType.L1C:
             self._parse_L2A_L1C_content(parsed_content, identifier, content)
@@ -373,6 +373,7 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
     def _parse_L2A_L1C_content(self, parsed_content, identifier, content):
         parsed_content['identifier'] = self._parse_identifier(identifier)
         parsed_content['name'] = self._parse_name(identifier)
+        parsed_content['title'] = self._parse_name(identifier)
         parsed_content['filename'] = self._parse_filename(identifier)
         parsed_content['spatial'] = json.dumps(
             self._bbox_to_geojson(self._parse_bbox(content)))
@@ -384,6 +385,7 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         name = file_name
         parsed_content['identifier'] = self._parse_S_identifier(name)
         parsed_content['name'] = self._parse_S_name(name)
+        parsed_content['title'] = parsed_content['name']
         parsed_content['filename'] = name
         bbox = self._generate_bbox(self._parse_coordinates(name))
         parsed_content['spatial'] = json.dumps(self._bbox_to_geojson(bbox))
