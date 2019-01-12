@@ -17,5 +17,5 @@ install:
     - pip install flake8==3.5.0
 script:
     - sh bin/travis-run.sh
-    - flake8 ./ckanext/nextgeossharvest --exclude ./ckanext/nextgeossharvest/harvesters/opensearch_example.py --ignore E127,E128
+    - flake8 ./ckanext/nextgeossharvest --exclude ./ckanext/nextgeossharvest/harvesters/opensearch_example.py,./ckanext/nextgeossharvest/harvesters/cmems.py,./ckanext/nextgeossharvest/lib/cmems_base.py,./ckanext/nextgeossharvest/harvesters/gome2.py,./ckanext/nextgeossharvest/lib/gome2_base.py,./ckanext/nextgeossharvest/harvesters/itag.py --ignore E127,E128
 
