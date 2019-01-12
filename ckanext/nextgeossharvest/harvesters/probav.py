@@ -729,7 +729,6 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
                 obj.save()
                 return obj.id
             elif self.flagged_extra and not self._get_package_extra(
-            #elif self.flagged_extra and not get_pkg_dict_extra(
                     package.as_dict(), self.flagged_extra):  # noqa: E501
                 log.debug('{} already exists and will be extended.'.format(
                     entry_name))  # noqa: E501
