@@ -16,7 +16,6 @@ import requests
 from requests.auth import HTTPBasicAuth
 from requests.exceptions import Timeout
 
-from ckan.lib.helpers import get_pkg_dict_extra
 from ckan.model import Session
 from ckan.plugins.core import implements
 
