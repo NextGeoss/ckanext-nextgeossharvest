@@ -1,0 +1,12 @@
+eclipse.preferences.version=1
+encoding//ckanext/__init__.py=utf-8
+encoding//ckanext/nextgeossharvest/harvesters/cmems.py=utf-8
+encoding//ckanext/nextgeossharvest/harvesters/esa.py=utf-8
+encoding//ckanext/nextgeossharvest/harvesters/opensearch_example.py=utf-8
+encoding//ckanext/nextgeossharvest/harvesters/plan4all.py=utf-8
+encoding//ckanext/nextgeossharvest/lib/cswsearch_base.py=utf-8
+encoding//ckanext/nextgeossharvest/lib/esa_base.py=utf-8
+encoding//ckanext/nextgeossharvest/lib/nextgeoss_base.py=utf-8
+encoding//ckanext/nextgeossharvest/lib/opensearch_base.py=utf-8
+encoding//ckanext/nextgeossharvest/lib/plan4all_base.py=utf-8
+encoding/setup.py=utf-8

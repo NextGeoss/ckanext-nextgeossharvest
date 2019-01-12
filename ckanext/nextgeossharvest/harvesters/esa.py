@@ -143,7 +143,17 @@ class ESAHarvester(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
         else:
             skip_raw = ''
 
-        harvest_url = '{base_url}/dhus/search?q=ingestiondate:{date_range}{skip_raw}&orderby=ingestiondate asc&start=0&rows=100'.format(base_url=base_url, date_range=date_range, skip_raw=skip_raw)  # noqa: E501
+        limit = self.source_config.get('datasets_per_job', 100)
+
+        url_template = ('{base_url}/dhus/search?' +
+                        'q=ingestiondate:{date_range}' +
+                        '{skip_raw}' +
+                        '&orderby=ingestiondate asc' +
+                        '&start=0' +
+                        '&rows={limit}')
+        harvest_url = url_template.format(base_url=base_url,
+                                          date_range=date_range,
+                                          skip_raw=skip_raw, limit=limit)
         log.debug('Harvest URL is {}'.format(harvest_url))
         username = config.get('ckanext.nextgeossharvest.nextgeoss_username')
         password = config.get('ckanext.nextgeossharvest.nextgeoss_password')
@@ -153,7 +163,6 @@ class ESAHarvester(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
         # via cron jobs, we don't need to grab all the results from a date
         # range at once and the harvester will resume from the last gathered
         # date each time it runs.
-        limit = self.source_config.get('datasets_per_job', 1000)
         timeout = self.source_config.get('timeout', 4)
 
         if not hasattr(self, 'provider_logger'):
@@ -161,6 +170,7 @@ class ESAHarvester(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
         self.provider = source
 
         # This can be a hook
+        print harvest_url
         ids = self._crawl_results(harvest_url, limit, timeout, username,
                                   password)
         # This can be a hook

@@ -21,25 +21,34 @@ This extension contains harvester plugins for harvesting from sources used by Ne
 5. [Harvesting GOME-2 products](#harvesting-gome2)
     1. [GOME-2 Settings](#gome2-settings)
     2. [Running a GOME-2 harvester](#running-gome2)
-5. [Harvesting PROBA-V products](#harvesting-proba-v)
+6. [Harvesting PROBA-V products](#harvesting-proba-v)
     1. [PROBA-V Settings](#proba-v-settings)
     2. [Running a PROBA-V harvester](#running-proba-v)
-6. [Developing new harvesters](#develop)
+7. [Harvesting Static EBVs](#harvesting-static-ebvs)
+    1. [Static EBVs Settings](#static-ebvs-settings)
+    2. [Running a static EBVs harvester](#running-static-ebvs)
+8. [Harvesting GLASS LAI products](#harvesting-glass-lai)
+    1. [GLASS LAI Settings](#glass-lai-settings)
+    2. [Running a GLASS LAI harvester](#running-glass-lai)
+9. [Harvesting Plan4All products](#harvesting-plan4all)
+    1. [Plan4All Settings](#plan4all-settings)
+    2. [Running a Plan4All harvester](#running-plan4all)
+10. [Developing new harvesters](#develop)
     1. [The basic harvester workflow](#basicworkflow)
         1. [gather_stage](#gather_stage)
         2. [fetch_stage](#fetch_stage)
         3. [import_stage](#import_stage)
     2. [Example of an OpenSearch-based harvester](#opensearchexample)
-7. [iTag](#itag)
+11. [iTag](#itag)
     1. [How ITagEnricher works](#itagprocess)
     2. [Setting up ITagEnricher](#setupitag)
     3. [Handling iTag errors](#handlingitagerrors)
-8. [Testing testing testing](#tests)
-9. [Suggested cron jobs](#cron)
-10. [Logs](#logs)
+12. [Testing testing testing](#tests)
+13. [Suggested cron jobs](#cron)
+14. [Logs](#logs)
 
 ## <a name="repo"></a>What's in the repository
-The repository contains three plugins:
+The repository contains four plugins:
 1. `nextgeossharvest`, the base CKAN plugin
 2. `esa`, a harvester plugin for harvesting Sentinel products from SciHub, NOA, and CODE-DE via their DHuS interfaces
 3. `cmems`, a harvester plugin for harvesting the following types of CMEMS products:
@@ -146,10 +155,13 @@ The created/updated counts for each harvester job will be accurate. The count th
 
 ## <a name="harvesting-cmems"></a>Harvesting CMEMS products
 To harvest CMEMS products, activate the `cmems` plugin, which you will use to create a harvester that harvests one of the following types of CMEMS product:
-1. Arctic Ocean Physics Analysis and Forecast (OCN) from ftp://mftp.cmems.met.no/Core/ARCTIC_ANALYSIS_FORECAST_PHYS_002_001_a/dataset-topaz4-arc-myoceanv2-be/
-2. Global Observed Sea Surface Temperature (SST) from ftp://cmems.isac.cnr.it/Core/SST_GLO_SST_L4_NRT_OBSERVATIONS_010_001/METOFFICE-GLO-SST-L4-NRT-OBS-SST-V2/
-3. Antarctic Ocean Observed Sea Ice Concentration (SIC South) from ftp://mftp.cmems.met.no/Core/SEAICE_GLO_SEAICE_L4_NRT_OBSERVATIONS_011_001/METNO-GLO-SEAICE_CONC-SOUTH-L4-NRT-OBS/
-4. Arctic Ocean Observed Sea Ice Concentration (SIC North) from ftp://mftp.cmems.met.no/Core/SEAICE_GLO_SEAICE_L4_NRT_OBSERVATIONS_011_001/METNO-GLO-SEAICE_CONC-NORTH-L4-NRT-OBS/
+1. Global Observed Sea Surface Temperature (sst) from ftp://nrt.cmems-du.eu/Core/SST_GLO_SST_L4_NRT_OBSERVATIONS_010_001/METOFFICE-GLO-SST-L4-NRT-OBS-SST-V2/
+2. Arctic Ocean Observed Sea Ice Concentration (sic_north) from ftp://mftp.cmems.met.no/Core/SEAICE_GLO_SEAICE_L4_NRT_OBSERVATIONS_011_001/METNO-GLO-SEAICE_CONC-NORTH-L4-NRT-OBS/
+3. Antarctic Ocean Observed Sea Ice Concentration (sic_south) from ftp://mftp.cmems.met.no/Core/SEAICE_GLO_SEAICE_L4_NRT_OBSERVATIONS_011_001/METNO-GLO-SEAICE_CONC-SOUTH-L4-NRT-OBS/
+4. Arctic Ocean Physics Analysis and Forecast (ocn) from ftp://mftp.cmems.met.no/Core/ARCTIC_ANALYSIS_FORECAST_PHYS_002_001_a/dataset-topaz4-arc-myoceanv2-be/
+5. Global Ocean Gridded L4 Sea Surface Heights and Derived Variables NRT (slv) from ftp://nrt.cmems-du.eu/Core/SEALEVEL_GLO_PHY_L4_NRT_OBSERVATIONS_008_046/dataset-duacs-nrt-global-merged-allsat-phy-l4
+6. Global Ocean Physics Analysis and Forecast - Hourly (gpaf) from ftp://nrt.cmems-du.eu/Core/GLOBAL_ANALYSIS_FORECAST_PHY_001_024/global-analysis-forecast-phy-001-024-hourly-t-u-v-ssh
+7. Global Total Surface and 15m Current - Hourly (mog) from ftp://nrt.cmems-du.eu/Core/MULTIOBS_GLO_PHY_NRT_015_003/dataset-uv-nrt-hourly
 
 To harvest more than one of those types of product, just create more than one harvester and configure a different `harvester_type`.
 
@@ -158,25 +170,34 @@ The URL you enter in the harvester GUI does not matter--the plugin determines th
 The different products are hosted on different services, so separate harvesters are necessary for ensuring that the harvesting of one is not affected by errors or outages on the others.
 
 ### <a name="cmems-settings"></a>CMEMS Settings
-`harvester_type` determines which type of product will be harvested. It must be one of the following four strings: `sst`, `sic_north`, `sic_south`, or `ocn`.
+`harvester_type` determines which type of product will be harvested. It must be one of the following four strings: `sst`, `sic_north`, `sic_south`, `ocn`, `gpaf`, `slv` or `mog`.
 
-`start_date` determines the start date for the harvester job. It must be the string `YESTERDAY` or a string describing a date in the format `YYYY-MM-DD`, like `2018-01-31`.
+`start_date` determines the start date for the harvester job. It must be the string `YESTERDAY` or a string describing a date in the format `YYYY-MM-DD`, like `2017-01-01`.
 
-`end_date` determines the end date for the harvester job. It must be the string `TODAY` or a string describing a date in the format `YYYY-MM-DD`, like `2018-01-31`.
+`end_date` determines the end date for the harvester job. It must be the string `TODAY` or a string describing a date in the format `YYYY-MM-DD`, like `2017-01-01`. The end_date is not mandatory and if not included the harvester will run until catch up the current day.
 
 The harvester will harvest all the products available on the start date and on every date up to but not including the end date. If the start and end dates are `YESTERDAY` and `TODAY`, respectively, then the harvester will harvest all the products available yesterday but not any of the products available today. If the start and end dates are `2018-01-01` and `2018-02-01`, respectively, then the harvester will harvest all the products available in the month of January (and none from the month of February).
 
-`timeout` determines how long the harvester will wait for a response from a server before cancelling the attempt. It must be a postive integer.
+`timeout` determines how long the harvester will wait for a response from a server before cancelling the attempt. It must be a postive integer. Not mandatory.
 
 `username` and `password` are your username and password for accessing the CMEMS products at the source for the harvester type you selected above.
 
 `make_private` is optional and defaults to `false`. If `true`, the datasets created by the harvester will be marked private. This setting is not retroactive. It only applies to datasets created by the harvester while the setting is `true`.
 
-Example config:
+Examples of config:
+```
+{
+"harvester_type":"slv",
+"start_date":"2017-01-01",
+"username":"your_username",
+"password":"your_password",
+"make_private":false
+}
+```
 ```
 {
   "harvester_type": "sic_south",
-  "start_date": "YESTERDAY",
+  "start_date": "2017-01-01",
   "end_date": "TODAY",
   "timeout": 10,
   "username": "your_username",
@@ -195,34 +216,211 @@ The GOME-2 harvester harvests products from the following GOME-2 coverages:
 4. GOME2_SO2
 5. GOME2_SO2mass
 
-The GOME-2 program has ceased creating those coverages. The earliest is from 2007-01-04 and the latest is from 2018-02-17.
-
-Unlike other harvesters, the GOME-2 harvester doesn't make any requests at all. It programmatically creates datasets and resources for products in those collections. There's no central registry to query, and the URL schemas are known.
-
-For that reason, the harvester (also unlike other harvesters) only needs to be run once in order to "harvest" all the products. The start and end dates are configurable, so it's possible to harvest the products in smaller chunks.
-
-Since no requests are made, there will never be any failures do to the source being unavailable and thus no need to retry failed requests, etc. There's no reason not to just harvest all the products at once. Harvesting a smaller date range is useful for generating a limited number of datasets for testing the portal, though.
+Unlike other harvesters, the GOME-2 harvester only makes requests to verify that a product exists. It programmatically creates datasets and resources for products that do exist within the specified date range.
 
 ### <a name="gome2-settings"></a>GOME-2 Settings
 The GOME-2 harvester has two required and one optional setting.
-1. `start_date` (required) determines the date on which the harvesting begins. It must be in the format `YYY-MM-DD`. If you want to harvest from the earliest product onwards, use `2007-01-04`
-2. `end_date` (required) determines the date on which the harvesting ends. It is inclusive, i.e., if the end date is `2017-03-2`, then products will be harvested up to _and including_ that date. If you want to harvest up to and including the very last GOME-2 product, use `2018-02-17`.
+1. `start_date` (required) determines the date on which the harvesting begins. It must be in the format `YYY-MM-DD` or the string `"YESTERDAY"`. If you want to harvest from the earliest product onwards, use `2007-01-04`. If you will be harvesting on a daily basis, use `"YESTERDAY"`
+2. `end_date` (required) determines the date on which the harvesting ends. It must be in the format `YYY-MM-DD` or the string `"TODAY"`. It is exclusive, i.e., if the end date is `2017-03-2`, then products will be harvested up to _and including_ 2017-03-01 and no products from 2017-03-02 will be included. For daily harvesting use `"TODAY"`.
 3. `make_private` (optional) determines whether the datasets created by the harvester will be private or public. The default is `false`, i.e., by default, all datasets created by the harvester will be public.
 
 #### Example of GOME-2 settings
+```
 {
     "start_date": "2017-03-01",
     "end_date": "2017-03-02",
     "make_private": false
 }
+```
 
+or
+
+```
+{
+    "start_date": "YESTERDAY",
+    "end_date": "TODAY",
+    "make_private": false
+}
+```
 ### <a name="running-gome2"></a>Running a GOME-2 harvester
 1. Add `gome2` to the list of plugins in your .ini file.
 2. Create a new harvester via the harvester interface.
-3. The URL you enter does not matter--as mentioned above, the GOME-2 harvester does not make any requests. Select `GOME2` from the list of harvesters.
+3. The URL you enter does not matter--the GOME-2 harvester only makes requests to a predetermined set of URLs. Select `GOME2` from the list of harvesters.
 4. Add a config as described above.
-5. Select `Manual` from the freuqency options. The harvester only needs to run once; the datasets are created programmatically and the program that produced the products has ended, so there are no updates or new products that you'll need to harvest later.
-6. Run the harvester. It will programmatically create datasets representing all the GOME-2 products.
+5. Select a frequency from the frequencey options. If you want to use a cron job (recommended) to run the harvester, select `Manual`.
+
+#### Known issues
+The GOME-2 harvester, like the CMEMS harvester, does not have a way to automatically recover from outages. If the data hub server or the source server suffers an outage while the harvester is scheduled to run, it will skip whatever products might have been harvested at that time. The assumption is that running the harvester three times a day will be sufficient to prevent any outages from affecting the harvesting, but a better solution would be improving the design of the harvester.
+
+## <a name="harvesting-proba-v"></a>Harvesting PROBA-V products
+The PROBA-V harvester harvests products from the following collections:
+
+- On time collections:
+    1. PROBAV_L2A_1KM_V001
+    2. Proba-V Level-1C
+    3. Proba-V S1-TOC (1KM)
+    4. Proba-V S1-TOA (1KM)
+    5. Proba-V S10-TOC (1KM)
+    6. Proba-V S10-TOC NDVI (1KM)
+- One month delayed collections with 333M resolution:
+    1. Proba-V Level-2A (333M)
+    2. Proba-V S1-TOA (333M)
+    3. Proba-V S1-TOC (333M)
+    4. Proba-V S10-TOC (333M)
+    5. Proba-V S10-TOC NDVI (333M)
+- One month delayed collections with 100M resolution:
+    1. Proba-V Level-2A (100M)
+    2. Proba-V S1-TOA (100M)
+    3. Proba-V S1-TOC (100M)
+    4. Proba-V S1-TOC NDVI (100M)
+    5. Proba-V S5-TOA (100M)
+    6. Proba-V S5-TOC (100M)
+    7. Proba-V S5-TOC NDVI (100M)
+
+The products from the on time collections are created and published on the same day.
+The product from delayed collections are published with one month delay after being created.
+
+The collections were also splitted according to the resoltion to avoid a huge number of datasets being harvested.
+L1C, L2A and S1 products are published daily. S5 products are published every 5 days. S10 products are published every 10 days.
+S1, S5 and S10 products are tiles covering almost the entire world. Each dataset correspond to a single tile.
+
+### <a name="proba-v-settings"></a>PROBA-V Settings
+The PROBA-V harvester has configuration as:
+1. `start_date` (required) determines the date on which the harvesting begins. It must be in the format `YYYY-MM-DD`. If you want to harvest from the earliest product onwards, use `2018-01-01`
+2. `end_date` (optional) determines the end date for the harvester job. It must be a string describing a date in the format `YYYY-MM-DD`, like 2018-01-31. The end_date is not mandatory and if not included the harvester will run until catch up the current day. To limit the number of datasets per job each job will harvest a maximum of 2 days of data.
+3. `username` and `password` are your username and password for accessing the PROBA-V products at the source.
+4. `collections_type` (required) to define the collection that will be collected. It can be `current` (for the on time collections) or `delayed` (for the one month delayed collections).
+5. `resolution` (required if the `collections_type` is `delayed`) to define if the harvester will collect products with 333M or 100M resolution.
+6. `make_private` (optional) determines whether the datasets created by the harvester will be private or public. The default is `false`, i.e., by default, all datasets created by the harvester will be public.
+
+#### Examples of PROVA-V settings
+```
+{
+"start_date":"2018-08-01",
+"collections_type":"current",
+"username":"nextgeoss",
+"password":"nextgeoss",
+"make_private":false
+}
+```
+```
+{
+"start_date":"2018-08-01",
+"collections_type":"delayed",
+"resolution":"100",
+"username":"nextgeoss",
+"password":"nextgeoss",
+"make_private":false
+}
+```
+```
+{
+"start_date":"2018-08-01",
+"collections_type":"delayed",
+"resolution":"333",
+"username":"nextgeoss",
+"password":"nextgeoss",
+"make_private":false
+}
+```
+
+The start_date for the delayed collections can be any date before the current_day - 1 month. For the current collections the start_date can be any date.
+
+### <a name="running-proba-v"></a>Running a PROBA-V harvester
+1. Add `probav` to the list of plugins in your .ini file.
+2. Create a new harvester via the harvester interface.
+3. Select `Proba-V Harvester` from the list of harvesters.
+4. Add a config as described above.
+5. Select a frequency from the frequencey options. If you want to use a cron job (recommended) to run the harvester, select `Manual`.
+6. Run the harvester. It will programmatically create datasets.
+
+## <a name="harvesting-glass-lai"></a>Harvesting GLASS LAI products
+The GLASS LAI harvester harvests products from the following collections:
+
+- LAI_1KM_AVHRR_8DAYS_GL (from 1982 to 2015)
+- LAI_1KM_MODIS_8DAYS_GL (from 2001 to 2015)
+
+### <a name="glass-lai-settings"></a>GLASS LAI Settings
+The GLASS LAI harvester has configuration as:
+1. `sensor` to define if the harvester will collect products based on AVHRR (`avhrr`) or MODIS (`modis`).
+6. `make_private` (optional) determines whether the datasets created by the harvester will be private or public. The default is `false`, i.e., by default, all datasets created by the harvester will be public.
+
+#### Examples of GLASS LAI settings
+```
+{
+"sensor":"avhrr",
+"make_private":false
+}
+```
+```
+{
+"sensor":"modis",
+"make_private":false
+}
+```
+
+### <a name="running-glass-lai"></a>Running a GLASS LAI harvester
+1. Add `glass_lai` to the list of plugins in your .ini file.
+2. Create a new harvester via the harvester interface.
+3. Select `GLASS LAI Harvester` from the list of harvesters.
+4. Add a config as described above.
+5. Select `Manual` from the frequency options. The harvester only needs to run twice (with two different configurations).
+6. Run the harvester. It will programmatically create datasets.
+
+## <a name="harvesting-static-ebvs"></a>Harvesting static EBVs
+The static EBVs harvester harvests products from the following collections:
+
+- TREE_SPECIES_DISTRIBUTION_HABITAT_SUITABILITY
+- FLOOD_HAZARD_EU_GL
+- RSP_AVHRR_1KM_ANNUAL_USA
+- EMODIS_PHENOLOGY_250M_ANNUAL_USA
+
+### <a name="static-ebvs-settings"></a>Static EBVs Settings
+The Static EBVs harvester has configuration as:
+1. `make_private` (optional) determines whether the datasets created by the harvester will be private or public. The default is `false`, i.e., by default, all datasets created by the harvester will be public.
+
+#### Examples of GLASS LAI settings
+```
+{
+"make_private":false
+}
+```
+
+### <a name="running-static-ebvs"></a>Running a static EBVs harvester
+1. Add `ebvs` to the list of plugins in your .ini file.
+2. Create a new harvester via the harvester interface.
+3. Select `EBVs` from the list of harvesters.
+4. Add a config as described above.
+5. Select `Manual` from the frequency options. The harvester only needs to run once because the datasets are static.
+
+
+## <a name="harvesting-plan4all"></a>Harvesting Plan4All products
+The Plan4All harvester harvests products from the following collections:
+
+- Open Land Use Map (from the European Project: Plan4All)
+
+### <a name="plan4all-settings"></a>Plan4All Settings
+The Plan4All harvester has configuration as:
+1. `datasets_per_job` (optional, integer, defaults to 100) determines the maximum number of products that will be harvested during each job. If a query returns 2,501 results, only the first 100 will be harvested if you're using the default. This is useful for running the harvester via recurring jobs intended to harvest products incrementally (i.e., you want to start from the beginning and harvest all available products). The harvester will harvest products in groups of 100, rather than attmepting to harvest all x-hundred-thousand at once. You'll get feedback after each job, so you'll know if there are errors without waiting for the whole job to run. And the harvester will automatically resume from the harvested dataset if you're running it via a recurring cron job.
+2. `timeout` (optional, integer, defaults to 60) determines the number of seconds to wait before timing out a request.
+3. `make_private` (optional) determines whether the datasets created by the harvester will be private or public. The default is `false`, i.e., by default, all datasets created by the harvester will be public.
+
+#### Examples of Plan4All settings
+```
+{
+  "datasets_per_job": 10,
+  "timeout": 60,
+  "make_private": false
+}
+```
+
+### <a name="running-plan4all"></a>Running a Plan4All harvester
+1. Add `plan4all` to the list of plugins in your .ini file.
+2. Create a new harvester via the harvester interface.
+3. Select `Plan4All Harvester` from the list of harvesters.
+4. Add a config as described above.
+5. Select `Manual` from the frequency options. 
+6. Run the harvester. It will programmatically create datasets.
 
 ## <a name="harvesting-proba-v"></a>Harvesting PROBA-V products
 The PROBA-V harvester harvests products from the following collections:

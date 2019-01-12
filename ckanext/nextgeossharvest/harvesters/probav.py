@@ -16,6 +16,8 @@ import requests
 from requests.auth import HTTPBasicAuth
 from requests.exceptions import Timeout
 
+from ckan.lib.helpers import get_pkg_dict_extra
+
 from ckan.model import Session
 from ckan.plugins.core import implements
 
@@ -354,12 +356,16 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         parsed_content = {}
         parsed_content['collection_name'] = collection.get_name()
         parsed_content['collection_description'] = collection.get_description()
+        parsed_content['title'] = collection.get_name()
+        parsed_content['description'] = collection.get_description()
         parsed_content['tags'] = self._create_ckan_tags(collection.get_tags())  # noqa: E501
         parsed_content['uuid'] = str(uuid.uuid4())
         parsed_content['StartTime'], parsed_content[
             'StopTime'] = self._parse_interval(content)
         parsed_content['collection_id'] = str(collection)
         parsed_content['notes'] = parsed_content['collection_description']
+        parsed_content['Collection'] = str(collection)
+        parsed_content['notes'] = parsed_content['description']
         if collection.product_type == ProductType.L2A or \
                 collection.product_type == ProductType.L1C:
             self._parse_L2A_L1C_content(parsed_content, identifier, content)
@@ -723,6 +729,7 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
                 obj.save()
                 return obj.id
             elif self.flagged_extra and not self._get_package_extra(
+            #elif self.flagged_extra and not get_pkg_dict_extra(
                     package.as_dict(), self.flagged_extra):  # noqa: E501
                 log.debug('{} already exists and will be extended.'.format(
                     entry_name))  # noqa: E501
