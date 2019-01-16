@@ -433,17 +433,17 @@ The GDACS harvester harvests products from the following collections:
 
 ### <a name="gdacs-settings"></a>GDACS Settings
 The GDACS harvester has configuration as:
-`data_type` determines which collection will be harvested. It must be one of the following two strings: `signal` or `magnitude`.
+1. `data_type` determines which collection will be harvested. It must be one of the following two strings: `signal` or `magnitude`.
 
-`request_check` determines if the URL of each harvested dataset will be tested. It must be one of the following two strings: `yes` or `no`.
+2. `request_check` determines if the URL of each harvested dataset will be tested. It must be one of the following two strings: `yes` or `no`.
 
-`start_date` determines the start date for the harvester job. It must be the string `YESTERDAY` or a string describing a date in the format `YYYY-MM-DD`, like `1997-12-01`.
+3. `start_date` determines the start date for the harvester job. It must be the string `YESTERDAY` or a string describing a date in the format `YYYY-MM-DD`, like `1997-12-01`.
 
-`end_date` determines the end date for the harvester job. It must be the string `TODAY` or a string describing a date in the format `YYYY-MM-DD`, like `1997-12-01`. The end_date is not mandatory and if not included the harvester will run until catch up the current day.
+4. `end_date` determines the end date for the harvester job. It must be the string `TODAY` or a string describing a date in the format `YYYY-MM-DD`, like `1997-12-01`. The end_date is not mandatory and if not included the harvester will run until catch up the current day.
 
-`timeout` determines how long the harvester will wait for a response from a server before cancelling the attempt. It must be a postive integer. Not mandatory.
+5. `timeout` determines how long the harvester will wait for a response from a server before cancelling the attempt. It must be a postive integer. Not mandatory.
 
-`make_private` is optional and defaults to `false`. If `true`, the datasets created by the harvester will be marked private. This setting is not retroactive. It only applies to datasets created by the harvester while the setting is `true`.
+6. `make_private` is optional and defaults to `false`. If `true`, the datasets created by the harvester will be marked private. This setting is not retroactive. It only applies to datasets created by the harvester while the setting is `true`.
 
 #### Examples of GDACS settings
 ```
@@ -472,87 +472,6 @@ or
 5. Select `Manual` from the frequency options. 
 6. Run the harvester. It will programmatically create datasets.
 
-## <a name="harvesting-proba-v"></a>Harvesting PROBA-V products
-The PROBA-V harvester harvests products from the following collections:
-
-- On time collections:
-    1. PROBAV_L2A_1KM_V001
-    2. Proba-V Level-1C
-    3. Proba-V S1-TOC (1KM)
-    4. Proba-V S1-TOA (1KM)
-    5. Proba-V S10-TOC (1KM)
-    6. Proba-V S10-TOC NDVI (1KM)
-- One month delayed collections with 333M resolution:
-    1. Proba-V Level-2A (333M)
-    2. Proba-V S1-TOA (333M)
-    3. Proba-V S1-TOC (333M)
-    4. Proba-V S10-TOC (333M)
-    5. Proba-V S10-TOC NDVI (333M)
-- One month delayed collections with 100M resolution:
-    1. Proba-V Level-2A (100M)
-    2. Proba-V S1-TOA (100M)
-    3. Proba-V S1-TOC (100M)
-    4. Proba-V S1-TOC NDVI (100M)
-    5. Proba-V S5-TOA (100M)
-    6. Proba-V S5-TOC (100M)
-    7. Proba-V S5-TOC NDVI (100M)
-
-The products from the on time collections are created and published on the same day.
-The product from delayed collections are published with one month delay after being created.
-
-The collections were also splitted according to the resoltion to avoid a huge number of datasets being harvested.
-L1C, L2A and S1 products are published daily. S5 products are published every 5 days. S10 products are published every 10 days.
-S1, S5 and S10 products are tiles covering almost the entire world. Each dataset correspond to a single tile.
-
-### <a name="proba-v-settings"></a>PROBA-V Settings
-The PROBA-V harvester has configuration has:
-1. `start_date` (required) determines the date on which the harvesting begins. It must be in the format `YYYY-MM-DD`. If you want to harvest from the earliest product onwards, use `2018-01-01`
-2. `end_date` (optional) determines the end date for the harvester job. It must be a string describing a date in the format `YYYY-MM-DD`, like 2018-01-31. The end_date is not mandatory and if not included the harvester will run until catch up the current day. To limit the number of datasets per job each job will harvest a maximum of 2 days of data.
-3. `username` and `password` are your username and password for accessing the PROBA-V products at the source.
-4. `collections_type` (required) to define the collection that will be collected. It can be `current` (for the on time collections) or `delayed` (for the one month delayed collections).
-5. `resolution` (required if the `collections_type` is `delayed`) to define if the harvester will collect products with 333M or 100M resolution.
-6. `make_private` (optional) determines whether the datasets created by the harvester will be private or public. The default is `false`, i.e., by default, all datasets created by the harvester will be public.
-
-#### Examples of PROVA-V settings
-```
-{
-"start_date":"2018-08-01",
-"collections_type":"current",
-"username":"nextgeoss",
-"password":"nextgeoss",
-"make_private":false
-}
-```
-```
-{
-"start_date":"2018-08-01",
-"collections_type":"delayed",
-"resolution":"100",
-"username":"nextgeoss",
-"password":"nextgeoss",
-"make_private":false
-}
-```
-```
-{
-"start_date":"2018-08-01",
-"collections_type":"delayed",
-"resolution":"333",
-"username":"nextgeoss",
-"password":"nextgeoss",
-"make_private":false
-}
-```
-
-The start_date for the delayed collections can be any date before the current_day - 1 month. For the current collections the start_date can be any date.
-
-### <a name="running-proba-v"></a>Running a PROBA-V harvester
-1. Add `probav` to the list of plugins in your .ini file.
-2. Create a new harvester via the harvester interface.
-3. Select `Proba-V Harvester` from the list of harvesters.
-4. Add a config as described above.
-5. Select `Manual` from the freuqency options. The harvester only needs to run once; the datasets are created programmatically and the program that produced the products has ended, so there are no updates or new products that you'll need to harvest later.
-6. Run the harvester. It will programmatically create datasets.
 
 ## <a name="develop"></a>Developing new harvesters
 ### <a name="basicworkflow"></a>The basic harvester workflow
