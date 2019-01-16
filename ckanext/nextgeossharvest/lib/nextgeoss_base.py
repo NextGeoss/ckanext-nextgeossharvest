@@ -315,8 +315,8 @@ class NextGEOSSHarvester(HarvesterBase):
 
         return logger
 
-    #New function added to generate logs about the number of datasets
-    #harvested by job for each data source
+    # New function added to generate logs about the number of datasets
+    # harvested by job for each data source
     def make_harvester_logger(self, filename='dataconnectors_info.log'):
         """Create a logger just for datasets harvested."""
         log_dir = config.get('ckanext.nextgeossharvest.provider_log_dir')
