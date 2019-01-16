@@ -33,19 +33,22 @@ This extension contains harvester plugins for harvesting from sources used by Ne
 9. [Harvesting Plan4All products](#harvesting-plan4all)
     1. [Plan4All Settings](#plan4all-settings)
     2. [Running a Plan4All harvester](#running-plan4all)
-10. [Developing new harvesters](#develop)
+10. [Harvesting GDACS Average Flood products](#harvesting-gdacs)
+    1. [GDACS Settings](#gdacs-settings)
+    2. [Running a GDACS harvester](#running-gdacs)
+11. [Developing new harvesters](#develop)
     1. [The basic harvester workflow](#basicworkflow)
         1. [gather_stage](#gather_stage)
         2. [fetch_stage](#fetch_stage)
         3. [import_stage](#import_stage)
     2. [Example of an OpenSearch-based harvester](#opensearchexample)
-11. [iTag](#itag)
+12. [iTag](#itag)
     1. [How ITagEnricher works](#itagprocess)
     2. [Setting up ITagEnricher](#setupitag)
     3. [Handling iTag errors](#handlingitagerrors)
-12. [Testing testing testing](#tests)
-13. [Suggested cron jobs](#cron)
-14. [Logs](#logs)
+13. [Testing testing testing](#tests)
+14. [Suggested cron jobs](#cron)
+15. [Logs](#logs)
 
 ## <a name="repo"></a>What's in the repository
 The repository contains four plugins:
@@ -170,7 +173,7 @@ The URL you enter in the harvester GUI does not matter--the plugin determines th
 The different products are hosted on different services, so separate harvesters are necessary for ensuring that the harvesting of one is not affected by errors or outages on the others.
 
 ### <a name="cmems-settings"></a>CMEMS Settings
-`harvester_type` determines which type of product will be harvested. It must be one of the following four strings: `sst`, `sic_north`, `sic_south`, `ocn`, `gpaf`, `slv` or `mog`.
+`harvester_type` determines which type of product will be harvested. It must be one of the following seven strings: `sst`, `sic_north`, `sic_south`, `ocn`, `gpaf`, `slv` or `mog`.
 
 `start_date` determines the start date for the harvester job. It must be the string `YESTERDAY` or a string describing a date in the format `YYYY-MM-DD`, like `2017-01-01`.
 
@@ -418,6 +421,53 @@ The Plan4All harvester has configuration as:
 1. Add `plan4all` to the list of plugins in your .ini file.
 2. Create a new harvester via the harvester interface.
 3. Select `Plan4All Harvester` from the list of harvesters.
+4. Add a config as described above.
+5. Select `Manual` from the frequency options. 
+6. Run the harvester. It will programmatically create datasets.
+
+## <a name="harvesting-gdacs"></a>Harvesting GDACS Average Flood products
+The GDACS harvester harvests products from the following collections:
+
+- AVERAGE_FLOOD_SIGNAL (from 1997/12 to present - 1 dataset per day)
+- AVERAGE_FLOOD_MAGNITUDE (from 1997/12 to present - 1 dataset per day)
+
+### <a name="gdacs-settings"></a>GDACS Settings
+The GDACS harvester has configuration as:
+`data_type` determines which collection will be harvested. It must be one of the following two strings: `signal` or `magnitude`.
+
+`request_check` determines if the URL of each harvested dataset will be tested. It must be one of the following two strings: `yes` or `no`.
+
+`start_date` determines the start date for the harvester job. It must be the string `YESTERDAY` or a string describing a date in the format `YYYY-MM-DD`, like `1997-12-01`.
+
+`end_date` determines the end date for the harvester job. It must be the string `TODAY` or a string describing a date in the format `YYYY-MM-DD`, like `1997-12-01`. The end_date is not mandatory and if not included the harvester will run until catch up the current day.
+
+`timeout` determines how long the harvester will wait for a response from a server before cancelling the attempt. It must be a postive integer. Not mandatory.
+
+`make_private` is optional and defaults to `false`. If `true`, the datasets created by the harvester will be marked private. This setting is not retroactive. It only applies to datasets created by the harvester while the setting is `true`.
+
+#### Examples of GDACS settings
+```
+{
+"data_type":"signal",
+"request_check":"yes",
+"start_date":"1997-12-01",
+"make_private":false
+}
+
+or
+
+{
+"data_type":"magnitude",
+"request_check":"yes",
+"start_date":"1997-12-01",
+"make_private":false
+}
+```
+
+### <a name="running-gdacs"></a>Running a GDACS harvester
+1. Add `gdacs` to the list of plugins in your .ini file.
+2. Create a new harvester via the harvester interface.
+3. Select `GDACS Harvester` from the list of harvesters.
 4. Add a config as described above.
 5. Select `Manual` from the frequency options. 
 6. Run the harvester. It will programmatically create datasets.
