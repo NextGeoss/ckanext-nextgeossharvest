@@ -139,11 +139,11 @@ class MODISHarvester(CMRHarvester, OpenSearchHarvester, NextGEOSSHarvester):
         if collection in ['MOD17A2H', 'MYD15A2H', 'MOD15A2H', 'MOD14A2', 'MYD14A2']:  # noqa: E501
             # The time resolution of these datasets is 8 days, thus deltaT:
             # 7days + 23hours + 59minutes + 59seconds
-            deltaT = 7*24*3600 + 23*3600 + 59*60 + 59
+            deltaT = 7 * 24 * 3600 + 23 * 3600 + 59 * 60 + 59  # noqa: E501
         elif collection in ['MYD13Q1', 'MYD13A1', 'MYD13A2', 'MOD13Q1', 'MOD13A1', 'MOD13A2']:  # noqa: E501
             # The time resolution of these datasets is 16 days, thus deltaT:
             # 15days + 23hours + 59minutes + 59seconds
-            deltaT = 15*24*3600 + 23*3600 + 59*60 + 59
+            deltaT = 15 * 24 * 3600 + 23 * 3600 + 59 * 60 + 59  # noqa: E501
 
         if collection in ['MOD17A3H']:
             # Since the time resolution of this collection is 1 year,
