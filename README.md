@@ -33,19 +33,22 @@ This extension contains harvester plugins for harvesting from sources used by Ne
 9. [Harvesting Plan4All products](#harvesting-plan4all)
     1. [Plan4All Settings](#plan4all-settings)
     2. [Running a Plan4All harvester](#running-plan4all)
-10. [Developing new harvesters](#develop)
+10. [Harvesting --- products](#harvesting-modis)
+    1. [*** Settings](#modis-settings)
+    2. [Running a *** harvester](#running-modis)
+11. [Developing new harvesters](#develop)
     1. [The basic harvester workflow](#basicworkflow)
         1. [gather_stage](#gather_stage)
         2. [fetch_stage](#fetch_stage)
         3. [import_stage](#import_stage)
     2. [Example of an OpenSearch-based harvester](#opensearchexample)
-11. [iTag](#itag)
+12. [iTag](#itag)
     1. [How ITagEnricher works](#itagprocess)
     2. [Setting up ITagEnricher](#setupitag)
     3. [Handling iTag errors](#handlingitagerrors)
-12. [Testing testing testing](#tests)
-13. [Suggested cron jobs](#cron)
-14. [Logs](#logs)
+13. [Testing testing testing](#tests)
+14. [Suggested cron jobs](#cron)
+15. [Logs](#logs)
 
 ## <a name="repo"></a>What's in the repository
 The repository contains four plugins:
@@ -422,86 +425,130 @@ The Plan4All harvester has configuration as:
 5. Select `Manual` from the frequency options. 
 6. Run the harvester. It will programmatically create datasets.
 
-## <a name="harvesting-proba-v"></a>Harvesting PROBA-V products
-The PROBA-V harvester harvests products from the following collections:
 
-- On time collections:
-    1. PROBAV_L2A_1KM_V001
-    2. Proba-V Level-1C
-    3. Proba-V S1-TOC (1KM)
-    4. Proba-V S1-TOA (1KM)
-    5. Proba-V S10-TOC (1KM)
-    6. Proba-V S10-TOC NDVI (1KM)
-- One month delayed collections with 333M resolution:
-    1. Proba-V Level-2A (333M)
-    2. Proba-V S1-TOA (333M)
-    3. Proba-V S1-TOC (333M)
-    4. Proba-V S10-TOC (333M)
-    5. Proba-V S10-TOC NDVI (333M)
-- One month delayed collections with 100M resolution:
-    1. Proba-V Level-2A (100M)
-    2. Proba-V S1-TOA (100M)
-    3. Proba-V S1-TOC (100M)
-    4. Proba-V S1-TOC NDVI (100M)
-    5. Proba-V S5-TOA (100M)
-    6. Proba-V S5-TOC (100M)
-    7. Proba-V S5-TOC NDVI (100M)
+## <a name="harvesting-modis"></a>Harvesting MODIS products
+The MODIS harvester harvests products from the following collections, which can be divided by time resolution:
 
-The products from the on time collections are created and published on the same day.
-The product from delayed collections are published with one month delay after being created.
+- 8 days:
+    1. MOD17A2H (currently 249848 datasets, starting at 2000-02-18T00:00:00Z)
+    2. MYD15A2H (currently 218456 datasets, starting at 2002-07-04T00:00:00Z)
+    3. MOD15A2H (currently 248647 datasets, starting at 2000-02-18T00:00:00Z)
+    4. MOD14A2  (currently 255161 datasets, starting at 2000-02-18T00:00:00Z)
+    5. MYD14A2  (currently 223424 datasets, starting at 2002-07-04T00:00:00Z)
+- 16 days:
+    1. MYD13Q1  (currently 110551 datasets, starting at 2002-07-04T00:00:00Z)
+    2. MYD13A1  (currently 110551 datasets, starting at 2002-07-04T00:00:00Z)
+    3. MYD13A2  (currently 110540 datasets, starting at 2002-07-04T00:00:00Z)
+    4. MOD13Q1  (currently 126268 datasets, starting at 2000-02-18T00:00:00Z)
+    5. MOD13A1  (currently 126268 datasets, starting at 2000-02-18T00:00:00Z)
+    6. MOD13A2  (currently 126268 datasets, starting at 2000-02-18T00:00:00Z)
+- Yearly:
+    1. MOD17A3H (currently   4110 datasets, starting at 2000-12-26T00:00:00Z)
 
-The collections were also splitted according to the resoltion to avoid a huge number of datasets being harvested.
-L1C, L2A and S1 products are published daily. S5 products are published every 5 days. S10 products are published every 10 days.
-S1, S5 and S10 products are tiles covering almost the entire world. Each dataset correspond to a single tile.
+All collections, with the exception of collection MOD17A3H, are updated on a weekly / biweekly basis. Collection MOD17A3H is the only collection that is static, where the last dataset refers to 2015-01-03. 
 
-### <a name="proba-v-settings"></a>PROBA-V Settings
-The PROBA-V harvester has configuration has:
-1. `start_date` (required) determines the date on which the harvesting begins. It must be in the format `YYYY-MM-DD`. If you want to harvest from the earliest product onwards, use `2018-01-01`
-2. `end_date` (optional) determines the end date for the harvester job. It must be a string describing a date in the format `YYYY-MM-DD`, like 2018-01-31. The end_date is not mandatory and if not included the harvester will run until catch up the current day. To limit the number of datasets per job each job will harvest a maximum of 2 days of data.
-3. `username` and `password` are your username and password for accessing the PROBA-V products at the source.
-4. `collections_type` (required) to define the collection that will be collected. It can be `current` (for the on time collections) or `delayed` (for the one month delayed collections).
-5. `resolution` (required if the `collections_type` is `delayed`) to define if the harvester will collect products with 333M or 100M resolution.
-6. `make_private` (optional) determines whether the datasets created by the harvester will be private or public. The default is `false`, i.e., by default, all datasets created by the harvester will be public.
+Due to the fact that granule queries now require collection identifiers, each collection has to be harvested with different harvesters.
 
-#### Examples of PROVA-V settings
+### <a name="modis-settings"></a>MODIS Settings
+The MODIS harvester has configuration has:
+1. `collection` (required) to define the collection that will be collected. It can be `MYD13Q1`, `MYD13A1`, `MYD13A2`, `MOD13Q1`, `MOD13A1`, `MOD13A2`, `MOD17A3H`, `MOD17A2H`, `MYD15A2H`, `MOD15A2H`, `MOD14A2`, `MYD14A2`.
+2. `start_date` (required) determines the date on which the harvesting begins. It must be in the format `YYYY-MM-DDTHH:MM:SSZ`. If you want to harvest from the earliest product onwards, use the starting dates presented in "Harvesting MODIS products"
+3. `timeout` (optional, integer, defaults to 10) determines the number of seconds to wait before timing out a request.
+4. `make_private` (optional) determines whether the datasets created by the harvester will be private or public. The default is `false`, i.e., by default, all datasets created by the harvester will be public.
+
+#### Examples of MODIS settings
 ```
 {
-"start_date":"2018-08-01",
-"collections_type":"current",
-"username":"nextgeoss",
-"password":"nextgeoss",
-"make_private":false
+  "collection": "MYD13Q1",
+  "start_date": "2002-07-04T00:00:00Z",
+  "make_private": false
 }
 ```
 ```
 {
-"start_date":"2018-08-01",
-"collections_type":"delayed",
-"resolution":"100",
-"username":"nextgeoss",
-"password":"nextgeoss",
-"make_private":false
+  "collection": "MYD13A1",
+  "start_date": "2002-07-04T00:00:00Z",
+  "make_private": false
 }
 ```
 ```
 {
-"start_date":"2018-08-01",
-"collections_type":"delayed",
-"resolution":"333",
-"username":"nextgeoss",
-"password":"nextgeoss",
-"make_private":false
+  "collection": "MYD13A2",
+  "start_date": "2002-07-04T00:00:00Z",
+  "make_private": false
+}
+```
+```
+{
+  "collection": "MOD13Q1",
+  "start_date": "2000-02-18T00:00:00Z",
+  "make_private": false
+}
+```
+```
+{
+  "collection": "MOD13A1",
+  "start_date": "2000-02-18T00:00:00Z",
+  "make_private": false
+}
+```
+```
+{
+  "collection": "MOD13A2",
+  "start_date": "2000-02-18T00:00:00Z",
+  "make_private": false
+}
+```
+```
+{
+  "collection": "MOD17A3H",
+  "start_date": "2000-12-26T00:00:00Z",
+  "make_private": false
+}
+```
+```
+{
+  "collection": "MOD17A2H",
+  "start_date": "2000-02-18T00:00:00Z",
+  "make_private": false
+}
+```
+```
+{
+  "collection": "MYD15A2H",
+  "start_date": "2002-07-04T00:00:00Z",
+  "make_private": false
+}
+```
+```
+{
+  "collection": "MOD15A2H",
+  "start_date": "2000-02-18T00:00:00Z",
+  "make_private": false
+}
+```
+```
+{
+  "collection": "MOD14A2",
+  "start_date": "2000-02-18T00:00:00Z",
+  "make_private": false
+}
+```
+```
+{
+  "collection": "MYD14A2",
+  "start_date": "2002-07-04T00:00:00Z",
+  "make_private": false
 }
 ```
 
-The start_date for the delayed collections can be any date before the current_day - 1 month. For the current collections the start_date can be any date.
 
-### <a name="running-proba-v"></a>Running a PROBA-V harvester
-1. Add `probav` to the list of plugins in your .ini file.
+### <a name="running-modis"></a>Running a MODIS harvester
+1. Add `modis` to the list of plugins in your .ini file.
 2. Create a new harvester via the harvester interface.
-3. Select `Proba-V Harvester` from the list of harvesters.
+3. Select `MODIS Harvester` from the list of harvesters.
 4. Add a config as described above.
-5. Select `Manual` from the freuqency options. The harvester only needs to run once; the datasets are created programmatically and the program that produced the products has ended, so there are no updates or new products that you'll need to harvest later.
+5. Select `Manual` from the freuqency options. 
 6. Run the harvester. It will programmatically create datasets.
 
 ## <a name="develop"></a>Developing new harvesters
