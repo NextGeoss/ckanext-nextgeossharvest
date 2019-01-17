@@ -310,19 +310,40 @@ class EBVSBase(HarvesterBase):
 
         if content['collectionID'] == 'TREE_SPECIES_DISTRIBUTION_HABITAT_SUITABILITY':  # noqa: E501
             metadata['collection_id'] = (content['collectionID'])
+            metadata['collection_name'] = 'Tree Species Distribution Habitat Suitability'
+            metadata['collection_description'] = 'European Distribution of the specie Fagus sylvatica for the '\
+                'years 2020, 2050 and 2080, based on different models such as ENS, CCCMA, CSIRO, HADCM3 '\
+                '(Habitat Suitability future).'
             metadata['downloadLink'] = content['downloadURL']
 
         elif content['collectionID'] == 'FLOOD_HAZARD_EU_GL':
             metadata['collection_id'] = (content['collectionID'])
+            metadata['collection_name'] = 'Flood Hazard Europe/Global'
+            metadata['collection_description'] = 'The map depicts flood prone areas in Europe for flood events with ' \
+                '10-year return period. Cell values indicate water depth (in m). The map can be used to assess flood ' \
+                'exposure and risk of population and assets. NOTE: this dataset is based on JRC elaborations and is not '\
+                'an official flood hazard map.'
             metadata['downloadLink'] = content['downloadURL']
 
         elif content['collectionID'] == 'RSP_AVHRR_1KM_ANNUAL_USA':
             metadata['collection_id'] = (content['collectionID'])
+            metadata['collection_name'] = "AVHRR Remote Sensing Phenology"
+            metadta['description'] = "The Remote Sensing Phenology (RSP) collection is a set of nine annual phenological metrics "\
+                "for the conterminous United States. Researchers at the U.S. Geological Survey (USGS) Earth Resources Observation and " \
+                "Science (EROS) Center utilize data gathered by satellite sensors to track seasonal changes in vegetation. " \
+                "These datasets are provided by the sensor Advanced Very High Resolution Radiometer (AVHRR) from National Oceanic and " \
+                "Atmospheric Administration (NOAA) polar-orbiting satellites."
             metadata['downloadLinkTIF'] = content['downloadURL_tif']
             metadata['downloadLinkENVI'] = content['downloadURL_envi']
 
         elif content['collectionID'] == 'EMODIS_PHENOLOGY_250M_ANNUAL_USA':
             metadata['collection_id'] = (content['collectionID'])
+            metadata['name'] = "eMODIS Remote Sensing Phenology"
+            metadata['description'] = "The Remote Sensing Phenology (RSP) collection is a set of nine annual phenological metrics " \
+                "for the conterminous United States. Researchers at the U.S. Geological Survey (USGS) Earth Resources Observation " \
+                "and Science (EROS) Center utilize data gathered by satellite sensors to track seasonal changes in vegetation. " \
+                "These datasets are provided by the sensor Moderate Resolution Imaging Spectroradiometer (MODIS) carried aboard " \
+                "National Aeronautics and Space Administration (NASA) Terra and Aqua satellites."
             metadata['downloadLinkTIF'] = content['downloadURL_tif']
             metadata['downloadLinkENVI'] = content['downloadURL_envi']
 
