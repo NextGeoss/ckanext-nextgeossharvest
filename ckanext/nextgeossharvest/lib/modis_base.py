@@ -102,7 +102,7 @@ class CMRHarvester(HarvesterBase):
             item['collection_description'] = 'MOD14A2 data are 8-day fire-mask composites at 1-kilometer resolution provided as a gridded level-3 product in the Sinusoidal projection. Science Data Sets include the fire-mask and algorithm quality assurance.'  # noqa: E501
 
         elif identifier.startswith('myd14a2'):
-            item['collection_id'] = 'MODIS-AQUA: MYD14A2'
+            item['collection_id'] = 'MODIS_AQUA_MYD14A2'
             item['collection_name'] = 'MODIS/Aqua Thermal Anomalies/Fire 8-Day L3 Global 1km SIN Grid'  # noqa: E501
             item['collection_description'] = 'MYD14A2 data are 8-day fire-mask composites at 1-kilometer resolution provided as a gridded level-3 product in the Sinusoidal projection. Science Data Sets include the fire-mask and algorithm quality assurance.'  # noqa: E501
 
