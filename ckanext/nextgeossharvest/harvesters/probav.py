@@ -358,8 +358,8 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         parsed_content['description'] = collection.get_description()
         parsed_content['tags'] = self._create_ckan_tags(collection.get_tags())  # noqa: E501
         parsed_content['uuid'] = str(uuid.uuid4())
-        parsed_content['StartTime'], parsed_content[
-            'StopTime'] = self._parse_interval(content)
+        parsed_content['timerange_start'], parsed_content[
+            'timerange_end'] = self._parse_interval(content)
         parsed_content['collection_id'] = str(collection)
         parsed_content['notes'] = parsed_content['collection_description']
         parsed_content['Collection'] = str(collection)
