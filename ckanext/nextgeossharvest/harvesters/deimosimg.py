@@ -155,8 +155,7 @@ class DEIMOSIMGHarvester(NextGEOSSHarvester, DEIMOSIMGBase):
                 'identifier': identifier,
                 'product_type': product_type,
                 'ftp_link': ftp_url
-                }
-            )
+                })
 
             raw_id = identifier.replace(product_type, 'L0R')
 
