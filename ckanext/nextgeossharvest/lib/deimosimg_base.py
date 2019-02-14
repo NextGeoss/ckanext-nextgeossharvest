@@ -88,9 +88,9 @@ class DEIMOSIMGBase(HarvesterBase):
             template = Template('''{"type": "Polygon", "coordinates": [$coords_list]}''')  # noqa: E501
             coord_str_list = coordinates.split(' ')
             coords_list = []
-            for idx_list in range(len(coord_str_list)/2):
-                lat = coord_str_list[idx_list*2 + 0]
-                lng = coord_str_list[idx_list*2 + 1]
+            for idx_list in range(len(coord_str_list) / 2):
+                lat = coord_str_list[idx_list * 2 + 0]
+                lng = coord_str_list[idx_list * 2 + 1]
                 point = [float(lng), float(lat)]
                 coords_list.append(point)
 
