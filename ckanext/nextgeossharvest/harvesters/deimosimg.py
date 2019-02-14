@@ -151,11 +151,7 @@ class DEIMOSIMGHarvester(NextGEOSSHarvester, DEIMOSIMGBase):
             product_type = self.parse_filedirectory(ftp_url)
             identifier = filename
 
-            content = ({
-                'identifier': identifier,
-                'product_type': product_type,
-                'ftp_link': ftp_url
-                })
+            content = {'identifier': identifier, 'product_type': product_type,'ftp_link': ftp_url}
 
             raw_id = identifier.replace(product_type, 'L0R')
 
