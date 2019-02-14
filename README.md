@@ -33,19 +33,22 @@ This extension contains harvester plugins for harvesting from sources used by Ne
 9. [Harvesting Plan4All products](#harvesting-plan4all)
     1. [Plan4All Settings](#plan4all-settings)
     2. [Running a Plan4All harvester](#running-plan4all)
-10. [Developing new harvesters](#develop)
+10. [Harvesting DEIMOS-2 products](#harvesting-deimos2)
+    1. [DEIMOS-2 Settings](#deimos2-settings)
+    2. [Running a DEIMOS-2 harvester](#running-plan4all)
+11. [Developing new harvesters](#develop)
     1. [The basic harvester workflow](#basicworkflow)
         1. [gather_stage](#gather_stage)
         2. [fetch_stage](#fetch_stage)
         3. [import_stage](#import_stage)
     2. [Example of an OpenSearch-based harvester](#opensearchexample)
-11. [iTag](#itag)
+12. [iTag](#itag)
     1. [How ITagEnricher works](#itagprocess)
     2. [Setting up ITagEnricher](#setupitag)
     3. [Handling iTag errors](#handlingitagerrors)
-12. [Testing testing testing](#tests)
-13. [Suggested cron jobs](#cron)
-14. [Logs](#logs)
+13. [Testing testing testing](#tests)
+14. [Suggested cron jobs](#cron)
+15. [Logs](#logs)
 
 ## <a name="repo"></a>What's in the repository
 The repository contains four plugins:
@@ -418,6 +421,40 @@ The Plan4All harvester has configuration as:
 1. Add `plan4all` to the list of plugins in your .ini file.
 2. Create a new harvester via the harvester interface.
 3. Select `Plan4All Harvester` from the list of harvesters.
+4. Add a config as described above.
+5. Select `Manual` from the frequency options. 
+6. Run the harvester. It will programmatically create datasets.
+
+## <a name="harvesting-deimos2"></a>Harvesting DEIMOS-2 products
+The DEIMOS-2 harvester harvests products from the following collections:
+
+- DEIMOS-2 PM4 Level-1B 
+- DEIMOS-2 PSH Level-1B 
+- DEIMOS-2 PSH Level-1C 
+
+The number of products is static, and thus the harvaster only needs to be run once.
+
+### <a name="deimos2-settings"></a>DEIMOS-2 Settings
+The DEIMOS-2 harvester has configuration as:
+1. `harvester_type` determines the ftp domain, as well as the directories in said domain
+2. `username` and `password` are your username and password for accessing the DEIMOS-2 products at the source for the harvester type you selected above.
+3. `timeout` (optional, integer, defaults to 60) determines the number of seconds to wait before timing out a request.
+4. `make_private` (optional) determines whether the datasets created by the harvester will be private or public. The default is `false`, i.e., by default, all datasets created by the harvester will be public.
+
+#### Examples of DEIMOS-2 settings
+```
+{
+"harvester_type":"deimos_imaging",
+"username":"your_username",
+"password":"your_password",
+"make_private":false
+}
+```
+
+### <a name="running-plan4all"></a>Running a DEIMOS-2 harvester
+1. Add `deimosimg` to the list of plugins in your .ini file.
+2. Create a new harvester via the harvester interface.
+3. Select `DEIMOS Imaging` from the list of harvesters.
 4. Add a config as described above.
 5. Select `Manual` from the frequency options. 
 6. Run the harvester. It will programmatically create datasets.
