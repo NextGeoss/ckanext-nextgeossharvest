@@ -436,7 +436,7 @@ The number of products is static, and thus the harvaster only needs to be run on
 
 ### <a name="deimos2-settings"></a>DEIMOS-2 Settings
 The DEIMOS-2 harvester has configuration as:
-1. `harvester_type` determines the ftp domain, as well as the directories in said domain
+1. `harvester_type` determines the ftp domain, as well as the directories in said domain.
 2. `username` and `password` are your username and password for accessing the DEIMOS-2 products at the source for the harvester type you selected above.
 3. `timeout` (optional, integer, defaults to 60) determines the number of seconds to wait before timing out a request.
 4. `make_private` (optional) determines whether the datasets created by the harvester will be private or public. The default is `false`, i.e., by default, all datasets created by the harvester will be public.
