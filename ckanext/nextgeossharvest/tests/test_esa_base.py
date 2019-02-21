@@ -38,7 +38,8 @@ class TestNormalizeNames(object):
             'identifier': 'S1B_EW_GRDH_1SDH_20180131T104713_20180131T104813_009414_010EA4_BD6D',  # noqa: E501
             'size': '1.0 GB',
             'PlatformIdentifier': '2016-025A',
-            'RelativeOrbitNumber': '113'
+            'RelativeOrbitNumber': '113',
+            'psn': 'S1B'
         }
 
         assert test_item == expected_item
