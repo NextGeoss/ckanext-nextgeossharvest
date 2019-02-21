@@ -47,7 +47,6 @@ class SentinelHarvester(HarvesterBase):
             'uuid': 'uuid',
             'identifier': 'identifier',
             'size': 'size',
-            'platformname': 'PlatformName',
             'platformidentifier': 'PlatformIdentifier',
             'platformserialidentifier': 'PlatformSerialIdentifier',
             'relativeorbitnumber': 'RelativeOrbitNumber',
