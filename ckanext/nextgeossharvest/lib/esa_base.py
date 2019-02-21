@@ -47,12 +47,18 @@ class SentinelHarvester(HarvesterBase):
             'uuid': 'uuid',
             'identifier': 'identifier',
             'size': 'size',
+            'platformname': 'PlatformName',
+            'platformidentifier': 'PlatformIdentifier',
+            'platformserialidentifier': 'PlatformSerialIdentifier',
+            'relativeorbitnumber': 'RelativeOrbitNumber',
         }
         item = {}
 
         for subitem_node in item_node.findChildren():
             if subitem_node.name in name_elements:
                 key = normalized_names.get(subitem_node.get('name'))
+                if key == 'Filename':
+                    item['psn'] = subitem_node.text[:3]
                 if key:
                     item[key] = subitem_node.text
 
