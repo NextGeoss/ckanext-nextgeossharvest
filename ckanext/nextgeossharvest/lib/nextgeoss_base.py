@@ -307,7 +307,7 @@ class NextGEOSSHarvester(HarvesterBase):
 
         return logger
 
-def _crawl_urls_ftp(self, url, provider):
+    def _crawl_urls_ftp(self, url, provider):
         """
         Check if a file is present on an FTP server and return the appropriate
         status code.
