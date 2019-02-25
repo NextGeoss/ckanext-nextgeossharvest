@@ -285,7 +285,29 @@ class NextGEOSSHarvester(HarvesterBase):
 
         return logger
 
-    def _crawl_urls_ftp(self, url, provider):
+    # New function added to generate logs about the number of datasets
+    # harvested by job for each data source
+    def make_harvester_logger(self, filename='dataconnectors_info.log'):
+        """Create a logger just for datasets harvested."""
+        log_dir = config.get('ckanext.nextgeossharvest.provider_log_dir')
+        if log_dir:
+            if not os.path.exists(log_dir):
+                os.makedirs(log_dir)
+            handler = logging.FileHandler('{}/{}'.format(log_dir, filename))
+            handler.setFormatter(logging.Formatter('%(levelname)s | %(message)s'))  # noqa: E501
+            logger = logging.getLogger('harvester_logger')
+            logger.setLevel(logging.INFO)
+            logger.addHandler(handler)
+        else:
+            handler = logging.StreamHandler()
+            handler.setFormatter(logging.Formatter('%(levelname)s | %(message)s'))  # noqa: E501
+            logger = logging.getLogger('harvester_logger')
+            logger.setLevel(logging.INFO)
+            logger.addHandler(handler)
+
+        return logger
+
+def _crawl_urls_ftp(self, url, provider):
         """
         Check if a file is present on an FTP server and return the appropriate
         status code.
