@@ -80,6 +80,8 @@ The repository contains four plugins:
 ## <a name="harvesting"></a>Harvesting Sentinel products
 To harvest Sentinel products, activate the `esa` plugin, which you will use to create a harvester that harvests from SciHub, NOA or CODE-DE. To harvest from more than one of those sources, just create more than one harvester and point it at a different source.
 
+Note: The [configuration object](#generalsettings) is _required_ for all of these harvesters.
+
 ### <a name="scihub"></a>Harvesting from SciHub
 Create a new harvest source and select `ESA Sentinel Harvester New`. The URL does not matter—the harvester only harvests from SciHub, NOA, or CODE-DE, depending on the configuration below.
 
