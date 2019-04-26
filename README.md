@@ -126,10 +126,10 @@ Example configuration with all variables present:
   "update_all": false,
   "start_date": "2018-01-16T10:30:00.000Z",
   "end_date": "2018-01-16T11:00:00.000Z",
-  "datasets_per_job": 1000,
+  "datasets_per_job": 100,
   "timeout": 4,
   "skip_raw": true,
-  "make_private: false"
+  "make_private": false
 }
 ```
 Note: you must place your username and password in the `.ini` file as described above.
