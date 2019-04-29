@@ -631,5 +631,5 @@ Using the same structure, we can also add tests that verify that the metadata of
 ## <a name="logs"></a>Logs
 Both the ESA harvester and the iTag metadata harvester can optionally log the status codes and response times of the sources or services that they query. If you want to log the response times and status codes of requests to harvest sources and/or your iTag service, you must include `ckanext.nextgeossharvest.provider_log_dir=/path/to/your/logs` in your `.ini` file. The log entries will look like this: `INFO | esa_scihub   | 2018-03-08 14:17:04.474262 | 200 | 2.885231s` (the second field will always be 12 characters and will be padded if necessary).
 
-The data provider log file is called `dataproviders_info.log`. The iTag service provider log is called `itag_uptime.log`
+The data provider log file is called `dataproviders_info.log`. The iTag service provider log is called `itag_uptime.log`.
 
