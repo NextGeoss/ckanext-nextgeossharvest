@@ -86,7 +86,8 @@ class DEIMOSIMGHarvester(NextGEOSSHarvester, DEIMOSIMGBase):
             'ms:cloudpercent': 'CloudCoverage',
             'ms:roll_filter': 'Roll',
             'ms:pitch_filter': 'Pitch',
-            'ms:yaw_filter': 'Yaw'
+            'ms:yaw_filter': 'Yaw',
+            'ms:asceid': 'ASCID'
         }
 
         item = {}
