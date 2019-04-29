@@ -33,7 +33,7 @@ class DEIMOSIMGBase(HarvesterBase):
 
     def _add_tags(self, product_type):
         """Create a list of tags based on the type of harvester."""
-        tags_list = [{"name": "deimos2"}, {"name": "deimos-2"}]
+        tags_list = [{"name": "deimos2"}]
 
         if product_type == 'PM4_L1B':
             tags_list.extend([{"name": "panchromatic"},
@@ -103,6 +103,7 @@ class DEIMOSIMGBase(HarvesterBase):
         ftp_link = content['ftp_link']
         product_type = content['product_type']
 
+        item['productType'] = product_type
         item['downloadLink'] = ftp_link
         item['thumbnail'] = self._get_thumbmail_url(content['identifier'], product_type)  # noqa: E501
 
