@@ -450,7 +450,7 @@ The PROBA-V harvester harvests products from the following collections:
 The products from the on time collections are created and published on the same day.
 The product from delayed collections are published with one month delay after being created.
 
-The collections were also splitted according to the resoltion to avoid a huge number of datasets being harvested.
+The collection to be harvested is defined on the harvester configuration.
 L1C, L2A and S1 products are published daily. S5 products are published every 5 days. S10 products are published every 10 days.
 S1, S5 and S10 products are tiles covering almost the entire world. Each dataset correspond to a single tile.
 
@@ -459,15 +459,14 @@ The PROBA-V harvester has configuration has:
 1. `start_date` (required) determines the date on which the harvesting begins. It must be in the format `YYYY-MM-DD`. If you want to harvest from the earliest product onwards, use `2018-01-01`
 2. `end_date` (optional) determines the end date for the harvester job. It must be a string describing a date in the format `YYYY-MM-DD`, like 2018-01-31. The end_date is not mandatory and if not included the harvester will run until catch up the current day. To limit the number of datasets per job each job will harvest a maximum of 2 days of data.
 3. `username` and `password` are your username and password for accessing the PROBA-V products at the source.
-4. `collections_type` (required) to define the collection that will be collected. It can be `current` (for the on time collections) or `delayed` (for the one month delayed collections).
-5. `resolution` (required if the `collections_type` is `delayed`) to define if the harvester will collect products with 333M or 100M resolution.
+4. `collection` (required) to define the collection that will be collected. It can be `PROBAV_P_V001`, `PROBAV_S1-TOA_1KM_V001`, `PROBAV_S1-TOC_1KM_V001`, `PROBAV_S10-TOC_1KM_V001`, `PROBAV_S10-TOC-NDVI_1KM_V001`, `PROBAV_S1-TOA_100M_V001`, `PROBAV_S1-TOC-NDVI_100M_V001`, `PROBAV_S5-TOC-NDVI_100M_V001`, `PROBAV_S5-TOA_100M_V001`, `PROBAV_S5-TOC_100M_V001`, `PROBAV_S1-TOC_100M_V001`, `PROBAV_S1-TOA_333M_V001`, `PROBAV_S1-TOC_333M_V001`, `PROBAV_S10-TOC_333M_V001`, `PROBAV_S10-TOC-NDVI_333M_V001`, `PROBAV_L2A_1KM_V001`, `PROBAV_L2A_100M_V001` or `PROBAV_L2A_333M_V001`
 6. `make_private` (optional) determines whether the datasets created by the harvester will be private or public. The default is `false`, i.e., by default, all datasets created by the harvester will be public.
 
 #### Examples of PROVA-V settings
 ```
 {
-"start_date":"2018-08-01",
-"collections_type":"current",
+"start_date":"2019-01-01",
+"collection":"PROBAV_P_V001",
 "username":"nextgeoss",
 "password":"nextgeoss",
 "make_private":false
@@ -475,9 +474,8 @@ The PROBA-V harvester has configuration has:
 ```
 ```
 {
-"start_date":"2018-08-01",
-"collections_type":"delayed",
-"resolution":"100",
+"start_date":"2019-01-01",
+"collection":"PROBAV_S10-TOC_1KM_V001",
 "username":"nextgeoss",
 "password":"nextgeoss",
 "make_private":false
@@ -485,9 +483,8 @@ The PROBA-V harvester has configuration has:
 ```
 ```
 {
-"start_date":"2018-08-01",
-"collections_type":"delayed",
-"resolution":"333",
+"start_date":"2019-01-01",
+"collection":"PROBAV_L2A_333M_V001",
 "username":"nextgeoss",
 "password":"nextgeoss",
 "make_private":false
