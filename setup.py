@@ -89,6 +89,7 @@ setup(
         glass_lai=ckanext.nextgeossharvest.harvesters:GLASS_LAI_Harvester
         plan4all=ckanext.nextgeossharvest.harvesters:Plan4AllHarvester
         epos=ckanext.nextgeossharvest.harvesters:EPOSHarvester
+        foodsecurity=ckanext.nextgeossharvest.harvesters:FoodSecurityHarvester
         itag=ckanext.nextgeossharvest.harvesters:ITagEnricher
 	      ebvs=ckanext.nextgeossharvest.harvesters:EBVSHarvester
         [babel.extractors]
