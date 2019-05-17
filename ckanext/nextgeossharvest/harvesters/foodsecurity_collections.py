@@ -36,7 +36,7 @@ COLLECTION_DESCRIPTIONS = {
      "the understory may represent a very significant contribution to the total "
      "canopy LAI. The derived LAI corresponds therefore to the total green LAI, "
      "including the contribution of the green elements of the understory. The "
-     "resulting NEXTGEOSS SENTNEL LAI products are relatively consistent with the "
+     "resulting NEXTGEOSS SENTNEL 2 LAI products are relatively consistent with the "
      "actual LAI for low LAI values and 'non-forest' surfaces; while for forests, "
      "particularly for needle leaf types, significant departures with the true LAI "
      "are expected."),
