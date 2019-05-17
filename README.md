@@ -511,15 +511,15 @@ The Food Security harvester harvests the VITO pilot outputs for the following co
 
 The date of the pilot outputs can be different of the current date since the pilot processes old Sentinel Data.
 
-### <a name="proba-v-settings"></a>PROBA-V Settings
-The PROBA-V harvester has configuration has:
+### <a name="foodsecurity-settings"></a>Food Security Settings
+The Food Security harvester has configuration has:
 1. `start_date` (required) determines the date on which the harvesting begins. It must be in the format `YYYY-MM-DD`. If you want to harvest from the earliest product onwards, use `2018-01-01`
 2. `end_date` (optional) determines the end date for the harvester job. It must be a string describing a date in the format `YYYY-MM-DD`, like 2018-01-31. The end_date is not mandatory and if not included the harvester will run until catch up the current day. To limit the number of datasets per job each job will harvest a maximum of 2 days of data.
 3. `username` and `password` are your username and password for accessing the PROBA-V products at the source.
 4. `collection` (required) to define the collection that will be collected. It can be `FAPAR`, `FCOVER`, `LAI` or `NDVI`.
 5. `make_private` (optional) determines whether the datasets created by the harvester will be private or public. The default is `false`, i.e., by default, all datasets created by the harvester will be public.
 
-#### Examples of PROVA-V settings
+#### Examples of Food Security settings
 ```
 {
 "start_date":"2018-03-01",
