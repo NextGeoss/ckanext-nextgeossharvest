@@ -30,6 +30,7 @@ from ckan.model import Package
 from ckanext.harvest.model import HarvestObjectExtra as HOExtra
 
 from foodsecurity_collections import COLLECTION_DESCRIPTIONS
+from numpy.ma.core import ids
 
 log = logging.getLogger(__name__)
 
@@ -195,6 +196,9 @@ class FoodSecurityHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         if not hasattr(self, 'provider_logger'):
             self.provider_logger = self.make_provider_logger()
 
+        if not hasattr(self, 'harvester_logger'):
+            self.harvester_logger = self.make_harvester_logger()
+
         config = json.loads(harvest_job.source.config)
 
         auth = (self.source_config['username'],
@@ -221,6 +225,10 @@ class FoodSecurityHarvester(OpenSearchHarvester, NextGEOSSHarvester):
             if _id:
                 ids.append(_id)
 
+        harvester_msg = '{:<12} | {} | jobID:{} | {} | {}'
+        if hasattr(self, 'harvester_logger'):
+            timestamp = str(datetime.utcnow())
+            self.harvester_logger.info(harvester_msg.format(self.provider,timestamp, self.job.id, len(ids), 0)) # noqa: E128, E501
         return ids
 
     def _get_last_harvesting_date(self, source_id):
@@ -258,7 +266,7 @@ class FoodSecurityHarvester(OpenSearchHarvester, NextGEOSSHarvester):
 
         parsed_content = {}
         parsed_content['collection_name'] = collection.get_name()
-        parsed_content['collection_description'] = collection.get_description()
+        parsed_content['collection_description'] = collection.get_description()  # noqa: E501
         parsed_content['title'] = collection.get_name()
         parsed_content['description'] = collection.get_description()
         parsed_content['tags'] = self._create_ckan_tags(collection.get_tags())  # noqa: E501
@@ -274,8 +282,8 @@ class FoodSecurityHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         parsed_content['filename'] = self._parse_filename(identifier)
         parsed_content['spatial'] = json.dumps(
             self._bbox_to_geojson(self._parse_bbox(content)))
-        parsed_content['metadata_download'] = self._get_metadata_url(content)
-        parsed_content['product_download'] = self._get_product_url(content)
+        parsed_content['metadata_download'] = self._get_metadata_url(content)  # noqa: E501
+        parsed_content['product_download'] = self._get_product_url(content)  # noqa: E501
         parsed_content['thumbnail_download'] = self._get_thumbnail_url(content)  # noqa: E501
         return parsed_content
 
@@ -315,8 +323,7 @@ class FoodSecurityHarvester(OpenSearchHarvester, NextGEOSSHarvester):
 
     def _parse_name(self, identifier):
         identifier_parts = identifier.split(':')
-        name = identifier_parts[-2]
-        return '{}_{}'.format(name, identifier_parts[-1]).lower()
+        return '{}'.format(identifier_parts[-1]).lower()
 
     def _parse_filename(self, identifier):
         identifier_parts = identifier.split(':')
