@@ -50,5 +50,3 @@ COLLECTION_DESCRIPTIONS = {
      "the near infrared band , and Red to the reflectance in the red band. "
      "It is closely related to FAPAR and is little scale dependent."),
 }
-
-

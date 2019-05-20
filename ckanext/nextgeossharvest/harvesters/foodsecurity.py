@@ -71,7 +71,7 @@ class FoodSecurityCollection(object):
 
     def get_name(self):
         return 'NextGEOSS Sentinel-2 {}'.format(self.product_type)
-    
+
     def __str__(self):
         return 'NEXTGEOSS_SENTINEL2_{}'.format(self.product_type)
 
@@ -225,11 +225,9 @@ class FoodSecurityHarvester(OpenSearchHarvester, NextGEOSSHarvester):
             end_date = datetime.now()
             harvest_url = self._generate_harvest_url(collection,
                                                  start_date + timedelta(days=1), end_date)  # noqa E501
-            
-            for open_search_page in self._open_search_pages_from(
-                harvest_url, auth=auth):
-                open_search_entry = self._parse_open_search_entries(
-                    open_search_page)[0]
+
+            for open_search_page in self._open_search_pages_from(harvest_url, auth=auth):  # noqa: E501
+                open_search_entry = self._parse_open_search_entries(open_search_page)[0]  # noqa: E501
             restart_date = open_search_entry.find('dc:date').string.split('/')[1].split('T')[0]  # noqa: E501
             start_date = datetime.strptime(restart_date, '%Y-%m-%d')
             end_date = start_date + timedelta(days=1)
@@ -244,7 +242,7 @@ class FoodSecurityHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         harvester_msg = '{:<12} | {} | jobID:{} | {} | {}'
         if hasattr(self, 'harvester_logger'):
             timestamp = str(datetime.utcnow())
-            self.harvester_logger.info(harvester_msg.format(self.provider,timestamp, self.job.id, len(ids), 0)) # noqa: E128, E501
+            self.harvester_logger.info(harvester_msg.format(self.provider, timestamp, self.job.id, len(ids), 0))  # noqa E501
         return ids
 
     def _get_last_harvesting_date(self, source_id):
