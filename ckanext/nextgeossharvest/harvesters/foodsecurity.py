@@ -7,9 +7,6 @@ import uuid
 from datetime import datetime, timedelta
 import time
 from bs4 import BeautifulSoup
-from os import path
-from urllib import urlencode, unquote
-from urlparse import urlparse, urlunparse, parse_qsl
 from sqlalchemy import desc
 
 import requests
@@ -30,7 +27,6 @@ from ckan.model import Package
 from ckanext.harvest.model import HarvestObjectExtra as HOExtra
 
 from foodsecurity_collections import COLLECTION_DESCRIPTIONS
-from numpy.ma.core import ids
 
 log = logging.getLogger(__name__)
 
@@ -137,8 +133,8 @@ class FoodSecurityHarvester(OpenSearchHarvester, NextGEOSSHarvester):
                 raise ValueError('username is required and must be a string')
             if config_obj.get('collection') not in {"FAPAR", "FCOVER",  # noqa E501
                                                      "LAI", "NDVI"}:  # noqa E501
-                raise ValueError('''collections_type is required and must be "FAPAR",
-                 "FCOVER", "LAI" or "NDVI"''')
+                raise ValueError('''collections_type is required and must be
+                 "FAPAR", "FCOVER", "LAI" or "NDVI"''')
             if type(config_obj.get('make_private', False)) != bool:
                 raise ValueError('make_private must be true or false')
         except ValueError as e:
@@ -190,7 +186,7 @@ class FoodSecurityHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         self._init()
         self.job = harvest_job
         self._set_source_config(self.job.source.config)
-        log.debug('Food security harvester gather_stage for job: %r', harvest_job)
+        log.debug('Food security harvester gather_stage for job: %r', harvest_job)  # noqa E501
 
         self.provider = 'vito'
         if not hasattr(self, 'provider_logger'):
@@ -228,7 +224,7 @@ class FoodSecurityHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         if (start_date != datetime.now() and len(ids) == 0):
             end_date = datetime.now()
             harvest_url = self._generate_harvest_url(collection,
-                                                 start_date + timedelta(days=1), end_date)
+                                                 start_date + timedelta(days=1), end_date)  # noqa E501
             
             for open_search_page in self._open_search_pages_from(
                 harvest_url, auth=auth):
@@ -253,7 +249,7 @@ class FoodSecurityHarvester(OpenSearchHarvester, NextGEOSSHarvester):
 
     def _get_last_harvesting_date(self, source_id):
         objects = self._get_imported_harvest_objects_by_source(source_id)
-        sorted_objects = objects.order_by(desc(HarvestObject.import_finished))
+        sorted_objects = objects.order_by(desc(HarvestObject.import_finished))  # noqa E501
         last_object = sorted_objects.limit(1).first()
         if last_object is not None:
             soup = BeautifulSoup(last_object.content)
