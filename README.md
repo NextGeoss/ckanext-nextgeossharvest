@@ -471,7 +471,7 @@ The date of the pilot outputs can be different of the current date since the pil
 
 ### <a name="foodsecurity-settings"></a>Food Security Settings
 The Food Security harvester has configuration has:
-1. `start_date` (required) determines the date on which the harvesting begins. It must be in the format `YYYY-MM-DD`. If you want to harvest from the earliest product onwards, use `2018-01-01`
+1. `start_date` (required) determines the date on which the harvesting begins. It must be in the format `YYYY-MM-DD`. If you want to harvest from the earliest product onwards, use `2017-01-01`
 2. `end_date` (optional) determines the end date for the harvester job. It must be a string describing a date in the format `YYYY-MM-DD`, like 2018-01-31. The end_date is not mandatory and if not included the harvester will run until catch up the current day. To limit the number of datasets per job each job will harvest a maximum of 2 days of data.
 3. `username` and `password` are your username and password for accessing the PROBA-V products at the source.
 4. `collection` (required) to define the collection that will be collected. It can be `FAPAR`, `FCOVER`, `LAI` or `NDVI`.
@@ -480,7 +480,7 @@ The Food Security harvester has configuration has:
 #### Examples of Food Security settings
 ```
 {
-"start_date":"2018-03-01",
+"start_date":"2017-01-01",
 "collection":"FAPAR",
 "username":"nextgeoss",
 "password":"nextgeoss",
@@ -489,7 +489,7 @@ The Food Security harvester has configuration has:
 ```
 ```
 {
-"start_date":"2018-03-01",
+"start_date":"2017-01-01",
 "collections_type":"FCOVER",
 "username":"nextgeoss",
 "password":"nextgeoss",
