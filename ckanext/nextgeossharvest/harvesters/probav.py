@@ -181,21 +181,24 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
             if type(config_obj.get('username', None)) != unicode:
                 raise ValueError('username is required and must be a string')
             if config_obj.get('collection') not in {"PROBAV_S1-TOA_1KM_V001", "PROBAV_S1-TOC_1KM_V001", "PROBAV_P_V001",  # noqa E501
-                                                     "PROBAV_S10-TOC_1KM_V001", "PROBAV_S10-TOC-NDVI_1KM_V001",
-                                                     "PROBAV_S1-TOA_100M_V001", "PROBAV_S1-TOC-NDVI_100M_V001",
-                                                     "PROBAV_S5-TOC-NDVI_100M_V001", "PROBAV_S5-TOA_100M_V001",
-                                                     "PROBAV_S5-TOC_100M_V001", "PROBAV_S1-TOC_100M_V001",
-                                                     "PROBAV_S1-TOA_333M_V001", "PROBAV_S1-TOC_333M_V001",
-                                                     "PROBAV_S10-TOC_333M_V001", "PROBAV_S10-TOC-NDVI_333M_V001",
+                                                     "PROBAV_S10-TOC_1KM_V001", "PROBAV_S10-TOC-NDVI_1KM_V001",  # noqa E501
+                                                     "PROBAV_S1-TOA_100M_V001", "PROBAV_S1-TOC-NDVI_100M_V001",  # noqa E501
+                                                     "PROBAV_S5-TOC-NDVI_100M_V001", "PROBAV_S5-TOA_100M_V001",  # noqa E501
+                                                     "PROBAV_S5-TOC_100M_V001", "PROBAV_S1-TOC_100M_V001",  # noqa E501
+                                                     "PROBAV_S1-TOA_333M_V001", "PROBAV_S1-TOC_333M_V001",  # noqa E501
+                                                     "PROBAV_S10-TOC_333M_V001", "PROBAV_S10-TOC-NDVI_333M_V001",  # noqa E501
                                                      "PROBAV_L2A_1KM_V001", "PROBAV_L2A_100M_V001", "PROBAV_L2A_333M_V001"}:  # noqa E501
-                raise ValueError('''collections_type is required and must be "PROBAV_P_V001", "PROBAV_S1-TOA_1KM_V001", "PROBAV_S1-TOC_1KM_V001",
-                                "PROBAV_S10-TOC_1KM_V001", "PROBAV_S10-TOC-NDVI_1KM_V001",
-                                "PROBAV_S1-TOA_100M_V001", "PROBAV_S1-TOC-NDVI_100M_V001",
-                                "PROBAV_S5-TOC-NDVI_100M_V001", "PROBAV_S5-TOA_100M_V001",
-                                "PROBAV_S5-TOC_100M_V001", "PROBAV_S1-TOC_100M_V001",
-                                "PROBAV_S1-TOA_333M_V001", "PROBAV_S1-TOC_333M_V001",
-                                "PROBAV_S10-TOC_333M_V001", "PROBAV_S10-TOC-NDVI_333M_V001",
-                                "PROBAV_L2A_1KM_V001", "PROBAV_L2A_100M_V001" or "PROBAV_L2A_333M_V001"''')
+                raise ValueError('''collections_type is required and must be
+                "PROBAV_P_V001", "PROBAV_S1-TOA_1KM_V001",
+                "PROBAV_S1-TOC_1KM_V001", "PROBAV_S10-TOC_1KM_V001",
+                "PROBAV_S10-TOC-NDVI_1KM_V001", "PROBAV_S1-TOA_100M_V001",
+                "PROBAV_S1-TOC-NDVI_100M_V001",
+                "PROBAV_S5-TOC-NDVI_100M_V001", "PROBAV_S5-TOA_100M_V001",
+                "PROBAV_S5-TOC_100M_V001", "PROBAV_S1-TOC_100M_V001",
+                "PROBAV_S1-TOA_333M_V001", "PROBAV_S1-TOC_333M_V001",
+                "PROBAV_S10-TOC_333M_V001", "PROBAV_S10-TOC-NDVI_333M_V001",
+                "PROBAV_L2A_1KM_V001", "PROBAV_L2A_100M_V001"
+                 or "PROBAV_L2A_333M_V001"''')
             if type(config_obj.get('make_private', False)) != bool:
                 raise ValueError('make_private must be true or false')
         except ValueError as e:
