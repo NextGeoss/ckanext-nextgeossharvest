@@ -209,10 +209,10 @@ class EPOSHarvester(EPOSbaseHarvester, NextGEOSSHarvester, HarvesterBase):
         items_per_page = eval(soup.find('itemsperpage').text)
         start_page = eval(soup.find('startindex').text)
 
-        records_ratio = float(total_results) / (start_page*items_per_page)
+        records_ratio = float(total_results) / (start_page * items_per_page)
         if records_ratio > 1:
             splitted_url = harvest_url.split('StartPage')
-            next_url = splitted_url[0] + 'StartPage=' + str(start_page+1)
+            next_url = splitted_url[0] + 'StartPage=' + str(start_page + 1)
             return next_url
         else:
             return None
@@ -323,4 +323,3 @@ class EPOSHarvester(EPOSbaseHarvester, NextGEOSSHarvester, HarvesterBase):
                                        timestamp, self.job.id, new_counter, 0))  # noqa: E128, E501
 
         return ids
-
