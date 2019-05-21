@@ -258,4 +258,3 @@ class EPOSbaseHarvester(HarvesterBase):
             resources.sort(key=lambda x: x['order'])
 
         return resources
-
