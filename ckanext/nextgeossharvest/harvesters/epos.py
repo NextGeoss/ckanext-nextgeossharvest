@@ -66,6 +66,12 @@ class EPOSHarvester(EPOSbaseHarvester, NextGEOSSHarvester, HarvesterBase):
                                       '%Y-%m-%dT%H:%M:%SZ')
                 except ValueError:
                     raise ValueError('end_date format must be 2018-01-01T00:00:00Z')  # noqa: E501
+
+            if 'datasets_per_job' in config_obj:
+                limit = config_obj['datasets_per_job']
+                if not isinstance(limit, int) and not limit > 0:
+                    raise ValueError('datasets_per_job must be a positive integer')  # noqa: E501
+
             if 'timeout' in config_obj:
                 timeout = config_obj['timeout']
                 if not isinstance(timeout, int) and not timeout > 0:
@@ -163,9 +169,10 @@ class EPOSHarvester(EPOSbaseHarvester, NextGEOSSHarvester, HarvesterBase):
 
         self.provider = 'epos'
 
+        limit = self.source_config.get('datasets_per_job', 100)
+
         # This can be a hook
-        print harvest_url
-        ids = self._crawl_results(harvest_url, timeout)
+        ids = self._crawl_results(harvest_url, timeout, limit)
         # This can be a hook
 
         return ids
@@ -289,7 +296,7 @@ class EPOSHarvester(EPOSbaseHarvester, NextGEOSSHarvester, HarvesterBase):
                     obj.content = entry['content']
                     obj.package = package
                     obj.save()
-                    ids.append(obj.id)
+
                 elif not package:
                     # It's a product we haven't harvested before.
                     log.debug('{} has not been harvested before. Creating a new harvest object.'.format(entry_name))  # noqa: E501
@@ -313,6 +320,7 @@ class EPOSHarvester(EPOSbaseHarvester, NextGEOSSHarvester, HarvesterBase):
         if hasattr(self, 'harvester_logger'):
             timestamp = str(datetime.utcnow())
             self.harvester_logger.info(harvester_msg.format(self.provider,
-                                       timestamp, self.job.id, new_counter, 0)) # noqa: E128, E501
+                                       timestamp, self.job.id, new_counter, 0))  # noqa: E128, E501
 
         return ids
+

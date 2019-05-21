@@ -45,7 +45,7 @@ class EPOSbaseHarvester(HarvesterBase):
             'eop:processorversion': 'ProcessorVersion',
             'eop:processorlevel': 'ProcessorLevel',
             'identifier': 'identifier',
-            'title':'title',
+            'title': 'title',
             'eop:size': 'size',
             'eop:nativeproductformat': 'NativeProductFormat'
         }
@@ -258,3 +258,4 @@ class EPOSbaseHarvester(HarvesterBase):
             resources.sort(key=lambda x: x['order'])
 
         return resources
+
