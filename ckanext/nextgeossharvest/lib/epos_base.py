@@ -95,7 +95,7 @@ class EPOSbaseHarvester(HarvesterBase):
                 item['collection_id'] = prodType
                 item['collection_name'] = 'Map of LoS Vector'  # noqa: E501
                 item['collection_description'] = 'Map of the Line of Sight vector (North East Up coefficients).'  # noqa: E501
-        else: # add missing collections
+        else:  # add missing collections
             message = 'No collection for product {}'.format(prodType)
             log.warning(message)
 
