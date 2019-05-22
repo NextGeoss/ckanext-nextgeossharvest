@@ -74,28 +74,28 @@ class EPOSbaseHarvester(HarvesterBase):
         if prodType.startswith('UNWRAPPED_INTERFEROGRAM'):
                 item['collection_id'] = prodType
                 item['collection_name'] = 'Unwrapped Interferogram'  # noqa: E501
-                item['collection_description'] = 'Unwrapped Interferogram.'  # noqa: E501
+                item['collection_description'] = 'Unwrapped Differential SAR Interferogram (Phase and Amplitude).'  # noqa: E501
         elif prodType.startswith('WRAPPED_INTERFEROGRAM'):
                 item['collection_id'] = prodType
                 item['collection_name'] = 'Wrapped Interferogram'  # noqa: E501
-                item['collection_description'] = 'Wrapped Interferogram.'  # noqa: E501
+                item['collection_description'] = 'Differential SAR Interferogram (Phase and Amplitude) in the wrapped domain.'  # noqa: E501
         elif prodType.startswith('SPATIAL_COHERENCE'):
                 item['collection_id'] = prodType
                 item['collection_name'] = 'Spatial Coherence'  # noqa: E501
-                item['collection_description'] = 'Spatial Coherence.'  # noqa: E501
+                item['collection_description'] = 'Interferometric SAR Spatial coherence.'  # noqa: E501
         elif prodType.startswith('LOS_DISPLACEMENT_TIMESERIES'):
                 item['collection_id'] = prodType
-                item['collection_name'] = 'Displacement Timeseries'  # noqa: E501
-                item['collection_description'] = 'Displacement Timeseries.'  # noqa: E501
+                item['collection_name'] = 'LoS Displacement Timeseries'  # noqa: E501
+                item['collection_description'] = 'Displacement Time Series along the sensor Line of Sight.'  # noqa: E501
         elif prodType.startswith('INTERFEROGRAM_APS_GLOBAL_MODEL'):
                 item['collection_id'] = prodType
                 item['collection_name'] = 'Interferogram APS Global Model'  # noqa: E501
-                item['collection_description'] = 'Interferogram APS Global Model.'  # noqa: E501
+                item['collection_description'] = 'Interferometric Atmospheric Phase Screen derived from Global Atmospheric Model.'  # noqa: E501
         elif prodType.startswith('MAP_OF_LOS_VECTOR'):
                 item['collection_id'] = prodType
-                item['collection_name'] = 'Map of LOS Vector'  # noqa: E501
-                item['collection_description'] = 'Map of LOS Vector.'  # noqa: E501
-        else:
+                item['collection_name'] = 'Map of LoS Vector'  # noqa: E501
+                item['collection_description'] = 'Map of the Line of Sight vector (North East Up coefficients).'  # noqa: E501
+        else: # add missing collections
             message = 'No collection for product {}'.format(prodType)
             log.warning(message)
 
