@@ -52,6 +52,7 @@ class EPOSHarvester(EPOSbaseHarvester, NextGEOSSHarvester, HarvesterBase):
 
             if config_obj.get('collection') not in {'inu', 'inw', 'dts', 'coh', 'aps', 'cosneu'}:  # noqa: E501
                 raise ValueError('collection is required and must be either inu, inw, dts, coh, aps, cosneu')  # noqa: E501
+                # add missing collections
             if 'start_date' in config_obj:
                 try:
                     datetime.strptime(config_obj['start_date'],
