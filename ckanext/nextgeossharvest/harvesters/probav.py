@@ -35,23 +35,6 @@ log = logging.getLogger(__name__)
 
 COLLECTION_TEMPLATE = 'PROBAV_{type}_{resolution}_V001'
 
-l1c_collection = "PROBAV_P_V001"
-
-L3_COLLECTIONS = [
-    "PROBAV_S1-TOA_1KM_V001", "PROBAV_S1-TOC_1KM_V001",
-    "PROBAV_S10-TOC_1KM_V001", "PROBAV_S10-TOC-NDVI_1KM_V001"
-]
-L3_COLLECTIONS_DELAYED_100 = [
-    "PROBAV_S1-TOA_100M_V001", "PROBAV_S1-TOC-NDVI_100M_V001",
-    "PROBAV_S5-TOC-NDVI_100M_V001", "PROBAV_S5-TOA_100M_V001",
-    "PROBAV_S5-TOC_100M_V001", "PROBAV_S1-TOC_100M_V001"
-]
-
-L3_COLLECTIONS_DELAYED_333 = [
-    "PROBAV_S1-TOA_333M_V001", "PROBAV_S1-TOC_333M_V001",
-    "PROBAV_S10-TOC_333M_V001", "PROBAV_S10-TOC-NDVI_333M_V001"
-]
-
 URL_TEMPLATE = 'http://www.vito-eodata.be/openSearch/findProducts.atom?collection=urn:ogc:def:EOP:VITO:{}&platform=PV01&start={}&end={}&count=500'  # count=500  # noqa: E501
 DATE_FORMAT = '%Y-%m-%d'
 
@@ -197,13 +180,25 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
                 raise ValueError('password is required and must be a string')
             if type(config_obj.get('username', None)) != unicode:
                 raise ValueError('username is required and must be a string')
-            if config_obj.get('collections_type') not in {'current',
-                                                          'delayed'}:
-                raise ValueError('collections_type is required and must be a "current" or "delayed"')  # noqa E501
-            if config_obj.get('collections_type') == 'delayed':
-                if config_obj.get('resolution') not in {'100',
-                                                        '333'}:
-                    raise ValueError('resolution is required and must be a "100" or "333"')  # noqa E501
+            if config_obj.get('collection') not in {"PROBAV_S1-TOA_1KM_V001", "PROBAV_S1-TOC_1KM_V001", "PROBAV_P_V001",  # noqa E501
+                                                     "PROBAV_S10-TOC_1KM_V001", "PROBAV_S10-TOC-NDVI_1KM_V001",  # noqa E501
+                                                     "PROBAV_S1-TOA_100M_V001", "PROBAV_S1-TOC-NDVI_100M_V001",  # noqa E501
+                                                     "PROBAV_S5-TOC-NDVI_100M_V001", "PROBAV_S5-TOA_100M_V001",  # noqa E501
+                                                     "PROBAV_S5-TOC_100M_V001", "PROBAV_S1-TOC_100M_V001",  # noqa E501
+                                                     "PROBAV_S1-TOA_333M_V001", "PROBAV_S1-TOC_333M_V001",  # noqa E501
+                                                     "PROBAV_S10-TOC_333M_V001", "PROBAV_S10-TOC-NDVI_333M_V001",  # noqa E501
+                                                     "PROBAV_L2A_1KM_V001", "PROBAV_L2A_100M_V001", "PROBAV_L2A_333M_V001"}:  # noqa E501
+                raise ValueError('''collections_type is required and must be
+                "PROBAV_P_V001", "PROBAV_S1-TOA_1KM_V001",
+                "PROBAV_S1-TOC_1KM_V001", "PROBAV_S10-TOC_1KM_V001",
+                "PROBAV_S10-TOC-NDVI_1KM_V001", "PROBAV_S1-TOA_100M_V001",
+                "PROBAV_S1-TOC-NDVI_100M_V001",
+                "PROBAV_S5-TOC-NDVI_100M_V001", "PROBAV_S5-TOA_100M_V001",
+                "PROBAV_S5-TOC_100M_V001", "PROBAV_S1-TOC_100M_V001",
+                "PROBAV_S1-TOA_333M_V001", "PROBAV_S1-TOC_333M_V001",
+                "PROBAV_S10-TOC_333M_V001", "PROBAV_S10-TOC-NDVI_333M_V001",
+                "PROBAV_L2A_1KM_V001", "PROBAV_L2A_100M_V001"
+                 or "PROBAV_L2A_333M_V001"''')
             if type(config_obj.get('make_private', False)) != bool:
                 raise ValueError('make_private must be true or false')
         except ValueError as e:
@@ -266,7 +261,7 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         auth = (self.source_config['username'],
                 self.source_config['password'])
 
-        collections_type = self.source_config['collections_type']
+        collection = self.source_config['collection']
 
         last_product_date = (
             self._get_last_harvesting_date(harvest_job.source_id)
@@ -279,42 +274,19 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
 
         ids = []
 
-        if collections_type == 'current':
-            l2a_collection = "PROBAV_L2A_1KM_V001"
-            l3Collections = L3_COLLECTIONS
-        elif collections_type == 'delayed':
-            resolution = self.source_config['resolution']
-            if resolution == '100':
-                l2a_collection = "PROBAV_L2A_100M_V001"
-                l3Collections = L3_COLLECTIONS_DELAYED_100
-            elif resolution == '333':
-                l2a_collection = "PROBAV_L2A_333M_V001"
-                l3Collections = L3_COLLECTIONS_DELAYED_333
-
-        for l3_collection in l3Collections:
-            harvest_url = self._generate_harvest_url(l3_collection, start_date,  # noqa: E501
-                                                     end_date)
-            log.info('Harvesting {}'.format(harvest_url))
-            for harvest_object in self._gather_L3(harvest_url, auth=auth):
-                _id = self._gather_entry(harvest_object)
-                if _id:
-                    ids.append(_id)
-
-        if collections_type == 'current':
-            harvest_url = self._generate_harvest_url(l1c_collection,
-                                                     start_date, end_date)
+        harvest_url = self._generate_harvest_url(collection,
+                                                 start_date, end_date)
+        log.info('Harvesting {}'.format(harvest_url))
+        if ('L2A' in collection) or ('P_V001' in collection):
             for harvest_object in self._gather_L2A_L1C(harvest_url):
                 _id = self._gather_entry(harvest_object)
                 if _id:
                     ids.append(_id)
-
-        harvest_url = self._generate_harvest_url(l2a_collection,
-                                                 start_date, end_date)
-        log.info('Harvesting {}'.format(harvest_url))
-        for harvest_object in self._gather_L2A_L1C(harvest_url):
-            _id = self._gather_entry(harvest_object)
-            if _id:
-                ids.append(_id)
+        else:
+            for harvest_object in self._gather_L3(harvest_url, auth=auth):
+                _id = self._gather_entry(harvest_object)
+                if _id:
+                    ids.append(_id)
 
         return ids
 

@@ -300,15 +300,14 @@ The PROBA-V harvester has configuration as:
 1. `start_date` (required) determines the date on which the harvesting begins. It must be in the format `YYYY-MM-DD`. If you want to harvest from the earliest product onwards, use `2018-01-01`
 2. `end_date` (optional) determines the end date for the harvester job. It must be a string describing a date in the format `YYYY-MM-DD`, like 2018-01-31. The end_date is not mandatory and if not included the harvester will run until catch up the current day. To limit the number of datasets per job each job will harvest a maximum of 2 days of data.
 3. `username` and `password` are your username and password for accessing the PROBA-V products at the source.
-4. `collections_type` (required) to define the collection that will be collected. It can be `current` (for the on time collections) or `delayed` (for the one month delayed collections).
-5. `resolution` (required if the `collections_type` is `delayed`) to define if the harvester will collect products with 333M or 100M resolution.
-6. `make_private` (optional) determines whether the datasets created by the harvester will be private or public. The default is `false`, i.e., by default, all datasets created by the harvester will be public.
+4. `collection` (required) to define the collection that will be collected. It can be `PROBAV_P_V001`, `PROBAV_S1-TOA_1KM_V001`, `PROBAV_S1-TOC_1KM_V001`, `PROBAV_S10-TOC_1KM_V001`, `PROBAV_S10-TOC-NDVI_1KM_V001`, `PROBAV_S1-TOA_100M_V001`, `PROBAV_S1-TOC-NDVI_100M_V001`, `PROBAV_S5-TOC-NDVI_100M_V001`, `PROBAV_S5-TOA_100M_V001`, `PROBAV_S5-TOC_100M_V001`, `PROBAV_S1-TOC_100M_V001`, `PROBAV_S1-TOA_333M_V001`, `PROBAV_S1-TOC_333M_V001`, `PROBAV_S10-TOC_333M_V001`, `PROBAV_S10-TOC-NDVI_333M_V001`, `PROBAV_L2A_1KM_V001`, `PROBAV_L2A_100M_V001` or `PROBAV_L2A_333M_V001`.
+5. `make_private` (optional) determines whether the datasets created by the harvester will be private or public. The default is `false`, i.e., by default, all datasets created by the harvester will be public.
 
 #### Examples of PROVA-V settings
 ```
 {
 "start_date":"2018-08-01",
-"collections_type":"current",
+"collection":"PROBAV_S1-TOC_1KM_V001",
 "username":"nextgeoss",
 "password":"nextgeoss",
 "make_private":false
@@ -317,8 +316,7 @@ The PROBA-V harvester has configuration as:
 ```
 {
 "start_date":"2018-08-01",
-"collections_type":"delayed",
-"resolution":"100",
+"collection":"PROBAV_L2A_1KM_V001",
 "username":"nextgeoss",
 "password":"nextgeoss",
 "make_private":false
@@ -327,8 +325,7 @@ The PROBA-V harvester has configuration as:
 ```
 {
 "start_date":"2018-08-01",
-"collections_type":"delayed",
-"resolution":"333",
+"collection":"PROBAV_P_V001",
 "username":"nextgeoss",
 "password":"nextgeoss",
 "make_private":false
@@ -424,7 +421,6 @@ The Plan4All harvester has configuration as:
   "make_private": false
 }
 ```
-
 ### <a name="running-plan4all"></a>Running a Plan4All harvester
 1. Add `plan4all` to the list of plugins in your .ini file.
 2. Create a new harvester via the harvester interface.
@@ -563,6 +559,7 @@ or
 4. Add a config as described above.
 5. Select `Manual` from the frequency options.
 6. Run the harvester. It will programmatically create datasets.
+
 
 
 ## <a name="develop"></a>Developing new harvesters
