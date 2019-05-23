@@ -128,6 +128,8 @@ class EPOSHarvester(EPOSbaseHarvester, NextGEOSSHarvester, HarvesterBase):
         # Get the base_url
         source = self.source_config.get('collection')
         base_url = 'https://catalog.terradue.com'
+        ids = []
+        collection = ''
 
         if source == 'inu':
             collection = 'pt=UNWRAPPED_INTERFEROGRAM'
@@ -141,6 +143,9 @@ class EPOSHarvester(EPOSbaseHarvester, NextGEOSSHarvester, HarvesterBase):
             collection = 'pt=INTERFEROGRAM_APS_GLOBAL_MODEL'
         elif source == 'cosneu':
             collection = 'pt=MAP_OF_LOS_VECTOR'
+        else:
+            log.info('The collection "{}" is not eligible to be harvested'.format(source))  # noqa: E501
+            return ids
 
         url_template = ('{base_url}/gep-epos/search?' +
                         '{start_date}' +
