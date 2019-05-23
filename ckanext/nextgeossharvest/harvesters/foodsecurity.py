@@ -226,18 +226,23 @@ class FoodSecurityHarvester(OpenSearchHarvester, NextGEOSSHarvester):
             harvest_url = self._generate_harvest_url(collection,
                                                  start_date + timedelta(days=1), end_date)  # noqa E501
 
-            for open_search_page in self._open_search_pages_from(harvest_url, auth=auth):  # noqa: E501
-                open_search_entry = self._parse_open_search_entries(open_search_page)[0]  # noqa: E501
-            restart_date = open_search_entry.find('dc:date').string.split('/')[1].split('T')[0]  # noqa: E501
-            start_date = datetime.strptime(restart_date, '%Y-%m-%d')
-            end_date = start_date + timedelta(days=1)
-            harvest_url = self._generate_harvest_url(collection,
+            for open_search_page in self._open_search_pages_from(harvest_url, auth=auth):  # noqa E501
+                open_search_entries = self._parse_open_search_entries(open_search_page)  # noqa: E501
+            if len(open_search_entries) > 0:
+                open_search_entry = open_search_entries[0]
+                restart_date = open_search_entry.find('dc:date').string.split('/')[1].split('T')[0]  # noqa: E501
+                start_date = datetime.strptime(restart_date, '%Y-%m-%d')
+                end_date = start_date + timedelta(days=1)
+                harvest_url = self._generate_harvest_url(collection,
                                                  start_date, end_date)
-            log.info('Harvesting {}'.format(harvest_url))
-            for harvest_object in self._gather_(harvest_url):
-                _id = self._gather_entry(harvest_object)
-                if _id:
-                    ids.append(_id)
+                log.info('Harvesting {}'.format(harvest_url))
+                for harvest_object in self._gather_(harvest_url):
+                    _id = self._gather_entry(harvest_object)
+                    if _id:
+                        ids.append(_id)
+            else:
+                log.info('No more datasets to collect until the current day')  # noqa: E501
+                return ids
 
         harvester_msg = '{:<12} | {} | jobID:{} | {} | {}'
         if hasattr(self, 'harvester_logger'):
@@ -407,7 +412,7 @@ class FoodSecurityHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         }]
 
     def _get_metadata_url(self, content):
-        return str(content.find('link', title='HMA')['href'])
+        return str(content.find('link', title='HMA ordering')['href'])
 
     def _get_product_url(self, content):
         return str(content.find('link', rel='enclosure')['href'])
