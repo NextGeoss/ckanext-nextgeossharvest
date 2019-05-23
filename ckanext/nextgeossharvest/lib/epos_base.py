@@ -124,7 +124,8 @@ class EPOSbaseHarvester(HarvesterBase):
             template = Template('''{"type": "Polygon", "coordinates": [$coords_list]}''')  # noqa: E501
 
             tmp_list = geojson_tmp.split('))')[0].split('((')[1]
-            coords_list = '[[' + tmp_list.replace(',', '],[') + ']]'
+            tmp_list = tmp_list.replace(',', '],[').replace(' ', ', ')
+            coords_list = '[[' + tmp_list + ']]'
 
             geojson = template.substitute(coords_list=coords_list)
             item['spatial'] = geojson
