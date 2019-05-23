@@ -412,7 +412,7 @@ class FoodSecurityHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         }]
 
     def _get_metadata_url(self, content):
-        return str(content.find('link', title='HMA ordering')['href'])
+        return str(content.find('link', title='Inspire')['href'])
 
     def _get_product_url(self, content):
         return str(content.find('link', rel='enclosure')['href'])
