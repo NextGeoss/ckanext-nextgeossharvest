@@ -230,7 +230,7 @@ class FoodSecurityHarvester(OpenSearchHarvester, NextGEOSSHarvester):
                 open_search_entries = self._parse_open_search_entries(open_search_page)  # noqa: E501
             if len(open_search_entries) > 0:
                 open_search_entry = open_search_entries[0]
-                restart_date = open_search_entry.find('dc:date').string.split('/')[1].split('T')[0]  # noqa: E501
+                restart_date = open_search_entry.find('date').string.split('/')[1].split('T')[0]  # noqa: E501
                 start_date = datetime.strptime(restart_date, '%Y-%m-%d')
                 end_date = start_date + timedelta(days=1)
                 harvest_url = self._generate_harvest_url(collection,
