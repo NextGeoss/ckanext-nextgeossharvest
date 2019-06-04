@@ -119,8 +119,14 @@ class EPOSbaseHarvester(HarvesterBase):
 
         # If there's a spatial element, convert it to GeoJSON
         # Remove it if it's invalid
-        geojson = self._convert_to_geojson(item.pop('spatial', None))
-        if geojson:
+        geojson_tmp = item.pop('spatial', None)
+        if geojson_tmp:
+            template = Template('''{"type": "Polygon", "coordinates": [$coords_list]}''')  # noqa: E501
+
+            tmp_list = geojson_tmp.split('))')[0].split('((')[1]
+            coords_list = '[[' + tmp_list.replace(',', '],[') + ']]'
+
+            geojson = template.substitute(coords_list=coords_list)
             item['spatial'] = geojson
 
         date_tmp = item.pop('StartTime', None)

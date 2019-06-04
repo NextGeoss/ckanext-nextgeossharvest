@@ -327,6 +327,5 @@ class EPOSHarvester(EPOSbaseHarvester, NextGEOSSHarvester, HarvesterBase):
             timestamp = str(datetime.utcnow())
             self.harvester_logger.info(harvester_msg.format(self.provider,
                                        timestamp, self.job.id, new_counter, 0))  # noqa: E128, E501
-        print ids
 
         return ids
