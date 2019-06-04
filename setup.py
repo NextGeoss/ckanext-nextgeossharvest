@@ -90,6 +90,7 @@ setup(
         plan4all=ckanext.nextgeossharvest.harvesters:Plan4AllHarvester
         modis=ckanext.nextgeossharvest.harvesters:MODISHarvester
         gdacs=ckanext.nextgeossharvest.harvesters:GDACSHarvester
+        epos=ckanext.nextgeossharvest.harvesters:EPOSHarvester
         itag=ckanext.nextgeossharvest.harvesters:ITagEnricher
         ebvs=ckanext.nextgeossharvest.harvesters:EBVSHarvester
         [babel.extractors]

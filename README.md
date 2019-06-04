@@ -39,24 +39,25 @@ This extension contains harvester plugins for harvesting from sources used by Ne
 11. [Harvesting MODIS products](#harvesting-modis)
     1. [MODIS Settings](#modis-settings)
     2. [Running a MODIS harvester](#running-modis)
-12. [Developing new harvesters](#develop)
 13. [Harvesting GDACS Average Flood products](#harvesting-gdacs)
     1. [GDACS Settings](#gdacs-settings)
     2. [Running a GDACS harvester](#running-gdacs)
-14. [Developing new harvesters](#develop)
+14. [Harvesting EPOS-Sat products](#harvesting-epos)
+    1. [EPOS-Sat Settings](#epos-settings)
+    2. [Running a EPOS-Sat harvester](#running-epos)
+15. [Developing new harvesters](#develop)
     1. [The basic harvester workflow](#basicworkflow)
         1. [gather_stage](#gather_stage)
         2. [fetch_stage](#fetch_stage)
         3. [import_stage](#import_stage)
     2. [Example of an OpenSearch-based harvester](#opensearchexample)
-15. [iTag](#itag)
+16. [iTag](#itag)
     1. [How ITagEnricher works](#itagprocess)
     2. [Setting up ITagEnricher](#setupitag)
     3. [Handling iTag errors](#handlingitagerrors)
-16. [Testing testing testing](#tests)
-17. [Suggested cron jobs](#cron)
-18. [Logs](#logs)
-
+17. [Testing testing testing](#tests)
+18. [Suggested cron jobs](#cron)
+19. [Logs](#logs)
 
 ## <a name="repo"></a>What's in the repository
 The repository contains four plugins:
@@ -456,7 +457,7 @@ The DEIMOS-2 harvester has configuration as:
 }
 ```
 
-### <a name="running-plan4all"></a>Running a DEIMOS-2 harvester
+### <a name="running-epos"></a>Running a DEIMOS-2 harvester
 1. Add `deimosimg` to the list of plugins in your .ini file.
 2. Create a new harvester via the harvester interface.
 3. Select `DEIMOS Imaging` from the list of harvesters.
@@ -464,6 +465,77 @@ The DEIMOS-2 harvester has configuration as:
 5. Select `Manual` from the frequency options.
 6. Run the harvester. It will programmatically create datasets.
 
+
+## <a name="harvesting-epos"></a>Harvesting EPOS-Sat products
+The EPOS-Sat harvester harvests products from the following collections:
+
+- Unwrapped Interferogram
+- Wrapped Interferogram
+- LOS Displacement Timeseries
+- Spatial Coherence
+- Interferogram APS Global Model
+- Map of LOS Vector
+
+The number of products is low, due to the fact that currently there are only sample data. A large quantity of data is expected to start being injected in September of 2019.
+
+### <a name="epos-settings"></a>EPOS-Sat Settings
+The EPOS-Sat harvester has configuration as:
+1. `collection` (required) to define the collection that will be collected. It can be `inu`, `inw`, `dts`, `coh`, `aps`, `cosneu`.
+2. `start_date` (required) determines the date on which the harvesting begins. It must be in the format `YYYY-MM-DDTHH:MM:SSZ`. If you want to harvest from the earliest product onwards, use `2010-01-01T00:00:00Z`.
+3. `end_date` (optional) determines the date on which the harvesting ends. It must be in the format `YYYY-MM-DDTHH:MM:SSZ`, it defaults into `TODAY`.
+4. `datasets_per_job` (optional, integer, defaults to 100) determines the maximum number of products that will be harvested during each job.
+5. `timeout` (optional, integer, defaults to 4) determines the number of seconds to wait before timing out a request.
+6. `make_private` (optional) determines whether the datasets created by the harvester will be private or public. The default is `false`, i.e., by default, all datasets created by the harvester will be public.
+
+#### Examples of EPOS-Sat settings
+```
+{
+  "collection": "inw",
+  "start_date": "2010-01-16T10:30:00Z",
+  "timeout": 4,
+  "make_private":  false
+}
+```
+
+### <a name="running-epos"></a>Running a EPOS-Sat harvester
+1. Add `epos` to the list of plugins in your .ini file.
+2. Create a new harvester via the harvester interface.
+3. Select `EPOS Sat Harvester` from the list of harvesters.
+4. Add a config as described above.
+5. Select `Manual` from the frequency options.
+6. Run the harvester. It will programmatically create datasets.
+
+## <a name="harvesting-proba-v"></a>Harvesting PROBA-V products
+The PROBA-V harvester harvests products from the following collections:
+
+- On time collections:
+    1. PROBAV_L2A_1KM_V001
+    2. Proba-V Level-1C
+    3. Proba-V S1-TOC (1KM)
+    4. Proba-V S1-TOA (1KM)
+    5. Proba-V S10-TOC (1KM)
+    6. Proba-V S10-TOC NDVI (1KM)
+- One month delayed collections with 333M resolution:
+    1. Proba-V Level-2A (333M)
+    2. Proba-V S1-TOA (333M)
+    3. Proba-V S1-TOC (333M)
+    4. Proba-V S10-TOC (333M)
+    5. Proba-V S10-TOC NDVI (333M)
+- One month delayed collections with 100M resolution:
+    1. Proba-V Level-2A (100M)
+    2. Proba-V S1-TOA (100M)
+    3. Proba-V S1-TOC (100M)
+    4. Proba-V S1-TOC NDVI (100M)
+    5. Proba-V S5-TOA (100M)
+    6. Proba-V S5-TOC (100M)
+    7. Proba-V S5-TOC NDVI (100M)
+
+The products from the on time collections are created and published on the same day.
+The product from delayed collections are published with one month delay after being created.
+
+The collections were also splitted according to the resoltion to avoid a huge number of datasets being harvested.
+L1C, L2A and S1 products are published daily. S5 products are published every 5 days. S10 products are published every 10 days.
+S1, S5 and S10 products are tiles covering almost the entire world. Each dataset correspond to a single tile.
 
 ## <a name="harvesting-modis"></a>Harvesting MODIS products
 The MODIS harvester harvests products from the following collections, which can be divided by time resolution:
@@ -652,5 +724,6 @@ Using the same structure, we can also add tests that verify that the metadata of
 ## <a name="logs"></a>Logs
 Both the ESA harvester and the iTag metadata harvester can optionally log the status codes and response times of the sources or services that they query. If you want to log the response times and status codes of requests to harvest sources and/or your iTag service, you must include `ckanext.nextgeossharvest.provider_log_dir=/path/to/your/logs` in your `.ini` file. The log entries will look like this: `INFO | esa_scihub   | 2018-03-08 14:17:04.474262 | 200 | 2.885231s` (the second field will always be 12 characters and will be padded if necessary).
 
-The data provider log file is called `dataproviders_info.log`. The iTag service provider log is called `itag_uptime.log`.
+The data provider log file is called `dataproviders_info.log`. The iTag service provider log is called `itag_uptime.log`
+
 
