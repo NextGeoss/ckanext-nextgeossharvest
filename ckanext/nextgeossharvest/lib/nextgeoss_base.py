@@ -256,6 +256,8 @@ class NextGEOSSHarvester(HarvesterBase):
         template = Template('''{"type": "Polygon", "coordinates": [$coords_list]}''')  # noqa: E501
         geojson = template.substitute(coords_list=coords_list)
 
+        print coords_list
+
         return geojson
 
     def _get_extras(self, parsed_content):
