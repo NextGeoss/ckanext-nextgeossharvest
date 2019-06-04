@@ -45,19 +45,23 @@ This extension contains harvester plugins for harvesting from sources used by Ne
 14. [Harvesting EPOS-Sat products](#harvesting-epos)
     1. [EPOS-Sat Settings](#epos-settings)
     2. [Running a EPOS-Sat harvester](#running-epos)
-15. [Developing new harvesters](#develop)
+15. [Harvesting Food Security pilot outputs](#harvesting-foodsecurity)
+    1. [Food Security Settings](#foodsecurity-settings)
+    2. [Running a Food Security harvester](#running-foodsecurity)
+16. [Developing new harvesters](#develop)
     1. [The basic harvester workflow](#basicworkflow)
         1. [gather_stage](#gather_stage)
         2. [fetch_stage](#fetch_stage)
         3. [import_stage](#import_stage)
     2. [Example of an OpenSearch-based harvester](#opensearchexample)
-16. [iTag](#itag)
+17. [iTag](#itag)
     1. [How ITagEnricher works](#itagprocess)
     2. [Setting up ITagEnricher](#setupitag)
     3. [Handling iTag errors](#handlingitagerrors)
-17. [Testing testing testing](#tests)
-18. [Suggested cron jobs](#cron)
-19. [Logs](#logs)
+18. [Testing testing testing](#tests)
+19. [Suggested cron jobs](#cron)
+20. [Logs](#logs)
+
 
 ## <a name="repo"></a>What's in the repository
 The repository contains four plugins:
@@ -261,9 +265,6 @@ or
 4. Add a config as described above.
 5. Select a frequency from the frequencey options. If you want to use a cron job (recommended) to run the harvester, select `Manual`.
 
-#### Known issues
-The GOME-2 harvester, like the CMEMS harvester, does not have a way to automatically recover from outages. If the data hub server or the source server suffers an outage while the harvester is scheduled to run, it will skip whatever products might have been harvested at that time. The assumption is that running the harvester three times a day will be sufficient to prevent any outages from affecting the harvesting, but a better solution would be improving the design of the harvester.
-
 ## <a name="harvesting-proba-v"></a>Harvesting PROBA-V products
 The PROBA-V harvester harvests products from the following collections:
 
@@ -457,7 +458,8 @@ The DEIMOS-2 harvester has configuration as:
 }
 ```
 
-### <a name="running-epos"></a>Running a DEIMOS-2 harvester
+
+### <a name="running-deimos2"></a>Running a DEIMOS-2 harvester
 1. Add `deimosimg` to the list of plugins in your .ini file.
 2. Create a new harvester via the harvester interface.
 3. Select `DEIMOS Imaging` from the list of harvesters.
@@ -505,38 +507,17 @@ The EPOS-Sat harvester has configuration as:
 5. Select `Manual` from the frequency options.
 6. Run the harvester. It will programmatically create datasets.
 
-## <a name="harvesting-proba-v"></a>Harvesting PROBA-V products
-The PROBA-V harvester harvests products from the following collections:
+## <a name="harvesting-foodsecurity"></a>Harvesting Food Security pilot outputs
+The Food Security harvester harvests the VITO pilot outputs for the following collections:
 
-- On time collections:
-    1. PROBAV_L2A_1KM_V001
-    2. Proba-V Level-1C
-    3. Proba-V S1-TOC (1KM)
-    4. Proba-V S1-TOA (1KM)
-    5. Proba-V S10-TOC (1KM)
-    6. Proba-V S10-TOC NDVI (1KM)
-- One month delayed collections with 333M resolution:
-    1. Proba-V Level-2A (333M)
-    2. Proba-V S1-TOA (333M)
-    3. Proba-V S1-TOC (333M)
-    4. Proba-V S10-TOC (333M)
-    5. Proba-V S10-TOC NDVI (333M)
-- One month delayed collections with 100M resolution:
-    1. Proba-V Level-2A (100M)
-    2. Proba-V S1-TOA (100M)
-    3. Proba-V S1-TOC (100M)
-    4. Proba-V S1-TOC NDVI (100M)
-    5. Proba-V S5-TOA (100M)
-    6. Proba-V S5-TOC (100M)
-    7. Proba-V S5-TOC NDVI (100M)
+    1. NextGEOSS Sentinel-2 FAPAR
+    2. NextGEOSS Sentinel-2 FCOVER
+    3. NextGEOSS Sentinel-2 LAI
+    4. NextGEOSS Sentinel-2 NDVI
 
-The products from the on time collections are created and published on the same day.
-The product from delayed collections are published with one month delay after being created.
+The date of the pilot outputs can be different of the current date since the pilot processes old Sentinel Data.
 
-The collections were also splitted according to the resoltion to avoid a huge number of datasets being harvested.
-L1C, L2A and S1 products are published daily. S5 products are published every 5 days. S10 products are published every 10 days.
-S1, S5 and S10 products are tiles covering almost the entire world. Each dataset correspond to a single tile.
-
+<<<<<<< HEAD
 ## <a name="harvesting-modis"></a>Harvesting MODIS products
 The MODIS harvester harvests products from the following collections, which can be divided by time resolution:
 
@@ -613,21 +594,51 @@ The GDACS harvester has configuration as:
 "start_date":"1997-12-01",
 "make_private":false
 }
-
-or
-
-{
-"data_type":"magnitude",
-"request_check":"yes",
-"start_date":"1997-12-01",
-"make_private":false
-}
 ```
+
 
 ### <a name="running-gdacs"></a>Running a GDACS harvester
 1. Add `gdacs` to the list of plugins in your .ini file.
 2. Create a new harvester via the harvester interface.
 3. Select `GDACS Harvester` from the list of harvesters.
+4. Add a config as described above.
+5. Select `Manual` from the frequency options.
+6. Run the harvester. It will programmatically create datasets.
+
+
+### <a name="foodsecurity-settings"></a>Food Security Settings
+The Food Security harvester has configuration has:
+1. `start_date` (required) determines the date on which the harvesting begins. It must be in the format `YYYY-MM-DD`. If you want to harvest from the earliest product onwards, use `2017-01-01`
+2. `end_date` (optional) determines the end date for the harvester job. It must be a string describing a date in the format `YYYY-MM-DD`, like 2018-01-31. The end_date is not mandatory and if not included the harvester will run until catch up the current day. To limit the number of datasets per job each job will harvest a maximum of 2 days of data.
+3. `username` and `password` are your username and password for accessing the PROBA-V products at the source.
+4. `collection` (required) to define the collection that will be collected. It can be `FAPAR`, `FCOVER`, `LAI` or `NDVI`.
+5. `make_private` (optional) determines whether the datasets created by the harvester will be private or public. The default is `false`, i.e., by default, all datasets created by the harvester will be public.
+
+#### Examples of Food Security settings
+```
+{
+"start_date":"2017-01-01",
+"collection":"FAPAR",
+"username":"nextgeoss",
+"password":"nextgeoss",
+"make_private":false
+}
+
+or
+
+{
+"start_date":"2017-01-01",
+"collections_type":"FCOVER",
+"username":"nextgeoss",
+"password":"nextgeoss",
+"make_private":false
+}
+```
+
+### <a name="running-foodsecurity"></a>Running a Food Security harvester
+1. Add `foodsecurity` to the list of plugins in your .ini file.
+2. Create a new harvester via the harvester interface.
+3. Select `Food Security Harvester` from the list of harvesters.
 4. Add a config as described above.
 5. Select `Manual` from the frequency options.
 6. Run the harvester. It will programmatically create datasets.
