@@ -302,6 +302,7 @@ class EPOSHarvester(EPOSbaseHarvester, NextGEOSSHarvester, HarvesterBase):
                     obj.content = entry['content']
                     obj.package = package
                     obj.save()
+                    ids.append(obj.id)
 
                 elif not package:
                     # It's a product we haven't harvested before.
