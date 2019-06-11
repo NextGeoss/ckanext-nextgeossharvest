@@ -136,6 +136,7 @@ class EPOSbaseHarvester(HarvesterBase):
             item['StopTime'] = stop_tmp[0] + '.' + ms
 
         item['name'] = item['identifier'].lower()
+        item['name'] = item['name'].replace('-', '_')
 
         # Thumbnail and enclosure
         enclosure = soup.find('link', rel='enclosure')
