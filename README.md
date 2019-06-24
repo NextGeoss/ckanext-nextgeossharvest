@@ -492,7 +492,7 @@ The SIMOcean harvester has configuration as:
 4. `timeout`: (optional, integer, defaults to 10) determines the number of seconds to wait before timing out a request.
 5. `make_private` (optional) determines whether the datasets created by the harvester will be private or public. The default is `false`, i.e., by default, all datasets created by the harvester will be public.
 
-#### Examples of DEIMOS-2 settings
+#### Examples of SIMOcean settings
 ```
 {
 "start_date": "2017-01-01T00:00:00Z",
