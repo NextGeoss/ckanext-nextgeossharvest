@@ -90,8 +90,9 @@ setup(
         plan4all=ckanext.nextgeossharvest.harvesters:Plan4AllHarvester
         epos=ckanext.nextgeossharvest.harvesters:EPOSHarvester
         foodsecurity=ckanext.nextgeossharvest.harvesters:FoodSecurityHarvester
+        simocean=ckanext.nextgeossharvest.harvesters:SIMOceanHarvester
         itag=ckanext.nextgeossharvest.harvesters:ITagEnricher
-	      ebvs=ckanext.nextgeossharvest.harvesters:EBVSHarvester
+        ebvs=ckanext.nextgeossharvest.harvesters:EBVSHarvester
         [babel.extractors]
         ckan = ckan.lib.extract:extract_ckan
     ''',

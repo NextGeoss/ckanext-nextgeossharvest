@@ -42,6 +42,9 @@ This extension contains harvester plugins for harvesting from sources used by Ne
 11. [Harvesting Food Security pilot outputs](#harvesting-foodsecurity)
     1. [Food Security Settings](#foodsecurity-settings)
     2. [Running a Food Security harvester](#running-foodsecurity)
+11. [Harvesting SIMOcean products](#harvesting-simocean)
+    1. [SIMOcean Settings](#simocean-settings)
+    2. [Running a SIMOcean harvester](#running-simocean)
 12. [Developing new harvesters](#develop)
     1. [The basic harvester workflow](#basicworkflow)
         1. [gather_stage](#gather_stage)
@@ -119,7 +122,7 @@ After saving the configuration, you can click Reharvest and the job will begin (
 ### <a name="generalsettings"></a>Sentinel settings (SciHub, NOA and CODE-DE)
 1. `source`: **(required, string)** determines whether the harvester harvests from SciHub, NOA, or CODE-DE. To harvest from SciHub, use `"source": "esa_scihub"`. To harvest from NOA, use `"source": "esa_noa"`. To harvest from CODE-DE, use `"source": "esa_code"`.
 2. `update_all`: (optional, boolean, default is `false`) determines whether or not the harvester updates datasets that already have metadadata from _this_ source. For example: if we have `"update_all": true`, and dataset Foo has already been created or updated by harvesting from SciHub, then it will be updated again when the harvester runs. If we have `"update_all": false` and Foo has already been created or updated by harvesting from SciHub, then the dataset will _not_ be updated when the harvester runs. And regardless of whether `update_all` is `true` or `false`, if a dataset has _not_ been created or updated with metadata from SciHub (it's new, or it was created via NOA or CODE-DE and has no SciHub metadata), then it will be updated with the additional SciHub metadata.
-3. `start_date`: (optional, datetime string, default is "any" or "from the earliest date onwards" if the harvester is new, or from the ingestion date of the most recently harvested product if it has been run before) determines the end of the date range for harvester queries. Example: "start_date": "2018-01-16T10:30:00.000Z". Note that the entire datetime string is required. `2018-01-01` is not valid. Using full datetimes is especially useful when testing, as it is possible to restrict the number of possible results by searching only within a small time span, like 20 minutes. 
+3. `start_date`: (optional, datetime string, default is "any" or "from the earliest date onwards" if the harvester is new, or from the ingestion date of the most recently harvested product if it has been run before) determines the end of the date range for harvester queries. Example: "start_date": "2018-01-16T10:30:00.000Z". Note that the entire datetime string is required. `2018-01-01` is not valid. Using full datetimes is especially useful when testing, as it is possible to restrict the number of possible results by searching only within a small time span, like 20 minutes.
 4. `end_date`: (optional, datetime string, default is "now" or "to the latest possible date") determines the end of the date range for harvester queries. Example: "end_date": "2018-01-16T11:00:00.000Z". Note that the entire datetime string is required. `2018-01-01` is not valid. Using full datetimes is especially useful when testing, as it is possible to restrict the number of possible results by searching only within a small time span, like 20 minutes.
 5. `datasets_per_job`: (optional, integer, defaults to 1000) determines the maximum number of products that will be harvested during each job. If a query returns 2,501 results, only the first 1000 will be harvested if you're using the default. This is useful for running the harvester via recurring jobs intended to harvest products incrementally (i.e., you want to start from the beginning and harvest all available products). The harvester will harvest products in groups of 1000, rather than attmepting to harvest all x-hundred-thousand at once. You'll get feedback after each job, so you'll know if there are errors without waiting for the whole job to run. And the harvester will automatically resume from the harvested dataset if you're running it via a recurring cron job.
 6. `timeout`: (optional, integer, defaults to 4) determines the number of seconds to wait before timing out a request.
@@ -425,15 +428,15 @@ The Plan4All harvester has configuration as:
 2. Create a new harvester via the harvester interface.
 3. Select `Plan4All Harvester` from the list of harvesters.
 4. Add a config as described above.
-5. Select `Manual` from the frequency options. 
+5. Select `Manual` from the frequency options.
 6. Run the harvester. It will programmatically create datasets.
 
 ## <a name="harvesting-deimos2"></a>Harvesting DEIMOS-2 products
 The DEIMOS-2 harvester harvests products from the following collections:
 
-- DEIMOS-2 PM4 Level-1B 
-- DEIMOS-2 PSH Level-1B 
-- DEIMOS-2 PSH Level-1C 
+- DEIMOS-2 PM4 Level-1B
+- DEIMOS-2 PSH Level-1B
+- DEIMOS-2 PSH Level-1C
 
 The number of products is static, and thus the harvaster only needs to be run once.
 
@@ -459,25 +462,25 @@ The DEIMOS-2 harvester has configuration as:
 2. Create a new harvester via the harvester interface.
 3. Select `DEIMOS Imaging` from the list of harvesters.
 4. Add a config as described above.
-5. Select `Manual` from the frequency options. 
+5. Select `Manual` from the frequency options.
 6. Run the harvester. It will programmatically create datasets.
 
 ## <a name="harvesting-epos"></a>Harvesting EPOS-Sat products
 The EPOS-Sat harvester harvests products from the following collections:
 
-- Unwrapped Interferogram 
+- Unwrapped Interferogram
 - Wrapped Interferogram  
 - LOS Displacement Timeseries
-- Spatial Coherence 
+- Spatial Coherence
 - Interferogram APS Global Model
 - Map of LOS Vector
 
-The number of products is low, due to the fact that currently there are only sample data. A large quantity of data is expected to start being injected in September of 2019. 
+The number of products is low, due to the fact that currently there are only sample data. A large quantity of data is expected to start being injected in September of 2019.
 
 ### <a name="epos-settings"></a>EPOS-Sat Settings
 The EPOS-Sat harvester has configuration as:
 1. `collection` (required) to define the collection that will be collected. It can be `inu`, `inw`, `dts`, `coh`, `aps`, `cosneu`.
-2. `start_date` (required) determines the date on which the harvesting begins. It must be in the format `YYYY-MM-DDTHH:MM:SSZ`. If you want to harvest from the earliest product onwards, use `2010-01-01T00:00:00Z`. 
+2. `start_date` (required) determines the date on which the harvesting begins. It must be in the format `YYYY-MM-DDTHH:MM:SSZ`. If you want to harvest from the earliest product onwards, use `2010-01-01T00:00:00Z`.
 3. `end_date` (optional) determines the date on which the harvesting ends. It must be in the format `YYYY-MM-DDTHH:MM:SSZ`, it defaults into `TODAY`.
 4. `datasets_per_job` (optional, integer, defaults to 100) determines the maximum number of products that will be harvested during each job.
 5. `timeout` (optional, integer, defaults to 4) determines the number of seconds to wait before timing out a request.
@@ -498,7 +501,7 @@ The EPOS-Sat harvester has configuration as:
 2. Create a new harvester via the harvester interface.
 3. Select `EPOS Sat Harvester` from the list of harvesters.
 4. Add a config as described above.
-5. Select `Manual` from the frequency options. 
+5. Select `Manual` from the frequency options.
 6. Run the harvester. It will programmatically create datasets.
 
 ## <a name="harvesting-foodsecurity"></a>Harvesting Food Security pilot outputs
@@ -543,6 +546,53 @@ The Food Security harvester has configuration has:
 1. Add `foodsecurity` to the list of plugins in your .ini file.
 2. Create a new harvester via the harvester interface.
 3. Select `Food Security Harvester` from the list of harvesters.
+4. Add a config as described above.
+5. Select `Manual` from the frequency options.
+
+## <a name="harvesting-simocean"></a>Harvesting SIMOcean products
+The SIMOcean harvester harvests products from the following collections:
+
+- SIMOcean Mean Sea Level Pressure Forecast
+- SIMOcean Port Sea State Forecast From SMARTWAVE
+- SIMOcean Tidal Data
+- SIMOcean Sea Surface Temperature Forecast
+- SIMOcean Data From Multiparametric Buoys
+- SIMOcean Surface Wind Forecast From AROME
+- SIMOcean Cloudiness Forecast From AROME
+- SIMOcean Air Surface Temperature Forecast
+- SIMOcean Surface Currents From HF Radar
+- SIMOcean Sea Wave Period Forecast
+- SIMOcean Nearshore Sea State Forecast From SWAN
+- SIMOcean Sea Surface Wind Forecast
+- SIMOcean Precipitation Forecast From AROME
+- SIMOcean Significant Wave Height Forecast
+- SIMOcean Sea Wave Direction Forecast
+- SIMOcean Surface Forecast From HYCOM
+
+New products of these collections are created and published daily.
+
+### <a name="simocean-settings"></a>SIMOcean Settings
+The SIMOcean harvester has configuration as:
+1. `start_date`: (required, datetime string, if the harvester is new, or from the ingestion date of the most recently harvested product if it has been run before) determines the start of the date range for harvester queries. Example: "start_date": "2018-01-16T10:30:00Z". Note that the entire datetime string is required. `2018-01-01` is not valid.
+2. `end_date`: (optional, datetime string, default is "NOW") determines the end of the date range for harvester queries. Example: "end_date": "2018-01-16T11:00:00Z". Note that the entire datetime string is required. `2018-01-01` is not valid.
+3. `datasets_per_job`: (optional, integer, defaults to 100) determines the maximum number of products that will be harvested during each job.
+4. `timeout`: (optional, integer, defaults to 10) determines the number of seconds to wait before timing out a request.
+5. `make_private` (optional) determines whether the datasets created by the harvester will be private or public. The default is `false`, i.e., by default, all datasets created by the harvester will be public.
+
+#### Examples of SIMOcean settings
+```
+{
+"start_date": "2017-01-01T00:00:00Z",
+"timeout": 4,
+"datasets_per_job": 100,
+"make_private": false
+}
+```
+
+### <a name="running-simocean"></a>Running a SIMOcean harvester
+1. Add `simocean` to the list of plugins in your .ini file.
+2. Create a new harvester via the harvester interface.
+3. Select `SIMOcean Harvester` from the list of harvesters.
 4. Add a config as described above.
 5. Select `Manual` from the frequency options.
 6. Run the harvester. It will programmatically create datasets.
@@ -638,5 +688,3 @@ Using the same structure, we can also add tests that verify that the metadata of
 Both the ESA harvester and the iTag metadata harvester can optionally log the status codes and response times of the sources or services that they query. If you want to log the response times and status codes of requests to harvest sources and/or your iTag service, you must include `ckanext.nextgeossharvest.provider_log_dir=/path/to/your/logs` in your `.ini` file. The log entries will look like this: `INFO | esa_scihub   | 2018-03-08 14:17:04.474262 | 200 | 2.885231s` (the second field will always be 12 characters and will be padded if necessary).
 
 The data provider log file is called `dataproviders_info.log`. The iTag service provider log is called `itag_uptime.log`
-
-
