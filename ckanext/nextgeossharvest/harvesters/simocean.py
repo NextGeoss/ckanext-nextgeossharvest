@@ -235,7 +235,7 @@ class SIMOceanHarvester(SIMOceanbaseHarvester, NextGEOSSHarvester,
         """
         ids = []
         new_counter = 0
-
+        first_query = True
         while len(ids) < limit and harvest_url:
             # We'll limit ourselves to one request per second
             start_request = time.time()
@@ -274,7 +274,14 @@ class SIMOceanHarvester(SIMOceanbaseHarvester, NextGEOSSHarvester,
             harvest_url = self._get_next_url(harvest_url, json_content)
 
             # Get the entries from the results
-            entries = self._get_entries_from_results(json_content)
+            entry_list = self._get_entries_from_results(json_content)
+
+            if first_query:
+                entries = entry_list
+            else:
+                entries = entry_list[1:]
+
+            first_query = False
 
             # Create a harvest object for each entry
             for entry in entries:
