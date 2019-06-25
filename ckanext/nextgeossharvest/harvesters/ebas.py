@@ -274,7 +274,7 @@ class EBASHarvester(EBASbaseHarvester, NextGEOSSHarvester, HarvesterBase):
         # Find out which package names have been taken. Restrict it to names
         # derived from the ideal name plus and numbers added
         like_q = u'%s%%' % \
-            template_name[:PACKAGE_NAME_MAX_LENGTH-APPEND_MAX_CHARS]
+            template_name[:PACKAGE_NAME_MAX_LENGTH - APPEND_MAX_CHARS]
         results = Session.query(Package) \
                          .filter(Package.name.ilike(like_q)) \
                          .all()
