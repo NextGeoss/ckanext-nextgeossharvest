@@ -49,7 +49,7 @@ class EBASbaseHarvester(HarvesterBase):
         # Find out which package names have been taken. Restrict it to names
         # derived from the ideal name plus and numbers added
         like_q = u'%s%%' % \
-            ideal_name[:PACKAGE_NAME_MAX_LENGTH-APPEND_MAX_CHARS]
+            ideal_name[:PACKAGE_NAME_MAX_LENGTH - APPEND_MAX_CHARS]
         name_results = Session.query(Package.name) \
                               .filter(Package.name.ilike(like_q)) \
                               .all()
@@ -60,10 +60,9 @@ class EBASbaseHarvester(HarvesterBase):
         elif append_type == 'number-sequence':
             # find the next available number
             counter = 1
+            l_counter = len(str(counter)) + 1
             while counter <= MAX_NUMBER_APPENDED:
-                candidate_name = \
-                    ideal_name[:PACKAGE_NAME_MAX_LENGTH - len(str(counter)) - 1] \  # noqa: E501
-                    + '_' + str(counter)
+                candidate_name = ideal_name[:PACKAGE_NAME_MAX_LENGTH - l_counter] + '_' + str(counter)  # noqa: E501
                 if candidate_name not in taken:
                     return candidate_name
                 counter = counter + 1
