@@ -28,7 +28,6 @@ from ckanext.nextgeossharvest.lib.nextgeoss_base import NextGEOSSHarvester
 from ckanext.harvest.model import HarvestObject
 from ckanext.harvest.model import HarvestObjectExtra as HOExtra
 from ckanext.harvest.harvesters.base import HarvesterBase
-from ckan.controllers import package
 
 log = logging.getLogger(__name__)
 
@@ -205,7 +204,7 @@ class EBASHarvester(EBASbaseHarvester, NextGEOSSHarvester, HarvesterBase):
                 return True
             else:
                 return False
-        except:
+        except Exception:
             return False
 
     def _get_entries_from_results(self, soup, restart_date, token):
@@ -276,8 +275,8 @@ class EBASHarvester(EBASbaseHarvester, NextGEOSSHarvester, HarvesterBase):
         # derived from the ideal name plus and numbers added
         like_q = u'%s%%' % \
             template_name[:PACKAGE_NAME_MAX_LENGTH-APPEND_MAX_CHARS]
-        results = Session.query(Package)\
-                         .filter(Package.name.ilike(like_q))\
+        results = Session.query(Package) \
+                         .filter(Package.name.ilike(like_q)) \
                          .all()
         if results:
             for result in results:
