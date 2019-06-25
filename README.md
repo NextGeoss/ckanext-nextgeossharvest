@@ -35,20 +35,23 @@ This extension contains harvester plugins for harvesting from sources used by Ne
     2. [Running a Plan4All harvester](#running-plan4all)
 10. [Harvesting DEIMOS-2 products](#harvesting-deimos2)
     1. [DEIMOS-2 Settings](#deimos2-settings)
-    2. [Running a DEIMOS-2 harvester](#running-plan4all)
-11. [Developing new harvesters](#develop)
+    2. [Running a DEIMOS-2 harvester](#running-deimos2)
+11. [Harvesting EBAS-NILU products](#harvesting-ebasnilu)
+    1. [EBAS-NILU Settings](#ebasnilu-settings)
+    2. [Running a EBAS-NILU harvester](#running-ebasnilu)
+12. [Developing new harvesters](#develop)
     1. [The basic harvester workflow](#basicworkflow)
         1. [gather_stage](#gather_stage)
         2. [fetch_stage](#fetch_stage)
         3. [import_stage](#import_stage)
     2. [Example of an OpenSearch-based harvester](#opensearchexample)
-12. [iTag](#itag)
+13. [iTag](#itag)
     1. [How ITagEnricher works](#itagprocess)
     2. [Setting up ITagEnricher](#setupitag)
     3. [Handling iTag errors](#handlingitagerrors)
-13. [Testing testing testing](#tests)
-14. [Suggested cron jobs](#cron)
-15. [Logs](#logs)
+14. [Testing testing testing](#tests)
+15. [Suggested cron jobs](#cron)
+16. [Logs](#logs)
 
 ## <a name="repo"></a>What's in the repository
 The repository contains four plugins:
@@ -451,7 +454,7 @@ The DEIMOS-2 harvester has configuration as:
 }
 ```
 
-### <a name="running-plan4all"></a>Running a DEIMOS-2 harvester
+### <a name="running-deimos2"></a>Running a DEIMOS-2 harvester
 1. Add `deimosimg` to the list of plugins in your .ini file.
 2. Create a new harvester via the harvester interface.
 3. Select `DEIMOS Imaging` from the list of harvesters.
@@ -459,86 +462,32 @@ The DEIMOS-2 harvester has configuration as:
 5. Select `Manual` from the frequency options. 
 6. Run the harvester. It will programmatically create datasets.
 
-## <a name="harvesting-proba-v"></a>Harvesting PROBA-V products
-The PROBA-V harvester harvests products from the following collections:
+## <a name="harvesting-ebasnilu"></a>Harvesting EBAS-NILU products
+The EBAS-NILU harvester collects products from the following collections:
+- EBAS NILU Data Archive
 
-- On time collections:
-    1. PROBAV_L2A_1KM_V001
-    2. Proba-V Level-1C
-    3. Proba-V S1-TOC (1KM)
-    4. Proba-V S1-TOA (1KM)
-    5. Proba-V S10-TOC (1KM)
-    6. Proba-V S10-TOC NDVI (1KM)
-- One month delayed collections with 333M resolution:
-    1. Proba-V Level-2A (333M)
-    2. Proba-V S1-TOA (333M)
-    3. Proba-V S1-TOC (333M)
-    4. Proba-V S10-TOC (333M)
-    5. Proba-V S10-TOC NDVI (333M)
-- One month delayed collections with 100M resolution:
-    1. Proba-V Level-2A (100M)
-    2. Proba-V S1-TOA (100M)
-    3. Proba-V S1-TOC (100M)
-    4. Proba-V S1-TOC NDVI (100M)
-    5. Proba-V S5-TOA (100M)
-    6. Proba-V S5-TOC (100M)
-    7. Proba-V S5-TOC NDVI (100M)
+### <a name="ebasnilu-settings"></a>EBAS-NILU Settings
+The EBAS-NILU harvester has configuration as:
+1. `start_date`: (optional, datetime string, if the harvester is new, or from the ingestion date of the most recently harvested product if it has been run before) determines the start of the date range for harvester queries. Example: "start_date": "2018-01-16T10:30:00Z". Note that the entire datetime string is required. `2018-01-01` is not valid. 
+2. `end_date`: (optional, datetime string, default is "NOW") determines the end of the date range for harvester queries. Example: "end_date": "2018-01-16T11:00:00Z". Note that the entire datetime string is required. `2018-01-01` is not valid.
+4. `timeout`: (optional, integer, defaults to 10) determines the number of seconds to wait before timing out a request.
+5. `make_private` (optional) determines whether the datasets created by the harvester will be private or public. The default is `false`, i.e., by default, all datasets created by the harvester will be public.
 
-The products from the on time collections are created and published on the same day.
-The product from delayed collections are published with one month delay after being created.
-
-The collections were also splitted according to the resoltion to avoid a huge number of datasets being harvested.
-L1C, L2A and S1 products are published daily. S5 products are published every 5 days. S10 products are published every 10 days.
-S1, S5 and S10 products are tiles covering almost the entire world. Each dataset correspond to a single tile.
-
-### <a name="proba-v-settings"></a>PROBA-V Settings
-The PROBA-V harvester has configuration has:
-1. `start_date` (required) determines the date on which the harvesting begins. It must be in the format `YYYY-MM-DD`. If you want to harvest from the earliest product onwards, use `2018-01-01`
-2. `end_date` (optional) determines the end date for the harvester job. It must be a string describing a date in the format `YYYY-MM-DD`, like 2018-01-31. The end_date is not mandatory and if not included the harvester will run until catch up the current day. To limit the number of datasets per job each job will harvest a maximum of 2 days of data.
-3. `username` and `password` are your username and password for accessing the PROBA-V products at the source.
-4. `collections_type` (required) to define the collection that will be collected. It can be `current` (for the on time collections) or `delayed` (for the one month delayed collections).
-5. `resolution` (required if the `collections_type` is `delayed`) to define if the harvester will collect products with 333M or 100M resolution.
-6. `make_private` (optional) determines whether the datasets created by the harvester will be private or public. The default is `false`, i.e., by default, all datasets created by the harvester will be public.
-
-#### Examples of PROVA-V settings
+#### Examples of EBAS-NILU settings
 ```
 {
-"start_date":"2018-08-01",
-"collections_type":"current",
-"username":"nextgeoss",
-"password":"nextgeoss",
-"make_private":false
-}
-```
-```
-{
-"start_date":"2018-08-01",
-"collections_type":"delayed",
-"resolution":"100",
-"username":"nextgeoss",
-"password":"nextgeoss",
-"make_private":false
-}
-```
-```
-{
-"start_date":"2018-08-01",
-"collections_type":"delayed",
-"resolution":"333",
-"username":"nextgeoss",
-"password":"nextgeoss",
-"make_private":false
+"start_date": "2017-01-01T00:00:00Z",
+"timeout": 4,
+"make_private": false
 }
 ```
 
-The start_date for the delayed collections can be any date before the current_day - 1 month. For the current collections the start_date can be any date.
-
-### <a name="running-proba-v"></a>Running a PROBA-V harvester
-1. Add `probav` to the list of plugins in your .ini file.
+### <a name="running-ebasnilu"></a>Running a EBAS-NILU harvester
+1. Add `ebas` to the list of plugins in your .ini file.
 2. Create a new harvester via the harvester interface.
-3. Select `Proba-V Harvester` from the list of harvesters.
+3. Select `EBAS Harvester` from the list of harvesters.
 4. Add a config as described above.
-5. Select `Manual` from the freuqency options. The harvester only needs to run once; the datasets are created programmatically and the program that produced the products has ended, so there are no updates or new products that you'll need to harvest later.
+5. Select `Manual` from the frequency options. 
 6. Run the harvester. It will programmatically create datasets.
 
 ## <a name="develop"></a>Developing new harvesters
@@ -632,4 +581,3 @@ Using the same structure, we can also add tests that verify that the metadata of
 Both the ESA harvester and the iTag metadata harvester can optionally log the status codes and response times of the sources or services that they query. If you want to log the response times and status codes of requests to harvest sources and/or your iTag service, you must include `ckanext.nextgeossharvest.provider_log_dir=/path/to/your/logs` in your `.ini` file. The log entries will look like this: `INFO | esa_scihub   | 2018-03-08 14:17:04.474262 | 200 | 2.885231s` (the second field will always be 12 characters and will be padded if necessary).
 
 The data provider log file is called `dataproviders_info.log`. The iTag service provider log is called `itag_uptime.log`.
-
