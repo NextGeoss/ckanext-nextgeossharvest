@@ -50,12 +50,10 @@ class OLUHarvester(HarvesterBase):
             if subitem_node.name in normalized_names:
                 key = normalized_names[subitem_node.name]
                 if key:
-                    if key is 'spatial':
+                    if key == 'spatial':
                         item[key][subitem_node.name] = subitem_node.text
-                    elif key in ['identifier', 'notes', 'title']:
-                        item[key] = subitem_node.text
                     else:
-                        item[key] = subitem_node.text.lower()
+                        item[key] = subitem_node.text
 
         # Since the spatial field is composed by 4 values,
         # if either of the values is None, then the whole field is dismissed
@@ -122,13 +120,11 @@ class OLUHarvester(HarvesterBase):
             item['spatial'] = geojson
 
         if 'identifier' in item:
-            item['identifier'] = item['identifier'].replace('.', '_')
-            item['Filename'] = item['identifier'].lower()
+            item['Filename'] = item['identifier']
 
-        if 'parent_identifier' in item:
-            item['parent_identifier'] = item['parent_identifier'].replace('.', '_')  # noqa: E501
-
-        item['name'] = item['identifier'].lower()
+        name = item['title'].lower()
+        # name = item['identifier'].lower()
+        item['name'] = name.replace(' ', '_')
 
         # Thumbnail, alternative and enclosure
         quick_look = soup.find('gmd:md_browsegraphic')
@@ -151,11 +147,8 @@ class OLUHarvester(HarvesterBase):
         # Add the collection info
         item = self._add_collection(item)
 
-        item['title'] = item['collection_name']
-
-        item['notes'] = item['collection_description']
-
         item['tags'] = self._get_tags_for_dataset(item)
+        item['resource'] = item['identifier']
 
         return item
 
@@ -228,6 +221,31 @@ class OLUHarvester(HarvesterBase):
                      'order': order}
 
         return thumbnail
+    
+    def _make_dataset_link(self, item):
+        """
+        Return a thumbnail resource dictionary
+        """
+        if item.get('resource'):
+            name = 'Original Metadata Record'
+            description = 'Link to original metadata record.'
+            url = 'https://micka.lesprojekt.cz/record/basic/'
+            url = url + item['resource']
+            order = 4
+            _type = 'original_record'
+
+        else:
+            return None
+
+        thumbnail = {'name': name,
+                     'description': description,
+                     'url': url,
+                     'format': 'HTML',
+                     'mimetype': 'text/html',
+                     'resource_type': _type,
+                     'order': order}
+
+        return thumbnail
 
     def _get_resources(self, parsed_content):
         """Return a list of resource dicts."""
@@ -239,8 +257,9 @@ class OLUHarvester(HarvesterBase):
         shapefile = self._make_shapefile_resource(parsed_content)
         geojson = self._make_geojson_resource(parsed_content)
         thumbnail = self._make_thumbnail_resource(parsed_content)
+        url = self._make_dataset_link(parsed_content)
 
-        new_resources = [x for x in [shapefile, geojson, thumbnail] if x]
+        new_resources = [x for x in [shapefile, geojson, thumbnail, url] if x]
         if not old_resources:
             resources = new_resources
         else:

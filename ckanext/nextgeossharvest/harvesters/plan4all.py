@@ -106,6 +106,9 @@ class Plan4AllHarvester(OLUHarvester, CSWSearchHarvester, NextGEOSSHarvester):
         if not hasattr(self, 'provider_logger'):
             self.provider_logger = self.make_provider_logger()
 
+        if not hasattr(self, 'harvester_logger'):
+            self.harvester_logger = self.make_harvester_logger()
+
         self.provider = 'plan4all'
 
         # This can be a hook
