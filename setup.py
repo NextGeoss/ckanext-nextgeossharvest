@@ -88,7 +88,8 @@ setup(
         probav=ckanext.nextgeossharvest.harvesters:PROBAVHarvester
         glass_lai=ckanext.nextgeossharvest.harvesters:GLASS_LAI_Harvester
         plan4all=ckanext.nextgeossharvest.harvesters:Plan4AllHarvester
-	foodsecurity=ckanext.nextgeossharvest.harvesters:FoodSecurityHarvester
+        epos=ckanext.nextgeossharvest.harvesters:EPOSHarvester
+      	foodsecurity=ckanext.nextgeossharvest.harvesters:FoodSecurityHarvester
         modis=ckanext.nextgeossharvest.harvesters:MODISHarvester
       	gdacs=ckanext.nextgeossharvest.harvesters:GDACSHarvester
         itag=ckanext.nextgeossharvest.harvesters:ITagEnricher

@@ -5,6 +5,7 @@ from ckanext.nextgeossharvest.harvesters.gome2 import GOME2Harvester  # noqa: F4
 from ckanext.nextgeossharvest.harvesters.probav import PROBAVHarvester  # noqa: F401, E501
 from ckanext.nextgeossharvest.harvesters.glass_lai import GLASS_LAI_Harvester  # noqa: F401, E501
 from ckanext.nextgeossharvest.harvesters.plan4all import Plan4AllHarvester  # noqa: F401, E501
+from ckanext.nextgeossharvest.harvesters.epos import EPOSHarvester  # noqa: F401, E501
 from ckanext.nextgeossharvest.harvesters.foodsecurity import FoodSecurityHarvester  # noqa: F401, E501
 from ckanext.nextgeossharvest.harvesters.modis import MODISHarvester  # noqa: F401, E501
 from ckanext.nextgeossharvest.harvesters.gdacs import GDACSHarvester  # noqa: F401, E501

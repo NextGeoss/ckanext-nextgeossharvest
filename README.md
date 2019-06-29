@@ -33,6 +33,12 @@ This extension contains harvester plugins for harvesting from sources used by Ne
 9. [Harvesting Plan4All products](#harvesting-plan4all)
     1. [Plan4All Settings](#plan4all-settings)
     2. [Running a Plan4All harvester](#running-plan4all)
+10. [Harvesting DEIMOS-2 products](#harvesting-deimos2)
+    1. [DEIMOS-2 Settings](#deimos2-settings)
+    2. [Running a DEIMOS-2 harvester](#running-deimos2)
+11. [Harvesting EPOS-Sat products](#harvesting-epos)
+    1. [EPOS-Sat Settings](#epos-settings)
+    2. [Running a EPOS-Sat harvester](#running-epos)
 10. [Harvesting MODIS products](#harvesting-modis)
     1. [MODIS Settings](#modis-settings)
     2. [Running a MODIS harvester](#running-modis)
@@ -513,6 +519,44 @@ The DEIMOS-2 harvester has configuration as:
 5. Select `Manual` from the frequency options. 
 6. Run the harvester. It will programmatically create datasets.
 
+## <a name="harvesting-epos"></a>Harvesting EPOS-Sat products
+The EPOS-Sat harvester harvests products from the following collections:
+
+- Unwrapped Interferogram 
+- Wrapped Interferogram  
+- LOS Displacement Timeseries
+- Spatial Coherence 
+- Interferogram APS Global Model
+- Map of LOS Vector
+
+The number of products is low, due to the fact that currently there are only sample data. A large quantity of data is expected to start being injected in September of 2019. 
+
+### <a name="epos-settings"></a>EPOS-Sat Settings
+The EPOS-Sat harvester has configuration as:
+1. `collection` (required) to define the collection that will be collected. It can be `inu`, `inw`, `dts`, `coh`, `aps`, `cosneu`.
+2. `start_date` (required) determines the date on which the harvesting begins. It must be in the format `YYYY-MM-DDTHH:MM:SSZ`. If you want to harvest from the earliest product onwards, use `2010-01-01T00:00:00Z`. 
+3. `end_date` (optional) determines the date on which the harvesting ends. It must be in the format `YYYY-MM-DDTHH:MM:SSZ`, it defaults into `TODAY`.
+4. `datasets_per_job` (optional, integer, defaults to 100) determines the maximum number of products that will be harvested during each job.
+5. `timeout` (optional, integer, defaults to 4) determines the number of seconds to wait before timing out a request.
+6. `make_private` (optional) determines whether the datasets created by the harvester will be private or public. The default is `false`, i.e., by default, all datasets created by the harvester will be public.
+
+#### Examples of EPOS-Sat settings
+```
+{
+  "collection": "inw",
+  "start_date": "2010-01-16T10:30:00Z",
+  "timeout": 4,
+  "make_private":  false
+}
+```
+
+### <a name="running-epos"></a>Running a EPOS-Sat harvester
+1. Add `epos` to the list of plugins in your .ini file.
+2. Create a new harvester via the harvester interface.
+3. Select `EPOS Sat Harvester` from the list of harvesters.
+4. Add a config as described above.
+5. Select `Manual` from the frequency options. 
+6. Run the harvester. It will programmatically create datasets.
 
 ## <a name="harvesting-foodsecurity"></a>Harvesting Food Security pilot outputs
 The Food Security harvester harvests the VITO pilot outputs for the following collections:
@@ -679,5 +723,6 @@ Using the same structure, we can also add tests that verify that the metadata of
 ## <a name="logs"></a>Logs
 Both the ESA harvester and the iTag metadata harvester can optionally log the status codes and response times of the sources or services that they query. If you want to log the response times and status codes of requests to harvest sources and/or your iTag service, you must include `ckanext.nextgeossharvest.provider_log_dir=/path/to/your/logs` in your `.ini` file. The log entries will look like this: `INFO | esa_scihub   | 2018-03-08 14:17:04.474262 | 200 | 2.885231s` (the second field will always be 12 characters and will be padded if necessary).
 
-The data provider log file is called `dataproviders_info.log`. The iTag service provider log is called `itag_uptime.log`.
+The data provider log file is called `dataproviders_info.log`. The iTag service provider log is called `itag_uptime.log`
+
 
