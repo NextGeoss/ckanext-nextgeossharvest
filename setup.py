@@ -82,12 +82,14 @@ setup(
         [ckan.plugins]
         nextgeossharvest=ckanext.nextgeossharvest.plugin:NextgeossharvestPlugin
         cmems=ckanext.nextgeossharvest.harvesters:CMEMSHarvester
+        deimosimg=ckanext.nextgeossharvest.harvesters:DEIMOSIMGHarvester
         esa=ckanext.nextgeossharvest.harvesters:ESAHarvester
         gome2=ckanext.nextgeossharvest.harvesters:GOME2Harvester
         probav=ckanext.nextgeossharvest.harvesters:PROBAVHarvester
         glass_lai=ckanext.nextgeossharvest.harvesters:GLASS_LAI_Harvester
         plan4all=ckanext.nextgeossharvest.harvesters:Plan4AllHarvester
-	modis=ckanext.nextgeossharvest.harvesters:MODISHarvester
+	      modis=ckanext.nextgeossharvest.harvesters:MODISHarvester
+      	gdacs=ckanext.nextgeossharvest.harvesters:GDACSHarvester
         itag=ckanext.nextgeossharvest.harvesters:ITagEnricher
 	      ebvs=ckanext.nextgeossharvest.harvesters:EBVSHarvester
         [babel.extractors]
