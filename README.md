@@ -33,6 +33,10 @@ This extension contains harvester plugins for harvesting from sources used by Ne
 9. [Harvesting Plan4All products](#harvesting-plan4all)
     1. [Plan4All Settings](#plan4all-settings)
     2. [Running a Plan4All harvester](#running-plan4all)
+10. [Harvesting MODIS products](#harvesting-modis)
+    1. [MODIS Settings](#modis-settings)
+    2. [Running a MODIS harvester](#running-modis)
+11. [Developing new harvesters](#develop)
 10. [Harvesting GDACS Average Flood products](#harvesting-gdacs)
     1. [GDACS Settings](#gdacs-settings)
     2. [Running a GDACS harvester](#running-gdacs)
@@ -45,7 +49,13 @@ This extension contains harvester plugins for harvesting from sources used by Ne
         2. [fetch_stage](#fetch_stage)
         3. [import_stage](#import_stage)
     2. [Example of an OpenSearch-based harvester](#opensearchexample)
-13. [iTag](#itag)
+12. [iTag](#itag)
+    1. [How ITagEnricher works](#itagprocess)
+    2. [Setting up ITagEnricher](#setupitag)
+    3. [Handling iTag errors](#handlingitagerrors)
+13. [Testing testing testing](#tests)
+14. [Suggested cron jobs](#cron)
+15. [Logs](#logs)
     1. [How ITagEnricher works](#itagprocess)
     2. [Setting up ITagEnricher](#setupitag)
     3. [Handling iTag errors](#handlingitagerrors)
@@ -427,6 +437,54 @@ The Plan4All harvester has configuration as:
 4. Add a config as described above.
 5. Select `Manual` from the frequency options. 
 6. Run the harvester. It will programmatically create datasets.
+
+
+## <a name="harvesting-modis"></a>Harvesting MODIS products
+The MODIS harvester harvests products from the following collections, which can be divided by time resolution:
+
+- 8 days:
+    1. MOD17A2H (currently 249848 datasets, starting at 2000-02-18T00:00:00Z)
+    2. MYD15A2H (currently 218456 datasets, starting at 2002-07-04T00:00:00Z)
+    3. MOD15A2H (currently 248647 datasets, starting at 2000-02-18T00:00:00Z)
+    4. MOD14A2  (currently 255161 datasets, starting at 2000-02-18T00:00:00Z)
+    5. MYD14A2  (currently 223424 datasets, starting at 2002-07-04T00:00:00Z)
+- 16 days:
+    1. MYD13Q1  (currently 110551 datasets, starting at 2002-07-04T00:00:00Z)
+    2. MYD13A1  (currently 110551 datasets, starting at 2002-07-04T00:00:00Z)
+    3. MYD13A2  (currently 110540 datasets, starting at 2002-07-04T00:00:00Z)
+    4. MOD13Q1  (currently 126268 datasets, starting at 2000-02-18T00:00:00Z)
+    5. MOD13A1  (currently 126268 datasets, starting at 2000-02-18T00:00:00Z)
+    6. MOD13A2  (currently 126268 datasets, starting at 2000-02-18T00:00:00Z)
+- Yearly:
+    1. MOD17A3H (currently   4110 datasets, starting at 2000-12-26T00:00:00Z)
+
+All collections, with the exception of collection MOD17A3H, are updated on a weekly / biweekly basis. Collection MOD17A3H is the only collection that is static, where the last dataset refers to 2015-01-03. 
+
+Due to the fact that granule queries now require collection identifiers, each collection has to be harvested with different harvesters.
+
+### <a name="modis-settings"></a>MODIS Settings
+The MODIS harvester has configuration has:
+1. `collection` (required) to define the collection that will be collected. It can be `MYD13Q1`, `MYD13A1`, `MYD13A2`, `MOD13Q1`, `MOD13A1`, `MOD13A2`, `MOD17A3H`, `MOD17A2H`, `MYD15A2H`, `MOD15A2H`, `MOD14A2`, `MYD14A2`.
+2. `start_date` (required) determines the date on which the harvesting begins. It must be in the format `YYYY-MM-DDTHH:MM:SSZ`. If you want to harvest from the earliest product onwards, use the starting dates presented in "Harvesting MODIS products"
+3. `timeout` (optional, integer, defaults to 10) determines the number of seconds to wait before timing out a request.
+4. `make_private` (optional) determines whether the datasets created by the harvester will be private or public. The default is `false`, i.e., by default, all datasets created by the harvester will be public.
+
+#### Examples of MODIS settings
+```
+{
+  "collection": "MYD13Q1",
+  "start_date": "2002-07-04T00:00:00Z",
+  "make_private": false
+}
+```
+
+
+### <a name="running-modis"></a>Running a MODIS harvester
+1. Add `modis` to the list of plugins in your .ini file.
+2. Create a new harvester via the harvester interface.
+3. Select `MODIS Harvester` from the list of harvesters.
+4. Add a config as described above.
+5. Select `Manual` from the freuqency options. 
 
 ## <a name="harvesting-deimos2"></a>Harvesting DEIMOS-2 products
 The DEIMOS-2 harvester harvests products from the following collections:
