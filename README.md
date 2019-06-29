@@ -36,19 +36,22 @@ This extension contains harvester plugins for harvesting from sources used by Ne
 10. [Harvesting GDACS Average Flood products](#harvesting-gdacs)
     1. [GDACS Settings](#gdacs-settings)
     2. [Running a GDACS harvester](#running-gdacs)
-11. [Developing new harvesters](#develop)
+11. [Harvesting DEIMOS-2 products](#harvesting-deimos2)
+    1. [DEIMOS-2 Settings](#deimos2-settings)
+    2. [Running a DEIMOS-2 harvester](#running-plan4all)
+12. [Developing new harvesters](#develop)
     1. [The basic harvester workflow](#basicworkflow)
         1. [gather_stage](#gather_stage)
         2. [fetch_stage](#fetch_stage)
         3. [import_stage](#import_stage)
     2. [Example of an OpenSearch-based harvester](#opensearchexample)
-12. [iTag](#itag)
+13. [iTag](#itag)
     1. [How ITagEnricher works](#itagprocess)
     2. [Setting up ITagEnricher](#setupitag)
     3. [Handling iTag errors](#handlingitagerrors)
-13. [Testing testing testing](#tests)
-14. [Suggested cron jobs](#cron)
-15. [Logs](#logs)
+14. [Testing testing testing](#tests)
+15. [Suggested cron jobs](#cron)
+16. [Logs](#logs)
 
 ## <a name="repo"></a>What's in the repository
 The repository contains four plugins:
@@ -425,9 +428,43 @@ The Plan4All harvester has configuration as:
 5. Select `Manual` from the frequency options. 
 6. Run the harvester. It will programmatically create datasets.
 
+## <a name="harvesting-deimos2"></a>Harvesting DEIMOS-2 products
+The DEIMOS-2 harvester harvests products from the following collections:
+
+- DEIMOS-2 PM4 Level-1B 
+- DEIMOS-2 PSH Level-1B 
+- DEIMOS-2 PSH Level-1C 
+
+The number of products is static, and thus the harvaster only needs to be run once.
+
+### <a name="deimos2-settings"></a>DEIMOS-2 Settings
+The DEIMOS-2 harvester has configuration as:
+1. `harvester_type` determines the ftp domain, as well as the directories in said domain.
+2. `username` and `password` are your username and password for accessing the DEIMOS-2 products at the source for the harvester type you selected above.
+3. `timeout` (optional, integer, defaults to 60) determines the number of seconds to wait before timing out a request.
+4. `make_private` (optional) determines whether the datasets created by the harvester will be private or public. The default is `false`, i.e., by default, all datasets created by the harvester will be public.
+
+#### Examples of DEIMOS-2 settings
+```
+{
+"harvester_type":"deimos_imaging",
+"username":"your_username",
+"password":"your_password",
+"make_private":false
+}
+```
+
+### <a name="running-plan4all"></a>Running a DEIMOS-2 harvester
+1. Add `deimosimg` to the list of plugins in your .ini file.
+2. Create a new harvester via the harvester interface.
+3. Select `DEIMOS Imaging` from the list of harvesters.
+4. Add a config as described above.
+5. Select `Manual` from the frequency options. 
+6. Run the harvester. It will programmatically create datasets.
+
+
 ## <a name="harvesting-gdacs"></a>Harvesting GDACS Average Flood products
 The GDACS harvester harvests products from the following collections:
-
 - AVERAGE_FLOOD_SIGNAL (from 1997/12 to present - 1 dataset per day)
 - AVERAGE_FLOOD_MAGNITUDE (from 1997/12 to present - 1 dataset per day)
 
@@ -564,3 +601,4 @@ Using the same structure, we can also add tests that verify that the metadata of
 Both the ESA harvester and the iTag metadata harvester can optionally log the status codes and response times of the sources or services that they query. If you want to log the response times and status codes of requests to harvest sources and/or your iTag service, you must include `ckanext.nextgeossharvest.provider_log_dir=/path/to/your/logs` in your `.ini` file. The log entries will look like this: `INFO | esa_scihub   | 2018-03-08 14:17:04.474262 | 200 | 2.885231s` (the second field will always be 12 characters and will be padded if necessary).
 
 The data provider log file is called `dataproviders_info.log`. The iTag service provider log is called `itag_uptime.log`.
+
