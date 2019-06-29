@@ -12,7 +12,7 @@ services:
     - postgresql
 install:
     - pip install --no-cache-dir git+https://github.com/ViderumGlobal/ckanext-spatial.git@ckan-2.7#egg=ckanext-spatial
-    - pip install --no-cache-dir -r https://raw.githubusercontent.com/ViderumGlobal/ckanext-spatial/v0.0.1/pip-requirements.txt
+    - pip install --no-cache-dir -r https://raw.githubusercontent.com/ckan/ckanext-spatial/master/pip-requirements.txt
     - bash bin/travis-build.bash
     - pip install flake8==3.5.0
 script:

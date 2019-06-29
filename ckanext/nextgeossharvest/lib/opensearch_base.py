@@ -66,7 +66,8 @@ class OpenSearchHarvester(HarvesterBase):
         and return the ids.
         """
         ids = []
-
+        new_counter = 0
+        update_counter = 0
         while len(ids) < limit and harvest_url:
             # We'll limit ourselves to one request per second
             start_request = time.time()
@@ -134,11 +135,13 @@ class OpenSearchHarvester(HarvesterBase):
                     if self.update_all:
                         log.debug('{} already exists and will be updated.'.format(entry_name))  # noqa: E501
                         status = 'change'
+                        update_counter += 1
                     # E.g., a Sentinel dataset exists,
                     # but doesn't have a NOA resource yet.
                     elif self.flagged_extra and not get_pkg_dict_extra(pkg_dict, self.flagged_extra):  # noqa: E501
                         log.debug('{} already exists and will be extended.'.format(entry_name))  # noqa: E501
                         status = 'change'
+                        update_counter += 1
                     else:
                         log.debug('{} will not be updated.'.format(entry_name))  # noqa: E501
                         status = 'unchanged'
@@ -160,6 +163,7 @@ class OpenSearchHarvester(HarvesterBase):
                                                 value='new'),
                                                 HOExtra(key='restart_date',
                                                 value=entry_restart_date)])
+                    new_counter += 1
                     obj.content = entry['content']
                     obj.package = None
                     obj.save()
@@ -170,4 +174,9 @@ class OpenSearchHarvester(HarvesterBase):
             if request_time < 1.0:
                 time.sleep(1 - request_time)
 
+        harvester_msg = '{:<12} | {} | jobID:{} | {} | {}'
+        if hasattr(self, 'harvester_logger'):
+            timestamp = str(datetime.utcnow())
+            self.harvester_logger.info(harvester_msg.format(self.provider,
+                                       timestamp, self.job.id, new_counter, update_counter))  # noqa: E128, E501
         return ids
