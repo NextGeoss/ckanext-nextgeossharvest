@@ -36,6 +36,9 @@ This extension contains harvester plugins for harvesting from sources used by Ne
 10. [Harvesting DEIMOS-2 products](#harvesting-deimos2)
     1. [DEIMOS-2 Settings](#deimos2-settings)
     2. [Running a DEIMOS-2 harvester](#running-deimos2)
+11. [Harvesting SIMOcean products](#harvesting-simocean)
+    1. [SIMOcean Settings](#simocean-settings)
+    2. [Running a SIMOcean harvester](#running-simocean)
 11. [Harvesting EPOS-Sat products](#harvesting-epos)
     1. [EPOS-Sat Settings](#epos-settings)
     2. [Running a EPOS-Sat harvester](#running-epos)
@@ -518,6 +521,53 @@ The DEIMOS-2 harvester has configuration as:
 4. Add a config as described above.
 5. Select `Manual` from the frequency options. 
 6. Run the harvester. It will programmatically create datasets.
+
+## <a name="harvesting-simocean"></a>Harvesting SIMOcean products
+The SIMOcean harvester harvests products from the following collections:
+
+- SIMOcean Mean Sea Level Pressure Forecast 
+- SIMOcean Port Sea State Forecast From SMARTWAVE
+- SIMOcean Tidal Data
+- SIMOcean Sea Surface Temperature Forecast
+- SIMOcean Data From Multiparametric Buoys
+- SIMOcean Surface Wind Forecast From AROME
+- SIMOcean Cloudiness Forecast From AROME
+- SIMOcean Air Surface Temperature Forecast
+- SIMOcean Surface Currents From HF Radar
+- SIMOcean Sea Wave Period Forecast
+- SIMOcean Nearshore Sea State Forecast From SWAN
+- SIMOcean Sea Surface Wind Forecast
+- SIMOcean Precipitation Forecast From AROME
+- SIMOcean Significant Wave Height Forecast
+- SIMOcean Sea Wave Direction Forecast
+- SIMOcean Surface Forecast From HYCOM 
+
+New products of these collections are created and published daily.
+
+### <a name="simocean-settings"></a>SIMOcean Settings
+The SIMOcean harvester has configuration as:
+1. `start_date`: (required, datetime string, if the harvester is new, or from the ingestion date of the most recently harvested product if it has been run before) determines the start of the date range for harvester queries. Example: "start_date": "2018-01-16T10:30:00Z". Note that the entire datetime string is required. `2018-01-01` is not valid. 
+2. `end_date`: (optional, datetime string, default is "NOW") determines the end of the date range for harvester queries. Example: "end_date": "2018-01-16T11:00:00Z". Note that the entire datetime string is required. `2018-01-01` is not valid.
+3. `datasets_per_job`: (optional, integer, defaults to 100) determines the maximum number of products that will be harvested during each job. 
+4. `timeout`: (optional, integer, defaults to 10) determines the number of seconds to wait before timing out a request.
+5. `make_private` (optional) determines whether the datasets created by the harvester will be private or public. The default is `false`, i.e., by default, all datasets created by the harvester will be public.
+
+#### Examples of SIMOcean settings
+```
+{
+"start_date": "2017-01-01T00:00:00Z",
+"timeout": 4,
+"datasets_per_job": 100,
+"make_private": false
+}
+```
+
+### <a name="running-simocean"></a>Running a SIMOcean harvester
+1. Add `simocean` to the list of plugins in your .ini file.
+2. Create a new harvester via the harvester interface.
+3. Select `SIMOcean Harvester` from the list of harvesters.
+4. Add a config as described above.
+5. Select `Manual` from the frequency options. 
 
 ## <a name="harvesting-epos"></a>Harvesting EPOS-Sat products
 The EPOS-Sat harvester harvests products from the following collections:
