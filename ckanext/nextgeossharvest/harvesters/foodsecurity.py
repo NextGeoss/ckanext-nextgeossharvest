@@ -301,6 +301,8 @@ class FoodSecurityHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         parsed_content['filename'] = self._parse_filename(identifier)
         parsed_content['spatial'] = json.dumps(
             self._bbox_to_geojson(self._parse_bbox(content)))
+        parsed_content['groups'] = [{'name': 'food-security'}]
+        parsed_content['is_output'] = True
         parsed_content['metadata_download'] = self._get_metadata_url(content)  # noqa: E501
         parsed_content['product_download'] = self._get_product_url(content)  # noqa: E501
         parsed_content['thumbnail_download'] = self._get_thumbnail_url(content)  # noqa: E501
