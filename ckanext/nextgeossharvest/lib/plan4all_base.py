@@ -42,7 +42,7 @@ class OLUHarvester(HarvesterBase):
             'gmd:fileidentifier': 'identifier',
             'gmd:title': 'title',
             'gmd:abstract': 'notes',
-            'gmd:parentidentifier': 'parent_identifier'
+            'gmd:parentidentifier': 'parentIdentifier'
         }
         item = {'spatial': spatial_dict}
 
