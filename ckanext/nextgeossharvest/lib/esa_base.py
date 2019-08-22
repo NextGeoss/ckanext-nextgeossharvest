@@ -118,6 +118,25 @@ class SentinelHarvester(HarvesterBase):
 
             else:
                 log.warning('No collection for Sentinel-2 product {}'.format(identifier))  # noqa: E501
+        elif identifier.startswith('s5'):
+            if 'offl_l1b' in identifier:
+                item['collection_id'] = 'SENTINEL5P_OFFL_L1B'
+                item['collection_name'] = 'Sentinel-5P OFFL Level-1B'
+                item['collection_description'] = 'The Sentinel-5 Precursor mission is dedicated to monitoring our atmosphere, using the TROPOspheric Monitoring Instrument (TROPOMI). The Level-1B products are geo-located and radiometrically corrected top of the atmosphere Earth radiances in all spectral bands, as well as solar irradiances. For offline processing (OFFL), the data availability depends on the product.'  # noqa: E501
+            if 'offl_l2' in identifier:
+                item['collection_id'] = 'SENTINEL5P_OFFL_L2'
+                item['collection_name'] = 'Sentinel-5P OFFL Level-2'
+                item['collection_description'] = 'The Sentinel-5 Precursor mission is dedicated to monitoring our atmosphere, using the TROPOspheric Monitoring Instrument (TROPOMI). The The Level-2 products are geolocated total columns of ozone, sulfur dioxide, nitrogen dioxide, carbon monoxide, formaldehyde and methane, geolocated tropospheric columns of ozone, geolocated vertical profiles of ozone, geolocated cloud and aerosol information (e.g. absorbing aerosol index and aerosol layer height). For offline processing (OFFL), the data availability depends on the product.'  # noqa: E501
+            if 'nrti_l2' in identifier:
+                item['collection_id'] = 'SENTINEL5P_NRTI_L2'
+                item['collection_name'] = 'Sentinel-5P NRTI Level-2'
+                item['collection_description'] = 'The Sentinel-5 Precursor mission is dedicated to monitoring our atmosphere, using the TROPOspheric Monitoring Instrument (TROPOMI). The The Level-2 products are geolocated total columns of ozone, sulfur dioxide, nitrogen dioxide, carbon monoxide, formaldehyde and methane, geolocated tropospheric columns of ozone, geolocated vertical profiles of ozone, geolocated cloud and aerosol information (e.g. absorbing aerosol index and aerosol layer height). For near real time processing (NRT) the availability of products must be within 3 hours after sensing.'  # noqa: E501
+            if 'rpro_l2' in identifier:
+                item['collection_id'] = 'SENTINEL5P_RPRO_L2'
+                item['collection_name'] = 'Sentinel-5P RPRO Level-2'
+                item['collection_description'] = 'The Sentinel-5 Precursor mission is dedicated to monitoring our atmosphere, using the TROPOspheric Monitoring Instrument (TROPOMI). The The Level-2 products are geolocated total columns of ozone, sulfur dioxide, nitrogen dioxide, carbon monoxide, formaldehyde and methane, geolocated tropospheric columns of ozone, geolocated vertical profiles of ozone, geolocated cloud and aerosol information (e.g. absorbing aerosol index and aerosol layer height). For reprocessing activities (RPRO) there are no time constraints. Reprocessing of Sentinel-5 Precursor products will be performed when major product upgrades are considered necessary.'  # noqa: E501
+            else:
+                log.warning('No collection for Sentinel-5p product {}'.format(identifier))  # noqa: E501
         else:
             if 'slc' in identifier:
                 item['collection_id'] = 'SENTINEL1_L1_SLC'
