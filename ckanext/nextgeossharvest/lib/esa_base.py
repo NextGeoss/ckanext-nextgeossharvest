@@ -335,6 +335,8 @@ class SentinelHarvester(HarvesterBase):
             url = item['code_manifest_url']
             order = 6
             _type = 'code_manifest'
+        else:
+            return None
 
         manifest = {'name': name,
                     'description': description,
@@ -405,14 +407,24 @@ class SentinelHarvester(HarvesterBase):
             _type = 'code_product'
         size = item['size']
 
-        product = {'name': name,
-                   'description': description,
-                   'url': url,
-                   'format': 'SAFE',
-                   'mimetype': 'application/zip',
-                   'size': size,
-                   'resource_type': _type,
-                   'order': order}
+        if 's5p' not in item['identifier']:
+            product = {'name': name,
+                       'description': description,
+                       'url': url,
+                       'format': 'SAFE',
+                       'mimetype': 'application/zip',
+                       'size': size,
+                       'resource_type': _type,
+                       'order': order}
+        else:
+            product = {'name': name,
+                       'description': description,
+                       'url': url,
+                       'format': 'netCDF',
+                       'mimetype': 'application/x-netcdf',
+                       'size': size,
+                       'resource_type': _type,
+                       'order': order}
 
         return product
 
@@ -427,7 +439,10 @@ class SentinelHarvester(HarvesterBase):
         manifest = self._make_manifest_resource(parsed_content)
         thumbnail = self._make_thumbnail_resource(parsed_content)
 
-        new_resources = [x for x in [product, manifest, thumbnail] if x]
+        if manifest == None:
+            new_resources = [x for x in [product, thumbnail] if x]
+        else:
+            new_resources = [x for x in [product, manifest, thumbnail] if x]
         if not old_resources:
             resources = new_resources
         else:
