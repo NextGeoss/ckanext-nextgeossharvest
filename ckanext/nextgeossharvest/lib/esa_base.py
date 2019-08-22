@@ -118,7 +118,7 @@ class SentinelHarvester(HarvesterBase):
 
             else:
                 log.warning('No collection for Sentinel-2 product {}'.format(identifier))  # noqa: E501
-        elif identifier.startswith('s5'):
+        elif identifier.startswith('s5p'):
             if 'offl_l1b' in identifier:
                 item['collection_id'] = 'SENTINEL5P_OFFL_L1B'
                 item['collection_name'] = 'Sentinel-5P OFFL Level-1B'
@@ -192,6 +192,27 @@ class SentinelHarvester(HarvesterBase):
             elif 'cal' in identifier:
                 tags.extend([{'name': 'Calibration'}, {'name': 'Level-1'},
                              {'name': 'SAR'}, {'name': 'Altimeter'}])
+            elif 'lst' in identifier:
+                tags.extend([{'name': 'land surface temperature'},
+                             {'name': 'Level-2'}])
+            elif 'rbt' in identifier:
+                tags.extend([{'name': 'radiances and brightness temperatures'},  # noqa: E501
+                             {'name': 'Level-1 '}])
+        elif identifier.startswith('s5p'):
+            tags = [{'name': 'Sentinel-5P'}, {'name': 'tropospheric'}, {'name': 'atmosphere'}, {'name': 'tropomi'}]  # noqa: E501
+            if 'l1b' in identifier:
+                tags.extend([{'name': 'Level-1B'},
+                             {'name': 'offline'}, {'name': 'offline processing'}])  # noqa: E501
+            elif 'l2' in identifier:
+                if 'offl' in identifier:
+                    tags.extend([{'name': 'Level-2'},
+                                {'name': 'offline'}, {'name': 'offline processing'}])  # noqa: E501
+                elif 'nrti' in identifier:
+                    tags.extend([{'name': 'Level-2'},
+                                {'name': 'near real time'}, {'name': 'near real time processing'}])  # noqa: E501
+                elif 'rpro' in identifier:
+                    tags.extend([{'name': 'Level-2'},
+                                {'name': 'reprocessing'}])
         else:
             tags = []
             log.debug('No tags for {}'.format(identifier))
