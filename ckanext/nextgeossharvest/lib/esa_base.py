@@ -439,7 +439,7 @@ class SentinelHarvester(HarvesterBase):
         manifest = self._make_manifest_resource(parsed_content)
         thumbnail = self._make_thumbnail_resource(parsed_content)
 
-        if manifest == None:
+        if manifest is None:
             new_resources = [x for x in [product, thumbnail] if x]
         else:
             new_resources = [x for x in [product, manifest, thumbnail] if x]
