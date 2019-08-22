@@ -244,13 +244,15 @@ class SentinelHarvester(HarvesterBase):
         if enclosure.startswith('https://scihub'):
             item['scihub_download_url'] = enclosure
             item['scihub_product_url'] = alternative
-            item['scihub_manifest_url'] = self._make_manifest_url(item)
+            if 's5p' not in item['name']:
+                item['scihub_manifest_url'] = self._make_manifest_url(item)
             if thumbnail:
                 item['scihub_thumbnail'] = thumbnail['href']
         elif enclosure.startswith('https://sentinels'):
             item['noa_download_url'] = enclosure
             item['noa_product_url'] = alternative
-            item['noa_manifest_url'] = self._make_manifest_url(item)
+            if 's5p' not in item['name']:
+                item['noa_manifest_url'] = self._make_manifest_url(item)
             if thumbnail:
                 item['noa_thumbnail'] = thumbnail['href']
             ingestion_date = soup.find('date',
@@ -264,7 +266,8 @@ class SentinelHarvester(HarvesterBase):
         elif enclosure.startswith('https://code-de'):
             item['code_download_url'] = enclosure
             item['code_product_url'] = alternative
-            item['code_manifest_url'] = self._make_manifest_url(item)
+            if 's5p' not in item['name']:
+                item['code_manifest_url'] = self._make_manifest_url(item)
             if thumbnail:
                 item['code_thumbnail'] = thumbnail['href']
         item['thumbnail'] = item.get('scihub_thumbnail') or item.get('noa_thumbnail') or item.get('code_thumbnail')  # noqa: E501
