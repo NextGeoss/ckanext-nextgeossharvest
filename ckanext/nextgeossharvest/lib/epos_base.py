@@ -3,11 +3,7 @@
 import logging
 
 from bs4 import BeautifulSoup as Soup
-
 from ckanext.harvest.harvesters.base import HarvesterBase
-
-from string import Template
-
 
 log = logging.getLogger(__name__)
 
