@@ -7,13 +7,13 @@ COLLECTION_DESCRIPTIONS = {
      "defined as the line-of-sight from the radar to each reflecting object. "
      "The products are in zero-Doppler orientation where each row of pixels "
      "represents points along a line perpendicular to the sub-satellite track."),
-     "CGS S1 GRD SIGMA0 L1":
+     "CGS S1 GRD L1":
     ("Level-1 Ground Range Detected (GRD) products consist of focused SAR data "
      "that has been detected, multi-looked and projected to ground range using "
      "the Earth ellipsoid model WGS84. The ellipsoid projection of the GRD "
      "products is corrected using the terrain height specified in the product "
      "general annotation. The terrain height used varies in azimuth but is "
      "constant in range (but can be different for each IW/EW sub-swath)."),
-    "CGS S1 GRD L1":
+    "CGS S1 GRD SIGMA0 L1":
     ("TBD"),
 }
