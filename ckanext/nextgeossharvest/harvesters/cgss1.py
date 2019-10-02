@@ -424,7 +424,7 @@ class CGSHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         return str(content.find('link', title='Inspire')['href'])
 
     def _get_product_url(self, content):
-        return str(content.find('link', rel='enclosure')['href'] + "fileIndex=2")  # noqa: E501
+        return str(content.find('link', rel='enclosure')['href'])  # noqa: E501
 
     def _get_thumbnail_url(self, content):
         return str(content.find('link', rel='icon')['href'])
