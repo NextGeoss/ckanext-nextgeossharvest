@@ -134,10 +134,10 @@ class CGSHarvester(OpenSearchHarvester, NextGEOSSHarvester):
                 raise ValueError('password is required and must be a string')
             if type(config_obj.get('username', None)) != unicode:
                 raise ValueError('username is required and must be a string')
-            if config_obj.get('collection') not in {"SLC_L1", "GRD_SIGMA0_L1",  # noqa E501
-                                                     "GRD_L1"}:  # noqa E501
+            if config_obj.get('collection') not in {"SLC_L1", "GRD_L1",  # noqa E501
+                                                     "GRD_SIGMA0_L1"}:  # noqa E501
                 raise ValueError('''collections_type is required and must be
-                 "SLC_L1", "GRD_SIGMA0_L1" or "GRD_L1"''')
+                 "SLC_L1", "GRD_L1" or "GRD_SIGMA0_L1"''')
             if type(config_obj.get('make_private', False)) != bool:
                 raise ValueError('make_private must be true or false')
             if 'groups' in config_obj:
