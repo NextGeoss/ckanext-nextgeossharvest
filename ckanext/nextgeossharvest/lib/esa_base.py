@@ -30,6 +30,7 @@ class SentinelHarvester(HarvesterBase):
         normalized_names = {
             'beginposition': 'StartTime',
             'endposition': 'StopTime',
+            'ingestiondate': 'IngestionDate',
             'footprint': 'spatial',
             'filename': 'Filename',
             'platformname': 'FamilyName',
@@ -50,6 +51,7 @@ class SentinelHarvester(HarvesterBase):
             'platformidentifier': 'PlatformIdentifier',
             'platformserialidentifier': 'PlatformSerialIdentifier',
             'relativeorbitnumber': 'RelativeOrbitNumber',
+            'tileid': 'Tileid',
         }
         item = {}
 
