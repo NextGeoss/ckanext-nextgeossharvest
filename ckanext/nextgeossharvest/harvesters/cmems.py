@@ -167,7 +167,7 @@ class CMEMSHarvester(NextGEOSSHarvester, CMEMSBase):
     def _get_imported_harvest_objects_by_source(self, source_id):
         return Session.query(HarvestObject).filter(
             HarvestObject.harvest_source_id == source_id,
-            HarvestObject.import_finished is not None)
+            HarvestObject.state == "COMPLETE")
 
     def _get_config(self, harvest_job):
         return json.loads(harvest_job.source.config)
