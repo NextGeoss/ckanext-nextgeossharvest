@@ -64,7 +64,10 @@ pip install -r dev-requirements.txt
 # We need the harvester as well
 pip install -e git+https://github.com/NextGeoss/ckanext-harvest.git@many-jobs#egg=ckanext-harvest
 pip install -r https://raw.githubusercontent.com/ckan/ckanext-harvest/master/pip-requirements.txt
-
+pip install --no-cache-dir git+https://github.com/NextGeoss/ckanext-nextgeoss.git#egg=ckanext-nextgeoss
+pip install -r https://raw.githubusercontent.com/NextGeoss/ckanext-nextgeoss/master/requirements.txt
+pip install --no-cache-dir git+https://github.com/NextGeoss/ckanext-opensearch.git#egg=ckanext-opensearch
+pip install -r https://raw.githubusercontent.com/NextGeoss/ckanext-opensearch/master/requirements.txt
 
 python setup.py develop
 

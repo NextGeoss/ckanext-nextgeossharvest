@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<atom:feed xmlns:atom="http://www.w3.org/2005/Atom" xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:param="http://a9.com/-/spec/opensearch/extensions/parameters/1.0/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:georss="http://www.georss.org/georss/11" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:score="http://a9.com/-/opensearch/extensions/relevance/1.0/" xmlns:media="http://tools.search.yahoo.com/mrss/" xmlns:ns1="http://purl.org/dc/terms/" xmlns:os="http://a9.com/-/spec/opensearch/1.1/" xmlns:time="http://a9.com/-/opensearch/extensions/time/1.0/" xmlns:geo="http://a9.com/-/opensearch/extensions/geo/1.0/" xmlns:eo="http://a9.com/-/opensearch/extensions/eo/1.0/" xmlns:vito="http://www.opengis.net/vito/1.0" xmlns:sru="http://a9.com/-/opensearch/extensions/sru/2.0/" xmlns:esipdiscovery="http://commons.esipfed.org/ns/discovery/1.2/" xmlns:referrer="http://www.opensearch.org/Specifications/OpenSearch/Extensions/Referrer/1.0" esipdiscovery:version="1.2">
+    <atom:title>Product Search result;</atom:title>
+    <atom:subtitle>Number of results: 2</atom:subtitle>
+    <atom:id>https://www.vito-eodata.be/openSearch/findProducts.atom?collection=urn:ogc:def:EOP:VITO:PROBAV_S1-TOA_100M_V001&amp;count=1&amp;platform=PV01&amp;start=2018-01-01&amp;end=2018-01-02</atom:id>
+    <atom:generator uri="https://www.vito-eodata.be/openSearch/findProducts.atom?collection=urn:ogc:def:EOP:VITO:PROBAV_S1-TOA_100M_V001&amp;platform=PV01&amp;start=2018-01-01&amp;end=2018-01-02&amp;count=1" version="0.1">S1 TOA 100 m [C1] collection search result</atom:generator>
+    <atom:author>
+        <atom:name>VITO</atom:name>
+    </atom:author>
+    <atom:updated>2018-05-25T18:18:10.71Z</atom:updated>
+    <os:totalResults>2</os:totalResults>
+    <os:startIndex>1</os:startIndex>
+    <os:itemsPerPage>1</os:itemsPerPage>
+    <os:Query role="request" os:count="1" time:start="2018-01-01" time:end="2018-01-02" eo:platform="PV01"/>
+    <atom:link href="https://www.vito-eodata.be/openSearch/description.xml?collection=urn:ogc:def:EOP:VITO:PROBAV_S1-TOA_100M_V001" rel="search" type="application/opensearchdescription+xml" title="Collection description"/>
+    <atom:link href="https://www.vito-eodata.be/openSearch/findProducts.atom?collection=urn:ogc:def:EOP:VITO:PROBAV_S1-TOA_100M_V001&amp;count=1&amp;platform=PV01&amp;start=2018-01-01&amp;end=2018-01-02" rel="self" type="application/atom+xml" title="self"/>
+    <atom:link href="https://www.vito-eodata.be/openSearch/findProducts.atom?collection=urn:ogc:def:EOP:VITO:PROBAV_S1-TOA_100M_V001&amp;count=1&amp;platform=PV01&amp;start=2018-01-01&amp;end=2018-01-02&amp;startIndex=1" rel="first" type="application/atom+xml" title="first"/>
+    <atom:link href="https://www.vito-eodata.be/openSearch/findProducts.atom?collection=urn:ogc:def:EOP:VITO:PROBAV_S1-TOA_100M_V001&amp;count=1&amp;platform=PV01&amp;start=2018-01-01&amp;end=2018-01-02&amp;startIndex=2" rel="next" type="application/atom+xml" title="next"/>
+    <atom:link href="https://www.vito-eodata.be/openSearch/findProducts.atom?collection=urn:ogc:def:EOP:VITO:PROBAV_S1-TOA_100M_V001&amp;count=1&amp;platform=PV01&amp;start=2018-01-01&amp;end=2018-01-02&amp;startIndex=2" rel="last" type="application/atom+xml" title="last"/>
+    <atom:entry>
+        <atom:title>urn:ogc:def:EOP:VITO:PROBAV_S1-TOA_100M_V001:PROBAV_S1-TOA_20180101_100M:V101</atom:title>
+        <atom:id>urn:ogc:def:EOP:VITO:PROBAV_S1-TOA_100M_V001:PROBAV_S1-TOA_20180101_100M:V101</atom:id>
+        <dc:identifier>urn:ogc:def:EOP:VITO:PROBAV_S1-TOA_100M_V001:PROBAV_S1-TOA_20180101_100M:V101</dc:identifier>
+        <atom:published>2018-01-02T09:58:12Z</atom:published>
+        <atom:updated>2018-01-02T09:58:12Z</atom:updated>
+        <atom:summary>Product belonging to collection S1 TOA 100 m [C1].  It was ingested on the 2018-01-02T09:58:12Z.</atom:summary>
+        <dc:date>2018-01-01T00:00:00Z/2018-01-01T23:59:59Z</dc:date>
+        <georss:box>-54.999 -180.0 75.0 179.998992</georss:box>
+        <georss:polygon>-54.999 -180.0 -54.999 -120.00017 -54.999 -60.000336 -54.999 -5.0354004E-4 -54.999 59.99933 -54.999 119.999176 -54.999 179.999 0.0099983215 179.999 0.01 119.99916 0.01 59.99933 0.01 -5.0354004E-4 0.01 -60.000336 0.01 -120.00018 0.01 -180.0 -54.999 -180.0 -0.01 -180.0 -0.01 -120.00017 -0.01 -60.000336 -0.01 -5.0354004E-4 -0.01 59.99933 -0.01 119.999176 -0.01 179.999 37.495003 179.999 75.0 179.999 75.0 119.99916 75.0 59.99933 75.0 -5.0354004E-4 75.0 -60.000336 75.0 -120.00018 75.0 -180.0 37.495 -180.0 -0.010002136 -180.0</georss:polygon>
+        <atom:link href="https://www.vito-eodata.be/cgi-bin/probav?SERVICE=WMS&amp;VERSION=1.3.0&amp;REQUEST=GetMap&amp;SRS=EPSG:4326&amp;FORMAT=image/png&amp;LAYERS=PROBAV_L3_S1_TOA_100M_Red band&amp;TIME=2018-01-01T00:00:00Z&amp;BBOX=-54.999,-180.0,75.0,179.998992&amp;HEIGHT=200&amp;WIDTH=554" rel="icon" type="image/png" title="Red band"/>
+        <atom:link href="https://www.vito-eodata.be/cgi-bin/probav?SERVICE=WMS&amp;VERSION=1.3.0&amp;REQUEST=GetMap&amp;SRS=EPSG:4326&amp;FORMAT=image/png&amp;LAYERS=PROBAV_L3_S1_TOA_100M_NDVI band&amp;TIME=2018-01-01T00:00:00Z&amp;BBOX=-54.999,-180.0,75.0,179.998992&amp;HEIGHT=200&amp;WIDTH=554" rel="icon" type="image/png" title="NDVI band"/>
+        <atom:link href="https://www.vito-eodata.be/PDF/dataaccessMdXML??mdmode=Inspire&amp;collectionID=1000125&amp;productID=267473044&amp;fileName=inspire.xml" rel="alternate" type="application/vnd.iso.19139+xml" title="Inspire"/>
+        <atom:link href="https://www.vito-eodata.be/openSearch/findProducts?collection=urn:ogc:def:EOP:VITO:PROBAV_S1-TOA_100M_V001&amp;uid=urn:ogc:def:EOP:VITO:PROBAV_S1-TOA_100M_V001:PROBAV_S1-TOA_20180101_100M:V101&amp;mdDetail=full" rel="alternate" type="application/atom+xml" title="URL for retrieving full details of the product: urn:ogc:def:EOP:VITO:PROBAV_S1-TOA_100M_V001:PROBAV_S1-TOA_20180101_100M:V101"/>
+        <atom:link href="https://www.vito-eodata.be/PDF/dataaccessMdXML?mdmode=hma&amp;collectionID=1000125&amp;productID=267473044&amp;fileName=PV_S1_TOA-20180101_100M_V101.xml" rel="via" type="application/gml+xml" title="HMA"/>
+        <atom:link href="https://www.vito-eodata.be/PDF/dataaccess?service=DSEO&amp;request=GetProduct&amp;version=1.0.0&amp;collectionID=1000125&amp;productID=267473044&amp;ProductURI=urn:ogc:def:EOP:VITO:PROBAV_S1-TOA_100M_V001:PROBAV_S1-TOA_20180101_100M:V101&amp;" rel="enclosure" type="application/metalink+xml" title="PV_S1_TOA-20180101_100M_V101"/>
+        <atom:link href="https://www.vito-eodata.be/ordering/webservice?wsdl" rel="enclosure" type="application/vnd.ogc.oseo.capabilities.response_xml" title="HMA ordering"/>
+        <atom:link href="https://www.vito-eodata.be/PDF/dataaccessorder?service=DSEO&amp;request=GetProduct&amp;version=1.0.0&amp;collectionID=1000125&amp;productID=267473044&amp;ProductURI=urn:ogc:def:EOP:VITO:PROBAV_S1-TOA_100M_V001:PROBAV_S1-TOA_20180101_100M:V101&amp;" rel="enclosure" type="text/html" title="HTML ordering"/>
+        <atom:link href="https://www.vito-eodata.be/collections/srv/eng/main.home?uuid=urn:ogc:def:EOP:VITO:PROBAV_S1-TOA_100M_V001" rel="describedBy" type="text/html"/>
+        <atom:content>Referenced as PV_S1_TOA-20180101_100M_V101</atom:content>
+        <media:group>
+            <media:content url="https://www.vito-eodata.be/cgi-bin/probav?SERVICE=WMS&amp;VERSION=1.3.0&amp;REQUEST=GetMap&amp;SRS=EPSG:4326&amp;FORMAT=image/png&amp;LAYERS=PROBAV_L3_S1_TOA_100M_Red band&amp;TIME=2018-01-01T00:00:00Z&amp;BBOX=-54.999,-180.0,75.0,179.998992&amp;HEIGHT=200&amp;WIDTH=554" type="image/png" medium="image">
+                <media:title>Red band</media:title>
+                <media:category scheme="http://www.opengis.net/spec/EOMPOM/1.1">QUICKLOOK</media:category>
+            </media:content>
+        </media:group>
+        <media:group>
+            <media:content url="https://www.vito-eodata.be/cgi-bin/probav?SERVICE=WMS&amp;VERSION=1.3.0&amp;REQUEST=GetMap&amp;SRS=EPSG:4326&amp;FORMAT=image/png&amp;LAYERS=PROBAV_L3_S1_TOA_100M_NDVI band&amp;TIME=2018-01-01T00:00:00Z&amp;BBOX=-54.999,-180.0,75.0,179.998992&amp;HEIGHT=200&amp;WIDTH=554" type="image/png" medium="image">
+                <media:title>NDVI band</media:title>
+                <media:category scheme="http://www.opengis.net/spec/EOMPOM/1.1">QUICKLOOK</media:category>
+            </media:content>
+        </media:group>
+        
+<opt:EarthObservation xmlns:eop="http://www.opengis.net/eop/2.1" xmlns:ows="http://www.opengis.net/ows/2.0" xmlns:om="http://www.opengis.net/om/2.0" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:opt="http://www.opengis.net/opt/2.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" gml:id="eopr_267473044" xsi:schemaLocation="http://www.opengis.net/eop/2.1 http://schemas.opengis.net/eompom/1.1/xsd/eop.xsd http://www.opengis.net/opt/2.1 http://schemas.opengis.net/eompom/1.1/xsd/opt.xsd http://www.opengis.net/om/2.0 http://schemas.opengis.net/om/2.0/observation.xsd">
+   <om:phenomenonTime>
+		<gml:TimePeriod gml:id="tp_267473044">
+			<gml:beginPosition>2018-01-01T00:00:00Z</gml:beginPosition>
+			<gml:endPosition>2018-01-01T23:59:59Z</gml:endPosition>
+		</gml:TimePeriod>
+   </om:phenomenonTime>
+   <om:resultTime>
+		<gml:TimeInstant gml:id="ti_267473044">
+			<gml:timePosition>2018-05-25T18:18:10.86Z</gml:timePosition>
+		</gml:TimeInstant>
+   </om:resultTime>
+   <om:procedure>
+	<eop:EarthObservationEquipment gml:id="eoe_267473044">
+		<eop:platform>
+			<eop:Platform>
+				<eop:shortName>PV01</eop:shortName>
+			</eop:Platform>
+		</eop:platform>
+		<eop:instrument>
+			<eop:Instrument>
+				<eop:shortName>VGT</eop:shortName>
+			</eop:Instrument>
+		</eop:instrument>
+		<eop:sensor>
+			<eop:Sensor>
+				<eop:sensorType>OPTICAL</eop:sensorType>
+			</eop:Sensor>
+		</eop:sensor>
+		<eop:acquisitionParameters>
+			<eop:Acquisition>
+				<eop:orbitNumber>1</eop:orbitNumber>
+				<eop:orbitDirection>DESCENDING</eop:orbitDirection>
+			</eop:Acquisition>
+		</eop:acquisitionParameters>
+	</eop:EarthObservationEquipment>
+   </om:procedure>
+
+   <om:observedProperty xlink:href="#params1"/>
+	<om:featureOfInterest>
+		<eop:Footprint gml:id="fp_267473044">
+			<eop:multiExtentOf>
+				<gml:MultiSurface gml:id="ms_267473044" srsName="EPSG:4326">
+					<gml:surfaceMembers>
+						<gml:Polygon gml:id="fppoly_267473044">
+							<gml:exterior>
+								<gml:LinearRing>
+									<gml:posList>-54.999 -180.0 -54.999 -120.00017 -54.999 -60.000336 -54.999 -5.0354004E-4 -54.999 59.99933 -54.999 119.999176 -54.999 179.999 0.0099983215 179.999 0.01 119.99916 0.01 59.99933 0.01 -5.0354004E-4 0.01 -60.000336 0.01 -120.00018 0.01 -180.0 -54.999 -180.0 -0.01 -180.0 -0.01 -120.00017 -0.01 -60.000336 -0.01 -5.0354004E-4 -0.01 59.99933 -0.01 119.999176 -0.01 179.999 37.495003 179.999 75.0 179.999 75.0 119.99916 75.0 59.99933 75.0 -5.0354004E-4 75.0 -60.000336 75.0 -120.00018 75.0 -180.0 37.495 -180.0 -0.010002136 -180.0</gml:posList>
+								</gml:LinearRing>
+							</gml:exterior>
+						</gml:Polygon>
+					</gml:surfaceMembers>
+				</gml:MultiSurface>
+			</eop:multiExtentOf>
+			<eop:centerOf>
+				<gml:Point gml:id="pt_267473044" srsName="EPSG:4326">
+					<gml:pos>10.0005 -5.0354004E-4</gml:pos>
+				</gml:Point>
+			</eop:centerOf>
+		</eop:Footprint>
+	</om:featureOfInterest>
+	<om:result>
+		<opt:EarthObservationResult gml:id="optr_267473044">
+		    
+		    <eop:browse>
+	            <eop:BrowseInformation>
+	               	<eop:type>QUICKLOOK</eop:type>
+	               	<eop:referenceSystemIdentifier codeSpace="EPSG">epsg:4326</eop:referenceSystemIdentifier>
+	               	<eop:fileName>
+						<ows:ServiceReference xlink:href="https://www.vito-eodata.be/cgi-bin/probav?SERVICE=WMS&amp;VERSION=1.3.0&amp;REQUEST=GetMap&amp;SRS=EPSG:4326&amp;FORMAT=image/png&amp;LAYERS=PROBAV_L3_S1_TOA_100M_Red band&amp;TIME=2018-01-01T00:00:00Z&amp;BBOX=-54.999,-180.0,75.0,179.998992&amp;HEIGHT=200&amp;WIDTH=554">
+							<ows:RequestMessage/>
+						</ows:ServiceReference>
+					</eop:fileName>
+	            </eop:BrowseInformation>
+         	</eop:browse>
+            
+            
+            <eop:browse>
+	            <eop:BrowseInformation>
+	               	<eop:type>QUICKLOOK</eop:type>
+	               	<eop:referenceSystemIdentifier codeSpace="EPSG">epsg:4326</eop:referenceSystemIdentifier>
+	               	<eop:fileName>
+						<ows:ServiceReference xlink:href="https://www.vito-eodata.be/cgi-bin/probav?SERVICE=WMS&amp;VERSION=1.3.0&amp;REQUEST=GetMap&amp;SRS=EPSG:4326&amp;FORMAT=image/png&amp;LAYERS=PROBAV_L3_S1_TOA_100M_NDVI band&amp;TIME=2018-01-01T00:00:00Z&amp;BBOX=-54.999,-180.0,75.0,179.998992&amp;HEIGHT=200&amp;WIDTH=554">
+							<ows:RequestMessage/>
+						</ows:ServiceReference>
+					</eop:fileName>
+	            </eop:BrowseInformation>
+         	</eop:browse>
+            
+			<eop:product>
+				<eop:ProductInformation>
+					<eop:fileName>
+						<ows:ServiceReference xlink:href="https://www.vito-eodata.be/PDF/dataaccess?service=DSEO&amp;request=GetProduct&amp;version=1.0.0&amp;collectionID=1000125&amp;productID=267473044&amp;ProductURI=267473044">
+							<ows:RequestMessage/>
+						</ows:ServiceReference>
+					</eop:fileName>
+				<eop:size uom="Bytes">18870732152</eop:size></eop:ProductInformation>
+			</eop:product>
+	        
+            <opt:cloudCoverPercentage uom="%">10.911</opt:cloudCoverPercentage>
+            
+			
+            <opt:snowCoverPercentage uom="%">1.926</opt:snowCoverPercentage>
+            
+      </opt:EarthObservationResult>
+	</om:result>
+   <eop:metaDataProperty>
+      <eop:EarthObservationMetaData>
+         <eop:identifier>urn:ogc:def:EOP:VITO:PROBAV_S1-TOA_100M_V001:PROBAV_S1-TOA_20180101_100M:V101</eop:identifier>
+         <eop:parentIdentifier>urn:ogc:def:EOP:VITO:PROBAV_S1-TOA_100M_V001</eop:parentIdentifier>
+         <eop:acquisitionType>NOMINAL</eop:acquisitionType>
+         <eop:productType>PROBAV_L3_S1_TOA_100M</eop:productType>
+         <eop:status>ARCHIVED</eop:status>
+         
+             <eop:vendorSpecific>
+				<eop:SpecificInformation>
+					<eop:localAttribute>BoundingBox</eop:localAttribute>
+                    <eop:localValue>75.000 -180.000 -54.999 -180.000 -54.999 179.999 75.000 179.999 75.000 -180.000</eop:localValue>
+				</eop:SpecificInformation>
+			</eop:vendorSpecific>
+         
+             <eop:vendorSpecific>
+				<eop:SpecificInformation>
+					<eop:localAttribute>ProductReference</eop:localAttribute>
+                    <eop:localValue>PV_S1_TOA-20180101_100M_V101</eop:localValue>
+				</eop:SpecificInformation>
+			</eop:vendorSpecific>
+         
+             <eop:vendorSpecific>
+				<eop:SpecificInformation>
+					<eop:localAttribute>IsReservedSegment</eop:localAttribute>
+                    <eop:localValue>false</eop:localValue>
+				</eop:SpecificInformation>
+			</eop:vendorSpecific>
+         
+             <eop:vendorSpecific>
+				<eop:SpecificInformation>
+					<eop:localAttribute>ProductDescription</eop:localAttribute>
+                    <eop:localValue>PROBA-V Level3 Top Of Atmosphere Daily Synthesis at 100M resolution</eop:localValue>
+				</eop:SpecificInformation>
+			</eop:vendorSpecific>
+         
+             <eop:vendorSpecific>
+				<eop:SpecificInformation>
+					<eop:localAttribute>ProductVersion</eop:localAttribute>
+                    <eop:localValue>V101</eop:localValue>
+				</eop:SpecificInformation>
+			</eop:vendorSpecific>
+         
+             <eop:vendorSpecific>
+				<eop:SpecificInformation>
+					<eop:localAttribute>LandPercentage</eop:localAttribute>
+                    <eop:localValue>6.198</eop:localValue>
+				</eop:SpecificInformation>
+			</eop:vendorSpecific>
+         
+             <eop:vendorSpecific>
+				<eop:SpecificInformation>
+					<eop:localAttribute>MissingDataPercentage</eop:localAttribute>
+                    <eop:localValue>0.002</eop:localValue>
+				</eop:SpecificInformation>
+			</eop:vendorSpecific>
+         
+             <eop:vendorSpecific>
+				<eop:SpecificInformation>
+					<eop:localAttribute>MapProjectionName</eop:localAttribute>
+                    <eop:localValue>Geographic Lat/Lon</eop:localValue>
+				</eop:SpecificInformation>
+			</eop:vendorSpecific>
+         
+             <eop:vendorSpecific>
+				<eop:SpecificInformation>
+					<eop:localAttribute>MapProjectionFamily</eop:localAttribute>
+                    <eop:localValue>Equirectangular projection</eop:localValue>
+				</eop:SpecificInformation>
+			</eop:vendorSpecific>
+         
+             <eop:vendorSpecific>
+				<eop:SpecificInformation>
+					<eop:localAttribute>MapProjectionUnit</eop:localAttribute>
+                    <eop:localValue>DEGREES</eop:localValue>
+				</eop:SpecificInformation>
+			</eop:vendorSpecific>
+         
+             <eop:vendorSpecific>
+				<eop:SpecificInformation>
+					<eop:localAttribute>IsSampleImage</eop:localAttribute>
+                    <eop:localValue>FALSE</eop:localValue>
+				</eop:SpecificInformation>
+			</eop:vendorSpecific>
+         
+             <eop:vendorSpecific>
+				<eop:SpecificInformation>
+					<eop:localAttribute>MapProjectionReference</eop:localAttribute>
+                    <eop:localValue>GEOGRAPHIC_LAT_LON</eop:localValue>
+				</eop:SpecificInformation>
+			</eop:vendorSpecific>
+         
+             <eop:vendorSpecific>
+				<eop:SpecificInformation>
+					<eop:localAttribute>IsReservedSynthesis</eop:localAttribute>
+                    <eop:localValue>false</eop:localValue>
+				</eop:SpecificInformation>
+			</eop:vendorSpecific>
+         
+      </eop:EarthObservationMetaData>
+   </eop:metaDataProperty>
+</opt:EarthObservation><!-- OM11 timestamp is 60 ms. -->
+    </atom:entry>
+</atom:feed>
+<!-- Computed in 61 ms. -->

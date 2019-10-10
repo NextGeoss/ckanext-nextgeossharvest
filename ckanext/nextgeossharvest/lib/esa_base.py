@@ -62,7 +62,31 @@ class SentinelHarvester(HarvesterBase):
         """Return the item with collection ID, name, and description."""
         identifier = item['identifier'].lower()
         if identifier.startswith('s3'):
-            if 'cal' in identifier:
+            if 'efr' in identifier:
+                item['collection_id'] = 'SENTINEL3_OLCI_L1_EFR'
+                item['collection_name'] = 'Sentinel-3 OLCI Level-1 Full Resolution'  # noqa: E501
+                item['collection_description'] = 'SENTINEL-3 OLCI Level-1 product provides radiances for each pixel in the instrument grid, each view and each OLCI channel, plus annotation data associated to OLCI pixels. The output of this product is during EO processing mode for Full Resolution.'  # noqa: E501
+            elif 'err' in identifier:
+                item['collection_id'] = 'SENTINEL3_OLCI_L1_ERR'
+                item['collection_name'] = 'Sentinel-3 OLCI Level-1 Reduced Resolution'  # noqa: E501
+                item['collection_description'] = 'SENTINEL-3 OLCI Level-1 product provides radiances for each pixel in the instrument grid, each view and each OLCI channel, plus annotation data associated to OLCI pixels. The output of this product is during EO processing mode for Reduced Resolution.'  # noqa: E501
+            elif 'lfr' in identifier:
+                item['collection_id'] = 'SENTINEL3_OLCI_L2_LFR'
+                item['collection_name'] = 'Sentinel-3 OLCI Level-2 Land Full Resolution'  # noqa: E501
+                item['collection_description'] = 'SENTINEL-3 OLCI level-2 land product provides land and atmospheric geophysical parameters computed for full Resolution.'  # noqa: E501
+            elif 'lrr' in identifier:
+                item['collection_id'] = 'SENTINEL3_OLCI_L2_LRR'
+                item['collection_name'] = 'Sentinel-3 OLCI Level-2 Land Reduced Resolution'  # noqa: E501
+                item['collection_description'] = 'SENTINEL-3 OLCI level-2 land product provides land and atmospheric geophysical parameters computed for reduced Resolution.'  # noqa: E501
+            elif 'rbt' in identifier:
+                item['collection_id'] = 'SENTINEL3_SLSTR_L1_RBT'
+                item['collection_name'] = 'Sentinel-3 SLSTR Level-1 Radiances and Brightness Temperatures'  # noqa: E501
+                item['collection_description'] = 'SENTINEL-3 SLSTR Level-1 product provides radiances and brightness temperatures for each pixel in a regular image grid, each view and each SLSTR channel, plus annotations data associated with SLSTR pixels.'  # noqa: E501
+            elif 'lst' in identifier:
+                item['collection_id'] = 'SENTINEL3_SLSTR_L2_LST'
+                item['collection_name'] = 'Sentinel-3 SLSTR Level-2 Land Surface Temperature'  # noqa: E501
+                item['collection_description'] = 'SENTINEL-3 SLSTR Level-2 LST product provides land surface parameters generated on the wide 1 km measurement grid.'  # noqa: E501
+            elif 'cal' in identifier:
                 item['collection_id'] = 'SENTINEL3_SRAL_L1_CAL'
                 item['collection_name'] = 'Sentinel-3 SRAL Level-1 Calibration'
                 item['collection_description'] = 'SENTINEL-3 is the first Earth Observation Altimetry mission to provide 100% SAR altimetry coverage where LRM is maintained as a back-up operating mode. This is a Level 1 Calibration product.'  # noqa: E501
@@ -82,7 +106,6 @@ class SentinelHarvester(HarvesterBase):
                 message = 'No collection for Sentinel-3 product {}'.format(
                     item["identifier"])
                 log.warning(message)
-                self._save_object_error(message, self.obj, "Import")
         elif identifier.startswith('s2'):
             if 'msil1c' in identifier:
                 item['collection_id'] = 'SENTINEL2_L1C'
@@ -95,6 +118,25 @@ class SentinelHarvester(HarvesterBase):
 
             else:
                 log.warning('No collection for Sentinel-2 product {}'.format(identifier))  # noqa: E501
+        elif identifier.startswith('s5p'):
+            if 'offl_l1b' in identifier:
+                item['collection_id'] = 'SENTINEL5P_OFFL_L1B'
+                item['collection_name'] = 'Sentinel-5P OFFL Level-1B'
+                item['collection_description'] = 'The Sentinel-5 Precursor mission is dedicated to monitoring our atmosphere, using the TROPOspheric Monitoring Instrument (TROPOMI). The Level-1B products are geo-located and radiometrically corrected top of the atmosphere Earth radiances in all spectral bands, as well as solar irradiances. For offline processing (OFFL), the data availability depends on the product.'  # noqa: E501
+            if 'offl_l2' in identifier:
+                item['collection_id'] = 'SENTINEL5P_OFFL_L2'
+                item['collection_name'] = 'Sentinel-5P OFFL Level-2'
+                item['collection_description'] = 'The Sentinel-5 Precursor mission is dedicated to monitoring our atmosphere, using the TROPOspheric Monitoring Instrument (TROPOMI). The The Level-2 products are geolocated total columns of ozone, sulfur dioxide, nitrogen dioxide, carbon monoxide, formaldehyde and methane, geolocated tropospheric columns of ozone, geolocated vertical profiles of ozone, geolocated cloud and aerosol information (e.g. absorbing aerosol index and aerosol layer height). For offline processing (OFFL), the data availability depends on the product.'  # noqa: E501
+            if 'nrti_l2' in identifier:
+                item['collection_id'] = 'SENTINEL5P_NRTI_L2'
+                item['collection_name'] = 'Sentinel-5P NRTI Level-2'
+                item['collection_description'] = 'The Sentinel-5 Precursor mission is dedicated to monitoring our atmosphere, using the TROPOspheric Monitoring Instrument (TROPOMI). The The Level-2 products are geolocated total columns of ozone, sulfur dioxide, nitrogen dioxide, carbon monoxide, formaldehyde and methane, geolocated tropospheric columns of ozone, geolocated vertical profiles of ozone, geolocated cloud and aerosol information (e.g. absorbing aerosol index and aerosol layer height). For near real time processing (NRT) the availability of products must be within 3 hours after sensing.'  # noqa: E501
+            if 'rpro_l2' in identifier:
+                item['collection_id'] = 'SENTINEL5P_RPRO_L2'
+                item['collection_name'] = 'Sentinel-5P RPRO Level-2'
+                item['collection_description'] = 'The Sentinel-5 Precursor mission is dedicated to monitoring our atmosphere, using the TROPOspheric Monitoring Instrument (TROPOMI). The The Level-2 products are geolocated total columns of ozone, sulfur dioxide, nitrogen dioxide, carbon monoxide, formaldehyde and methane, geolocated tropospheric columns of ozone, geolocated vertical profiles of ozone, geolocated cloud and aerosol information (e.g. absorbing aerosol index and aerosol layer height). For reprocessing activities (RPRO) there are no time constraints. Reprocessing of Sentinel-5 Precursor products will be performed when major product upgrades are considered necessary.'  # noqa: E501
+            else:
+                log.warning('No collection for Sentinel-5p product {}'.format(identifier))  # noqa: E501
         else:
             if 'slc' in identifier:
                 item['collection_id'] = 'SENTINEL1_L1_SLC'
@@ -150,6 +192,27 @@ class SentinelHarvester(HarvesterBase):
             elif 'cal' in identifier:
                 tags.extend([{'name': 'Calibration'}, {'name': 'Level-1'},
                              {'name': 'SAR'}, {'name': 'Altimeter'}])
+            elif 'lst' in identifier:
+                tags.extend([{'name': 'land surface temperature'},
+                             {'name': 'Level-2'}])
+            elif 'rbt' in identifier:
+                tags.extend([{'name': 'radiances and brightness temperatures'},  # noqa: E501
+                             {'name': 'Level-1 '}])
+        elif identifier.startswith('s5p'):
+            tags = [{'name': 'Sentinel-5P'}, {'name': 'tropospheric'}, {'name': 'atmosphere'}, {'name': 'tropomi'}]  # noqa: E501
+            if 'l1b' in identifier:
+                tags.extend([{'name': 'Level-1B'},
+                             {'name': 'offline'}, {'name': 'offline processing'}])  # noqa: E501
+            elif 'l2' in identifier:
+                if 'offl' in identifier:
+                    tags.extend([{'name': 'Level-2'},
+                                {'name': 'offline'}, {'name': 'offline processing'}])  # noqa: E501
+                elif 'nrti' in identifier:
+                    tags.extend([{'name': 'Level-2'},
+                                {'name': 'near real time'}, {'name': 'near real time processing'}])  # noqa: E501
+                elif 'rpro' in identifier:
+                    tags.extend([{'name': 'Level-2'},
+                                {'name': 'reprocessing'}])
         else:
             tags = []
             log.debug('No tags for {}'.format(identifier))
@@ -181,13 +244,15 @@ class SentinelHarvester(HarvesterBase):
         if enclosure.startswith('https://scihub'):
             item['scihub_download_url'] = enclosure
             item['scihub_product_url'] = alternative
-            item['scihub_manifest_url'] = self._make_manifest_url(item)
+            if 's5p' not in item['name']:
+                item['scihub_manifest_url'] = self._make_manifest_url(item)
             if thumbnail:
                 item['scihub_thumbnail'] = thumbnail['href']
         elif enclosure.startswith('https://sentinels'):
             item['noa_download_url'] = enclosure
             item['noa_product_url'] = alternative
-            item['noa_manifest_url'] = self._make_manifest_url(item)
+            if 's5p' not in item['name']:
+                item['noa_manifest_url'] = self._make_manifest_url(item)
             if thumbnail:
                 item['noa_thumbnail'] = thumbnail['href']
             ingestion_date = soup.find('date',
@@ -201,7 +266,8 @@ class SentinelHarvester(HarvesterBase):
         elif enclosure.startswith('https://code-de'):
             item['code_download_url'] = enclosure
             item['code_product_url'] = alternative
-            item['code_manifest_url'] = self._make_manifest_url(item)
+            if 's5p' not in item['name']:
+                item['code_manifest_url'] = self._make_manifest_url(item)
             if thumbnail:
                 item['code_thumbnail'] = thumbnail['href']
         item['thumbnail'] = item.get('scihub_thumbnail') or item.get('noa_thumbnail') or item.get('code_thumbnail')  # noqa: E501
@@ -269,6 +335,8 @@ class SentinelHarvester(HarvesterBase):
             url = item['code_manifest_url']
             order = 6
             _type = 'code_manifest'
+        else:
+            return None
 
         manifest = {'name': name,
                     'description': description,
@@ -339,14 +407,24 @@ class SentinelHarvester(HarvesterBase):
             _type = 'code_product'
         size = item['size']
 
-        product = {'name': name,
-                   'description': description,
-                   'url': url,
-                   'format': 'SAFE',
-                   'mimetype': 'application/zip',
-                   'size': size,
-                   'resource_type': _type,
-                   'order': order}
+        if 's5p' not in item['identifier']:
+            product = {'name': name,
+                       'description': description,
+                       'url': url,
+                       'format': 'SAFE',
+                       'mimetype': 'application/zip',
+                       'size': size,
+                       'resource_type': _type,
+                       'order': order}
+        else:
+            product = {'name': name,
+                       'description': description,
+                       'url': url,
+                       'format': 'netCDF',
+                       'mimetype': 'application/x-netcdf',
+                       'size': size,
+                       'resource_type': _type,
+                       'order': order}
 
         return product
 
@@ -361,7 +439,10 @@ class SentinelHarvester(HarvesterBase):
         manifest = self._make_manifest_resource(parsed_content)
         thumbnail = self._make_thumbnail_resource(parsed_content)
 
-        new_resources = [x for x in [product, manifest, thumbnail] if x]
+        if manifest is None:
+            new_resources = [x for x in [product, thumbnail] if x]
+        else:
+            new_resources = [x for x in [product, manifest, thumbnail] if x]
         if not old_resources:
             resources = new_resources
         else:

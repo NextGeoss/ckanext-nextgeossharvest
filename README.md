@@ -21,22 +21,62 @@ This extension contains harvester plugins for harvesting from sources used by Ne
 5. [Harvesting GOME-2 products](#harvesting-gome2)
     1. [GOME-2 Settings](#gome2-settings)
     2. [Running a GOME-2 harvester](#running-gome2)
-6. [Developing new harvesters](#develop)
+6. [Harvesting PROBA-V products](#harvesting-proba-v)
+    1. [PROBA-V Settings](#proba-v-settings)
+    2. [Running a PROBA-V harvester](#running-proba-v)
+7. [Harvesting Static EBVs](#harvesting-static-ebvs)
+    1. [Static EBVs Settings](#static-ebvs-settings)
+    2. [Running a static EBVs harvester](#running-static-ebvs)
+8. [Harvesting GLASS LAI products](#harvesting-glass-lai)
+    1. [GLASS LAI Settings](#glass-lai-settings)
+    2. [Running a GLASS LAI harvester](#running-glass-lai)
+9. [Harvesting Plan4All products](#harvesting-plan4all)
+    1. [Plan4All Settings](#plan4all-settings)
+    2. [Running a Plan4All harvester](#running-plan4all)
+10. [Harvesting DEIMOS-2 products](#harvesting-deimos2)
+    1. [DEIMOS-2 Settings](#deimos2-settings)
+    2. [Running a DEIMOS-2 harvester](#running-deimos2)
+11. [Harvesting EBAS-NILU products](#harvesting-ebasnilu)
+    1. [EBAS-NILU Settings](#ebasnilu-settings)
+    2. [Running a EBAS-NILU harvester](#running-ebasnilu)
+11. [Harvesting SIMOcean products](#harvesting-simocean)
+    1. [SIMOcean Settings](#simocean-settings)
+    2. [Running a SIMOcean harvester](#running-simocean)
+11. [Harvesting EPOS-Sat products](#harvesting-epos)
+    1. [EPOS-Sat Settings](#epos-settings)
+    2. [Running a EPOS-Sat harvester](#running-epos)
+10. [Harvesting MODIS products](#harvesting-modis)
+    1. [MODIS Settings](#modis-settings)
+    2. [Running a MODIS harvester](#running-modis)
+11. [Developing new harvesters](#develop)
+10. [Harvesting GDACS Average Flood products](#harvesting-gdacs)
+    1. [GDACS Settings](#gdacs-settings)
+    2. [Running a GDACS harvester](#running-gdacs)
+11. [Harvesting DEIMOS-2 products](#harvesting-deimos2)
+    1. [DEIMOS-2 Settings](#deimos2-settings)
+    2. [Running a DEIMOS-2 harvester](#running-deimos2)
+11. [Harvesting Food Security pilot outputs](#harvesting-foodsecurity)
+    1. [Food Security Settings](#foodsecurity-settings)
+    2. [Running a Food Security harvester](#running-foodsecurity)
+12. [Developing new harvesters](#develop)
     1. [The basic harvester workflow](#basicworkflow)
         1. [gather_stage](#gather_stage)
         2. [fetch_stage](#fetch_stage)
         3. [import_stage](#import_stage)
     2. [Example of an OpenSearch-based harvester](#opensearchexample)
-7. [iTag](#itag)
+13. [iTag](#itag)
     1. [How ITagEnricher works](#itagprocess)
     2. [Setting up ITagEnricher](#setupitag)
     3. [Handling iTag errors](#handlingitagerrors)
-8. [Testing testing testing](#tests)
-9. [Suggested cron jobs](#cron)
-10. [Logs](#logs)
+13. [Testing testing testing](#tests)
+14. [Suggested cron jobs](#cron)
+15. [Logs](#logs)
+    1. [How ITagEnricher works](#itagprocess)
+    2. [Setting up ITagEnricher](#setupitag)
+    3. [Handling iTag errors](#handlingitagerrors)
 
 ## <a name="repo"></a>What's in the repository
-The repository contains three plugins:
+The repository contains four plugins:
 1. `nextgeossharvest`, the base CKAN plugin
 2. `esa`, a harvester plugin for harvesting Sentinel products from SciHub, NOA, and CODE-DE via their DHuS interfaces
 3. `cmems`, a harvester plugin for harvesting the following types of CMEMS products:
@@ -158,7 +198,7 @@ The URL you enter in the harvester GUI does not matter--the plugin determines th
 The different products are hosted on different services, so separate harvesters are necessary for ensuring that the harvesting of one is not affected by errors or outages on the others.
 
 ### <a name="cmems-settings"></a>CMEMS Settings
-`harvester_type` determines which type of product will be harvested. It must be one of the following four strings: `sst`, `sic_north`, `sic_south`, `ocn`, `gpaf`, `slv` or `mog`.
+`harvester_type` determines which type of product will be harvested. It must be one of the following seven strings: `sst`, `sic_north`, `sic_south`, `ocn`, `gpaf`, `slv` or `mog`.
 
 `start_date` determines the start date for the harvester job. It must be the string `YESTERDAY` or a string describing a date in the format `YYYY-MM-DD`, like `2017-01-01`.
 
@@ -237,8 +277,441 @@ or
 4. Add a config as described above.
 5. Select a frequency from the frequencey options. If you want to use a cron job (recommended) to run the harvester, select `Manual`.
 
-#### Known issues
-The GOME-2 harvester, like the CMEMS harvester, does not have a way to automatically recover from outages. If the data hub server or the source server suffers an outage while the harvester is scheduled to run, it will skip whatever products might have been harvested at that time. The assumption is that running the harvester three times a day will be sufficient to prevent any outages from affecting the harvesting, but a better solution would be improving the design of the harvester.
+## <a name="harvesting-proba-v"></a>Harvesting PROBA-V products
+The PROBA-V harvester harvests products from the following collections:
+
+- On time collections:
+    1. PROBAV_L2A_1KM_V001
+    2. Proba-V Level-1C
+    3. Proba-V S1-TOC (1KM)
+    4. Proba-V S1-TOA (1KM)
+    5. Proba-V S10-TOC (1KM)
+    6. Proba-V S10-TOC NDVI (1KM)
+- One month delayed collections with 333M resolution:
+    1. Proba-V Level-2A (333M)
+    2. Proba-V S1-TOA (333M)
+    3. Proba-V S1-TOC (333M)
+    4. Proba-V S10-TOC (333M)
+    5. Proba-V S10-TOC NDVI (333M)
+- One month delayed collections with 100M resolution:
+    1. Proba-V Level-2A (100M)
+    2. Proba-V S1-TOA (100M)
+    3. Proba-V S1-TOC (100M)
+    4. Proba-V S1-TOC NDVI (100M)
+    5. Proba-V S5-TOA (100M)
+    6. Proba-V S5-TOC (100M)
+    7. Proba-V S5-TOC NDVI (100M)
+
+The products from the on time collections are created and published on the same day.
+The product from delayed collections are published with one month delay after being created.
+
+The collections were also splitted according to the resoltion to avoid a huge number of datasets being harvested.
+L1C, L2A and S1 products are published daily. S5 products are published every 5 days. S10 products are published every 10 days.
+S1, S5 and S10 products are tiles covering almost the entire world. Each dataset correspond to a single tile.
+
+### <a name="proba-v-settings"></a>PROBA-V Settings
+The PROBA-V harvester has configuration as:
+1. `start_date` (required) determines the date on which the harvesting begins. It must be in the format `YYYY-MM-DD`. If you want to harvest from the earliest product onwards, use `2018-01-01`
+2. `end_date` (optional) determines the end date for the harvester job. It must be a string describing a date in the format `YYYY-MM-DD`, like 2018-01-31. The end_date is not mandatory and if not included the harvester will run until catch up the current day. To limit the number of datasets per job each job will harvest a maximum of 2 days of data.
+3. `username` and `password` are your username and password for accessing the PROBA-V products at the source.
+4. `collection` (required) to define the collection that will be collected. It can be `PROBAV_P_V001`, `PROBAV_S1-TOA_1KM_V001`, `PROBAV_S1-TOC_1KM_V001`, `PROBAV_S10-TOC_1KM_V001`, `PROBAV_S10-TOC-NDVI_1KM_V001`, `PROBAV_S1-TOA_100M_V001`, `PROBAV_S1-TOC-NDVI_100M_V001`, `PROBAV_S5-TOC-NDVI_100M_V001`, `PROBAV_S5-TOA_100M_V001`, `PROBAV_S5-TOC_100M_V001`, `PROBAV_S1-TOC_100M_V001`, `PROBAV_S1-TOA_333M_V001`, `PROBAV_S1-TOC_333M_V001`, `PROBAV_S10-TOC_333M_V001`, `PROBAV_S10-TOC-NDVI_333M_V001`, `PROBAV_L2A_1KM_V001`, `PROBAV_L2A_100M_V001` or `PROBAV_L2A_333M_V001`.
+5. `make_private` (optional) determines whether the datasets created by the harvester will be private or public. The default is `false`, i.e., by default, all datasets created by the harvester will be public.
+
+#### Examples of PROVA-V settings
+```
+{
+"start_date":"2018-08-01",
+"collection":"PROBAV_S1-TOC_1KM_V001",
+"username":"nextgeoss",
+"password":"nextgeoss",
+"make_private":false
+}
+```
+```
+{
+"start_date":"2018-08-01",
+"collection":"PROBAV_L2A_1KM_V001",
+"username":"nextgeoss",
+"password":"nextgeoss",
+"make_private":false
+}
+```
+```
+{
+"start_date":"2018-08-01",
+"collection":"PROBAV_P_V001",
+"username":"nextgeoss",
+"password":"nextgeoss",
+"make_private":false
+}
+```
+
+The start_date for the delayed collections can be any date before the current_day - 1 month. For the current collections the start_date can be any date.
+
+### <a name="running-proba-v"></a>Running a PROBA-V harvester
+1. Add `probav` to the list of plugins in your .ini file.
+2. Create a new harvester via the harvester interface.
+3. Select `Proba-V Harvester` from the list of harvesters.
+4. Add a config as described above.
+5. Select a frequency from the frequencey options. If you want to use a cron job (recommended) to run the harvester, select `Manual`.
+6. Run the harvester. It will programmatically create datasets.
+
+## <a name="harvesting-glass-lai"></a>Harvesting GLASS LAI products
+The GLASS LAI harvester harvests products from the following collections:
+
+- LAI_1KM_AVHRR_8DAYS_GL (from 1982 to 2015)
+- LAI_1KM_MODIS_8DAYS_GL (from 2001 to 2015)
+
+### <a name="glass-lai-settings"></a>GLASS LAI Settings
+The GLASS LAI harvester has configuration as:
+1. `sensor` to define if the harvester will collect products based on AVHRR (`avhrr`) or MODIS (`modis`).
+6. `make_private` (optional) determines whether the datasets created by the harvester will be private or public. The default is `false`, i.e., by default, all datasets created by the harvester will be public.
+
+#### Examples of GLASS LAI settings
+```
+{
+"sensor":"avhrr",
+"make_private":false
+}
+```
+```
+{
+"sensor":"modis",
+"make_private":false
+}
+```
+
+### <a name="running-glass-lai"></a>Running a GLASS LAI harvester
+1. Add `glass_lai` to the list of plugins in your .ini file.
+2. Create a new harvester via the harvester interface.
+3. Select `GLASS LAI Harvester` from the list of harvesters.
+4. Add a config as described above.
+5. Select `Manual` from the frequency options. The harvester only needs to run twice (with two different configurations).
+6. Run the harvester. It will programmatically create datasets.
+
+## <a name="harvesting-static-ebvs"></a>Harvesting static EBVs
+The static EBVs harvester harvests products from the following collections:
+
+- TREE_SPECIES_DISTRIBUTION_HABITAT_SUITABILITY
+- FLOOD_HAZARD_EU_GL
+- RSP_AVHRR_1KM_ANNUAL_USA
+- EMODIS_PHENOLOGY_250M_ANNUAL_USA
+
+### <a name="static-ebvs-settings"></a>Static EBVs Settings
+The Static EBVs harvester has configuration as:
+1. `make_private` (optional) determines whether the datasets created by the harvester will be private or public. The default is `false`, i.e., by default, all datasets created by the harvester will be public.
+
+#### Examples of GLASS LAI settings
+```
+{
+"make_private":false
+}
+```
+
+### <a name="running-static-ebvs"></a>Running a static EBVs harvester
+1. Add `ebvs` to the list of plugins in your .ini file.
+2. Create a new harvester via the harvester interface.
+3. Select `EBVs` from the list of harvesters.
+4. Add a config as described above.
+5. Select `Manual` from the frequency options. The harvester only needs to run once because the datasets are static.
+
+
+## <a name="harvesting-plan4all"></a>Harvesting Plan4All products
+The Plan4All harvester harvests products from the following collections:
+
+- Open Land Use Map (from the European Project: Plan4All)
+
+### <a name="plan4all-settings"></a>Plan4All Settings
+The Plan4All harvester has configuration as:
+1. `datasets_per_job` (optional, integer, defaults to 100) determines the maximum number of products that will be harvested during each job. If a query returns 2,501 results, only the first 100 will be harvested if you're using the default. This is useful for running the harvester via recurring jobs intended to harvest products incrementally (i.e., you want to start from the beginning and harvest all available products). The harvester will harvest products in groups of 100, rather than attmepting to harvest all x-hundred-thousand at once. You'll get feedback after each job, so you'll know if there are errors without waiting for the whole job to run. And the harvester will automatically resume from the harvested dataset if you're running it via a recurring cron job.
+2. `timeout` (optional, integer, defaults to 60) determines the number of seconds to wait before timing out a request.
+3. `make_private` (optional) determines whether the datasets created by the harvester will be private or public. The default is `false`, i.e., by default, all datasets created by the harvester will be public.
+
+#### Examples of Plan4All settings
+```
+{
+  "datasets_per_job": 10,
+  "timeout": 60,
+  "make_private": false
+}
+```
+### <a name="running-plan4all"></a>Running a Plan4All harvester
+1. Add `plan4all` to the list of plugins in your .ini file.
+2. Create a new harvester via the harvester interface.
+3. Select `Plan4All Harvester` from the list of harvesters.
+4. Add a config as described above.
+5. Select `Manual` from the frequency options. 
+6. Run the harvester. It will programmatically create datasets.
+
+
+## <a name="harvesting-modis"></a>Harvesting MODIS products
+The MODIS harvester harvests products from the following collections, which can be divided by time resolution:
+
+- 8 days:
+    1. MOD17A2H (currently 249848 datasets, starting at 2000-02-18T00:00:00Z)
+    2. MYD15A2H (currently 218456 datasets, starting at 2002-07-04T00:00:00Z)
+    3. MOD15A2H (currently 248647 datasets, starting at 2000-02-18T00:00:00Z)
+    4. MOD14A2  (currently 255161 datasets, starting at 2000-02-18T00:00:00Z)
+    5. MYD14A2  (currently 223424 datasets, starting at 2002-07-04T00:00:00Z)
+- 16 days:
+    1. MYD13Q1  (currently 110551 datasets, starting at 2002-07-04T00:00:00Z)
+    2. MYD13A1  (currently 110551 datasets, starting at 2002-07-04T00:00:00Z)
+    3. MYD13A2  (currently 110540 datasets, starting at 2002-07-04T00:00:00Z)
+    4. MOD13Q1  (currently 126268 datasets, starting at 2000-02-18T00:00:00Z)
+    5. MOD13A1  (currently 126268 datasets, starting at 2000-02-18T00:00:00Z)
+    6. MOD13A2  (currently 126268 datasets, starting at 2000-02-18T00:00:00Z)
+- Yearly:
+    1. MOD17A3H (currently   4110 datasets, starting at 2000-12-26T00:00:00Z)
+
+All collections, with the exception of collection MOD17A3H, are updated on a weekly / biweekly basis. Collection MOD17A3H is the only collection that is static, where the last dataset refers to 2015-01-03. 
+
+Due to the fact that granule queries now require collection identifiers, each collection has to be harvested with different harvesters.
+
+### <a name="modis-settings"></a>MODIS Settings
+The MODIS harvester has configuration has:
+1. `collection` (required) to define the collection that will be collected. It can be `MYD13Q1`, `MYD13A1`, `MYD13A2`, `MOD13Q1`, `MOD13A1`, `MOD13A2`, `MOD17A3H`, `MOD17A2H`, `MYD15A2H`, `MOD15A2H`, `MOD14A2`, `MYD14A2`.
+2. `start_date` (required) determines the date on which the harvesting begins. It must be in the format `YYYY-MM-DDTHH:MM:SSZ`. If you want to harvest from the earliest product onwards, use the starting dates presented in "Harvesting MODIS products"
+3. `timeout` (optional, integer, defaults to 10) determines the number of seconds to wait before timing out a request.
+4. `make_private` (optional) determines whether the datasets created by the harvester will be private or public. The default is `false`, i.e., by default, all datasets created by the harvester will be public.
+
+#### Examples of MODIS settings
+```
+{
+  "collection": "MYD13Q1",
+  "start_date": "2002-07-04T00:00:00Z",
+  "make_private": false
+}
+```
+
+
+### <a name="running-modis"></a>Running a MODIS harvester
+1. Add `modis` to the list of plugins in your .ini file.
+2. Create a new harvester via the harvester interface.
+3. Select `MODIS Harvester` from the list of harvesters.
+4. Add a config as described above.
+5. Select `Manual` from the freuqency options. 
+
+## <a name="harvesting-deimos2"></a>Harvesting DEIMOS-2 products
+The DEIMOS-2 harvester harvests products from the following collections:
+
+- DEIMOS-2 PM4 Level-1B 
+- DEIMOS-2 PSH Level-1B 
+- DEIMOS-2 PSH Level-1C 
+
+The number of products is static, and thus the harvaster only needs to be run once.
+
+### <a name="deimos2-settings"></a>DEIMOS-2 Settings
+The DEIMOS-2 harvester has configuration as:
+1. `harvester_type` determines the ftp domain, as well as the directories in said domain.
+2. `username` and `password` are your username and password for accessing the DEIMOS-2 products at the source for the harvester type you selected above.
+3. `timeout` (optional, integer, defaults to 60) determines the number of seconds to wait before timing out a request.
+4. `make_private` (optional) determines whether the datasets created by the harvester will be private or public. The default is `false`, i.e., by default, all datasets created by the harvester will be public.
+
+#### Examples of DEIMOS-2 settings
+```
+{
+"harvester_type":"deimos_imaging",
+"username":"your_username",
+"password":"your_password",
+"make_private":false
+}
+```
+
+### <a name="running-deimos2"></a>Running a DEIMOS-2 harvester
+1. Add `deimosimg` to the list of plugins in your .ini file.
+2. Create a new harvester via the harvester interface.
+3. Select `DEIMOS Imaging` from the list of harvesters.
+4. Add a config as described above.
+5. Select `Manual` from the frequency options. 
+6. Run the harvester. It will programmatically create datasets.
+
+## <a name="harvesting-ebasnilu"></a>Harvesting EBAS-NILU products
+The EBAS-NILU harvester collects products from the following collections:
+- EBAS NILU Data Archive
+
+### <a name="ebasnilu-settings"></a>EBAS-NILU Settings
+The EBAS-NILU harvester has configuration as:
+1. `start_date`: (optional, datetime string, if the harvester is new, or from the ingestion date of the most recently harvested product if it has been run before) determines the start of the date range for harvester queries. Example: "start_date": "2018-01-16T10:30:00Z". Note that the entire datetime string is required. `2018-01-01` is not valid. 
+2. `end_date`: (optional, datetime string, default is "NOW") determines the end of the date range for harvester queries. Example: "end_date": "2018-01-16T11:00:00Z". Note that the entire datetime string is required. `2018-01-01` is not valid.
+4. `timeout`: (optional, integer, defaults to 10) determines the number of seconds to wait before timing out a request.
+5. `make_private` (optional) determines whether the datasets created by the harvester will be private or public. The default is `false`, i.e., by default, all datasets created by the harvester will be public.
+
+#### Examples of EBAS-NILU settings
+```
+{
+"start_date": "2017-01-01T00:00:00Z",
+"timeout": 4,
+"make_private": false
+}
+```
+
+### <a name="running-ebasnilu"></a>Running a EBAS-NILU harvester
+1. Add `ebas` to the list of plugins in your .ini file.
+2. Create a new harvester via the harvester interface.
+3. Select `EBAS Harvester` from the list of harvesters.
+4. Add a config as described above.
+5. Select `Manual` from the frequency options. 
+
+## <a name="harvesting-simocean"></a>Harvesting SIMOcean products
+The SIMOcean harvester harvests products from the following collections:
+
+- SIMOcean Mean Sea Level Pressure Forecast 
+- SIMOcean Port Sea State Forecast From SMARTWAVE
+- SIMOcean Tidal Data
+- SIMOcean Sea Surface Temperature Forecast
+- SIMOcean Data From Multiparametric Buoys
+- SIMOcean Surface Wind Forecast From AROME
+- SIMOcean Cloudiness Forecast From AROME
+- SIMOcean Air Surface Temperature Forecast
+- SIMOcean Surface Currents From HF Radar
+- SIMOcean Sea Wave Period Forecast
+- SIMOcean Nearshore Sea State Forecast From SWAN
+- SIMOcean Sea Surface Wind Forecast
+- SIMOcean Precipitation Forecast From AROME
+- SIMOcean Significant Wave Height Forecast
+- SIMOcean Sea Wave Direction Forecast
+- SIMOcean Surface Forecast From HYCOM 
+
+New products of these collections are created and published daily.
+
+### <a name="simocean-settings"></a>SIMOcean Settings
+The SIMOcean harvester has configuration as:
+1. `start_date`: (required, datetime string, if the harvester is new, or from the ingestion date of the most recently harvested product if it has been run before) determines the start of the date range for harvester queries. Example: "start_date": "2018-01-16T10:30:00Z". Note that the entire datetime string is required. `2018-01-01` is not valid. 
+2. `end_date`: (optional, datetime string, default is "NOW") determines the end of the date range for harvester queries. Example: "end_date": "2018-01-16T11:00:00Z". Note that the entire datetime string is required. `2018-01-01` is not valid.
+3. `datasets_per_job`: (optional, integer, defaults to 100) determines the maximum number of products that will be harvested during each job. 
+4. `timeout`: (optional, integer, defaults to 10) determines the number of seconds to wait before timing out a request.
+5. `make_private` (optional) determines whether the datasets created by the harvester will be private or public. The default is `false`, i.e., by default, all datasets created by the harvester will be public.
+
+#### Examples of SIMOcean settings
+```
+{
+"start_date": "2017-01-01T00:00:00Z",
+"timeout": 4,
+"datasets_per_job": 100,
+"make_private": false
+}
+```
+
+### <a name="running-simocean"></a>Running a SIMOcean harvester
+1. Add `simocean` to the list of plugins in your .ini file.
+2. Create a new harvester via the harvester interface.
+3. Select `SIMOcean Harvester` from the list of harvesters.
+4. Add a config as described above.
+5. Select `Manual` from the frequency options. 
+
+## <a name="harvesting-epos"></a>Harvesting EPOS-Sat products
+The EPOS-Sat harvester harvests products from the following collections:
+
+- Unwrapped Interferogram 
+- Wrapped Interferogram  
+- LOS Displacement Timeseries
+- Spatial Coherence 
+- Interferogram APS Global Model
+- Map of LOS Vector
+
+The number of products is low, due to the fact that currently there are only sample data. A large quantity of data is expected to start being injected in September of 2019. 
+
+### <a name="epos-settings"></a>EPOS-Sat Settings
+The EPOS-Sat harvester has configuration as:
+1. `collection` (required) to define the collection that will be collected. It can be `inu`, `inw`, `dts`, `coh`, `aps`, `cosneu`.
+2. `start_date` (required) determines the date on which the harvesting begins. It must be in the format `YYYY-MM-DDTHH:MM:SSZ`. If you want to harvest from the earliest product onwards, use `2010-01-01T00:00:00Z`. 
+3. `end_date` (optional) determines the date on which the harvesting ends. It must be in the format `YYYY-MM-DDTHH:MM:SSZ`, it defaults into `TODAY`.
+4. `datasets_per_job` (optional, integer, defaults to 100) determines the maximum number of products that will be harvested during each job.
+5. `timeout` (optional, integer, defaults to 4) determines the number of seconds to wait before timing out a request.
+6. `make_private` (optional) determines whether the datasets created by the harvester will be private or public. The default is `false`, i.e., by default, all datasets created by the harvester will be public.
+
+#### Examples of EPOS-Sat settings
+```
+{
+  "collection": "inw",
+  "start_date": "2010-01-16T10:30:00Z",
+  "timeout": 4,
+  "make_private":  false
+}
+```
+
+### <a name="running-epos"></a>Running a EPOS-Sat harvester
+1. Add `epos` to the list of plugins in your .ini file.
+2. Create a new harvester via the harvester interface.
+3. Select `EPOS Sat Harvester` from the list of harvesters.
+4. Add a config as described above.
+5. Select `Manual` from the frequency options. 
+6. Run the harvester. It will programmatically create datasets.
+
+## <a name="harvesting-foodsecurity"></a>Harvesting Food Security pilot outputs
+The Food Security harvester harvests the VITO pilot outputs for the following collections:
+
+    1. NextGEOSS Sentinel-2 FAPAR
+    2. NextGEOSS Sentinel-2 FCOVER
+    3. NextGEOSS Sentinel-2 LAI
+    4. NextGEOSS Sentinel-2 NDVI
+
+The date of the pilot outputs can be different of the current date since the pilot processes old Sentinel Data.
+
+### <a name="foodsecurity-settings"></a>Food Security Settings
+The Food Security harvester has configuration has:
+1. `start_date` (required) determines the date on which the harvesting begins. It must be in the format `YYYY-MM-DD`. If you want to harvest from the earliest product onwards, use `2017-01-01`
+2. `end_date` (optional) determines the end date for the harvester job. It must be a string describing a date in the format `YYYY-MM-DD`, like 2018-01-31. The end_date is not mandatory and if not included the harvester will run until catch up the current day. To limit the number of datasets per job each job will harvest a maximum of 2 days of data.
+3. `username` and `password` are your username and password for accessing the PROBA-V products at the source.
+4. `collection` (required) to define the collection that will be collected. It can be `FAPAR`, `FCOVER`, `LAI` or `NDVI`.
+5. `make_private` (optional) determines whether the datasets created by the harvester will be private or public. The default is `false`, i.e., by default, all datasets created by the harvester will be public.
+
+#### Examples of Food Security settings
+```
+{
+"start_date":"2017-01-01",
+"collection":"FAPAR",
+"username":"nextgeoss",
+"password":"nextgeoss",
+}
+
+## <a name="harvesting-gdacs"></a>Harvesting GDACS Average Flood products
+The GDACS harvester harvests products from the following collections:
+- AVERAGE_FLOOD_SIGNAL (from 1997/12 to present - 1 dataset per day)
+- AVERAGE_FLOOD_MAGNITUDE (from 1997/12 to present - 1 dataset per day)
+
+### <a name="gdacs-settings"></a>GDACS Settings
+The GDACS harvester has configuration as:
+1. `data_type` determines which collection will be harvested. It must be one of the following two strings: `signal` or `magnitude`.
+
+2. `request_check` determines if the URL of each harvested dataset will be tested. It must be one of the following two strings: `yes` or `no`.
+
+3. `start_date` determines the start date for the harvester job. It must be the string `YESTERDAY` or a string describing a date in the format `YYYY-MM-DD`, like `1997-12-01`.
+
+4. `end_date` determines the end date for the harvester job. It must be the string `TODAY` or a string describing a date in the format `YYYY-MM-DD`, like `1997-12-01`. The end_date is not mandatory and if not included the harvester will run until catch up the current day.
+
+5. `timeout` determines how long the harvester will wait for a response from a server before cancelling the attempt. It must be a postive integer. Not mandatory.
+
+6. `make_private` is optional and defaults to `false`. If `true`, the datasets created by the harvester will be marked private. This setting is not retroactive. It only applies to datasets created by the harvester while the setting is `true`.
+
+#### Examples of GDACS settings
+```
+{
+"data_type":"signal",
+"request_check":"yes",
+"start_date":"1997-12-01",
+"make_private":false
+}
+
+or
+
+{
+"data_type":"magnitude",
+"request_check":"yes",
+"start_date":"1997-12-01",
+"make_private":false
+}
+```
+
+
+### <a name="running-foodsecurity"></a>Running a Food Security harvester
+1. Add `foodsecurity` to the list of plugins in your .ini file.
+2. Create a new harvester via the harvester interface.
+3. Select `Food Security Harvester` from the list of harvesters.
+4. Add a config as described above.
+5. Select `Manual` from the frequency options.
+6. Run the harvester. It will programmatically create datasets.
+
 
 ## <a name="develop"></a>Developing new harvesters
 ### <a name="basicworkflow"></a>The basic harvester workflow
@@ -330,4 +803,4 @@ Using the same structure, we can also add tests that verify that the metadata of
 ## <a name="logs"></a>Logs
 Both the ESA harvester and the iTag metadata harvester can optionally log the status codes and response times of the sources or services that they query. If you want to log the response times and status codes of requests to harvest sources and/or your iTag service, you must include `ckanext.nextgeossharvest.provider_log_dir=/path/to/your/logs` in your `.ini` file. The log entries will look like this: `INFO | esa_scihub   | 2018-03-08 14:17:04.474262 | 200 | 2.885231s` (the second field will always be 12 characters and will be padded if necessary).
 
-The data provider log file is called `dataproviders_info.log`. The iTag service provider log is called `itag_uptime.log`.
+The data provider log file is called `dataproviders_info.log`. The iTag service provider log is called `itag_uptime.log`

@@ -5,5 +5,6 @@ requests
 sqlalchemy
 shapely
 requests-ftp
+enum34
 python-dateutil
 monthdelta

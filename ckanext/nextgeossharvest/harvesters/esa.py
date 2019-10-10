@@ -143,7 +143,7 @@ class ESAHarvester(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
         else:
             skip_raw = ''
 
-        limit = self.source_config.get('datasets_per_job', 1000)
+        limit = self.source_config.get('datasets_per_job', 100)
 
         url_template = ('{base_url}/dhus/search?' +
                         'q=ingestiondate:{date_range}' +

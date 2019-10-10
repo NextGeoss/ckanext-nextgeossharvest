@@ -1,73 +1,73 @@
 # -*- coding: utf-8 -*-
 
-import logging
-import time
-from datetime import datetime
-
-import requests
-from requests.auth import HTTPBasicAuth
-from requests.exceptions import Timeout
-from bs4 import BeautifulSoup as Soup
-
 from ckan import model
-import ckan.logic as logic
-from ckan.lib.helpers import get_pkg_dict_extra
-from ckan.model import Session
 from ckan.model import Package
-
+from ckan.model import Session
+from ckanext.harvest.harvesters.base import HarvesterBase
 from ckanext.harvest.model import HarvestObject
 from ckanext.harvest.model import HarvestObjectExtra as HOExtra
-from ckanext.harvest.harvesters.base import HarvesterBase
+from datetime import datetime
+import logging
+import requests
+from requests.exceptions import Timeout
+import time
+import uuid
+
+from bs4 import BeautifulSoup as Soup
 
 
 log = logging.getLogger(__name__)
 
 
-class OpenSearchHarvester(HarvesterBase):
-    """Base class for harvesters harvesting from OpenSearch services."""
+class CSWSearchHarvester(HarvesterBase):
+    """Base class for harvesters harvesting from CSW services."""
 
-    def _get_entries_from_results(self, soup):
-        """Extract the entries from an OpenSearch response."""
+    def _get_entries_from_results(self, soup, restart_record, next_record):
+        """Extract the entries from an CSWSearch response."""
         entries = []
 
-        for entry in soup.find_all('entry'):
+        for entry in soup.find_all({'gmd:md_metadata'}):
             content = entry.encode()
             # The lowercase identifier will serve as the dataset's name,
             # so we need the lowercase version for the lookup in the next step.
-            identifier = entry.find(self.os_id_name, self.os_id_attr).text.lower()  # noqa: E501
-            if hasattr(self, 'os_id_mod'):
-                identifier = self.os_id_mod(identifier)
-            guid = entry.find(self.os_guid_name, self.os_guid_attr).text
-            if hasattr(self, 'os_guid_mod'):
-                guid = self.os_guid_mod(guid)
-            restart_date = entry.find(self.os_restart_date_name, self.os_restart_date_attr).text  # noqa: E501
-            if hasattr(self, 'os_restart_date_mod'):
-                restart_date = self.os_restart_date_mod(restart_date)
-            entries.append({'content': content, 'identifier': identifier,
-                            'guid': guid, 'restart_date': restart_date})
+
+            identifier = entry.find(['gmd:fileidentifier', 'gco:characterstring']).text.lower()   # noqa: E501
+            identifier = identifier.replace('.', '_')
+
+            guid = unicode(uuid.uuid4())
+
+            if identifier.startswith('olu'):
+                entries.append({'content': content, 'identifier': identifier,
+                                'guid': guid, 'restart_record': restart_record})  # noqa: E501
+
+        # If this job is interrupted mid-way, then the new job will re-harvest
+        # the collections of this job (restart_record is the initial record)
+        # If the job is finished (gone through all the entries), then the new
+        # job will harvest new collections (restart_record is the next record)
+        entries[-1]['restart_record'] = next_record
 
         return entries
 
-    def _get_next_url(self, soup):
+    def _get_next_url(self, harvest_url, records_returned, next_record, limit):
         """
         Get the next URL.
 
         Return None of there is none next URL (end of results).
         """
-        next_url = soup.find('link', rel='next')
-        if next_url:
-            return next_url['href']
+        if next_record is not '0' and eval(records_returned) == limit:
+            splitted_url = harvest_url.split('StartPosition')
+            next_url = splitted_url[0] + 'StartPosition=' + next_record
+            return next_url
         else:
             return None
 
-    def _crawl_results(self, harvest_url, limit=100, timeout=5, username=None, password=None, provider=None):  # noqa: E501
+    def _crawl_results(self, harvest_url, limit=100, timeout=5):  # noqa: E501
         """
         Iterate through the results, create harvest objects,
         and return the ids.
         """
         ids = []
-        new_counter = 0
-        update_counter = 0
+
         while len(ids) < limit and harvest_url:
             # We'll limit ourselves to one request per second
             start_request = time.time()
@@ -76,9 +76,7 @@ class OpenSearchHarvester(HarvesterBase):
             timestamp = str(datetime.utcnow())
             log_message = '{:<12} | {} | {} | {}s'
             try:
-                r = requests.get(harvest_url,
-                                 auth=HTTPBasicAuth(username, password),
-                                 verify=False, timeout=timeout)
+                r = requests.get(harvest_url, timeout=timeout)
             except Timeout as e:
                 self._save_gather_error('Request timed out: {}'.format(e), self.job)  # noqa: E501
                 status_code = 408
@@ -101,17 +99,27 @@ class OpenSearchHarvester(HarvesterBase):
 
             soup = Soup(r.content, 'lxml')
 
+            next_url = soup.find('csw:searchresults', elementset="summary")
+            records_returned = next_url['numberofrecordsreturned']
+            next_record = next_url['nextrecord']
+            number_records_matched = next_url['numberofrecordsmatched']
+
+            if next_record is not '0':
+                current_record = str(eval(next_record) - eval(records_returned))  # noqa: E501
+            else:
+                current_record = str(eval(number_records_matched) - eval(records_returned))  # noqa: E501
+
             # Get the URL for the next loop, or None to break the loop
-            harvest_url = self._get_next_url(soup)
+            # Only works if StartPosition is last URL parameter
+            harvest_url = self._get_next_url(harvest_url, records_returned, next_record, limit)  # noqa: E501
 
             # Get the entries from the results
-            entries = self._get_entries_from_results(soup)
+            entries = self._get_entries_from_results(soup, current_record, next_record)  # noqa: E501
 
             # Create a harvest object for each entry
             for entry in entries:
                 entry_guid = entry['guid']
                 entry_name = entry['identifier']
-                entry_restart_date = entry['restart_date']
 
                 package = Session.query(Package) \
                     .filter(Package.name == entry_name).first()
@@ -119,11 +127,6 @@ class OpenSearchHarvester(HarvesterBase):
                 if package:
                     # Meaning we've previously harvested this,
                     # but we may want to reharvest it now.
-                    # We need package_show to ensure that all the conversions
-                    # are carried out.
-                    context = {"user": "test_user", "ignore_auth": True,
-                               "model": model, "session": Session}
-                    pkg_dict = logic.get_action('package_show')(context, {"id": package.name})  # noqa: E501
                     previous_obj = model.Session.query(HarvestObject) \
                         .filter(HarvestObject.guid == entry_guid) \
                         .filter(HarvestObject.current == True) \
@@ -132,25 +135,14 @@ class OpenSearchHarvester(HarvesterBase):
                         previous_obj.current = False
                         previous_obj.save()
 
-                    if self.update_all:
-                        log.debug('{} already exists and will be updated.'.format(entry_name))  # noqa: E501
-                        status = 'change'
-                        update_counter += 1
-                    # E.g., a Sentinel dataset exists,
-                    # but doesn't have a NOA resource yet.
-                    elif self.flagged_extra and not get_pkg_dict_extra(pkg_dict, self.flagged_extra):  # noqa: E501
-                        log.debug('{} already exists and will be extended.'.format(entry_name))  # noqa: E501
-                        status = 'change'
-                        update_counter += 1
-                    else:
-                        log.debug('{} will not be updated.'.format(entry_name))  # noqa: E501
-                        status = 'unchanged'
+                    log.debug('{} will not be updated.'.format(entry_name))  # noqa: E501
+                    status = 'unchanged'
 
                     obj = HarvestObject(guid=entry_guid, job=self.job,
                                         extras=[HOExtra(key='status',
                                                 value=status),
-                                                HOExtra(key='restart_date',
-                                                value=entry_restart_date)])
+                                                HOExtra(key='restart_record',
+                                                value=entry['restart_record'])])  # noqa: E501
                     obj.content = entry['content']
                     obj.package = package
                     obj.save()
@@ -161,9 +153,8 @@ class OpenSearchHarvester(HarvesterBase):
                     obj = HarvestObject(guid=entry_guid, job=self.job,
                                         extras=[HOExtra(key='status',
                                                 value='new'),
-                                                HOExtra(key='restart_date',
-                                                value=entry_restart_date)])
-                    new_counter += 1
+                                                HOExtra(key='restart_record',
+                                                value=entry['restart_record'])])  # noqa: E501
                     obj.content = entry['content']
                     obj.package = None
                     obj.save()
@@ -174,9 +165,4 @@ class OpenSearchHarvester(HarvesterBase):
             if request_time < 1.0:
                 time.sleep(1 - request_time)
 
-        harvester_msg = '{:<12} | {} | jobID:{} | {} | {}'
-        if hasattr(self, 'harvester_logger'):
-            timestamp = str(datetime.utcnow())
-            self.harvester_logger.info(harvester_msg.format(self.provider,
-                                       timestamp, self.job.id, new_counter, update_counter))  # noqa: E128, E501
         return ids
