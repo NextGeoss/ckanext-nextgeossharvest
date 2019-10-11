@@ -88,7 +88,7 @@ class ESAHarvester(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
         # the queries
         last_object = Session.query(HarvestObject). \
             filter(HarvestObject.harvest_source_id == self.job.source_id,
-                   HarvestObject.state == "COMPLETE"). \
+                   HarvestObject.import_finished != None). \
             order_by(desc(HarvestObject.import_finished)).limit(1)  # noqa: E711, E501
         if last_object:
             try:
