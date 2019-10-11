@@ -127,7 +127,7 @@ class GOME2Harvester(GOME2Base,
     def get_last_harvesting_date(self):
         last_object = Session.query(HarvestObject).filter(
             HarvestObject.harvest_source_id == self.job.source_id,
-            HarvestObject.state == "COMPLETE").\
+            HarvestObject.import_finished is not None).\
             order_by(desc(HarvestObject.import_finished)).\
             limit(1).first()
         if last_object is not None:
