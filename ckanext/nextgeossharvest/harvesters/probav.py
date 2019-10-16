@@ -261,6 +261,8 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         auth = (self.source_config['username'],
                 self.source_config['password'])
 
+        timeout = self.source_config.get('timeout', 10)
+
         collection = self.source_config['collection']
 
         last_product_date = (
@@ -278,12 +280,14 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
                                                  start_date, end_date)
         log.info('Harvesting {}'.format(harvest_url))
         if ('L2A' in collection) or ('P_V001' in collection):
-            for harvest_object in self._gather_L2A_L1C(harvest_url):
+            for harvest_object in self._gather_L2A_L1C(harvest_url,
+                                                      timeout=timeout):
                 _id = self._gather_entry(harvest_object)
                 if _id:
                     ids.append(_id)
         else:
-            for harvest_object in self._gather_L3(harvest_url, auth=auth):
+            for harvest_object in self._gather_L3(harvest_url, auth=auth,
+                                                 timeout=timeout):
                 _id = self._gather_entry(harvest_object)
                 if _id:
                     ids.append(_id)
@@ -523,9 +527,9 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         response = self._get_url(url, auth=auth, **kwargs)
         return BeautifulSoup(response.text, 'lxml-xml')
 
-    def _gather_L2A_L1C(self, open_search_url, auth=None):
+    def _gather_L2A_L1C(self, open_search_url, auth=None, timeout=10):
         for open_search_page in self._open_search_pages_from(
-                open_search_url, auth=auth):
+                open_search_url, auth=auth, timeout=timeout):
             for open_search_entry in self._parse_open_search_entries(
                     open_search_page):
                 guid = self._parse_identifier_element(open_search_entry)
@@ -533,9 +537,9 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
                 content = open_search_entry.encode()
                 yield self._create_harvest_object(guid, restart_date, content)  # noqa: E501
 
-    def _gather_L3(self, open_search_url, auth=None):
+    def _gather_L3(self, open_search_url, auth=None, timeout=10):
         for open_search_page in self._open_search_pages_from(
-                open_search_url, auth=auth):
+                open_search_url, auth=auth, timeout=timeout):
             for open_search_entry in self._parse_open_search_entries(
                     open_search_page):
                 metalink_url = self._parse_metalink_url(open_search_entry)

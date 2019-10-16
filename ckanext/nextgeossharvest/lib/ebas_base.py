@@ -65,6 +65,7 @@ class EBASbaseHarvester(HarvesterBase):
                 candidate_name = \
                     ideal_name[:PACKAGE_NAME_MAX_LENGTH-len(str(counter))-1] \
                     + '_' + str(counter)
+
                 if candidate_name not in taken:
                     return candidate_name
                 counter = counter + 1

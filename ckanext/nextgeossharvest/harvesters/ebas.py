@@ -28,6 +28,7 @@ from ckanext.nextgeossharvest.lib.nextgeoss_base import NextGEOSSHarvester
 from ckanext.harvest.model import HarvestObject
 from ckanext.harvest.model import HarvestObjectExtra as HOExtra
 from ckanext.harvest.harvesters.base import HarvesterBase
+
 log = logging.getLogger(__name__)
 
 
@@ -332,6 +333,7 @@ class EBASHarvester(EBASbaseHarvester, NextGEOSSHarvester, HarvesterBase):
 
             # Get the URL for the next loop, or None to break the loop
             log.debug(harvest_url)
+
             harvest_url = self._get_next_url(harvest_url, soup)
 
             # Get the entries from the results

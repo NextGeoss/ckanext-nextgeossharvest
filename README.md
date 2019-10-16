@@ -36,6 +36,9 @@ This extension contains harvester plugins for harvesting from sources used by Ne
 10. [Harvesting DEIMOS-2 products](#harvesting-deimos2)
     1. [DEIMOS-2 Settings](#deimos2-settings)
     2. [Running a DEIMOS-2 harvester](#running-deimos2)
+11. [Harvesting EBAS-NILU products](#harvesting-ebasnilu)
+    1. [EBAS-NILU Settings](#ebasnilu-settings)
+    2. [Running a EBAS-NILU harvester](#running-ebasnilu)
 11. [Harvesting SIMOcean products](#harvesting-simocean)
     1. [SIMOcean Settings](#simocean-settings)
     2. [Running a SIMOcean harvester](#running-simocean)
@@ -107,6 +110,8 @@ The repository contains four plugins:
 ## <a name="harvesting"></a>Harvesting Sentinel products
 To harvest Sentinel products, activate the `esa` plugin, which you will use to create a harvester that harvests from SciHub, NOA or CODE-DE. To harvest from more than one of those sources, just create more than one harvester and point it at a different source.
 
+Note: The [configuration object](#generalsettings) is _required_ for all of these harvesters.
+
 ### <a name="scihub"></a>Harvesting from SciHub
 Create a new harvest source and select `ESA Sentinel Harvester New`. The URL does not matter—the harvester only harvests from SciHub, NOA, or CODE-DE, depending on the configuration below.
 
@@ -151,10 +156,10 @@ Example configuration with all variables present:
   "update_all": false,
   "start_date": "2018-01-16T10:30:00.000Z",
   "end_date": "2018-01-16T11:00:00.000Z",
-  "datasets_per_job": 1000,
+  "datasets_per_job": 100,
   "timeout": 4,
   "skip_raw": true,
-  "make_private: false"
+  "make_private": false
 }
 ```
 Note: you must place your username and password in the `.ini` file as described above.
@@ -569,6 +574,33 @@ The DEIMOS-2 harvester has configuration as:
 5. Select `Manual` from the frequency options. 
 6. Run the harvester. It will programmatically create datasets.
 
+## <a name="harvesting-ebasnilu"></a>Harvesting EBAS-NILU products
+The EBAS-NILU harvester collects products from the following collections:
+- EBAS NILU Data Archive
+
+### <a name="ebasnilu-settings"></a>EBAS-NILU Settings
+The EBAS-NILU harvester has configuration as:
+1. `start_date`: (optional, datetime string, if the harvester is new, or from the ingestion date of the most recently harvested product if it has been run before) determines the start of the date range for harvester queries. Example: "start_date": "2018-01-16T10:30:00Z". Note that the entire datetime string is required. `2018-01-01` is not valid. 
+2. `end_date`: (optional, datetime string, default is "NOW") determines the end of the date range for harvester queries. Example: "end_date": "2018-01-16T11:00:00Z". Note that the entire datetime string is required. `2018-01-01` is not valid.
+4. `timeout`: (optional, integer, defaults to 10) determines the number of seconds to wait before timing out a request.
+5. `make_private` (optional) determines whether the datasets created by the harvester will be private or public. The default is `false`, i.e., by default, all datasets created by the harvester will be public.
+
+#### Examples of EBAS-NILU settings
+```
+{
+"start_date": "2017-01-01T00:00:00Z",
+"timeout": 4,
+"make_private": false
+}
+```
+
+### <a name="running-ebasnilu"></a>Running a EBAS-NILU harvester
+1. Add `ebas` to the list of plugins in your .ini file.
+2. Create a new harvester via the harvester interface.
+3. Select `EBAS Harvester` from the list of harvesters.
+4. Add a config as described above.
+5. Select `Manual` from the frequency options. 
+
 ## <a name="harvesting-simocean"></a>Harvesting SIMOcean products
 The SIMOcean harvester harvests products from the following collections:
 
@@ -682,9 +714,6 @@ The Food Security harvester has configuration has:
 "password":"nextgeoss",
 }
 ```
-
-
-
 
 ## <a name="harvesting-vitocgss1"></a>Harvesting VITO CGS S1 products
 The VITO CGS S1 harvester collects the products of an external VITO project for the following collections:
@@ -816,5 +845,3 @@ Using the same structure, we can also add tests that verify that the metadata of
 Both the ESA harvester and the iTag metadata harvester can optionally log the status codes and response times of the sources or services that they query. If you want to log the response times and status codes of requests to harvest sources and/or your iTag service, you must include `ckanext.nextgeossharvest.provider_log_dir=/path/to/your/logs` in your `.ini` file. The log entries will look like this: `INFO | esa_scihub   | 2018-03-08 14:17:04.474262 | 200 | 2.885231s` (the second field will always be 12 characters and will be padded if necessary).
 
 The data provider log file is called `dataproviders_info.log`. The iTag service provider log is called `itag_uptime.log`
-
-
