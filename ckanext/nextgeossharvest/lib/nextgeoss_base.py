@@ -142,6 +142,8 @@ class NextGEOSSHarvester(HarvesterBase):
         package_dict['title'] = parsed_content['title']
         package_dict['notes'] = parsed_content['notes']
         package_dict['tags'] = parsed_content['tags']
+        if 'groups' in parsed_content:
+            package_dict['groups'] = parsed_content['groups']
         package_dict['extras'] = self._get_extras(parsed_content)
         package_dict['resources'] = self._get_resources(parsed_content)
         package_dict['private'] = self.source_config.get('make_private', False)
@@ -266,7 +268,7 @@ class NextGEOSSHarvester(HarvesterBase):
 
     def _get_extras(self, parsed_content):
         """Return a list of CKAN extras."""
-        skip = {'id', 'title', 'tags', 'status', 'notes', 'name', 'resource'}
+        skip = {'id', 'title', 'tags', 'status', 'notes', 'name', 'resource', 'groups'}  # noqa: E501
         extras_tmp = [{'key': key, 'value': value}
                       for key, value in parsed_content.items()
                       if key not in skip]

@@ -137,6 +137,9 @@ class FoodSecurityHarvester(OpenSearchHarvester, NextGEOSSHarvester):
                  "FAPAR", "FCOVER", "LAI" or "NDVI"''')
             if type(config_obj.get('make_private', False)) != bool:
                 raise ValueError('make_private must be true or false')
+            if 'groups' in config_obj:
+                if not isinstance(config_obj['groups'], list):
+                    raise ValueError('groups must be like [{"name":"group-id"}]')  # noqa E501
         except ValueError as e:
             raise e
 
@@ -301,6 +304,9 @@ class FoodSecurityHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         parsed_content['filename'] = self._parse_filename(identifier)
         parsed_content['spatial'] = json.dumps(
             self._bbox_to_geojson(self._parse_bbox(content)))
+        if 'groups' in self.source_config:
+            parsed_content['groups'] = self.source_config['groups']
+        parsed_content['is_output'] = True
         parsed_content['metadata_download'] = self._get_metadata_url(content)  # noqa: E501
         parsed_content['product_download'] = self._get_product_url(content)  # noqa: E501
         parsed_content['thumbnail_download'] = self._get_thumbnail_url(content)  # noqa: E501
