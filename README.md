@@ -108,6 +108,8 @@ The repository contains four plugins:
 ## <a name="harvesting"></a>Harvesting Sentinel products
 To harvest Sentinel products, activate the `esa` plugin, which you will use to create a harvester that harvests from SciHub, NOA or CODE-DE. To harvest from more than one of those sources, just create more than one harvester and point it at a different source.
 
+Note: The [configuration object](#generalsettings) is _required_ for all of these harvesters.
+
 ### <a name="scihub"></a>Harvesting from SciHub
 Create a new harvest source and select `ESA Sentinel Harvester New`. The URL does not matter—the harvester only harvests from SciHub, NOA, or CODE-DE, depending on the configuration below.
 
@@ -152,10 +154,10 @@ Example configuration with all variables present:
   "update_all": false,
   "start_date": "2018-01-16T10:30:00.000Z",
   "end_date": "2018-01-16T11:00:00.000Z",
-  "datasets_per_job": 1000,
+  "datasets_per_job": 100,
   "timeout": 4,
   "skip_raw": true,
-  "make_private: false"
+  "make_private": false
 }
 ```
 Note: you must place your username and password in the `.ini` file as described above.
