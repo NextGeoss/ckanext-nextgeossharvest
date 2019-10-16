@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import ast
 import json
 import logging
 import os
@@ -44,6 +45,35 @@ class NextGEOSSHarvester(HarvesterBase):
             if extra.key == key:
                 return extra.value
         return default
+
+    def _get_package_extra(self, package_dict, flagged_extra, default=None):
+        """
+        Helper method for retrieving the value from a package's extras list.
+        """
+        extras = self.convert_string_extras(package_dict['extras'])
+
+        if "dataset_extra" in extras:
+            extras = ast.literal_eval(extras["dataset_extra"])
+
+        if type(extras) == list:
+            for extra in extras:
+                if extra["key"] == flagged_extra:
+                    return extra["value"]
+        elif type(extras) == dict:
+            value = extras.get(flagged_extra)
+            if value:
+                return value
+
+        return default
+
+    def convert_string_extras(self, extras_list):
+        """Convert extras stored as a string back into a normal extras list."""
+        try:
+            extras = ast.literal_eval(extras_list[0]["value"])
+            assert type(extras) == list
+            return extras
+        except (Exception, AssertionError):
+            return extras_list
 
     def _set_source_config(self, config_str):
         '''
@@ -212,13 +242,19 @@ class NextGEOSSHarvester(HarvesterBase):
             return None
 
         coords_type = coords.type.upper()
-        if coords_type != 'POLYGON':
+        if coords_type == 'MULTIPOLYGON':
+            c = coords.geoms[0].exterior.coords
+            c_list = list(c[0])
+        elif coords_type == 'POLYGON':
+            c = coords.exterior.coords
+            c_list = list(c[0])
+        else:
             return None
 
         # Remove double coordinates -- they are not valid GeoJSON and Solr
         # will reject them.
-        coords_list = [list(coords.exterior.coords[0])]
-        for i in coords.exterior.coords[1:]:
+        coords_list = [c_list]
+        for i in c[1:]:
             new_coord = list(i)
             if new_coord != coords_list[-1]:
                 coords_list.append(new_coord)
@@ -280,6 +316,28 @@ class NextGEOSSHarvester(HarvesterBase):
             handler = logging.StreamHandler()
             handler.setFormatter(logging.Formatter('%(levelname)s | %(message)s'))  # noqa: E501
             logger = logging.getLogger('provider_logger')
+            logger.setLevel(logging.INFO)
+            logger.addHandler(handler)
+
+        return logger
+
+    # New function added to generate logs about the number of datasets
+    # harvested by job for each data source
+    def make_harvester_logger(self, filename='dataconnectors_info.log'):
+        """Create a logger just for datasets harvested."""
+        log_dir = config.get('ckanext.nextgeossharvest.provider_log_dir')
+        if log_dir:
+            if not os.path.exists(log_dir):
+                os.makedirs(log_dir)
+            handler = logging.FileHandler('{}/{}'.format(log_dir, filename))
+            handler.setFormatter(logging.Formatter('%(levelname)s | %(message)s'))  # noqa: E501
+            logger = logging.getLogger('harvester_logger')
+            logger.setLevel(logging.INFO)
+            logger.addHandler(handler)
+        else:
+            handler = logging.StreamHandler()
+            handler.setFormatter(logging.Formatter('%(levelname)s | %(message)s'))  # noqa: E501
+            logger = logging.getLogger('harvester_logger')
             logger.setLevel(logging.INFO)
             logger.addHandler(handler)
 
