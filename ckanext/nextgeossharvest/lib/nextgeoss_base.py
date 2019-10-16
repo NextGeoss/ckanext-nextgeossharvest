@@ -242,13 +242,19 @@ class NextGEOSSHarvester(HarvesterBase):
             return None
 
         coords_type = coords.type.upper()
-        if coords_type != 'POLYGON':
+        if coords_type == 'MULTIPOLYGON':
+            c = coords.geoms[0].exterior.coords
+            c_list = list(c[0])
+        elif coords_type == 'POLYGON':
+            c = coords.exterior.coords
+            c_list = list(c[0])
+        else:
             return None
 
         # Remove double coordinates -- they are not valid GeoJSON and Solr
         # will reject them.
-        coords_list = [list(coords.exterior.coords[0])]
-        for i in coords.exterior.coords[1:]:
+        coords_list = [c_list]
+        for i in c[1:]:
             new_coord = list(i)
             if new_coord != coords_list[-1]:
                 coords_list.append(new_coord)
