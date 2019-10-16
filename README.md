@@ -57,19 +57,22 @@ This extension contains harvester plugins for harvesting from sources used by Ne
 16. [Harvesting Food Security pilot outputs](#harvesting-foodsecurity)
     1. [Food Security Settings](#foodsecurity-settings)
     2. [Running a Food Security harvester](#running-foodsecurity)
-17. [Developing new harvesters](#develop)
+17. [Harvesting VITO CGS S1 products](#harvesting-vitocgss1)
+    1. [VITO CGS S1 Settings](#vitocgss1-settings)
+    2. [Running a VITO CGS S1 harvester](#running-vitocgss1)
+18. [Developing new harvesters](#develop)
     1. [The basic harvester workflow](#basicworkflow)
         1. [gather_stage](#gather_stage)
         2. [fetch_stage](#fetch_stage)
         3. [import_stage](#import_stage)
     2. [Example of an OpenSearch-based harvester](#opensearchexample)
-18. [iTag](#itag)
+19. [iTag](#itag)
     1. [How ITagEnricher works](#itagprocess)
     2. [Setting up ITagEnricher](#setupitag)
     3. [Handling iTag errors](#handlingitagerrors)
-19. [Testing testing testing](#tests)
-14. [Suggested cron jobs](#cron)
-15. [Logs](#logs)
+20. [Testing testing testing](#tests)
+21. [Suggested cron jobs](#cron)
+22. [Logs](#logs)
     1. [How ITagEnricher works](#itagprocess)
     2. [Setting up ITagEnricher](#setupitag)
     3. [Handling iTag errors](#handlingitagerrors)
@@ -712,13 +715,43 @@ The Food Security harvester has configuration has:
 }
 ```
 
-### <a name="running-foodsecurity"></a>Running a Food Security harvester
-1. Add `foodsecurity` to the list of plugins in your .ini file.
+## <a name="harvesting-vitocgss1"></a>Harvesting VITO CGS S1 products
+The VITO CGS S1 harvester collects the products of an external VITO project for the following collections:
+
+    1. VITO CGS S1
+    2. CGS S1 GRD L1
+    3. CGS S1 GRD SIGMA0 L1 (NOT AVAILABLE YET)
+
+
+
+### <a name="vitocgss1-settings"></a>VITO CGS S1 Settings
+The Food Security harvester has configuration has:
+1. `start_date` (required) determines the date on which the harvesting begins. It must be in the format `YYYY-MM-DD`. If you want to harvest from the earliest product onwards, use `2017-01-01`
+2. `timeout` (optional, integer, defaults to 4) determines the number of seconds to wait before timing out a request.
+3. `username` and `password` are your username and password for accessing the PROBA-V products at the source.
+4. `collection` (required) to define the collection that will be collected. It can be `SLC_L1`, `GRD_L1`.
+5. `make_private` (optional) determines whether the datasets created by the harvester will be private or public. The default is `false`, i.e., by default, all datasets created by the harvester will be public.
+
+#### Examples of VITO CGS S1 settings
+```
+{
+"start_date":"2018-01-01",
+"collection":"SLC_L1",
+"username":"username",
+"password":"password",
+"timeout":1,
+"make_private":false
+}
+```
+
+### <a name="running-vitocgss1"></a>Running a VITO CGS S1 harvester
+1. Add `cgss1` to the list of plugins in your .ini file.
 2. Create a new harvester via the harvester interface.
-3. Select `Food Security Harvester` from the list of harvesters.
+3. Select `VITO CGS S1 Harvester` from the list of harvesters.
 4. Add a config as described above.
 5. Select `Manual` from the frequency options.
 6. Run the harvester. It will programmatically create datasets.
+
 
 
 ## <a name="develop"></a>Developing new harvesters

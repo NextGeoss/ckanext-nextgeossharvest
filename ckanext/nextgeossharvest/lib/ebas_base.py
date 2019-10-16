@@ -9,6 +9,7 @@ from ckanext.harvest.harvesters.base import HarvesterBase
 
 from string import Template
 
+from ckan import model
 from ckan.model import Package
 
 from ckan.model import Session
@@ -49,9 +50,9 @@ class EBASbaseHarvester(HarvesterBase):
         # Find out which package names have been taken. Restrict it to names
         # derived from the ideal name plus and numbers added
         like_q = u'%s%%' % \
-            ideal_name[:PACKAGE_NAME_MAX_LENGTH - APPEND_MAX_CHARS]
-        name_results = Session.query(Package.name) \
-                              .filter(Package.name.ilike(like_q)) \
+            ideal_name[:PACKAGE_NAME_MAX_LENGTH-APPEND_MAX_CHARS]
+        name_results = Session.query(Package.name)\
+                              .filter(Package.name.ilike(like_q))\
                               .all()
         taken = set([name_result[0] for name_result in name_results])
         if ideal_name not in taken:
@@ -60,9 +61,11 @@ class EBASbaseHarvester(HarvesterBase):
         elif append_type == 'number-sequence':
             # find the next available number
             counter = 1
-            l_counter = len(str(counter)) + 1
             while counter <= MAX_NUMBER_APPENDED:
-                candidate_name = ideal_name[:PACKAGE_NAME_MAX_LENGTH - l_counter] + '_' + str(counter)  # noqa: E501
+                candidate_name = \
+                    ideal_name[:PACKAGE_NAME_MAX_LENGTH-len(str(counter))-1] \
+                    + '_' + str(counter)
+
                 if candidate_name not in taken:
                     return candidate_name
                 counter = counter + 1
@@ -116,9 +119,11 @@ class EBASbaseHarvester(HarvesterBase):
 
     def _point_of_contact(self, soup, item):
 
-        normalized_names = {'gmd:individualname': 'PointOfContact',
-                            'gmd:organisationname': 'OrganizationName',
-                            'gmd:linkage': 'OrganizationLink'}
+        normalized_names = {
+                    'gmd:individualname': 'PointOfContact',
+                    'gmd:organisationname': 'OrganizationName',
+                    'gmd:linkage': 'OrganizationLink'
+        }
 
         for subitem_node in soup.findChildren():
             if subitem_node.name in normalized_names:
@@ -180,7 +185,7 @@ class EBASbaseHarvester(HarvesterBase):
                 json_item = json.loads(xml_block.text.strip('\n'))
                 for key in json_item:
                     item[key] = json_item[key]
-            except Exception:
+            except:
                 json_item = '1'
 
         # If there's a spatial element, convert it to GeoJSON
