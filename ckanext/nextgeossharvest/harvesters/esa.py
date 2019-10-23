@@ -101,7 +101,11 @@ class ESAHarvester(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
             restart_date = '*'
         log.debug('Restart date is {}'.format(restart_date))
 
-        start_date = self.source_config.get('start_date', restart_date)
+        if restart_date == '*':
+            start_date == self.source_config.get('start_date', restart_date)
+        else:
+            start_date = restart_date
+
         end_date = self.source_config.get('end_date', 'NOW')
         date_range = '[{} TO {}]'.format(start_date, end_date)
 
