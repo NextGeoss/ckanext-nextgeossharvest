@@ -109,6 +109,30 @@ class SentinelHarvester(HarvesterBase):
                 item['collection_id'] = 'SENTINEL3_SRAL_L2_WAT'
                 item['collection_name'] = 'Sentinel-3 SRAL Level-2 Water'
                 item['collection_description'] = 'SENTINEL-3 is the first Earth Observation Altimetry mission to provide 100% SAR altimetry coverage where LRM is maintained as a back-up operating mode. This is a product of Level 2 processing and geographical coverage over water.'  # noqa: E501
+            elif 'sy_1_misr' in identifier:
+                item['collection_id'] = 'SENTINEL3_SY_1_MISR'
+                item['collection_name'] = 'Sentinel-3 Synergy Level-1B'
+                item['collection_description'] = 'Correspondence and collocation grids between OLCI/SLSTR L1b product and SYN Level 2 grid.'  # noqa: E501
+            elif 'sy_2_syn' in identifier:
+                item['collection_id'] = 'SENTINEL3_SY_2_SYN'
+                item['collection_name'] = 'Sentinel-3 Synergy Level-2 SYN'
+                item['collection_description'] = 'Surface Reflectance and Aerosol parameters over Land.'  # noqa: E501
+            elif 'sy_2_vgp' in identifier:
+                item['collection_id'] = 'SENTINEL3_SY_2_VGP'
+                item['collection_name'] = 'Sentinel-3 Synergy Level-2 VGP'
+                item['collection_description'] = '1 km VEGETATION-Like product (~VGT-P) - TOA Reflectance.'  # noqa: E501
+            elif 'sy_2_vgk' in identifier:
+                item['collection_id'] = 'SENTINEL3_SY_2_VGK'
+                item['collection_name'] = 'Sentinel-3 Synergy Level-2 VGK'
+                item['collection_description'] = 'Surface reflectance over Land– used as input for VG-S product.'  # noqa: E501
+            elif 'sy_2_vg1' in identifier:
+                item['collection_id'] = 'SENTINEL3_SY_2_VG1'
+                item['collection_name'] = 'Sentinel-3 Synergy Level-2 VG1'
+                item['collection_description'] = '1 km VEGETATION-Like product (~VGT-S1) 1 day synthesis surface reflectance and NDVI.'  # noqa: E501
+            elif 'sy_2_v10' in identifier:
+                item['collection_id'] = 'SENTINEL3_SY_2_V10'
+                item['collection_name'] = 'Sentinel-3 Synergy Level-2 V10'
+                item['collection_description'] = '1 km VEGETATION-Like product (~VGT-S10) 10 day synthesis surface reflectance and NDVI.'  # noqa: E501
             else:
                 message = 'No collection for Sentinel-3 product {}'.format(
                     item["identifier"])
