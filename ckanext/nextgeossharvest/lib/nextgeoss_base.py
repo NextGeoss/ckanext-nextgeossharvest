@@ -302,7 +302,7 @@ class NextGEOSSHarvester(HarvesterBase):
         if "dataset_extra" in new_extras[0]['key']:
             new_values = eval(new_extras[0]['value'])
 
-        old_extra_keys = {old_values['key'] for old_values in old_values}
+        old_extra_keys = [old_value['key'] for old_value in old_values]
         for new_extra in new_values:
             if new_extra['key'] not in old_extra_keys:
                 old_values.append(new_extra)
