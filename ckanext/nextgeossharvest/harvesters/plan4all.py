@@ -43,6 +43,9 @@ class Plan4AllHarvester(OLUHarvester, CSWSearchHarvester, NextGEOSSHarvester):
                 if not isinstance(timeout, int) and not timeout > 0:
                     raise ValueError('timeout must be a positive integer')
 
+            if type(config_obj.get('update_all', False)) != bool:
+                raise ValueError('update_all must be true or false')
+
             if type(config_obj.get('make_private', False)) != bool:
                 raise ValueError('make_private must be true or false')
 
@@ -59,6 +62,8 @@ class Plan4AllHarvester(OLUHarvester, CSWSearchHarvester, NextGEOSSHarvester):
         self.job = harvest_job
 
         self._set_source_config(self.job.source.config)
+
+        self.update_all = self.source_config.get('update_all', False)
 
         # If we need to restart, we can do so from the ingestion timestamp
         # of the last harvest object for the source. So, query the harvest

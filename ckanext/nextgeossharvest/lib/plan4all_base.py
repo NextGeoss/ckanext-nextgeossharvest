@@ -120,10 +120,9 @@ class OLUHarvester(HarvesterBase):
             item['spatial'] = geojson
 
         if 'identifier' in item:
-            item['Filename'] = item['identifier']
+            item['fileIdentifier'] = item['identifier']
 
-        name = item['title'].lower()
-        # name = item['identifier'].lower()
+        name = item['identifier'].lower()
         item['name'] = name.replace(' ', '_')
 
         # Thumbnail, alternative and enclosure
@@ -221,7 +220,7 @@ class OLUHarvester(HarvesterBase):
                      'order': order}
 
         return thumbnail
-    
+
     def _make_dataset_link(self, item):
         """
         Return a thumbnail resource dictionary

@@ -31,13 +31,11 @@ class CSWSearchHarvester(HarvesterBase):
             # The lowercase identifier will serve as the dataset's name,
             # so we need the lowercase version for the lookup in the next step.
 
-            identifier = entry.find('gmd:title').text.lower()   # noqa: E501
-            # identifier = entry.find('gmd:fileidentifier').lower()  # noqa: E501
+            identifier = entry.find('gmd:fileidentifier').lower()  # noqa: E501
             identifier = identifier.replace(' ', '_')
             guid = unicode(uuid.uuid4())
 
-            if identifier.startswith('open_land_use'):
-                # if identifier.startswith('olu'):
+            if identifier.startswith('olu'):
                 entries.append({'content': content, 'identifier': identifier,
                                 'guid': guid, 'restart_record': restart_record})  # noqa: E501
 
@@ -139,15 +137,19 @@ class CSWSearchHarvester(HarvesterBase):
                         previous_obj.current = False
                         previous_obj.save()
 
-                    log.debug('{} already exists and will be updated.'.format(entry_name))  # noqa: E501
-                    status = 'change'
+                    if self.update_all:
+                        log.debug('{} already exists and will be updated.'.format(entry_name))  # noqa: E501
+                        status = 'change'
+                        update_counter += 1
+                    else:
+                        log.debug('{} already exists and will not be updated.'.format(entry_name))  # noqa: E501
+                        status = 'unchange'
 
                     obj = HarvestObject(guid=entry_guid, job=self.job,
                                         extras=[HOExtra(key='status',
                                                 value=status),
                                                 HOExtra(key='restart_record',
                                                 value=entry['restart_record'])])  # noqa: E501
-                    update_counter += 1
                     obj.content = entry['content']
                     obj.package = package
                     obj.save()
