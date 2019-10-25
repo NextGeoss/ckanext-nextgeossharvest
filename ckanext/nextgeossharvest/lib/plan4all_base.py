@@ -120,10 +120,10 @@ class OLUHarvester(HarvesterBase):
             item['spatial'] = geojson
 
         if 'identifier' in item:
-            item['fileIdentifier'] = item['identifier']
+            item['FileIdentifier'] = item['identifier']
 
         name = item['identifier'].lower()
-        item['name'] = name.replace(' ', '_')
+        item['name'] = name.replace('.', '_')
 
         # Thumbnail, alternative and enclosure
         quick_look = soup.find('gmd:md_browsegraphic')

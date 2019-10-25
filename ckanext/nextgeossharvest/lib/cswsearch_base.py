@@ -30,9 +30,8 @@ class CSWSearchHarvester(HarvesterBase):
             content = entry.encode()
             # The lowercase identifier will serve as the dataset's name,
             # so we need the lowercase version for the lookup in the next step.
-
-            identifier = entry.find('gmd:fileidentifier').lower()  # noqa: E501
-            identifier = identifier.replace(' ', '_')
+            identifier = entry.find('gmd:fileidentifier').text.lower()  # noqa: E501
+            identifier = identifier.replace('.', '_')
             guid = unicode(uuid.uuid4())
 
             if identifier.startswith('olu'):
