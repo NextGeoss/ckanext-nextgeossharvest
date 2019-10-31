@@ -296,12 +296,16 @@ class NextGEOSSHarvester(HarvesterBase):
         so that we can update metadata names more easily. We don't know what
         we'll get from iTag, though, so that's off the table for now.
         """
-        old_extra_keys = {old_extra['key'] for old_extra in old_extras}
-        for new_extra in new_extras:
+
+        if "dataset_extra" in new_extras[0]['key']:
+            new_values = eval(new_extras[0]['value'])
+
+        old_extra_keys = [old_value['key'] for old_value in old_extras]
+        for new_extra in new_values:
             if new_extra['key'] not in old_extra_keys:
                 old_extras.append(new_extra)
 
-        return old_extras
+        return [{'key': 'dataset_extra', 'value': str(old_extras)}]
 
     def make_provider_logger(self, filename='dataproviders_info.log'):
         """Create a logger just for provider uptimes."""
