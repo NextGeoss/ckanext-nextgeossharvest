@@ -336,6 +336,8 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         parsed_content['uuid'] = str(uuid.uuid4())
         parsed_content['timerange_start'], parsed_content[
             'timerange_end'] = self._parse_interval(content)
+        parsed_content['StartTime'] = parsed_content['timerange_start']
+        parsed_content['StopTime'] = parsed_content['timerange_end']
         parsed_content['collection_id'] = str(collection)
         parsed_content['notes'] = parsed_content['collection_description']
         parsed_content['Collection'] = str(collection)
