@@ -355,6 +355,8 @@ class EBVSBase(HarvesterBase):
         metadata['name'] = metadata['identifier'].lower()
         metadata['StartTime'] = '{}T00:00:00.000Z'.format(content['start_date'])  # noqa E501
         metadata['StopTime'] = '{}T23:59:59.999Z'.format(content['end_date'])  # noqa E501
+        metadata['timerange_start'] = metadata['StartTime']
+        metadata['timerange_end'] = metadata['StopTime']
         metadata['tags'] = content['tags']
 
         return metadata
