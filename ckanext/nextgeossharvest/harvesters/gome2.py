@@ -80,8 +80,6 @@ class GOME2Harvester(GOME2Base,
         log = logging.getLogger(__name__ + '.gather')
         log.debug('GOME2 Harvester gather_stage for job: %r', harvest_job)
 
-        self.provider = 'gome-2'
-
         if not hasattr(self, 'provider_logger'):
             self.provider_logger = self.make_provider_logger()
 
