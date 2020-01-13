@@ -140,6 +140,9 @@ class FoodSecurityHarvester(OpenSearchHarvester, NextGEOSSHarvester):
             if 'groups' in config_obj:
                 if not isinstance(config_obj['groups'], list):
                     raise ValueError('groups must be like [{"name":"group-id"}]')  # noqa E501
+            for key in ['update_all']:
+                if key in config_obj and not isinstance(config_obj[key], bool):
+                    raise ValueError('{} must be boolean'.format(key))
         except ValueError as e:
             raise e
 
@@ -205,6 +208,8 @@ class FoodSecurityHarvester(OpenSearchHarvester, NextGEOSSHarvester):
 
         collection = self.source_config['collection']
 
+        update_all = self.source_config.get('update_all', False)
+
         last_product_date = (
             self._get_last_harvesting_date(harvest_job.source_id)
         )
@@ -220,7 +225,7 @@ class FoodSecurityHarvester(OpenSearchHarvester, NextGEOSSHarvester):
                                                  start_date, end_date)
         log.info('Harvesting {}'.format(harvest_url))
         for harvest_object in self._gather_(harvest_url):
-            _id = self._gather_entry(harvest_object)
+            _id = self._gather_entry(harvest_object, update_all=update_all)
             if _id:
                 ids.append(_id)
 
@@ -240,7 +245,8 @@ class FoodSecurityHarvester(OpenSearchHarvester, NextGEOSSHarvester):
                                                  start_date, end_date)
                 log.info('Harvesting {}'.format(harvest_url))
                 for harvest_object in self._gather_(harvest_url):
-                    _id = self._gather_entry(harvest_object)
+                    _id = self._gather_entry(harvest_object,
+                                             update_all=update_all)
                     if _id:
                         ids.append(_id)
             else:
