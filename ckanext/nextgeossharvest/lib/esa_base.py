@@ -471,7 +471,7 @@ class SentinelHarvester(HarvesterBase):
             old_resources = [x.as_dict() for x in self.obj.package.resources]
         else:
             old_resources = None
-        parsed_resources=parsed_content['resource']
+        parsed_resources = parsed_content['resource']
         product = self._make_product_resource(parsed_resources)
         manifest = self._make_manifest_resource(parsed_resources)
         thumbnail = self._make_thumbnail_resource(parsed_resources)
