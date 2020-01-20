@@ -272,20 +272,22 @@ class SentinelHarvester(HarvesterBase):
         enclosure = soup.find('link', rel=None)['href']
         alternative = soup.find('link', rel='alternative')['href']
         thumbnail = soup.find('link', rel='icon')
+
+        resources = {}
         if enclosure.startswith('https://scihub'):
-            item['scihub_download_url'] = enclosure
-            item['scihub_product_url'] = alternative
+            resources['scihub_download_url'] = enclosure
+            resources['scihub_product_url'] = alternative
             if 's5p' not in item['name']:
-                item['scihub_manifest_url'] = self._make_manifest_url(item)
+                resources['scihub_manifest_url'] = self._make_manifest_url(item, resources)
             if thumbnail:
-                item['scihub_thumbnail'] = thumbnail['href']
+                resources['scihub_thumbnail'] = thumbnail['href']
         elif enclosure.startswith('https://sentinels'):
-            item['noa_download_url'] = enclosure
-            item['noa_product_url'] = alternative
+            resources['noa_download_url'] = enclosure
+            resources['noa_product_url'] = alternative
             if 's5p' not in item['name']:
-                item['noa_manifest_url'] = self._make_manifest_url(item)
+                resources['noa_manifest_url'] = self._make_manifest_url(item, resources)
             if thumbnail:
-                item['noa_thumbnail'] = thumbnail['href']
+                resources['noa_thumbnail'] = thumbnail['href']
             ingestion_date = soup.find('date',
                                        {'name': 'ingestiondate'}).text
             if '.' not in ingestion_date:
@@ -294,27 +296,25 @@ class SentinelHarvester(HarvesterBase):
                                                         '%Y-%m-%dT%H:%M:%S.%fZ')  # noqa: E501
             expiration_date = ingestion_date + datetime.timedelta(days=30)
             item['noa_expiration_date'] = datetime.datetime.strftime(expiration_date, '%Y-%m-%d')  # noqa: E501
+            resources['noa_expiration_date']=item['noa_expiration_date']
         elif enclosure.startswith('https://code-de'):
-            item['code_download_url'] = enclosure
-            item['code_product_url'] = alternative
+            resources['code_download_url'] = enclosure
+            resources['code_product_url'] = alternative
             if 's5p' not in item['name']:
-                item['code_manifest_url'] = self._make_manifest_url(item)
+                resources['code_manifest_url'] = self._make_manifest_url(item)
             if thumbnail:
-                item['code_thumbnail'] = thumbnail['href']
-        item['thumbnail'] = item.get('scihub_thumbnail') or item.get('noa_thumbnail') or item.get('code_thumbnail')  # noqa: E501
+                resources['code_thumbnail'] = thumbnail['href']
 
         # Convert size (298.74 MB to an integer representing bytes)
-        item['size'] = int(float(item['size'].split(' ')[0]) * 1000000)
-
+        resources['size'] = int(float(item['size'].split(' ')[0]) * 1000000)
+        resources['identifier'] = item['identifier']
+        item['resource'] = resources
         # Add the collection info
         item = self._add_collection(item)
 
         item['title'] = item['collection_name']
 
         item['notes'] = item['collection_description']
-
-        # I think this should be the description of the dataset itself
-        item['summary'] = soup.find('summary').text
 
         item['tags'] = self._get_tags_for_dataset(item)
 
@@ -325,19 +325,25 @@ class SentinelHarvester(HarvesterBase):
         item['timerange_start'] = item['StartTime']
         item['timerange_end'] = item['StopTime']
 
+        # Remove from the package dictionary the metadata fields that will not be
+        # added to the database
+        item.pop('Filename')
+        item.pop('size')
+
+
         return item
 
-    def _make_manifest_url(self, item):
+    def _make_manifest_url(self, item, resource):
         """Create the URL for manifests on SciHub, NOA, or CODE-DE."""
         if item['name'].startswith('s3'):
             manifest_file = 'xfdumanifest.xml'
         else:
             manifest_file = 'manifest.safe'
-        if item.get('scihub_product_url'):
+        if resource.get('scihub_product_url'):
             base_url = 'https://scihub.copernicus.eu/dhus/'
-        elif item.get('noa_product_url'):
+        elif resource.get('noa_product_url'):
             base_url = 'https://sentinels.space.noa.gr/dhus/'
-        elif item.get('code_product_url'):
+        elif resource.get('code_product_url'):
             base_url = 'https://code-de.org/dhus/'
 
         manifest_url = "{}odata/v1/Products('{}')/Nodes('{}')/Nodes('{}')/$value".format(base_url, item['uuid'], item['Filename'], manifest_file)  # noqa: E501
@@ -465,10 +471,10 @@ class SentinelHarvester(HarvesterBase):
             old_resources = [x.as_dict() for x in self.obj.package.resources]
         else:
             old_resources = None
-
-        product = self._make_product_resource(parsed_content)
-        manifest = self._make_manifest_resource(parsed_content)
-        thumbnail = self._make_thumbnail_resource(parsed_content)
+        parsed_resources=parsed_content['resource']
+        product = self._make_product_resource(parsed_resources)
+        manifest = self._make_manifest_resource(parsed_resources)
+        thumbnail = self._make_thumbnail_resource(parsed_resources)
 
         if manifest is None:
             new_resources = [x for x in [product, thumbnail] if x]
