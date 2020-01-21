@@ -28,8 +28,8 @@ class SentinelHarvester(HarvesterBase):
         """
         name_elements = ['str', 'int', 'date', 'double']
         normalized_names = {
-            'beginposition': 'StartTime',
-            'endposition': 'StopTime',
+            'beginposition': 'timerange_start',
+            'endposition': 'timerange_end',
             'ingestiondate': 'IngestionDate',
             'footprint': 'spatial',
             'filename': 'Filename',
@@ -317,13 +317,6 @@ class SentinelHarvester(HarvesterBase):
         item['summary'] = soup.find('summary').text
 
         item['tags'] = self._get_tags_for_dataset(item)
-
-        # Add time range metadata that's not tied to product-specific fields
-        # like StartTime so that we can filter by a dataset's time range
-        # without having to cram other kinds of temporal data into StartTime
-        # and StopTime fields, etc.
-        item['timerange_start'] = item['StartTime']
-        item['timerange_end'] = item['StopTime']
 
         return item
 
