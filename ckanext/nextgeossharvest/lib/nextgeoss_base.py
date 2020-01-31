@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import ast
 import json
 import logging
 import os
@@ -44,6 +45,35 @@ class NextGEOSSHarvester(HarvesterBase):
             if extra.key == key:
                 return extra.value
         return default
+
+    def _get_package_extra(self, package_dict, flagged_extra, default=None):
+        """
+        Helper method for retrieving the value from a package's extras list.
+        """
+        extras = self.convert_string_extras(package_dict['extras'])
+
+        if "dataset_extra" in extras:
+            extras = ast.literal_eval(extras["dataset_extra"])
+
+        if type(extras) == list:
+            for extra in extras:
+                if extra["key"] == flagged_extra:
+                    return extra["value"]
+        elif type(extras) == dict:
+            value = extras.get(flagged_extra)
+            if value:
+                return value
+
+        return default
+
+    def convert_string_extras(self, extras_list):
+        """Convert extras stored as a string back into a normal extras list."""
+        try:
+            extras = ast.literal_eval(extras_list[0]["value"])
+            assert type(extras) == list
+            return extras
+        except (Exception, AssertionError):
+            return extras_list
 
     def _set_source_config(self, config_str):
         '''
@@ -112,6 +142,8 @@ class NextGEOSSHarvester(HarvesterBase):
         package_dict['title'] = parsed_content['title']
         package_dict['notes'] = parsed_content['notes']
         package_dict['tags'] = parsed_content['tags']
+        if 'groups' in parsed_content:
+            package_dict['groups'] = parsed_content['groups']
         package_dict['extras'] = self._get_extras(parsed_content)
         package_dict['resources'] = self._get_resources(parsed_content)
         package_dict['private'] = self.source_config.get('make_private', False)
@@ -212,13 +244,19 @@ class NextGEOSSHarvester(HarvesterBase):
             return None
 
         coords_type = coords.type.upper()
-        if coords_type != 'POLYGON':
+        if coords_type == 'MULTIPOLYGON':
+            c = coords.geoms[0].exterior.coords
+            c_list = list(c[0])
+        elif coords_type == 'POLYGON':
+            c = coords.exterior.coords
+            c_list = list(c[0])
+        else:
             return None
 
         # Remove double coordinates -- they are not valid GeoJSON and Solr
         # will reject them.
-        coords_list = [list(coords.exterior.coords[0])]
-        for i in coords.exterior.coords[1:]:
+        coords_list = [c_list]
+        for i in c[1:]:
             new_coord = list(i)
             if new_coord != coords_list[-1]:
                 coords_list.append(new_coord)
@@ -230,7 +268,7 @@ class NextGEOSSHarvester(HarvesterBase):
 
     def _get_extras(self, parsed_content):
         """Return a list of CKAN extras."""
-        skip = {'id', 'title', 'tags', 'status', 'notes', 'name', 'resource'}
+        skip = {'id', 'title', 'tags', 'status', 'notes', 'name', 'resource', 'groups'}  # noqa: E501
         extras_tmp = [{'key': key, 'value': value}
                       for key, value in parsed_content.items()
                       if key not in skip]
@@ -258,12 +296,16 @@ class NextGEOSSHarvester(HarvesterBase):
         so that we can update metadata names more easily. We don't know what
         we'll get from iTag, though, so that's off the table for now.
         """
-        old_extra_keys = {old_extra['key'] for old_extra in old_extras}
-        for new_extra in new_extras:
+
+        if "dataset_extra" in new_extras[0]['key']:
+            new_values = eval(new_extras[0]['value'])
+
+        old_extra_keys = [old_value['key'] for old_value in old_extras]
+        for new_extra in new_values:
             if new_extra['key'] not in old_extra_keys:
                 old_extras.append(new_extra)
 
-        return old_extras
+        return [{'key': 'dataset_extra', 'value': str(old_extras)}]
 
     def make_provider_logger(self, filename='dataproviders_info.log'):
         """Create a logger just for provider uptimes."""
