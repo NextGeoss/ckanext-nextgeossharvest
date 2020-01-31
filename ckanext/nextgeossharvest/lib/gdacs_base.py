@@ -114,7 +114,6 @@ class GDACSBase(HarvesterBase):
                                                            [180, -90],
                                                            [-180, -90],
                                                            [-180, 90]])
-            metadata['downloadLink'] = http_link
 
         elif self.data_type == 'magnitude':
             metadata['collection_id'] = ('AVERAGE_FLOOD_MAGNITUDE')
@@ -126,11 +125,11 @@ class GDACSBase(HarvesterBase):
                                                            [180, -90],
                                                            [-180, -90],
                                                            [-180, 90]])
-            metadata['downloadLink'] = http_link
 
+        metadata['resource'] = self._make_resource(http_link,
+                                                   'Product Download')
         # Add common metadata
         metadata['identifier'] = content['identifier']
-        metadata['filename'] = metadata['identifier'] + '.tif'
         metadata['name'] = metadata['identifier'].lower()
 
         # For now, the collection name and description are the same as the
@@ -141,31 +140,17 @@ class GDACSBase(HarvesterBase):
 
         metadata['tags'] = self._create_tags()
 
-        # Add time range metadata that's not tied to product-specific fields
-        # like StartTime so that we can filter by a dataset's time range
-        # without having to cram other kinds of temporal data into StartTime
-        # and StopTime fields, etc. We do this for the Sentinel products.
-        #
-        # We'll want to revisit this later--it's still not clear if we can just
-        # use StartTime and StopTime everywhere or if it has a special meaning
-        # for certain kinds of products.
-        metadata['StartTime'] = '{}T00:00:00.000Z'.format(start_date_string)  # noqa E501
-        metadata['StopTime'] = '{}T23:59:59.999Z'.format(start_date_string)  # noqa E501
-        metadata['timerange_start'] = metadata['StartTime']
-        metadata['timerange_end'] = metadata['StopTime']
+        metadata['timerange_start'] = '{}T00:00:00.000Z'.format(start_date_string)  # noqa E501
+        metadata['timerange_end'] = '{}T23:59:59.999Z'.format(start_date_string)  # noqa E501
 
         return metadata
 
     # Required by NextGEOSS base harvester
     def _get_resources(self, metadata):
         """Return a list of resource dictionaries."""
-        resources = []
+        return metadata['resource']
 
-        resources.append(self._make_resource(metadata['downloadLink'],
-                                             'Product Download'))
-        return resources
-
-    def _make_resource(self, url, name, size=None):
+    def _make_resource(self, url, name):
         """Return a resource dictionary."""
         resource_dict = {}
         resource_dict['name'] = name
@@ -174,7 +159,7 @@ class GDACSBase(HarvesterBase):
         resource_dict['mimetype'] = 'image/tiff'
         resource_dict['description'] = ('Download the TIF from GDACS')
 
-        return resource_dict
+        return [resource_dict]
 
     def convert_date_config(self, term):
         """Convert a term into a datetime object."""
