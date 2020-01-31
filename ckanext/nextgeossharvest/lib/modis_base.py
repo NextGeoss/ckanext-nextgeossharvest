@@ -23,7 +23,7 @@ class CMRHarvester(HarvesterBase):
         once and rename them in one go.
         """
         normalized_names = {
-            'dc:date': 'StartTime',
+            'dc:date': 'timerange_start',
             'georss:polygon': 'spatial',
             'echo:producergranuleid': 'Filename',
             'echo:cloudcoverpercentage': 'CloudCoverage',
@@ -37,9 +37,9 @@ class CMRHarvester(HarvesterBase):
         item = {}
         for subitem_node in item_node.findChildren():
             if subitem_node.name in normalized_names:
-                    key = normalized_names[subitem_node.name]
-                    if key:
-                        item[key] = subitem_node.text
+                key = normalized_names[subitem_node.name]
+                if key:
+                    item[key] = subitem_node.text
 
         return item
 
@@ -106,9 +106,6 @@ class CMRHarvester(HarvesterBase):
             item['collection_name'] = 'MODIS/Aqua Thermal Anomalies/Fire 8-Day L3 Global 1km SIN Grid'  # noqa: E501
             item['collection_description'] = 'MYD14A2 data are 8-day fire-mask composites at 1-kilometer resolution provided as a gridded level-3 product in the Sinusoidal projection. Science Data Sets include the fire-mask and algorithm quality assurance.'  # noqa: E501
 
-        else:
-            pass
-
         return item
 
     def _get_tags_for_dataset(self, item):
@@ -142,9 +139,10 @@ class CMRHarvester(HarvesterBase):
         # Create an item dictionary and add metadata with normalized names.
         item = self._normalize_names(soup)
 
-        start_stop_time = item.pop('StartTime', None)
+        start_stop_time = item.pop('timerange_start', None)
         if start_stop_time:
-            item['StartTime'], item['StopTime'] = start_stop_time.split('/')
+            item['timerange_start'] = start_stop_time.split('/')[0]
+            item['timerange_end'] = start_stop_time.split('/')[1]
 
         coordinates = item.pop('spatial', None)
         if coordinates:
@@ -162,35 +160,45 @@ class CMRHarvester(HarvesterBase):
 
         item['name'] = item['identifier'].lower()
 
+        # Convert size (298.74 MB to an integer representing bytes)
+        size = int(float(item['size']) * 1000000)
+
+        resources = []
         # Thumbnail, manifest and enclosure
         enclosure_field = soup.find('link', rel='enclosure')
         if enclosure_field:
-            item['download_url'] = enclosure_field['href']
+            url = enclosure_field['href']
+            resources.append(self._make_product_resource(url, size))
+
         manifest = soup.find('link', rel='via', title='Product metadata')['href']  # noqa: E501
+        resources.append(self._make_manifest_resource(manifest))
+
         icon_list = soup.find_all('link', rel='icon')
         thumbnail_list = []
         for icon in icon_list:
             thumbnail_list.append(icon['href'])
 
-        item['manifest_url'] = manifest
-
         identifier = item['Filename'].lower()
         if identifier.startswith('myd13q1') or identifier.startswith('myd13a1') or identifier.startswith('myd13a2') or identifier.startswith('mod13q1') or identifier.startswith('mod13a1') or identifier.startswith('mod13a2'):  # noqa: E501
-            item['evi_thumbnail'] = thumbnail_list[0]
-            item['nvdi_thumbnail'] = thumbnail_list[1]
-        elif identifier.startswith('mod17a3h'):
-            item['thumbnail_1'] = thumbnail_list[0]
+            resources.append(self._make_thumbnail_resource(thumbnail_list[0],
+                                                           'evi'))
+            resources.append(self._make_thumbnail_resource(thumbnail_list[1],
+                                                           'ndvi'))
         elif identifier.startswith('mod17a2h'):  # noqa: E501
-            item['thumbnail_1'] = thumbnail_list[0]
-            item['thumbnail_2'] = thumbnail_list[1]
+            resources.append(self._make_thumbnail_resource(thumbnail_list[0],
+                                                           'thumbnail_1'))
+            resources.append(self._make_thumbnail_resource(thumbnail_list[1],
+                                                           'thumbnail_2'))
         elif identifier.startswith('myd15a2h') or identifier.startswith('mod15a2h'):  # noqa: E501
-            item['lai_thumbnail'] = thumbnail_list[0]
-            item['fpar_thumbnail'] = thumbnail_list[1]
-        elif identifier.startswith('myd14a2') or identifier.startswith('mod14a2'):  # noqa: E501
-            item['thumbnail_1'] = thumbnail_list[0]
+            resources.append(self._make_thumbnail_resource(thumbnail_list[0],
+                                                           'lai'))
+            resources.append(self._make_thumbnail_resource(thumbnail_list[1],
+                                                           'fpar'))
+        elif identifier.startswith('myd14a2') or identifier.startswith('mod14a2') or identifier.startswith('mod17a3h'):  # noqa: E501
+            resources.append(self._make_thumbnail_resource(thumbnail_list[0],
+                                                           'thumbnail_1'))
 
-        # Convert size (298.74 MB to an integer representing bytes)
-        item['size'] = int(float(item['size']) * 1000000)
+        item['resource'] = resources
 
         # Add the collection info
         item = self._add_collection(item)
@@ -202,115 +210,79 @@ class CMRHarvester(HarvesterBase):
 
         item['notes'] = item['collection_description']
 
-        # I think this should be the description of the dataset itself
-        # item['summary'] = soup.find('summary').text
-
         item['tags'] = self._get_tags_for_dataset(item)
 
-        # Add time range metadata that's not tied to product-specific fields
-        # like StartTime so that we can filter by a dataset's time range
-        # without having to cram other kinds of temporal data into StartTime
-        # and StopTime fields, etc.
-        item['timerange_start'] = item['StartTime']
-        item['timerange_end'] = item['StopTime']
-
+        # Remove fields from package dictionary
+        item.pop('Filename')
+        item.pop('size')
         return item
 
-    def _make_manifest_resource(self, item):
+    def _make_manifest_resource(self, url):
         """
         Return a manifest resource dictionary depending on the harvest source.
         """
-        if item.get('manifest_url'):
-            name = 'Product Metadata Download'
-            description = 'Download the metadata manifest from CMR Common Metadata Repository'  # noqa: E501
-            url = item['manifest_url']
-            order = 2
-            _type = 'manifest'
+
+        name = 'Product Metadata Download'
+        description = 'Download the metadata manifest from CMR Common Metadata Repository'  # noqa: E501
+        _type = 'manifest'
 
         manifest = {'name': name,
                     'description': description,
                     'url': url,
                     'format': 'XML',
                     'mimetype': 'application/xml',
-                    'resource_type': _type,
-                    'order': order}
+                    'resource_type': _type}
 
         return manifest
 
-    def _make_thumbnail_resource(self, item, multi_thumbnail=0):
+    def _make_thumbnail_resource(self, url, thumbnail_type):
         """
         Return a thumbnail resource dictionary depending on the harvest source.
         """
-        if not multi_thumbnail:
-            if item.get('evi_thumbnail'):
-                name = 'EVI Thumbnail Download'
-                description = 'Download the EVI layer thumbnail from NASA\'s LP DAAC'  # noqa: E501
-                url = item['evi_thumbnail']
-                _type = 'evi_thumbnail'
-            elif item.get('lai_thumbnail'):
-                name = 'LAI Thumbnail Download'  # noqa: E501
-                description = 'Download the LAI layer thumbnail from NASA\'s Land Processes Distributed Active Archive Center (LP DAAC)'  # noqa: E501
-                url = item['lai_thumbnail']
-                _type = 'lai_thumbnail'
-            elif item.get('thumbnail_1'):
-                name = 'Thumbnail-1 Download'
-                description = 'Download thumbnail from NASA\'s Land Processes Distributed Active Archive Center (LP DAAC)'  # noqa: E501
-                url = item['thumbnail_1']
-                _type = 'thumbnail_1'
-            else:
-                return None
-
-            order = 3
-            url = item.get('evi_thumbnail') or item.get('thumbnail_1') or item.get('lai_thumbnail')  # noqa: E501
-
+        if thumbnail_type == 'evi':
+            name = 'EVI Thumbnail Download'
+            description = 'Download the EVI layer thumbnail from NASA\'s LP DAAC'  # noqa: E501
+            _type = 'evi_thumbnail'
+        elif thumbnail_type == 'ndvi':
+            name = 'NVDI Thumbnail Download'
+            description = 'Download the NVDI layer thumbnail from NASA\'s Land Processes Distributed Active Archive Center (LP DAAC)'  # noqa: E501
+            _type = 'nvdi_thumbnail'
+        elif thumbnail_type == 'lai':
+            name = 'LAI Thumbnail Download'  # noqa: E501
+            description = 'Download the LAI layer thumbnail from NASA\'s Land Processes Distributed Active Archive Center (LP DAAC)'  # noqa: E501
+            _type = 'lai_thumbnail'
+        elif thumbnail_type == 'fpar':
+            name = 'FPAR Thumbnail Download'  # noqa: E501
+            description = 'Download the FPAR layer thumbnail from NASA\'s Land Processes Distributed Active Archive Center (LP DAAC)'  # noqa: E501
+            _type = 'fpar_thumbnail'
+        elif thumbnail_type == 'thumbnail_1':
+            name = 'Thumbnail-1 Download'
+            description = 'Download thumbnail from NASA\'s Land Processes Distributed Active Archive Center (LP DAAC)'  # noqa: E501
+            _type = 'thumbnail_1'
+        elif thumbnail_type == 'thumbnail_2':
+            name = 'Thumbnail-2 Download'
+            description = 'Download thumbnail from NASA\'s Land Processes Distributed Active Archive Center (LP DAAC)'  # noqa: E501
+            _type = 'thumbnail_2'
         else:
-            if item.get('nvdi_thumbnail'):
-                name = 'NVDI Thumbnail Download'
-                description = 'Download the NVDI layer thumbnail from NASA\'s Land Processes Distributed Active Archive Center (LP DAAC)'  # noqa: E501
-                url = item['nvdi_thumbnail']
-                _type = 'nvdi_thumbnail'
-            elif item.get('fpar_thumbnail'):
-                name = 'FPAR Thumbnail Download'  # noqa: E501
-                description = 'Download the FPAR layer thumbnail from NASA\'s Land Processes Distributed Active Archive Center (LP DAAC)'  # noqa: E501
-                url = item['fpar_thumbnail']
-                _type = 'fpar_thumbnail'
-            elif item.get('thumbnail_2'):
-                name = 'Thumbnail-2 Download'
-                description = 'Download thumbnail from NASA\'s Land Processes Distributed Active Archive Center (LP DAAC)'  # noqa: E501
-                url = item['thumbnail_2']
-                _type = 'thumbnail_2'
-            else:
-                return None
-
-            order = 4
-            url = item.get('nvdi_thumbnail') or item.get('fpar_thumbnail') or item.get('thumbnail_1')  # noqa: E501
+            return None
 
         thumbnail = {'name': name,
                      'description': description,
                      'url': url,
                      'format': 'JPEG',
                      'mimetype': 'image/jpeg',
-                     'resource_type': _type,
-                     'order': order}
+                     'resource_type': _type}
 
         return thumbnail
 
-    def _make_product_resource(self, item):
+    def _make_product_resource(self, url, size):
         """
         Return a product resource dictionary depending on the harvest source.
         """
-        if item.get('download_url'):
-            name = 'Product Download'
-            description = 'Download product from NASA\'s Land Processes Distributed Active Archive Center (LP DAAC). NOTE: DOWNLOAD REQUIRES LOGIN'  # noqa: E501
-            url = item['download_url']
-            order = 1
-            _type = 'product'
-        else:
-            # This is required due to the fact that MOD17A3H does not have
-            # downloadable products, only thumbnail and .xml file
-            return None
 
-        size = item['size']
+        name = 'Product Download'
+        description = 'Download product from NASA\'s Land Processes Distributed Active Archive Center (LP DAAC). NOTE: DOWNLOAD REQUIRES LOGIN'  # noqa: E501
+        _type = 'product'
 
         product = {'name': name,
                    'description': description,
@@ -318,8 +290,7 @@ class CMRHarvester(HarvesterBase):
                    'format': 'HDF',
                    'mimetype': 'application/x-hdfeos',
                    'size': size,
-                   'resource_type': _type,
-                   'order': order}
+                   'resource_type': _type}
 
         return product
 
@@ -330,12 +301,8 @@ class CMRHarvester(HarvesterBase):
         else:
             old_resources = None
 
-        product = self._make_product_resource(parsed_content)
-        manifest = self._make_manifest_resource(parsed_content)
-        thumbnail_1 = self._make_thumbnail_resource(parsed_content)
-        thumbnail_2 = self._make_thumbnail_resource(parsed_content, 1)
+        new_resources = parsed_content['resource']
 
-        new_resources = [x for x in [product, manifest, thumbnail_1, thumbnail_2] if x]  # noqa: E501
         if not old_resources:
             resources = new_resources
         else:
@@ -344,11 +311,9 @@ class CMRHarvester(HarvesterBase):
             resources = []
             for old in old_resources:
                 old_type = old.get('resource_type')
-                order = old.get('order')
-                if old_type not in new_resource_types and order:
+                if old_type not in new_resource_types:
                     resources.append(old)
             resources += new_resources
-
-            resources.sort(key=lambda x: x['order'])
+            resources.sort(key=lambda x: x['name'])
 
         return resources
