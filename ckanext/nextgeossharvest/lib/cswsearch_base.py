@@ -30,10 +30,8 @@ class CSWSearchHarvester(HarvesterBase):
             content = entry.encode()
             # The lowercase identifier will serve as the dataset's name,
             # so we need the lowercase version for the lookup in the next step.
-
-            identifier = entry.find(['gmd:fileidentifier', 'gco:characterstring']).text.lower()   # noqa: E501
+            identifier = entry.find('gmd:fileidentifier').text.lower()  # noqa: E501
             identifier = identifier.replace('.', '_')
-
             guid = unicode(uuid.uuid4())
 
             if identifier.startswith('olu'):
@@ -44,7 +42,8 @@ class CSWSearchHarvester(HarvesterBase):
         # the collections of this job (restart_record is the initial record)
         # If the job is finished (gone through all the entries), then the new
         # job will harvest new collections (restart_record is the next record)
-        entries[-1]['restart_record'] = next_record
+        if len(entries) > 1:
+            entries[-1]['restart_record'] = next_record
 
         return entries
 
@@ -54,7 +53,7 @@ class CSWSearchHarvester(HarvesterBase):
 
         Return None of there is none next URL (end of results).
         """
-        if next_record is not '0' and eval(records_returned) == limit:
+        if next_record != '0' and eval(records_returned) == limit:
             splitted_url = harvest_url.split('StartPosition')
             next_url = splitted_url[0] + 'StartPosition=' + next_record
             return next_url
@@ -67,6 +66,8 @@ class CSWSearchHarvester(HarvesterBase):
         and return the ids.
         """
         ids = []
+        new_counter = 0
+        update_counter = 0
 
         while len(ids) < limit and harvest_url:
             # We'll limit ourselves to one request per second
@@ -104,7 +105,7 @@ class CSWSearchHarvester(HarvesterBase):
             next_record = next_url['nextrecord']
             number_records_matched = next_url['numberofrecordsmatched']
 
-            if next_record is not '0':
+            if next_record != '0':
                 current_record = str(eval(next_record) - eval(records_returned))  # noqa: E501
             else:
                 current_record = str(eval(number_records_matched) - eval(records_returned))  # noqa: E501
@@ -135,8 +136,13 @@ class CSWSearchHarvester(HarvesterBase):
                         previous_obj.current = False
                         previous_obj.save()
 
-                    log.debug('{} will not be updated.'.format(entry_name))  # noqa: E501
-                    status = 'unchanged'
+                    if self.update_all:
+                        log.debug('{} already exists and will be updated.'.format(entry_name))  # noqa: E501
+                        status = 'change'
+                        update_counter += 1
+                    else:
+                        log.debug('{} already exists and will not be updated.'.format(entry_name))  # noqa: E501
+                        status = 'unchange'
 
                     obj = HarvestObject(guid=entry_guid, job=self.job,
                                         extras=[HOExtra(key='status',
@@ -155,6 +161,7 @@ class CSWSearchHarvester(HarvesterBase):
                                                 value='new'),
                                                 HOExtra(key='restart_record',
                                                 value=entry['restart_record'])])  # noqa: E501
+                    new_counter += 1
                     obj.content = entry['content']
                     obj.package = None
                     obj.save()
@@ -164,5 +171,11 @@ class CSWSearchHarvester(HarvesterBase):
             request_time = end_request - start_request
             if request_time < 1.0:
                 time.sleep(1 - request_time)
+
+        harvester_msg = '{:<12} | {} | jobID:{} | {} | {}'
+        if hasattr(self, 'harvester_logger'):
+            timestamp = str(datetime.utcnow())
+            self.harvester_logger.info(harvester_msg.format(self.provider,
+                                       timestamp, self.job.id, new_counter, update_counter))  # noqa: E128, E501
 
         return ids
