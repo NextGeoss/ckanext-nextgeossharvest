@@ -67,6 +67,10 @@ class GOME2Harvester(GOME2Base,
 
             if type(config_obj.get('make_private', False)) != bool:
                 raise ValueError('make_private must be true or false')
+
+            if type(config_obj.get('time_interval', 15)) != int:
+                raise ValueError('time_interval must be an int')
+
         except ValueError as e:
             raise e
 
@@ -78,6 +82,9 @@ class GOME2Harvester(GOME2Base,
 
         if not hasattr(self, 'provider_logger'):
             self.provider_logger = self.make_provider_logger()
+
+        if not hasattr(self, 'harvester_logger'):
+            self.harvester_logger = self.make_harvester_logger()
 
         self.job = harvest_job
         self._set_source_config(harvest_job.source.config)
@@ -98,16 +105,16 @@ class GOME2Harvester(GOME2Base,
         else:
             self.end_date = datetime.now()
 
-        if self.get_last_harvesting_date() is None:
-            self.start_date = self.start_date
-        else:
+        if self.get_last_harvesting_date() is not None:
             self.start_date = self.get_last_harvesting_date()
 
         if self.end_date > datetime.now():
             self.end_date = datetime.now()
 
-        if self.end_date > self.start_date + timedelta(days=10):
-            self.end_date = self.start_date + timedelta(days=10)
+        time_interval = self.source_config.get('time_interval', 15)
+
+        if self.end_date > self.start_date + timedelta(days=time_interval):
+            self.end_date = self.start_date + timedelta(days=time_interval)
 
         date = self.start_date
         date_strings = []
@@ -115,7 +122,6 @@ class GOME2Harvester(GOME2Base,
             date_strings.append(datetime.strftime(date, '%Y-%m-%d'))
             date += timedelta(days=1)
         self.date_strings = date_strings
-        print('DateList: {}'.format(str(date_strings)))
 
         ids = self._create_harvest_objects()
 
