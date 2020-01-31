@@ -42,6 +42,7 @@ class GOME2Base(HarvesterBase):
         coverages = ['GOME2_O3', 'GOME2_NO2', 'GOME2_SO2', 'GOME2_SO2mass',
                      'GOME2_TropNO2']
 
+        provider = 'gome-2'
         ids = []
 
         for coverage in coverages:
@@ -49,8 +50,14 @@ class GOME2Base(HarvesterBase):
             content_dicts = self._content_dict_generator(coverage)
             ho_ids = [self._create_harvest_object(content_dict)
                       for content_dict in content_dicts
-                      if not self._missing_or_harvested(coverage, content_dict)]  # noqa: E501
+                      if not self._missing_or_harvested(coverage, content_dict, provider)]  # noqa: E501
             ids.extend(ho_ids)
+
+        harvester_msg = '{:<12} | {} | jobID:{} | {} | {}'
+        if hasattr(self, 'harvester_logger'):
+            timestamp = str(datetime.utcnow())
+            self.harvester_logger.info(harvester_msg.format(provider,
+                                       timestamp, self.job.id, len(ids), 0))  # noqa: E128, E501
 
         return ids
 
@@ -65,7 +72,7 @@ class GOME2Base(HarvesterBase):
                                   'date_string': date_string})
         return content_dicts
 
-    def _missing_or_harvested(self, coverage, content_dict):
+    def _missing_or_harvested(self, coverage, content_dict, provider):
         """
         Check if a product is missing on the source server or if it's already
         been harvested. Return False if neither is the case.
@@ -73,7 +80,7 @@ class GOME2Base(HarvesterBase):
         if self._was_harvested(content_dict['identifier']):
             log.debug('{} will not be updated.'.format(content_dict['identifier']))  # noqa: E501
             return True
-        elif self._is_missing(coverage, content_dict['date_string']):
+        elif self._is_missing(coverage, content_dict['date_string'], provider):
             log.debug('{} is missing on the original Data Source so it will not be harvested.'.format(content_dict['identifier']))  # noqa: E501
             return True
         else:
@@ -92,12 +99,12 @@ class GOME2Base(HarvesterBase):
         else:
             return False
 
-    def _is_missing(self, coverage, date_string):
+    def _is_missing(self, coverage, date_string, provider):
         """Check if a product is missing on the source server."""
         url = ('https://wdc.dlr.de/data_products/VIEWER/missing_days.php?'
                'start_date={}'
                '&wpid={}').format(date_string, coverage)
-        provider = 'gome-2'
+
         timestamp = str(datetime.utcnow())
         log_message = '{:<12} | {} | {} | {}s'
 
