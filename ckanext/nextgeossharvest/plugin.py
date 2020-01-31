@@ -28,19 +28,19 @@ def convert_dataset_extra(dataset_extra_string):
     return [(extra["key"], extra["value"]) for extra in extras]
 
 
-def remove_from_dict(dict, key):
-        key_exists = dict.get(key, None)
-        if key_exists is not None:
-            dict.pop(key, None)
-        return dict
+def remove_from_dict(pkg_dict, key):
+    key_exists = pkg_dict.get(key, None)
+    if key_exists is not None:
+        pkg_dict.pop(key, None)
+    return pkg_dict
 
 
 def remove_sentinel_fields_from_index(pkg_dict):
     field_list = [
         "FamilyName",
         "InstrumentName",
-        "productClass",
-        "uuid"
+        "ProductClass",
+        "uuid",
         "AcquisitionType",
         "noa_expiration_date",
         "Filename",
