@@ -229,7 +229,7 @@ class FoodSecurityHarvester(OpenSearchHarvester, NextGEOSSHarvester):
             if _id:
                 ids.append(_id)
 
-        if (start_date != datetime.now() and (len(ids) == 0 or update_all))):
+        if (start_date != datetime.now() and (len(ids) == 0 or update_all)):
             end_date = datetime.now()
             harvest_url = self._generate_harvest_url(collection,
                                                  start_date + timedelta(days=1), end_date)  # noqa E501
