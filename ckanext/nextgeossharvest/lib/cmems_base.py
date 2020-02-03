@@ -431,21 +431,21 @@ class CMEMSBase(HarvesterBase):
                                                            [180, -90],
                                                            [-180, -90],
                                                            [-180, 90]])
-            metadata['downloadLink'] = ftp_link
-            metadata['thumbnail'] = ("http://nrt.cmems-du.eu/thredds/wms"
-                                     "/METOFFICE-GLO-SST-L4-NRT-OBS-SST-V2"
-                                     "?request=GetMap"
-                                     "&version=1.3.0"
-                                     "&layers=analysed_sst"
-                                     "&crs=CRS:84"
-                                     "&bbox=-180,-90,180,90"
-                                     "&WIDTH=800"
-                                     "&HEIGHT=800"
-                                     "&styles=boxfill/rainbow"
-                                     "&format=image/png"
-                                     "&time=" +
-                                     start_date_string +
-                                     "T12:00:00.000Z")
+
+            thumbnail = ("http://nrt.cmems-du.eu/thredds/wms"
+                         "/METOFFICE-GLO-SST-L4-NRT-OBS-SST-V2"
+                         "?request=GetMap"
+                         "&version=1.3.0"
+                         "&layers=analysed_sst"
+                         "&crs=CRS:84"
+                         "&bbox=-180,-90,180,90"
+                         "&WIDTH=800"
+                         "&HEIGHT=800"
+                         "&styles=boxfill/rainbow"
+                         "&format=image/png"
+                         "&time=" +
+                         start_date_string +
+                         "T12:00:00.000Z")
 
         elif self.harvester_type == 'sic_north':
             metadata['collection_id'] = ('METNO-GLO-SEAICE_CONC-NORTH-L4-NRT-OBS')  # noqa E501
@@ -460,35 +460,34 @@ class CMEMSBase(HarvesterBase):
                                                            [180, 0],
                                                            [-180, 0],
                                                            [-180, 90]])
-            metadata['downloadLinkEase'] = ftp_link
-            metadata['downloadLinkPolstere'] = (
-              "ftp://mftp.cmems.met.no/Core/"  # noqa: E121
-              "SEAICE_GLO_SEAICE_L4_NRT_OBSERVATIONS_011_001/"
-              "METNO-GLO-SEAICE_CONC-NORTH-L4-NRT-OBS/" +
-              year +
-              "/" +
-              month +
-              "/" +
-              "ice_conc_nh_polstere-100_multi_" +
-              year +
-              month +
-              day +
-              "1200.nc")
-            metadata['thumbnail'] = ("http://thredds.met.no/thredds/wms/"
-                                     "sea_ice/SIW-OSISAF-GLO-SIT_SIE_SIC-OBS/"
-                                     "ice_conc_north_aggregated"
-                                     "?request=GetMap"
-                                     "&layers=ice_conc"
-                                     "&version=1.3.0"
-                                     "&crs=CRS:84"
-                                     "&bbox=-180,0,180,90"
-                                     "&WIDTH=800"
-                                     "&HEIGHT=800"
-                                     "&styles=boxfill/rainbow"
-                                     "&format=image/png"
-                                     "&time=" +
-                                     start_date_string +
-                                     "T12:00:00.000Z")
+
+            polstere_url = ("ftp://mftp.cmems.met.no/Core/" +
+                            "SEAICE_GLO_SEAICE_L4_NRT_OBSERVATIONS_011_001/" +
+                            "METNO-GLO-SEAICE_CONC-NORTH-L4-NRT-OBS/" +
+                            year +
+                            "/" +
+                            month +
+                            "/" +
+                            "ice_conc_nh_polstere-100_multi_" +
+                            year +
+                            month +
+                            day +
+                            "1200.nc")
+            thumbnail = ("http://thredds.met.no/thredds/wms/" +
+                         "sea_ice/SIW-OSISAF-GLO-SIT_SIE_SIC-OBS/" +
+                         "ice_conc_north_aggregated" +
+                         "?request=GetMap" +
+                         "&layers=ice_conc" +
+                         "&version=1.3.0" +
+                         "&crs=CRS:84" +
+                         "&bbox=-180,0,180,90" +
+                         "&WIDTH=800" +
+                         "&HEIGHT=800" +
+                         "&styles=boxfill/rainbow" +
+                         "&format=image/png" +
+                         "&time=" +
+                         start_date_string +
+                         "T12:00:00.000Z")
 
         elif self.harvester_type == 'sic_south':
             metadata['collection_id'] = ('METNO-GLO-SEAICE_CONC-SOUTH-L4-NRT-OBS')  # noqa E501
@@ -503,35 +502,34 @@ class CMEMSBase(HarvesterBase):
                                                            [180, -90],
                                                            [-180, -90],
                                                            [-180, 0]])
-            metadata['downloadLinkEase'] = ftp_link
-            metadata['downloadLinkPolstere'] = (
-                "ftp://mftp.cmems.met.no/Core/" +  # noqa: E121
-                "SEAICE_GLO_SEAICE_L4_NRT_OBSERVATIONS_011_001/" +
-                "METNO-GLO-SEAICE_CONC-SOUTH-L4-NRT-OBS/" +
-                year +
-                "/" +
-                month +
-                "/" +
-                "ice_conc_sh_polstere-100_multi_" +
-                year +
-                month +
-                day +
-                "1200.nc")
-            metadata['thumbnail'] = ("http://thredds.met.no/thredds/wms/"
-                                     "sea_ice/SIW-OSISAF-GLO-SIT_SIE_SIC-OBS/"
-                                     "ice_conc_south_aggregated"
-                                     "?request=GetMap"
-                                     "&layers=ice_conc"
-                                     "&version=1.3.0"
-                                     "&crs=CRS:84"
-                                     "&bbox=-180,-90,180,0"
-                                     "&WIDTH=800"
-                                     "&HEIGHT=800"
-                                     "&styles=boxfill/rainbow"
-                                     "&format=image/png"
-                                     "&time=" +
-                                     start_date_string +
-                                     "T12:00:00.000Z")
+
+            polstere_url = ("ftp://mftp.cmems.met.no/Core/" +  # noqa: E121
+                            "SEAICE_GLO_SEAICE_L4_NRT_OBSERVATIONS_011_001/" +
+                            "METNO-GLO-SEAICE_CONC-SOUTH-L4-NRT-OBS/" +
+                            year +
+                            "/" +
+                            month +
+                            "/" +
+                            "ice_conc_sh_polstere-100_multi_" +
+                            year +
+                            month +
+                            day +
+                            "1200.nc")
+            thumbnail = ("http://thredds.met.no/thredds/wms/" +
+                         "sea_ice/SIW-OSISAF-GLO-SIT_SIE_SIC-OBS/" +
+                         "ice_conc_south_aggregated" +
+                         "?request=GetMap" +
+                         "&layers=ice_conc" +
+                         "&version=1.3.0" +
+                         "&crs=CRS:84" +
+                         "&bbox=-180,-90,180,0" +
+                         "&WIDTH=800" +
+                         "&HEIGHT=800" +
+                         "&styles=boxfill/rainbow" +
+                         "&format=image/png" +
+                         "&time=" +
+                         start_date_string +
+                         "T12:00:00.000Z")
 
         elif self.harvester_type == 'ocn':
             metadata['collection_id'] = 'ARCTIC_ANALYSIS_FORECAST_PHYS_002_001_A'  # noqa E501
@@ -549,21 +547,21 @@ class CMEMSBase(HarvesterBase):
                                                            [180, 63],
                                                            [-180, 63],
                                                            [-180, 90]])
-            metadata['downloadLink'] = ftp_link
-            metadata['thumbnail'] = ("http://thredds.met.no/thredds/wms/"  # noqa
-                                     "topaz/"
-                                     "dataset-topaz4-arc-1hr-myoceanv2-be"  # noqa
-                                     "?request=GetMap"
-                                     "&version=1.3.0"
-                                     "&layers=temperature"
-                                     "&CRS=CRS:84"
-                                     "&bbox=-180,0,180,90"
-                                     "&WIDTH=800"
-                                     "&HEIGHT=800"
-                                     "&styles=boxfill/rainbow"
-                                     "&format=image/png"
-                                     "&time=" +
-                                     start_date_string)
+
+            thumbnail = ("http://thredds.met.no/thredds/wms/" +
+                         "topaz/" +
+                         "dataset-topaz4-arc-1hr-myoceanv2-be" +
+                         "?request=GetMap" +
+                         "&version=1.3.0" +
+                         "&layers=temperature" +
+                         "&CRS=CRS:84" +
+                         "&bbox=-180,0,180,90" +
+                         "&WIDTH=800" +
+                         "&HEIGHT=800" +
+                         "&styles=boxfill/rainbow" +
+                         "&format=image/png" +
+                         "&time=" +
+                         start_date_string)
 
         elif self.harvester_type == 'slv':
             metadata['collection_id'] = ('SEALEVEL_GLO_PHY_L4_NRT_OBSERVATIONS_008_046')  # noqa E501
@@ -579,26 +577,25 @@ class CMEMSBase(HarvesterBase):
                                                            [180, -90],
                                                            [-180, -90],
                                                            [-180, 90]])
-            metadata['downloadLink'] = ftp_link
 
-            metadata['thumbnail'] = ("http://nrt.cmems-du.eu/thredds/wms/"
-                                     "dataset-duacs-nrt-global-merged-allsat-phy-l4"  # noqa E501
-                                     "?request=GetMap"
-                                     "&service=WMS"
-                                     "&version=1.3.0"
-                                     "&layers=surface_geostrophic_sea_water_velocity"  # noqa E501
-                                     "&crs=CRS:84"
-                                     "&bbox=-180,-90,180,90"
-                                     "&WIDTH=800"
-                                     "&HEIGHT=800"
-                                     "&styles=vector/rainbow"
-                                     "&format=image/png"
-                                     "&time=" +
-                                     start_date_string +
-                                     "T00:00:00.000Z")
+            thumbnail = ("http://nrt.cmems-du.eu/thredds/wms/" +
+                         "dataset-duacs-nrt-global-merged-allsat-phy-l4" +
+                         "?request=GetMap" +
+                         "&service=WMS" +
+                         "&version=1.3.0" +
+                         "&layers=surface_geostrophic_sea_water_velocity" +
+                         "&crs=CRS:84" +
+                         "&bbox=-180,-90,180,90" +
+                         "&WIDTH=800" +
+                         "&HEIGHT=800" +
+                         "&styles=vector/rainbow" +
+                         "&format=image/png" +
+                         "&time=" +
+                         start_date_string +
+                         "T00:00:00.000Z")
             slv_date = self._date_from_identifier_slv(content['identifier'])
-            metadata['StartTime'] = '{}T00:00:00.000Z'.format(slv_date)  # noqa E501
-            metadata['StopTime'] = metadata['StartTime']
+            metadata['timerange_start'] = '{}T00:00:00.000Z'.format(slv_date)  # noqa E501
+            metadata['timerange_end'] = metadata['timerange_start']
 
         elif self.harvester_type == 'gpaf':
             metadata['collection_id'] = 'GLOBAL_ANALYSIS_FORECAST_PHY_001_024'  # noqa E501
@@ -613,28 +610,28 @@ class CMEMSBase(HarvesterBase):
                                                            [180, -90],
                                                            [-180, -90],
                                                            [-180, 90]])
-            metadata['downloadLink'] = ftp_link
+
             gpaf_date_start, gpaf_date_end = self._date_from_identifier_gpaf(content['identifier'])   # noqa E501
-            metadata['thumbnail'] = ("http://nrt.cmems-du.eu/thredds/wms/"
-                                     "global-analysis-forecast-phy-001-024-hourly-t-u-v-ssh"   # noqa E501
-                                     "?request=GetMap"
-                                     "&service=WMS"
-                                     "&version=1.3.0"
-                                     "&layers=thetao"
-                                     "&crs=CRS:84"
-                                     "&bbox=-180,-90,180,90"
-                                     "&WIDTH=800"
-                                     "&HEIGHT=800"
-                                     "&styles=boxfill/rainbow"
-                                     "&format=image/gif"
-                                     "&time=" +
-                                     str(gpaf_date_start) +
-                                     "T00:30:00.000Z" +
-                                     "/" +
-                                     str(gpaf_date_start) +
-                                     "T23:30:00.000Z")
-            metadata['StartTime'] = '{}T00:30:00.000Z'.format(gpaf_date_start)  # noqa E501
-            metadata['StopTime'] = '{}T23:30:00.000Z'.format(gpaf_date_start)  # noqa E501
+            thumbnail = ("http://nrt.cmems-du.eu/thredds/wms/" +
+                         "global-analysis-forecast-phy-001-024-hourly-t-u-v-ssh" +
+                         "?request=GetMap" +
+                         "&service=WMS" +
+                         "&version=1.3.0" +
+                         "&layers=thetao" +
+                         "&crs=CRS:84" +
+                         "&bbox=-180,-90,180,90" +
+                         "&WIDTH=800" +
+                         "&HEIGHT=800" +
+                         "&styles=boxfill/rainbow" +
+                         "&format=image/gif" +
+                         "&time=" +
+                         str(gpaf_date_start) +
+                         "T00:30:00.000Z" +
+                         "/" +
+                         str(gpaf_date_start) +
+                         "T23:30:00.000Z")
+            metadata['timerange_start'] = '{}T00:30:00.000Z'.format(gpaf_date_start)  # noqa E501
+            metadata['timerange_end'] = '{}T23:30:00.000Z'.format(gpaf_date_start)  # noqa E501
 
             metadata['BulletinDate'] = str(gpaf_date_end)
             metadata['FieldDate'] = str(gpaf_date_start)
@@ -652,40 +649,34 @@ class CMEMSBase(HarvesterBase):
                                                            [180, -90],
                                                            [-180, -90],
                                                            [-180, 90]])
-            metadata['downloadLink'] = ftp_link
 
-            metadata['thumbnail'] = ("http://nrt.cmems-du.eu/thredds/wms/"
-                                     "dataset-uv-nrt-hourly"   # noqa E501
-                                     "?request=GetMap"
-                                     "&service=WMS"
-                                     "&version=1.3.0"
-                                     "&layers=sea_water_velocity"
-                                     "&crs=CRS:84"
-                                     "&bbox=-180,-90,180,90"
-                                     "&WIDTH=800"
-                                     "&HEIGHT=800"
-                                     "&styles=fancyvec/alg"
-                                     "&format=image/gif"
-                                     "&&time=" + start_date_string +
-                                     "T00:00:00.000Z" +
-                                     "/" +
-                                     start_date_string +
-                                     "T18:00:00.000Z")
+            thumbnail = ("http://nrt.cmems-du.eu/thredds/wms/" +
+                         "dataset-uv-nrt-hourly" +
+                         "?request=GetMap" +
+                         "&service=WMS" +
+                         "&version=1.3.0" +
+                         "&layers=sea_water_velocity" +
+                         "&crs=CRS:84" +
+                         "&bbox=-180,-90,180,90" +
+                         "&WIDTH=800" +
+                         "&HEIGHT=800" +
+                         "&styles=fancyvec/alg" +
+                         "&format=image/gif" +
+                         "&&time=" + start_date_string +
+                         "T00:00:00.000Z" +
+                         "/" +
+                         start_date_string +
+                         "T18:00:00.000Z")
             mog_date = self._date_from_identifier_mog(content['identifier'])
-            metadata['StartTime'] = '{}T00:00:00.000Z'.format(mog_date)  # noqa E501
-            metadata['StopTime'] = '{}T18:00:00.000Z'.format(mog_date)  # noqa E501
-
-        # Is there any way to determine the size of the downloads?
-        # Would be good to have (or possibly required) in some cases, like
-        # OpenSearch
+            metadata['timerange_start'] = '{}T00:00:00.000Z'.format(mog_date)  # noqa E501
+            metadata['timerange_end'] = '{}T18:00:00.000Z'.format(mog_date)  # noqa E501
 
         # Add common metadata
         metadata['identifier'] = content['identifier']
         metadata['name'] = metadata['identifier'].lower()
         if self.harvester_type not in ('slv', 'gpaf', 'mog'):
-            metadata['StartTime'] = '{}T00:00:00.000Z'.format(start_date_string)  # noqa E501
-            metadata['StopTime'] = self._make_stop_time(start_date)
-        metadata['size'] = content['size']
+            metadata['timerange_start'] = '{}T00:00:00.000Z'.format(start_date_string)  # noqa E501
+            metadata['timerange_end'] = self._make_stop_time(start_date)
 
         # For now, the collection name and description are the same as the
         # title and notes, though one or the other should probably change in
@@ -695,16 +686,20 @@ class CMEMSBase(HarvesterBase):
 
         metadata['tags'] = self._create_tags()
 
-        # Add time range metadata that's not tied to product-specific fields
-        # like StartTime so that we can filter by a dataset's time range
-        # without having to cram other kinds of temporal data into StartTime
-        # and StopTime fields, etc. We do this for the Sentinel products.
-        #
-        # We'll want to revisit this later--it's still not clear if we can just
-        # use StartTime and StopTime everywhere or if it has a special meaning
-        # for certain kinds of products.
-        metadata['timerange_start'] = metadata['StartTime']
-        metadata['timerange_end'] = metadata['StopTime']
+        resources = []
+
+        if self.harvester_type in {'sst', 'ocn', 'slv', 'gpaf', 'mog'}:
+            resources.append(self._make_resource(ftp_link,
+                                                 'Product Download'))
+        else:
+            resources.append(self._make_resource(ftp_link,
+                                                 'Product Download (EASE GRID)'))  # noqa: E501
+            resources.append(self._make_resource(polstere_url,
+                                                 'Product Download (Polar Stereographic)'))  # noqa: E501
+
+        resources.append(self._make_resource(thumbnail,
+                                             'Thumbnail Link'))
+        metadata['resource'] = resources
 
         return metadata
 
@@ -731,25 +726,9 @@ class CMEMSBase(HarvesterBase):
     # Required by NextGEOSS base harvester
     def _get_resources(self, metadata):
         """Return a list of resource dictionaries."""
-        resources = []
+        return metadata['resource']
 
-        if self.harvester_type in {'sst', 'ocn', 'slv', 'gpaf', 'mog'}:
-            resources.append(self._make_resource(metadata['downloadLink'],
-                                                 'Product Download',
-                                                 metadata['size']))
-        else:
-            resources.append(self._make_resource(metadata['downloadLinkEase'],
-                                                 'Product Download (EASE GRID)',  # noqa: E501,
-                                                 metadata['size']))
-            resources.append(self._make_resource(metadata['downloadLinkPolstere'],  # noqa: E501
-                                                 'Product Download (Polar Stereographic)'))  # noqa: E501
-
-        resources.append(self._make_resource(metadata['thumbnail'],
-                                             'Thumbnail Link'))
-
-        return resources
-
-    def _make_resource(self, url, name, size=None):
+    def _make_resource(self, url, name):
         """Return a resource dictionary."""
         resource_dict = {}
         resource_dict['name'] = name
@@ -764,8 +743,6 @@ class CMEMSBase(HarvesterBase):
                                             ' from CMEMS. NOTE:'
                                             ' DOWNLOAD REQUIRES'
                                             ' LOGIN')
-        if size:
-            resource_dict['size'] = size
 
         return resource_dict
 
