@@ -16,7 +16,7 @@ class EPOSbaseHarvester(HarvesterBase):
         """
 
         normalized_names = {
-            'date': 'StartTime',
+            'date': 'timerange_start',
             'spatial': 'spatial',
             'filename': 'Filename',
             'eop:platform': 'FamilyName',
@@ -42,7 +42,6 @@ class EPOSbaseHarvester(HarvesterBase):
             'eop:processorlevel': 'ProcessorLevel',
             'identifier': 'identifier',
             'title': 'title',
-            'eop:size': 'size',
             'eop:nativeproductformat': 'NativeProductFormat'
         }
         item = {}
@@ -119,17 +118,17 @@ class EPOSbaseHarvester(HarvesterBase):
         if geojson:
             item['spatial'] = geojson
 
-        date_tmp = item.pop('StartTime', None)
+        date_tmp = item.pop('timerange_start', None)
         if date_tmp:
             date_tmp = date_tmp.split('/')
 
             start_tmp = date_tmp[0].split('.')
             ms = start_tmp[1][0:3] + 'Z'
-            item['StartTime'] = start_tmp[0] + '.' + ms
+            item['timerange_start'] = start_tmp[0] + '.' + ms
 
             stop_tmp = date_tmp[1].split('.')
             ms = stop_tmp[1][0:3] + 'Z'
-            item['StopTime'] = stop_tmp[0] + '.' + ms
+            item['timerange_end'] = stop_tmp[0] + '.' + ms
 
         item['name'] = item['identifier'].lower()
         item['name'] = item['name'].replace('-', '_')
@@ -138,11 +137,17 @@ class EPOSbaseHarvester(HarvesterBase):
         enclosure = soup.find('link', rel='enclosure')
         thumbnail = soup.find('link', rel='icon')
 
+        resources = []
         if enclosure:
-            item['product_url'] = enclosure['href']
+            product_url = enclosure['href']
+            product_resource = self._make_product_resource(product_url)
+            if product_resource:
+                resources.append(product_resource)
 
         if thumbnail:
-            item['thumbnail'] = thumbnail['href']
+            thumbnail_url = thumbnail['href']
+            resources.append(self._make_thumbnail_resource(thumbnail_url))
+        item['resource'] = resources
 
         # Add the collection info
         item = self._add_collection(item)
@@ -153,74 +158,52 @@ class EPOSbaseHarvester(HarvesterBase):
 
         item['tags'] = self._get_tags_for_dataset(item)
 
-        # Add time range metadata that's not tied to product-specific fields
-        # like StartTime so that we can filter by a dataset's time range
-        # without having to cram other kinds of temporal data into StartTime
-        # and StopTime fields, etc.
-        item['timerange_start'] = item['StartTime']
-        item['timerange_end'] = item['StopTime']
-
         return item
 
-    def _make_thumbnail_resource(self, item):
+    def _make_thumbnail_resource(self, url):
         """
         Return a thumbnail resource dictionary depending on the type.
         """
-        if item.get('thumbnail'):
-            name = 'Thumbnail Download'
-            description = 'Download the thumbnail.'  # noqa: E501
-            url = item.get('thumbnail')
-            order = 3
-            _type = 'thumbnail'
+        name = 'Thumbnail Download'
+        description = 'Download the thumbnail.'  # noqa: E501
+        _type = 'thumbnail'
 
-            thumbnail = {'name': name,
-                         'description': description,
-                         'url': url,
-                         'format': 'PNG',
-                         'mimetype': 'image/png',
-                         'resource_type': _type,
-                         'order': order}
+        thumbnail = {'name': name,
+                        'description': description,
+                        'url': url,
+                        'format': 'PNG',
+                        'mimetype': 'image/png',
+                        'resource_type': _type}
 
-            return thumbnail
+        return thumbnail
 
-        else:
-            return None
-
-    def _make_product_resource(self, item):
+    def _make_product_resource(self, url):
         """
         Return a product resource dictionary depending on the product.
         """
-        if item.get('product_url'):
-            name = 'Product Download'
-            description = 'Download the product.'  # noqa: E501
-            url = item['product_url']
+        name = 'Product Download'
+        description = 'Download the product.' 
+        ext = url.split('.')[-1]
 
-            ext = url.split('.')[-1]
-
-            if ext == 'zip':
-                mimetype = 'application/zip'
-                file_ext = 'ZIP'
-                order = 1
-                _type = 'zip_product'
-            elif 'tif' in ext:
-                mimetype = 'image/tiff'
-                file_ext = 'GeoTIFF'
-                order = 2
-                _type = 'tif_product'
-            else:
-                return None
-
-            product = {'name': name,
-                       'description': description,
-                       'url': url,
-                       'format': file_ext,
-                       'mimetype': mimetype,
-                       'resource_type': _type,
-                       'order': order}
-
-            return product
+        if ext == 'zip':
+            mimetype = 'application/zip'
+            file_ext = 'ZIP'
+            _type = 'zip_product'
+        elif 'tif' in ext:
+            mimetype = 'image/tiff'
+            file_ext = 'GeoTIFF'
+            _type = 'tif_product'
         else:
             return None
+
+        product = {'name': name,
+                    'description': description,
+                    'url': url,
+                    'format': file_ext,
+                    'mimetype': mimetype,
+                    'resource_type': _type}
+
+        return product
 
     def _get_resources(self, parsed_content):
         """Return a list of resource dicts."""
@@ -229,10 +212,7 @@ class EPOSbaseHarvester(HarvesterBase):
         else:
             old_resources = None
 
-        product = self._make_product_resource(parsed_content)
-        thumbnail = self._make_thumbnail_resource(parsed_content)
-
-        new_resources = [x for x in [product, thumbnail] if x]
+        new_resources = parsed_content['resource']
         if not old_resources:
             resources = new_resources
         else:
@@ -241,11 +221,10 @@ class EPOSbaseHarvester(HarvesterBase):
             resources = []
             for old in old_resources:
                 old_type = old.get('resource_type')
-                order = old.get('order')
-                if old_type not in new_resource_types and order:
+                if old_type not in new_resource_types:
                     resources.append(old)
             resources += new_resources
 
-            resources.sort(key=lambda x: x['order'])
+        resources.sort(key=lambda x: x['name'])
 
         return resources
