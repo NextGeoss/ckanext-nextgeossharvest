@@ -126,8 +126,8 @@ class GDACSBase(HarvesterBase):
                                                            [-180, -90],
                                                            [-180, 90]])
 
-        metadata['resource'] = self._make_resource(http_link,
-                                                   'Product Download')
+        metadata['resource'] = [self._make_resource(http_link,
+                                                    'Product Download')]
         # Add common metadata
         metadata['identifier'] = content['identifier']
         metadata['name'] = metadata['identifier'].lower()
@@ -159,7 +159,7 @@ class GDACSBase(HarvesterBase):
         resource_dict['mimetype'] = 'image/tiff'
         resource_dict['description'] = ('Download the TIF from GDACS')
 
-        return [resource_dict]
+        return resource_dict
 
     def convert_date_config(self, term):
         """Convert a term into a datetime object."""
