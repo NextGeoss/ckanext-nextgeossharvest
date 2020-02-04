@@ -685,15 +685,18 @@ class CMEMSBase(HarvesterBase):
         metadata['collection_description'] = metadata['notes']
 
         metadata['tags'] = self._create_tags()
+        size = content['size']
 
         resources = []
 
         if self.harvester_type in {'sst', 'ocn', 'slv', 'gpaf', 'mog'}:
             resources.append(self._make_resource(ftp_link,
-                                                 'Product Download'))
+                                                 'Product Download',
+                                                 size))
         else:
             resources.append(self._make_resource(ftp_link,
-                                                 'Product Download (EASE GRID)'))  # noqa: E501
+                                                 'Product Download (EASE GRID)',  # noqa: E501
+                                                 size))
             resources.append(self._make_resource(polstere_url,
                                                  'Product Download (Polar Stereographic)'))  # noqa: E501
 
@@ -728,7 +731,7 @@ class CMEMSBase(HarvesterBase):
         """Return a list of resource dictionaries."""
         return metadata['resource']
 
-    def _make_resource(self, url, name):
+    def _make_resource(self, url, name, size=None):
         """Return a resource dictionary."""
         resource_dict = {}
         resource_dict['name'] = name
@@ -743,6 +746,9 @@ class CMEMSBase(HarvesterBase):
                                             ' from CMEMS. NOTE:'
                                             ' DOWNLOAD REQUIRES'
                                             ' LOGIN')
+
+        if size:
+            resource_dict['size'] = size
 
         return resource_dict
 
