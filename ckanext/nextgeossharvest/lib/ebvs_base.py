@@ -91,8 +91,12 @@ class EBVSBase(HarvesterBase):
 
         if ebv_type == 'tree_species':
             collectionID = 'TREE_SPECIES_DISTRIBUTION_HABITAT_SUITABILITY'
+            collection_name = 'Tree Species Distribution Habitat Suitability'
+            collection_description = '	European Distribution of the tress species for the years 2000 (Habitat Suitability baseline), 2020, 2050 and 2080 (Habitat Suitability future), based on different models such as ENS, CCCMA, CSIRO, HADCM3.'  # noqa: E501
         elif ebv_type == 'flood_hazards':
             collectionID = 'FLOOD_HAZARD_EU_GL'
+            collection_name = 'Flood Hazard Europe/Global'
+            collection_description = 'The maps depict flood prone areas at global/european scale for flood events. Resolution is 30 arcseconds (approx. 1km). Cell values indicate water depth (in m). The map can be used to assess flood exposure and risk of population and assets. NOTE: this dataset is based on JRC elaborations and is not an official flood hazard map.'  # noqa: E501
         title = dataset_info[0]
         description = dataset_info[1]
         start_date = dataset_info[2]
@@ -105,8 +109,8 @@ class EBVSBase(HarvesterBase):
 
         content = json.dumps({'collectionID': collectionID, 'title': title, 'description': description, 'start_date': start_date, 'end_date': end_date,  # noqa: E501
                                 'identifier': identifier, 'downloadURL': download_url,  # noqa: E501
-                                'spatial': spatial, 'filename': filename,
-                                'tags': tags}, default=str)
+                                'spatial': spatial, 'filename': filename, 'collection_name': collection_name,
+                                'collection_description': collection_description, 'tags': tags}, default=str)
 
         obj = HarvestObject(job=self.job, guid=unicode(uuid.uuid4()),
                             extras=extras, content=content)
@@ -144,6 +148,8 @@ class EBVSBase(HarvesterBase):
         metadata = {}
 
         metadata['collection_id'] = (content['collectionID'])
+        metadata['collection_name'] = (content['collection_name'])
+        metadata['collection_description'] = (content['collection_description'])  # noqa E501
         metadata['resource'] = [self._make_resource(content['downloadURL'],
                                                     'Product Download')]
 
