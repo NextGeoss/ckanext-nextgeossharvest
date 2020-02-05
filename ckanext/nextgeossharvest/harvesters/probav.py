@@ -331,15 +331,12 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         parsed_content['collection_name'] = collection.get_name()
         parsed_content['collection_description'] = collection.get_description()
         parsed_content['title'] = collection.get_name()
-        parsed_content['description'] = collection.get_description()
         parsed_content['tags'] = self._create_ckan_tags(collection.get_tags())  # noqa: E501
         parsed_content['uuid'] = str(uuid.uuid4())
         parsed_content['timerange_start'], parsed_content[
             'timerange_end'] = self._parse_interval(content)
         parsed_content['collection_id'] = str(collection)
         parsed_content['notes'] = parsed_content['collection_description']
-        parsed_content['Collection'] = str(collection)
-        parsed_content['notes'] = parsed_content['description']
         if collection.product_type == ProductType.L2A or \
                 collection.product_type == ProductType.L1C:
             self._parse_L2A_L1C_content(parsed_content, identifier, content)
@@ -353,25 +350,29 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
     def _parse_L2A_L1C_content(self, parsed_content, identifier, content):
         parsed_content['identifier'] = self._parse_identifier(identifier)
         parsed_content['name'] = self._parse_name(identifier)
-        parsed_content['filename'] = self._parse_filename(identifier)
         parsed_content['spatial'] = json.dumps(
             self._bbox_to_geojson(self._parse_bbox(content)))
-        parsed_content['metadata_download'] = self._get_metadata_url(content)
-        parsed_content['product_download'] = self._get_product_url(content)
-        parsed_content['thumbnail_download'] = self._get_thumbnail_url(content)  # noqa: E501
+        metadata_url = self._get_metadata_url(content)
+        product_url = self._get_product_url(content)
+        thumbnail_url = self._get_thumbnail_url(content)  # noqa: E501
+        parsed_content['resource'] = self._build_resources(metadata_url,
+                                                           product_url,
+                                                           thumbnail_url)
 
     def _parse_S_content(self, parsed_content, content, file_name, file_url):
         name = file_name
         parsed_content['identifier'] = self._parse_S_identifier(name)
         parsed_content['name'] = self._parse_S_name(name)
-        parsed_content['filename'] = name
         bbox = self._generate_bbox(self._parse_coordinates(name))
         parsed_content['spatial'] = json.dumps(self._bbox_to_geojson(bbox))
-        parsed_content['metadata_download'] = self._get_metadata_url(content)
-        parsed_content['product_download'] = file_url
-        parsed_content[
-            'thumbnail_download'] = self._generate_tile_thumbnail_url(
-                self._get_thumbnail_url(content), bbox)
+        metadata_url = self._get_metadata_url(content)
+        base_thumbnail_url = self._get_thumbnail_url(content)
+        thumbnail_url = self._generate_tile_thumbnail_url(base_thumbnail_url,
+                                                          bbox)
+        parsed_content['resource'] = self._build_resources(metadata_url,
+                                                           file_url,
+                                                           thumbnail_url)
+                
 
     def _generate_tile_thumbnail_url(self, thumbnail_url, bbox):
         url_parts = urlparse(thumbnail_url)
@@ -432,11 +433,6 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         name = identifier_parts[-2]
         return '{}_{}'.format(name, identifier_parts[-1]).lower()
 
-    def _parse_filename(self, identifier):
-        identifier_parts = identifier.split(':')
-        filename = identifier_parts[-2]
-        return '{}_{}.HDF5'.format(filename, identifier_parts[-1])
-
     def _bbox_to_geojson(self, bbox):
         return {
             'type': 'Polygon',
@@ -488,23 +484,26 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
             value = int(resolution_str[:-1])
         return Resolution(value, units)
 
-    def _get_resources(self, parsed_content):
+    def _build_resources(self, metadata_url, product_url, thumbnail_url):
         return [{
             'name': 'Metadata Download',
-            'url': parsed_content['metadata_download'],
+            'url': metadata_url,
             'format': 'xml',
             'mimetype': 'application/xml'
         }, {
             'name': 'Product Download',
-            'url': parsed_content['product_download'],
+            'url': product_url,
             'format': 'hdf5',
             'mimetype': 'application/x-hdf5'
         }, {
             'name': 'Thumbnail Download',
-            'url': parsed_content['thumbnail_download'],
+            'url': thumbnail_url,
             'format': 'png',
             'mimetype': 'image/png'
         }]
+
+    def _get_resources(self, parsed_content):
+        return parsed_content['resource']
 
     def _get_metadata_url(self, content):
         return str(content.find('link', title='HMA')['href'])
