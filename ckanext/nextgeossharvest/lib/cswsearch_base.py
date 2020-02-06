@@ -142,7 +142,7 @@ class CSWSearchHarvester(HarvesterBase):
                         update_counter += 1
                     else:
                         log.debug('{} already exists and will not be updated.'.format(entry_name))  # noqa: E501
-                        status = 'unchange'
+                        status = 'unchanged'
 
                     obj = HarvestObject(guid=entry_guid, job=self.job,
                                         extras=[HOExtra(key='status',
