@@ -180,7 +180,6 @@ class GDACSHarvester(NextGEOSSHarvester, GDACSBase):
     def _gather_object(self, job, url, start_date):
         filename = parse_filename(url)
         filename_id = filename
-        print('gathering %s', filename)
         extras = [HOExtra(key='status', value='new')]
         assert start_date
         content = json.dumps({
