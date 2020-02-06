@@ -42,6 +42,7 @@ class EPOSbaseHarvester(HarvesterBase):
             'eop:processorlevel': 'ProcessorLevel',
             'identifier': 'identifier',
             'title': 'title',
+            'eop:size': 'size',
             'eop:nativeproductformat': 'NativeProductFormat'
         }
         item = {}
@@ -133,6 +134,11 @@ class EPOSbaseHarvester(HarvesterBase):
         item['name'] = item['identifier'].lower()
         item['name'] = item['name'].replace('-', '_')
 
+        if 'size' in item:
+            size = item.pop('size')
+        else:
+            size = None
+
         # Thumbnail and enclosure
         enclosure = soup.find('link', rel='enclosure')
         thumbnail = soup.find('link', rel='icon')
@@ -140,7 +146,7 @@ class EPOSbaseHarvester(HarvesterBase):
         resources = []
         if enclosure:
             product_url = enclosure['href']
-            product_resource = self._make_product_resource(product_url)
+            product_resource = self._make_product_resource(product_url, size)
             if product_resource:
                 resources.append(product_resource)
 
@@ -177,7 +183,7 @@ class EPOSbaseHarvester(HarvesterBase):
 
         return thumbnail
 
-    def _make_product_resource(self, url):
+    def _make_product_resource(self, url, size=None):
         """
         Return a product resource dictionary depending on the product.
         """
@@ -202,6 +208,9 @@ class EPOSbaseHarvester(HarvesterBase):
                     'format': file_ext,
                     'mimetype': mimetype,
                     'resource_type': _type}
+
+        if size:
+            product['size'] = size
 
         return product
 
