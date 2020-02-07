@@ -32,9 +32,10 @@ class OLUHarvester(HarvesterBase):
 
         # Since Micka Catalogue datasets refer to an entire day,
         # there is only one datastamp. Thus, this value will be
-        # added to both StartTime and StopTime, and later pos-processed
+        # added to both timerange_start and timerange_end, and later
+        # pos-processed
         normalized_names = {
-            'gmd:datestamp': 'StartTime',
+            'gmd:datestamp': 'timerange_start',
             'gmd:westboundlongitude': 'spatial',
             'gmd:eastboundlongitude': 'spatial',
             'gmd:southboundlatitude': 'spatial',
@@ -42,7 +43,7 @@ class OLUHarvester(HarvesterBase):
             'gmd:fileidentifier': 'identifier',
             'gmd:title': 'title',
             'gmd:abstract': 'notes',
-            'gmd:parentidentifier': 'parent_identifier'
+            'gmd:parentidentifier': 'parentIdentifier'
         }
         item = {'spatial': spatial_dict}
 
@@ -50,12 +51,10 @@ class OLUHarvester(HarvesterBase):
             if subitem_node.name in normalized_names:
                 key = normalized_names[subitem_node.name]
                 if key:
-                    if key is 'spatial':
+                    if key == 'spatial':
                         item[key][subitem_node.name] = subitem_node.text
-                    elif key in ['identifier', 'notes', 'title']:
-                        item[key] = subitem_node.text
                     else:
-                        item[key] = subitem_node.text.lower()
+                        item[key] = subitem_node.text
 
         # Since the spatial field is composed by 4 values,
         # if either of the values is None, then the whole field is dismissed
@@ -64,12 +63,12 @@ class OLUHarvester(HarvesterBase):
                 del item['spatial']
                 break
 
-        if ('StartTime' in item) and ('StopTime' not in item):
-            item['StopTime'] = item['StartTime']
+        if ('timerange_start' in item) and ('timerange_end' not in item):
+            item['timerange_end'] = item['timerange_start']
 
-            if not item['StartTime'].endswith('Z'):
-                item['StartTime'] += 'T00:00:00.000Z'
-                item['StopTime'] += 'T23:59:59.999Z'
+            if not item['timerange_start'].endswith('Z'):
+                item['timerange_start'] += 'T00:00:00.000Z'
+                item['timerange_end'] += 'T23:59:59.999Z'
 
         return item
 
@@ -121,113 +120,107 @@ class OLUHarvester(HarvesterBase):
             geojson = template.substitute(coords_list=coords_list)
             item['spatial'] = geojson
 
-        if 'identifier' in item:
-            item['identifier'] = item['identifier'].replace('.', '_')
-            item['Filename'] = item['identifier'].lower()
+        name = item['identifier'].lower()
+        item['name'] = name.replace('.', '_')
 
-        if 'parent_identifier' in item:
-            item['parent_identifier'] = item['parent_identifier'].replace('.', '_')  # noqa: E501
-
-        item['name'] = item['identifier'].lower()
-
+        resources = []
         # Thumbnail, alternative and enclosure
         quick_look = soup.find('gmd:md_browsegraphic')
 
         if quick_look:
-            item['thumbnail'] = quick_look.find('gmd:filename').text
+            thumbnail = quick_look.find('gmd:filename').text
+            if thumbnail:
+                resources.append(self._make_thumbnail_resource(thumbnail))
 
         resources_list = soup.find_all({'gmd:online'})
         for resource in resources_list:
             name = resource.find('gmd:name').text.replace(' ', '_')
             if 'GeoJSON' in name:
-                item['geojsonLink'] = resource.find('gmd:linkage').text
+                geojson_url = resource.find('gmd:linkage').text
+                if geojson_url:
+                    resources.append(self._make_geojson_resource(geojson_url))
             elif 'SHP' in name:
-                item['shapefileLink'] = resource.find('gmd:linkage').text
-            elif 'WMS' in name:
-                pass
-            else:
-                pass
-
+                shp_url = resource.find('gmd:linkage').text
+                if shp_url:
+                    resources.append(self._make_shp_resource(shp_url))
+        resources.append(self._make_dataset_link(item['identifier']))
         # Add the collection info
         item = self._add_collection(item)
 
-        item['title'] = item['collection_name']
-
-        item['notes'] = item['collection_description']
-
         item['tags'] = self._get_tags_for_dataset(item)
+        item['resource'] = resources
 
         return item
 
-    def _make_geojson_resource(self, item):
+    def _make_geojson_resource(self, url):
         """
         Return a geojson resource dictionary
         """
-        if item.get('geojsonLink'):
-            name = 'GeoJSON Download from Plan4All'
-            description = 'Download the geojson file from Plan4All.'  # noqa: E501
-            url = item['geojsonLink']
-            order = 1
-            _type = 'plan4all_geojson'
+        name = 'GeoJSON Download from Plan4All'
+        description = 'Download the geojson file from Plan4All.'  # noqa: E501
+        _type = 'plan4all_geojson'
 
-            geojson = {'name': name,
-                       'description': description,
-                       'url': url,
-                       'format': 'JSON',
-                       'mimetype': 'application/json',
-                       'resource_type': _type,
-                       'order': order}
+        geojson = {'name': name,
+                   'description': description,
+                   'url': url,
+                   'format': 'JSON',
+                   'mimetype': 'application/json',
+                   'resource_type': _type}
 
-            return geojson
-        else:
-            return None
+        return geojson
 
-    def _make_shapefile_resource(self, item):
+    def _make_shp_resource(self, url):
         """
         Return a shapefile resource dictionary depending on the harvest source.
         """
-        if item.get('shapefileLink'):
-            name = 'ShapeFile Download from Plan4All'
-            description = 'Download ESRI shapefile as zip from Plan4All.'  # noqa: E501
-            url = item['shapefileLink']
-            order = 2
-            _type = 'plan4all_shapefile'
+        name = 'ShapeFile Download from Plan4All'
+        description = 'Download ESRI shapefile as zip from Plan4All.'  # noqa: E501
+        _type = 'plan4all_shapefile'
 
-            shapefile = {'name': name,
-                         'description': description,
-                         'url': url,
-                         'format': 'ZIP',
-                         'mimetype': 'application/zip',
-                         'resource_type': _type,
-                         'order': order}
+        shapefile = {'name': name,
+                     'description': description,
+                     'url': url,
+                     'format': 'ZIP',
+                     'mimetype': 'application/zip',
+                     'resource_type': _type}
 
-            return shapefile
-        else:
-            return None
+        return shapefile
 
-    def _make_thumbnail_resource(self, item):
+    def _make_thumbnail_resource(self, url):
         """
         Return a thumbnail resource dictionary
         """
-        if item.get('thumbnail'):
-            name = 'Thumbnail Download'
-            description = 'Download a PNG quicklook.'  # noqa: E501
-            url = item['thumbnail']
-            order = 3
-            _type = 'thumbnail'
-
-        else:
-            return None
+        name = 'Thumbnail Download'
+        description = 'Download a PNG quicklook.'  # noqa: E501
+        _type = 'thumbnail'
 
         thumbnail = {'name': name,
                      'description': description,
                      'url': url,
                      'format': 'PNG',
                      'mimetype': 'image/png',
-                     'resource_type': _type,
-                     'order': order}
+                     'resource_type': _type}
 
         return thumbnail
+
+    def _make_dataset_link(self, id):
+        """
+        Return a thumbnail resource dictionary
+        """
+        name = 'Original Metadata Record'
+        description = 'Link to original metadata record.'
+        url_base = 'https://micka.lesprojekt.cz/record/basic/'
+        url = url_base + id
+        _type = 'original_record'
+
+        og_link = {'name': name,
+                   'description': description,
+                   'url': url,
+                   'format': 'HTML',
+                   'mimetype': 'text/html',
+                   'resource_type': _type}
+
+        return og_link
 
     def _get_resources(self, parsed_content):
         """Return a list of resource dicts."""
@@ -236,11 +229,7 @@ class OLUHarvester(HarvesterBase):
         else:
             old_resources = None
 
-        shapefile = self._make_shapefile_resource(parsed_content)
-        geojson = self._make_geojson_resource(parsed_content)
-        thumbnail = self._make_thumbnail_resource(parsed_content)
-
-        new_resources = [x for x in [shapefile, geojson, thumbnail] if x]
+        new_resources = parsed_content['resource']
         if not old_resources:
             resources = new_resources
         else:
@@ -249,11 +238,10 @@ class OLUHarvester(HarvesterBase):
             resources = []
             for old in old_resources:
                 old_type = old.get('resource_type')
-                order = old.get('order')
-                if old_type not in new_resource_types and order:
+                if old_type not in new_resource_types:
                     resources.append(old)
             resources += new_resources
 
-            resources.sort(key=lambda x: x['order'])
+        resources.sort(key=lambda x: x['name'])
 
         return resources
