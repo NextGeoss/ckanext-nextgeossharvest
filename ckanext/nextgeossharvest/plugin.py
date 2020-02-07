@@ -1,11 +1,10 @@
-import ckan.plugins as plugins, IPackageController
+import ckan.plugins as plugins
 import shapely
 import json
 import ast
 
 class NextgeossharvestPlugin(plugins.SingletonPlugin):
-    plugins.implements(plugins.IConfigurer)
-    plugins.implements(IPackageController, inherit=True)
+    plugins.implements(plugins.IPackageController, inherit=True)
 
     def before_index(self, pkg_dict):
         """Expand extras if they're saved as a single string."""
