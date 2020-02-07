@@ -186,7 +186,6 @@ class CMEMSHarvester(NextGEOSSHarvester, CMEMSBase):
         filename_id = (
             filename.replace('-v02.0-fv02.0', '').replace('-fv02.0', '')
         )
-        print('gathering %s', filename)
         extras = [HOExtra(key='status', value='new')]
         assert start_date
         content = json.dumps({

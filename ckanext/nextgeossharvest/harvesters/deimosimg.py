@@ -81,7 +81,7 @@ class DEIMOSIMGHarvester(NextGEOSSHarvester, DEIMOSIMGBase):
         once and rename them in one go.
         """
         normalized_names = {
-            'ms:image_date': 'StartTime',
+            'ms:image_date': 'timerange_start',
             'gml:poslist': 'spatial',
             'ms:cloudpercent': 'CloudCoverage',
             'ms:roll_filter': 'Roll',
