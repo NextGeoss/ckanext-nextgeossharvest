@@ -80,6 +80,8 @@ class EPOSHarvester(EPOSbaseHarvester, NextGEOSSHarvester, HarvesterBase):
 
             if type(config_obj.get('make_private', False)) != bool:
                 raise ValueError('make_private must be true or false')
+            if type(config_obj.get('update_all', False)) != bool:
+                raise ValueError('update_all must be true or false')
 
         except ValueError as e:
             raise e
@@ -291,8 +293,12 @@ class EPOSHarvester(EPOSbaseHarvester, NextGEOSSHarvester, HarvesterBase):
 
                     # If the package already exists it
                     # will not create a new one
-                    log.debug('{} will not be updated.'.format(entry_name))  # noqa: E501
-                    status = 'unchanged'
+                    if self.update_all:
+                        log.debug('{} already exists and will be updated.'.format(entry_name))  # noqa: E501
+                        status = 'change'
+                    else:
+                        log.debug('{} will not be updated.'.format(entry_name))  # noqa: E501
+                        status = 'unchanged'
 
                     obj = HarvestObject(guid=entry_guid, job=self.job,
                                         extras=[HOExtra(key='status',
@@ -304,7 +310,7 @@ class EPOSHarvester(EPOSbaseHarvester, NextGEOSSHarvester, HarvesterBase):
                     obj.save()
                     ids.append(obj.id)
 
-                elif not package:
+                else:
                     # It's a product we haven't harvested before.
                     log.debug('{} has not been harvested before. Creating a new harvest object.'.format(entry_name))  # noqa: E501
                     obj = HarvestObject(guid=entry_guid, job=self.job,
