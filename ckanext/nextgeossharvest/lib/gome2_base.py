@@ -221,8 +221,8 @@ class GOME2Base(HarvesterBase):
         metadata['identifier'] = identifier
         metadata['name'] = identifier.lower()
         metadata['spatial'] = spatial_template.format(coordinates)
-        metadata['StartTime'] = '{}T00:00:00.000Z'.format(self.date_string)
-        metadata['StopTime'] = self._make_stop_time(self.date_string)
+        metadata['timerange_start'] = '{}T00:00:00.000Z'.format(self.date_string)  # noqa: E501
+        metadata['timerange_end'] = self._make_stop_time(self.date_string)
 
         # For now, the collection name and description are the same as the
         # title and notes, though one or the other should probably change in
@@ -231,17 +231,6 @@ class GOME2Base(HarvesterBase):
         metadata['collection_description'] = metadata['notes']
 
         metadata['tags'] = self._create_tags()
-
-        # Add time range metadata that's not tied to product-specific fields
-        # like StartTime so that we can filter by a dataset's time range
-        # without having to cram other kinds of temporal data into StartTime
-        # and StopTime fields, etc. We do this for the Sentinel products.
-        #
-        # We'll want to revisit this later--it's still not clear if we can just
-        # use StartTime and StopTime everywhere or if it has a special meaning
-        # for certain kinds of products.
-        metadata['timerange_start'] = metadata['StartTime']
-        metadata['timerange_end'] = metadata['StopTime']
 
         return metadata
 
