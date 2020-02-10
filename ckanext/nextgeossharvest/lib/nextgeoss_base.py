@@ -292,10 +292,17 @@ class NextGEOSSHarvester(HarvesterBase):
         Replace the old extras with the new extras from the harvester.
         """
 
+        print(new_extras)
         if "dataset_extra" in new_extras[0]['key']:
             new_values = eval(new_extras[0]['value'])
+        print(new_values)
 
-        return [{'key': 'dataset_extra', 'value': str(new_values)}]
+        if True:
+            # placeholder for product extras update,
+            # that only have 1 data source
+            return new_extras
+        else:
+            return [{'key': 'dataset_extra', 'value': str(new_values)}]
 
     def make_provider_logger(self, filename='dataproviders_info.log'):
         """Create a logger just for provider uptimes."""
