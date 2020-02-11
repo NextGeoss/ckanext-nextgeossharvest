@@ -15,7 +15,7 @@ class NextgeossharvestPlugin(plugins.SingletonPlugin):
 
         # Handle spatial indexing here since the string extras break
         # the spatial extension.
-        pkg_dict = remove_sentinel_fields_from_index(pkg_dict)
+        #pkg_dict = remove_sentinel_fields_from_index(pkg_dict)
 
         return pkg_dict
 
