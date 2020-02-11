@@ -58,7 +58,7 @@ class ESAHarvester(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
                 timeout = config_obj['timeout']
                 if not isinstance(timeout, int) and not timeout > 0:
                     raise ValueError('timeout must be a positive integer')
-            for key in ['update_all', 'skip_raw']:
+            for key in ['update_all', 'skip_raw', 'multiple_sources']:
                 if key in config_obj:
                     if not isinstance(config_obj[key], bool):
                         raise ValueError('{} must be boolean'.format(key))
