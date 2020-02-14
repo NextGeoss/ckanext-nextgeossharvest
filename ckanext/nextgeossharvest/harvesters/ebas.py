@@ -71,6 +71,8 @@ class EBASHarvester(EBASbaseHarvester, NextGEOSSHarvester, HarvesterBase):
 
             if type(config_obj.get('make_private', False)) != bool:
                 raise ValueError('make_private must be true or false')
+            if type(config_obj.get('update_all', False)) != bool:
+                raise ValueError('update_all must be true or false')
 
         except ValueError as e:
             raise e
@@ -360,10 +362,13 @@ class EBASHarvester(EBASbaseHarvester, NextGEOSSHarvester, HarvesterBase):
                         previous_obj.current = False
                         previous_obj.save()
 
-                    # If the package already exists it
-                    # will not create a new one
-                    log.debug('{} already exists and will be updated.'.format(entry_name))  # noqa: E501
-                    status = 'change'
+                    if self.update_all:
+                        log.debug('{} already exists and will be updated.'.format(entry_name))  # noqa: E501
+                        status = 'change'
+                        update_counter += 1
+                    else:
+                        log.debug('{} will not be updated.'.format(entry_name))  # noqa: E501
+                        status = 'unchanged'
 
                     obj = HarvestObject(guid=entry_guid, job=self.job,
                                         extras=[HOExtra(key='status',
@@ -372,7 +377,6 @@ class EBASHarvester(EBASbaseHarvester, NextGEOSSHarvester, HarvesterBase):
                                                 value=entry_restart_date),
                                                 HOExtra(key='restart_token',
                                                 value=entry_restart_token)])
-                    update_counter += 1
                     obj.content = entry['content']
                     obj.package = package
                     obj.save()
