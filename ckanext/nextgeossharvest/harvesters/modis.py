@@ -72,6 +72,8 @@ class MODISHarvester(CMRHarvester, OpenSearchHarvester, NextGEOSSHarvester):
                     raise ValueError('timeout must be a positive integer')
             if type(config_obj.get('make_private', False)) != bool:
                 raise ValueError('make_private must be true or false')
+            if type(config_obj.get('update_all', False)) != bool:
+                raise ValueError('update_all must be true or false')
 
         except ValueError as e:
             raise e
