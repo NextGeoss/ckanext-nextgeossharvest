@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 
 class GDACSBase(HarvesterBase):
 
-    def _was_harvested(self, identifier):
+    def _was_harvested(self, identifier, update_flag):
         """
         Check if a product has already been harvested and return True or False.
         """
@@ -25,11 +25,17 @@ class GDACSBase(HarvesterBase):
             .filter(Package.name == identifier.lower()).first()
 
         if package:
-            log.debug('{} will not be updated.'.format(identifier))
-            return True
+            if update_flag:
+                log.debug('{} already exists and will be updated.'.format(identifier))  # noqa: E501
+                status = 'change'
+            else:
+                log.debug('{} will not be updated.'.format(identifier))
+                status = 'unchanged'
         else:
             log.debug('{} has not been harvested before. Attempting to harvest it.'.format(identifier))  # noqa: E501
-            return False
+            status = 'new'
+
+        return status, package
 
     def _make_stop_time(self, start_date):
         stop_date = start_date + timedelta(days=1)
