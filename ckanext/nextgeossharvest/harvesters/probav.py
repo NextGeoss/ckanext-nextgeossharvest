@@ -201,6 +201,8 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
                  or "PROBAV_L2A_333M_V001"''')
             if type(config_obj.get('make_private', False)) != bool:
                 raise ValueError('make_private must be true or false')
+            if type(config_obj.get('update_all', False)) != bool:
+                raise ValueError('update_all must be true or false')
         except ValueError as e:
             raise e
 
@@ -262,6 +264,7 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
                 self.source_config['password'])
 
         timeout = self.source_config.get('timeout', 10)
+        self.update_all = self.source_config.get('update_all', False)
 
         collection = self.source_config['collection']
 
@@ -662,7 +665,7 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
             content_dict['file_entry'] = metalink_file_entry
         return json.dumps(content_dict)
 
-    def _gather_entry(self, entry, auth=None, update_all=False):
+    def _gather_entry(self, entry, auth=None):
         # Create a harvest object for each entry
         entry_guid = entry['guid']
         log.debug('gathering %s', entry_guid)
@@ -684,42 +687,24 @@ class PROBAVHarvester(OpenSearchHarvester, NextGEOSSHarvester):
                 previous_obj.current = False
                 previous_obj.save()
 
-            if update_all:
-                log.debug('{} already exists and will be updated.'.format(
-                    entry_name))  # noqa: E501
+            if self.update_all:
+                log.debug('{} already exists and will be updated.'.format(entry_name))  # noqa: E501
                 status = 'change'
-                obj = HarvestObject(
-                    guid=entry_guid,
-                    job=self.job,
-                    extras=[
-                        HOExtra(key='status', value=status),
-                        HOExtra(key='restart_date', value=entry_restart_date)
-                    ])
-                obj.content = entry['content']
-                obj.package = package
-                obj.save()
-                return obj.id
-            elif self.flagged_extra and not self._get_package_extra(
-                    package.as_dict(), self.flagged_extra):  # noqa: E501
-                log.debug('{} already exists and will be extended.'.format(
-                    entry_name))  # noqa: E501
-                status = 'change'
-                obj = HarvestObject(
-                    guid=entry_guid,
-                    job=self.job,
-                    extras=[
-                        HOExtra(key='status', value=status),
-                        HOExtra(key='restart_date', value=entry_restart_date)
-                    ])
-                obj.content = entry['content']
-                obj.package = package
-                obj.save()
-                return obj.id
             else:
-                log.debug(
-                    '{} will not be updated.'.format(entry_name))  # noqa: E501  # noqa: E501
+                log.debug('{} will not be updated.'.format(entry_name))  # noqa: E501  # noqa: E501
                 status = 'unchanged'
-                return
+
+            obj = HarvestObject(guid=entry_guid,
+                                job=self.job,
+                                extras=[
+                                    HOExtra(key='status', value=status),
+                                    HOExtra(key='restart_date', value=entry_restart_date)
+                                ])
+
+            obj.content = entry['content']
+            obj.package = package
+            obj.save()
+            return obj.id
 
         elif not package:
             # It's a product we haven't harvested before.
