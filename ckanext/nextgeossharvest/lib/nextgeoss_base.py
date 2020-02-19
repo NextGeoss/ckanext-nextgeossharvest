@@ -299,6 +299,8 @@ class NextGEOSSHarvester(HarvesterBase):
                                                       'multiple_sources'):
             extend_extras = self.source_config.get('multiple_sources', False)
 
+        print("Old-extras: {}".format(old_extras))
+        print("New-extras: {}".format(new_extras))
         if extend_extras:
 
             if "dataset_extra" in old_extras[0]['key']:
