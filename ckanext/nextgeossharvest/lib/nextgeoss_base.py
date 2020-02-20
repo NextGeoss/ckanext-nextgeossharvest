@@ -5,27 +5,23 @@ import json
 import logging
 import os
 import uuid
-from string import Template
 from datetime import datetime
+from string import Template
+
 import requests
 from requests.auth import HTTPBasicAuth
-import requests_ftp
 from requests.exceptions import ConnectTimeout, ReadTimeout
+from sqlalchemy.sql import bindparam, update
 
-from sqlalchemy.sql import update, bindparam
+import requests_ftp
 import shapely.wkt
-from shapely.errors import ReadingError, WKTReadingError
-
+from ckan import logic, model
 from ckan import plugins as p
-from ckan import model
 from ckan.common import config
-from ckan.model import Session
-from ckan.model import Package
-from ckan import logic
 from ckan.lib.navl.validators import not_empty
-
+from ckan.model import Package, Session
 from ckanext.harvest.harvesters.base import HarvesterBase
-
+from shapely.errors import ReadingError, WKTReadingError
 
 log = logging.getLogger(__name__)
 
@@ -303,14 +299,12 @@ class NextGEOSSHarvester(HarvesterBase):
         print("New-extras: {}".format(new_extras))
         if extend_extras:
 
-            if "dataset_extra" in old_extras[0]['key']:
-                old_values = eval(old_extras[0]['value'])
-
             if "dataset_extra" in new_extras[0]['key']:
                 new_values = eval(new_extras[0]['value'])
                 new_extra_keys = [new_value['key'] for new_value in new_values]
-
-            for old_extra in old_values:
+            print("New-extras keys: {}".format(new_extra_keys))
+            for old_extra in old_extras:
+                print(old_extra['key'])
                 if old_extra['key'] not in new_extra_keys:
                     new_values.append(old_extra)
 
