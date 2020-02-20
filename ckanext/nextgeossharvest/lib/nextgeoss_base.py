@@ -288,28 +288,49 @@ class NextGEOSSHarvester(HarvesterBase):
         Replace the old extras with the new extras from the harvester.
         """
 
-        # Robustness protection for harvesters that do not save configuration
+        ignore_list = [
+            "StartTime",
+            "StopTime",
+            "thumbnail",
+            "summary",
+            "Filename",
+            "size",
+            "scihub_download_url",
+            "scihub_product_url",
+            "scihub_manifest_url",
+            "scihub_thumbnail",
+            "noa_download_url",
+            "noa_product_url",
+            "noa_manifest_url",
+            "noa_thumbnail",
+            "code_download_url",
+            "code_product_url",
+            "code_manifest_url",
+            "code_thumbnail",
+        ]
+        # Robustness for harvesters that do not save configuration
         # into self.source_config
         extend_extras = False
-        if hasattr(self, 'source_config') and hasattr(self.source_config,
-                                                      'multiple_sources'):
+        if hasattr(self, 'source_config'):
             extend_extras = self.source_config.get('multiple_sources', False)
 
-        print("Old-extras: {}".format(old_extras))
-        print("New-extras: {}".format(new_extras))
         if extend_extras:
-
+            # For datasets with multiple sources, the extras are expanded
+            # with new fields
             if "dataset_extra" in new_extras[0]['key']:
                 new_values = eval(new_extras[0]['value'])
-                new_extra_keys = [new_value['key'] for new_value in new_values]
-            print("New-extras keys: {}".format(new_extra_keys))
-            for old_extra in old_extras:
-                print(old_extra['key'])
-                if old_extra['key'] not in new_extra_keys:
-                    new_values.append(old_extra)
+            else:
+                new_values = new_extras
+            new_extra_keys = [new_value['key'] for new_value in new_values]
 
+            for old_extra in old_extras:
+                if ((old_extra['key'] not in new_extra_keys) and 
+                    (old_extra['key'] not in ignore_list)):
+                    new_values.append(old_extra)
             return [{'key': 'dataset_extra', 'value': str(new_values)}]
         else:
+            # For datasets with single source, the extras are replaced
+            # with the fields collected in the most recent harvest
             return new_extras
 
     def make_provider_logger(self, filename='dataproviders_info.log'):
