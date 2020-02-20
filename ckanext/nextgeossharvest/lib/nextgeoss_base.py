@@ -285,7 +285,9 @@ class NextGEOSSHarvester(HarvesterBase):
 
     def _update_extras(self, old_extras, new_extras):
         """
-        Replace the old extras with the new extras from the harvester.
+        Replace the old extras with the new extras from the harvester,
+        or extend the new extras with the different fields from
+        old_extras
         """
 
         ignore_list = [
