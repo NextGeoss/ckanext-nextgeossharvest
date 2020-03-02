@@ -78,6 +78,9 @@ class SIMOceanHarvester(SIMOceanbaseHarvester, NextGEOSSHarvester,
             if type(config_obj.get('make_private', False)) != bool:
                 raise ValueError('make_private must be true or false')
 
+            if type(config_obj.get('update_all', False)) != bool:
+                raise ValueError('update_all must be true or false')
+
         except ValueError as e:
             raise e
 
@@ -303,10 +306,12 @@ class SIMOceanHarvester(SIMOceanbaseHarvester, NextGEOSSHarvester,
                         previous_obj.current = False
                         previous_obj.save()
 
-                    # If the package already exists it
-                    # will not create a new one
-                    log.debug('{} will not be updated.'.format(entry_name))  # noqa: E501
-                    status = 'unchanged'
+                    if self.update_all:
+                        log.debug('{} already exists and will be updated.'.format(entry_name))  # noqa: E501
+                        status = 'change'
+                    else:
+                        log.debug('{} will not be updated.'.format(entry_name))  # noqa: E501
+                        status = 'unchanged'
 
                     obj = HarvestObject(guid=entry_guid, job=self.job,
                                         extras=[HOExtra(key='status',

@@ -22,7 +22,11 @@ class SIMOceanbaseHarvester(HarvesterBase):
                        'StopHour',
                        'harvest_object_id',
                        'harvest_source_id',
-                       'harvest_source_title']
+                       'harvest_source_title',
+                       'Limitations On Public Access',
+                       'CreationTime',
+                       'Responsible Party',
+                       'Metadata Date']
 
         extras = content['extras']
         for field in extras:
@@ -115,71 +119,83 @@ class SIMOceanbaseHarvester(HarvesterBase):
 
         item['tags'] = self._get_tags_for_dataset(content)
 
-        item['resource'] = content['resources']
+        item['resource'] = self._parse_resources(content['resources'])
 
-        # Add time range metadata that's not tied to product-specific fields
-        # like StartTime so that we can filter by a dataset's time range
-        # without having to cram other kinds of temporal data into StartTime
-        # and StopTime fields, etc.
-        item['timerange_start'] = item['StartTime']
-        item['timerange_end'] = item['StopTime']
+        # Rename StartTime and StopTime to timerange_start
+        # and timerange_end, respectively and remove former
+        # from the package
+        item['timerange_start'] = item.pop('StartTime')
+        item['timerange_end'] = item.pop('StopTime')
 
         return item
 
-    def _make_resource(self, resource):
-        """
-            Return a dictionary of metadata fields retrieved from
-            the CKAN tags of the dataset.
+    def _parse_resources(self, resources_content):
+        resources = []
 
-        """
-        name = resource['name']
-
-        if 'Product' in name:
-            description = 'Download product from SIMOcean catalog'
-            mimetype = resource['format']
-            _format = 'NC'
-        elif 'PNG' in name:
-            description = 'Product preview'
-            mimetype = 'image/png'
+        for resource in resources_content:
+            name = resource['name']
+            url = resource['url']
             _format = resource['format']
-        elif 'XML' in name:
-            description = 'Download the metadata manifest from SIMOcean catalog'  # noqa: E501
-            mimetype = 'application/xml'
-            _format = resource['format']
-        else:
-            return None
+            if 'Product' in name:
+                parsed_resource = self._make_product_resource(url,
+                                                              name,
+                                                              _format)
+            elif 'PNG' in name:
+                parsed_resource = self._make_thumbnail_resource(url,
+                                                                name,
+                                                                _format)
+            elif 'XML' in name:
+                parsed_resource = self._make_manifest_resource(url,
+                                                               name,
+                                                               _format)
+            else:
+                continue
+            resources.append(parsed_resource)
+        return resources
 
-        ng_resource = {'name': name,
-                       'description': description,
-                       'url': resource['url'],
-                       'format': _format,
-                       'mimetype': mimetype}
+    def _make_manifest_resource(self, url, name, file_format):
+        """
+        Return a manifest resource dictionary.
+        """
+        description = 'Download the metadata manifest from SIMOcean catalog'  # noqa: E501
+        mimetype = 'application/xml'
 
-        return ng_resource
+        resource = {'name': name,
+                    'description': description,
+                    'url': url,
+                    'format': file_format,
+                    'mimetype': mimetype}
+
+        return resource
+
+    def _make_thumbnail_resource(self, url, name, file_format):
+        """
+        Return a thumbnail resource dictionary depending on the harvest source.
+        """
+        description = 'Product preview'
+        mimetype = 'image/png'
+
+        resource = {'name': name,
+                    'description': description,
+                    'url': url,
+                    'format': file_format,
+                    'mimetype': mimetype}
+        return resource
+
+    def _make_product_resource(self, url, name, mimetype):
+        """
+        Return a product resource dictionary.
+        """
+        description = 'Download product from SIMOcean catalog'
+        file_format = 'NC'
+
+        resource = {'name': name,
+                    'description': description,
+                    'url': url,
+                    'format': file_format,
+                    'mimetype': mimetype}
+        return resource
 
     def _get_resources(self, parsed_content):
         """Return a list of resource dicts."""
-        if self.obj.package and self.obj.package.resources:
-            old_resources = [x.as_dict() for x in self.obj.package.resources]
-        else:
-            old_resources = None
-
-        resources = parsed_content['resource']
-
-        new_resources = [self._make_resource(x) for x in resources if x]
-        if not old_resources:
-            resources = new_resources
-        else:
-            # Replace existing resources or add new ones
-            new_resource_types = {x['resource_type'] for x in new_resources}
-            resources = []
-            for old in old_resources:
-                old_type = old.get('resource_type')
-                order = old.get('order')
-                if old_type not in new_resource_types and order:
-                    resources.append(old)
-            resources += new_resources
-
-            resources.sort(key=lambda x: x['order'])
-
-        return resources
+        return parsed_content['resource']
