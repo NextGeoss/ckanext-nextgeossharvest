@@ -74,15 +74,14 @@ class DEIMOSIMGBase(HarvesterBase):
         metadata terms.
         """
 
-        content = json.loads(content2parse)
-        item = {}
+        item = json.loads(content2parse)
 
-        starttime_str = content['StartTime']
+        starttime_str = item.pop('timerange_start')
         starttime_obj = datetime.strptime(starttime_str, '%Y-%m-%d %H:%M:%S')
-        item['StartTime'] = starttime_obj.strftime("%Y-%m-%dT%H:%M:%S.000Z")
-        item['StopTime'] = item['StartTime']
+        item['timerange_start'] = starttime_obj.strftime("%Y-%m-%dT%H:%M:%S.000Z")
+        item['timerange_end'] = item['timerange_start']
 
-        coordinates = content.pop('spatial', None)
+        coordinates = item.pop('spatial', None)
         if coordinates:
 
             template = Template('''{"type": "Polygon", "coordinates": [$coords_list]}''')  # noqa: E501
@@ -97,15 +96,20 @@ class DEIMOSIMGBase(HarvesterBase):
             geojson = template.substitute(coords_list=coords_list)
             item['spatial'] = geojson
 
-        item['identifier'] = content['identifier']
-        item['Filename'] = content['identifier'] + '.ZIP'
-
-        ftp_link = content['ftp_link']
-        product_type = content['product_type']
+        ftp_link = item.pop('ftp_link')
+        product_type = item.pop('product_type')
 
         item['productType'] = product_type
-        item['downloadLink'] = ftp_link
-        item['thumbnail'] = self._get_thumbmail_url(content['identifier'], product_type)  # noqa: E501
+
+        resources = []
+        resources.append(self._make_resource(ftp_link,
+                                             'Product Download'))
+
+        thumbnail_url = self._get_thumbmail_url(item['identifier'],
+                                                product_type)
+        resources.append(self._make_resource(thumbnail_url,
+                                             'Thumbnail Download'))
+        item['resource'] = resources
 
         item['name'] = item['identifier'].lower()
 
@@ -115,31 +119,16 @@ class DEIMOSIMGBase(HarvesterBase):
         # Add the tag info
         item['tags'] = self._add_tags(product_type)
 
-        item['title'] = content['identifier'].lower()
+        item['title'] = item['identifier'].lower()
 
         item['notes'] = item['collection_description']
-
-        # Add time range metadata that's not tied to product-specific fields
-        # like StartTime so that we can filter by a dataset's time range
-        # without having to cram other kinds of temporal data into StartTime
-        # and StopTime fields, etc.
-        item['timerange_start'] = item['StartTime']
-        item['timerange_end'] = item['StopTime']
 
         return item
 
     # Required by NextGEOSS base harvester
     def _get_resources(self, metadata):
         """Return a list of resource dictionaries."""
-        resources = []
-
-        resources.append(self._make_resource(metadata['downloadLink'],
-                                             'Product Download'))
-
-        resources.append(self._make_resource(metadata['thumbnail'],
-                                             'Thumbnail Download'))
-
-        return resources
+        return metadata['resource']
 
     def _make_resource(self, url, name):
         """Return a resource dictionary."""
