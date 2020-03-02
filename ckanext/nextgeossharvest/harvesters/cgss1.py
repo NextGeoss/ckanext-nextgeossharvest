@@ -295,26 +295,27 @@ class CGSHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         parsed_content['collection_name'] = collection.get_name()
         parsed_content['collection_description'] = collection.get_description()  # noqa: E501
         parsed_content['title'] = collection.get_name()
-        parsed_content['description'] = collection.get_description()
         parsed_content['tags'] = self._create_ckan_tags(collection.get_tags())  # noqa: E501
         parsed_content['uuid'] = str(uuid.uuid4())
         parsed_content['timerange_start'], parsed_content[
             'timerange_end'] = self._parse_interval(content)
         parsed_content['collection_id'] = str(collection)
         parsed_content['notes'] = parsed_content['collection_description']
-        parsed_content['Collection'] = str(collection)
-        parsed_content['notes'] = parsed_content['description']
         parsed_content['identifier'] = self._parse_identifier(identifier)
         parsed_content['name'] = self._parse_name(identifier)
-        parsed_content['filename'] = self._parse_filename(identifier)
         parsed_content['spatial'] = json.dumps(
             self._bbox_to_geojson(self._parse_bbox(content)))
         if 'groups' in self.source_config:
             parsed_content['groups'] = self.source_config['groups']
-        #parsed_content['is_output'] = True
-        parsed_content['metadata_download'] = self._get_metadata_url(content)  # noqa: E501
-        parsed_content['product_download'] = self._get_product_url(content)  # noqa: E501
-        #parsed_content['thumbnail_download'] = self._get_thumbnail_url(content)  # noqa: E501
+
+        metadata_url = self._get_metadata_url(content)  # noqa: E501
+        product_url = self._get_product_url(content)  # noqa: E501
+
+        resources = []
+        resources.append(self._make_manifest_resource(metadata_url))
+        resources.append(self._make_product_resource(product_url))
+        parsed_content['resource'] = resources
+
         return parsed_content
 
     def _parse_file_name(self, file_entry):
@@ -344,8 +345,6 @@ class CGSHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         return entry.find('identifier').string
 
     def _parse_identifier(self, identifier):
-        #identifier_parts = identifier.replace(':','_')
-        #return '{}'.format(identifier_parts[-1])
         return '{}'.format(identifier)
 
     def _parse_interval(self, entry):
@@ -355,10 +354,6 @@ class CGSHarvester(OpenSearchHarvester, NextGEOSSHarvester):
     def _parse_name(self, identifier):
         identifier = identifier.replace(':', '_')
         return '{}'.format(identifier).lower()
-
-    def _parse_filename(self, identifier):
-        identifier_parts = identifier.split(':')
-        return '{}.tif'.format(identifier_parts[-1])
 
     def _bbox_to_geojson(self, bbox):
         return {
@@ -402,34 +397,31 @@ class CGSHarvester(OpenSearchHarvester, NextGEOSSHarvester):
             value = int(resolution_str[:-1])
         return Resolution(value, units)
 
+    def _make_manifest_resource(self, url):
+        resource = {'name': 'Metadata Download',
+                    'url': url,
+                    'format': 'xml',
+                    'mimetype': 'application/xml'
+                   }
+        return resource
+
+    def _make_product_resource(self, url):
+        resource = {'name': 'Product Download',
+                    'description': 'Multiple tif files inside the available URL',
+                    'url': url,
+                    'format': 'zip',
+                    'mimetype': 'application/zip'
+                    }
+        return resource
+
     def _get_resources(self, parsed_content):
-        return [{
-            'name': 'Metadata Download',
-            'url': parsed_content['metadata_download'],
-            'format': 'xml',
-            'mimetype': 'application/xml'
-        }, {
-            'name': 'Product Download',
-            'description': 'Multiple tif files inside the available URL',
-            'url': parsed_content['product_download'],
-            'format': 'zip',
-            #'mimetype': 'application/octet-stream'
-            'mimetype': 'application/zip'
-        #}, {
-        #    'name': 'Thumbnail Download',
-        #    'url': parsed_content['thumbnail_download'],
-        #    'format': 'png',
-        #    'mimetype': 'image/png'
-        }]
+        return parsed_content['resource'] 
 
     def _get_metadata_url(self, content):
         return str(content.find('link', title='Inspire')['href'])
 
     def _get_product_url(self, content):
         return str(content.find('link', rel='enclosure')['href'])  # noqa: E501
-
-    def _get_thumbnail_url(self, content):
-        return str(content.find('link', rel='icon')['href'])
 
     def _get_url(self, url, auth=None, **kwargs):
         log.info('getting %s', url)
