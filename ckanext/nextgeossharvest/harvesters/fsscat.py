@@ -45,8 +45,6 @@ class FSSCATHarvester(NextGEOSSHarvester, FSSCATBase):
 
     def __init__(self, *args, **kwargs):
         super(type(self), self).__init__(*args, **kwargs)
-        self.overlap = timedelta(days=30)
-        self.interval = timedelta(days=3 * 30)
 
     def info(self):
         return {
@@ -84,7 +82,10 @@ class FSSCATHarvester(NextGEOSSHarvester, FSSCATBase):
 
                 if not end_date > start_date:
                     raise ValueError('end_date must be after start_date')
-
+            if type(config_obj.get('ftp_domain', None)) != unicode:
+                raise ValueError('ftp_domain is required and must be a string')
+            if type(config_obj.get('ftp_path', None)) != unicode:
+                raise ValueError('ftp_path is required and must be a string')
             if type(config_obj.get('password', None)) != unicode:
                 raise ValueError('password is required and must be a string')
             if type(config_obj.get('username', None)) != unicode:
@@ -105,10 +106,14 @@ class FSSCATHarvester(NextGEOSSHarvester, FSSCATBase):
         self.log.debug('FSSCAT Harvester gather_stage for job: %r', harvest_job)
 
         self.source_config = self._get_config(harvest_job)
-        ftp_user =  self.source_config.get('username')
-        ftp_pwd =  self.source_config.get('password')
-        source_type =  self.source_config.get('harvester_type')
-        max_datasets =  self.source_config.get('max_datasets', 100)
+        ftp_user = self.source_config.get('username')
+        ftp_pwd = self.source_config.get('password')
+        source_type = self.source_config.get('harvester_type')
+        max_datasets = self.source_config.get('max_datasets', 100)
+        ftp_info = {
+            "domain": self.source_config.get('ftp_domain'),
+            "path":  self.source_config.get('ftp_path')
+        }
         self.update_all =  self.source_config.get('update_all', False)
 
         last_product_date = (
@@ -123,7 +128,7 @@ class FSSCATHarvester(NextGEOSSHarvester, FSSCATBase):
         end_date =  self.source_config.get('end_date', False)
         end_date = datetime.strptime(end_date, "%Y-%m-%d") if end_date else datetime.now()
 
-        ftp_source = create_ftp_source(source_type)
+        ftp_source = create_ftp_source(ftp_info)
 
         products = ftp_source.get_products_path(start_date, end_date,
                                                 ftp_user, ftp_pwd,
@@ -193,8 +198,8 @@ class FSSCATHarvester(NextGEOSSHarvester, FSSCATBase):
         return obj.id
 
 
-def create_ftp_source(source_type):
-    return FtpSource(**COLLECTION[source_type]["source"])
+def create_ftp_source(ftp_info):
+    return FtpSource(**ftp_info)
 
 class FtpSource(object):
 

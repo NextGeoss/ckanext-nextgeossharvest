@@ -59,7 +59,7 @@ class FSSCATBase(HarvesterBase):
         return tags_list
 
     def _parse_collection(self):
-        collection_info = COLLECTION[self.harvester_type]["collection"]
+        collection_info = COLLECTION[self.harvester_type]
         return collection_info
     
     def _parse_platform_info(self, content):
