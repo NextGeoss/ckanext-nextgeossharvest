@@ -119,7 +119,9 @@ class FSSCATHarvester(NextGEOSSHarvester, FSSCATBase):
         else:
             start_date =  self.source_config.get('start_date')
 
-        end_date =  self.source_config.get('end_date', datetime.now())
+        start_date = datetime.strptime(start_date, "%Y-%m-%d")
+        end_date =  self.source_config.get('end_date', False)
+        end_date = datetime.strptime(end_date, "%Y-%m-%d") if end_date else datetime.now()
 
         ftp_source = create_ftp_source(source_type)
 
