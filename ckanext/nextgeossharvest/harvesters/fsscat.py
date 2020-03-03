@@ -185,7 +185,7 @@ class FSSCATHarvester(NextGEOSSHarvester, FSSCATBase):
         )
 
         obj = HarvestObject(job=job,
-                            guid=uuid.uuid4(),
+                            guid=unicode(uuid.uuid4()),
                             extras=extras,
                             content=content)
         obj.package = package
