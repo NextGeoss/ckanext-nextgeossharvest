@@ -82,8 +82,8 @@ class FSSCATHarvester(NextGEOSSHarvester, FSSCATBase):
                 except ValueError:
                     raise ValueError('end_date format must be yyyy-mm-dd')
 
-            if not end_date > start_date:
-                raise ValueError('end_date must be after start_date')
+                if not end_date > start_date:
+                    raise ValueError('end_date must be after start_date')
 
             if type(config_obj.get('password', None)) != unicode:
                 raise ValueError('password is required and must be a string')
@@ -119,8 +119,7 @@ class FSSCATHarvester(NextGEOSSHarvester, FSSCATBase):
         else:
             start_date =  self.source_config.get('start_date')
 
-        start_date = start_date.strftime("%Y-%m-%d")
-        end_date =  self.source_config.get('end_date', datetime.now()).strftime("%Y-%m-%d")
+        end_date =  self.source_config.get('end_date', datetime.now())
 
         ftp_source = create_ftp_source(source_type)
 
