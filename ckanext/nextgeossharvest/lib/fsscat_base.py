@@ -110,7 +110,7 @@ class FSSCATBase(HarvesterBase):
 
         content = json.loads(content)
          
-        resources_url = content['resources']
+        resources_url = eval(content['resources'])
         name = content['name']
         manifest_content = Soup(content['manifest_content'], 'lxml')
 
@@ -131,7 +131,7 @@ class FSSCATBase(HarvesterBase):
         metadata['resource'] = self._parse_resources(resources_url, manifest_content)
 
         metadata['title'] =  metadata['collection_name']
-        metadata['notes'] =  ""
+        metadata['notes'] =  metadata['collection_description']
         metadata['tags'] = self._create_tags()
 
         return metadata
