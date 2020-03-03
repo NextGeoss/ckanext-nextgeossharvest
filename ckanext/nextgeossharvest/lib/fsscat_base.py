@@ -131,6 +131,7 @@ class FSSCATBase(HarvesterBase):
         metadata['resource'] = self._parse_resources(resources_url, manifest_content)
 
         metadata['title'] =  metadata['collection_name']
+        metadata['notes'] =  ""
         metadata['tags'] = self._create_tags()
 
         return metadata
