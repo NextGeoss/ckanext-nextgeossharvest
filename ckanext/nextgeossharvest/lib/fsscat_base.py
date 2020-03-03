@@ -151,7 +151,7 @@ class FSSCATBase(HarvesterBase):
                         name = "Product Download"
                         resources.append(self._make_resource(url, name,
                                                              mimetype, size))
-                    elif "manifest.fssp.safe.xml" in url:
+                    if "manifest.fssp.safe.xml" in url:
                         mimetype = "application/xml"
                         name = "Metadata Download"
                         resources.append(self._make_resource(url, name,

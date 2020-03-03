@@ -86,10 +86,14 @@ class FSSCATHarvester(NextGEOSSHarvester, FSSCATBase):
                 raise ValueError('ftp_domain is required and must be a string')
             if type(config_obj.get('ftp_path', None)) != unicode:
                 raise ValueError('ftp_path is required and must be a string')
-            if type(config_obj.get('password', None)) != unicode:
-                raise ValueError('password is required and must be a string')
-            if type(config_obj.get('username', None)) != unicode:
-                raise ValueError('username is requred and must be a string')
+            if type(config_obj.get('ftp_port', 21)) != int:
+                raise ValueError('ftp_port must be an integer')
+            if type(config_obj.get('ftp_timeout', 20)) != int:
+                raise ValueError('ftp_timeout must be an integer')
+            if type(config_obj.get('ftp_pass', None)) != unicode:
+                raise ValueError('ftp_pass is required and must be a string')
+            if type(config_obj.get('ftp_user', None)) != unicode:
+                raise ValueError('ftp_user is required and must be a string')
             if type(config_obj.get('make_private', False)) != bool:
                 raise ValueError('make_private must be true or false')
             if type(config_obj.get('update_all', False)) != bool:
@@ -106,14 +110,17 @@ class FSSCATHarvester(NextGEOSSHarvester, FSSCATBase):
         self.log.debug('FSSCAT Harvester gather_stage for job: %r', harvest_job)
 
         self.source_config = self._get_config(harvest_job)
-        ftp_user = self.source_config.get('username')
-        ftp_pwd = self.source_config.get('password')
-        source_type = self.source_config.get('harvester_type')
-        max_datasets = self.source_config.get('max_datasets', 100)
+        max_datasets = self.source_config.get('max_datasets')
+
         ftp_info = {
             "domain": self.source_config.get('ftp_domain'),
-            "path":  self.source_config.get('ftp_path')
+            "path":  self.source_config.get('ftp_path'),
+            "port": self.source_config.get('ftp_port'),
+            "username": self.source_config.get('ftp_user'),
+            "password": self.source_config.get('ftp_pass'),
+            "timeout": self.source_config.get('ftp_timeout')
         }
+
         self.update_all =  self.source_config.get('update_all', False)
 
         last_product_date = (
@@ -131,21 +138,17 @@ class FSSCATHarvester(NextGEOSSHarvester, FSSCATBase):
         ftp_source = create_ftp_source(ftp_info)
 
         products = ftp_source.get_products_path(start_date, end_date,
-                                                ftp_user, ftp_pwd,
                                                 max_datasets)
 
         ids = []
         for product in products:
-            resources = ftp_source.get_resources_url(ftp_user, ftp_pwd,
-                                                     product)
+            resources = ftp_source.get_resources_url(product)
             manifest_str = "manifest.fssp.safe.xml"
             manifest_url = [resource for resource in resources if 
                             manifest_str in resource]
             if manifest_url:
                 manifest_url = manifest_url[0]
-                manifest_content = ftp_source.get_file_content(ftp_user,
-                                                               ftp_pwd,
-                                                               manifest_url)
+                manifest_content = ftp_source.get_file_content(manifest_url)
 
             ids.append(self._gather_object(harvest_job, product, resources,
                                            manifest_content))
@@ -203,13 +206,17 @@ def create_ftp_source(ftp_info):
 
 class FtpSource(object):
 
-    def __init__(self, domain, path):
+    def __init__(self, domain, path, port, timeout, username, password):
         self.domain = domain
         self.path = path
+        self.port = port
+        self.username = username
+        self.password = password
+        self.timeout = timeout
 
-    def get_products_path(self, start_date, end_date, user, pwd, max_datasets):
+    def get_products_path(self, start_date, end_date, max_datasets):
         ftp_urls = set()
-        ftp = FTP(self._get_ftp_domain(), user, pwd)
+        ftp = self.connect_ftp()
         prod_type_exists = self._check_ftp_prod_type_path(ftp,
                                                           self._get_ftp_path())
         if not prod_type_exists:
@@ -333,19 +340,25 @@ class FtpSource(object):
     def _get_ftp_path(self):
         return self.path
 
-    def get_resources_url(self, user, pwd, dataset):
+    def get_resources_url(self, dataset):
         resources = set()
-        ftp = FTP(self._get_ftp_domain(), user, pwd)
+        ftp = self.connect_ftp()
         ftp.cwd(dataset)
         resources |=set(self._ftp_url(dataset, resource_url)
                         for resource_url in ftp.nlst())
         ftp.quit()
         return resources
 
-    def get_file_content(self, user, pwd, manifest_url):
-        ftp = FTP(self._get_ftp_domain(), user, pwd)
+    def get_file_content(self, manifest_url):
+        ftp = self.connect_ftp()
         ftp_path = self._ftp_path_from_url(manifest_url)
         r = StringIO()
         ftp.retrbinary('RETR {}'.format(ftp_path), r.write)
         ftp.quit()
         return r.getvalue()
+
+    def connect_ftp(self):
+        ftp = FTP()
+        ftp.connect(self._get_ftp_domain, self.port, self.timeout)
+        ftp.login(self.username, self.password)
+        return ftp
