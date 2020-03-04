@@ -105,12 +105,13 @@ class FSSCATHarvester(NextGEOSSHarvester, FSSCATBase):
 
         return config
 
+    # Required by NextGEOSS base harvester
     def gather_stage(self, harvest_job):
         self.log = logging.getLogger(__file__)
         self.log.debug('FSSCAT Harvester gather_stage for job: %r', harvest_job)
 
         self.source_config = self._get_config(harvest_job)
-        max_datasets = self.source_config.get('max_datasets', 100)
+        max_datasets = self.source_config.get('max_dataset', 100)
         ftp_info = {
             "domain": self.source_config.get('ftp_domain'),
             "path":  self.source_config.get('ftp_path'),
@@ -125,13 +126,14 @@ class FSSCATHarvester(NextGEOSSHarvester, FSSCATBase):
             self._get_last_harvesting_date(harvest_job.source_id)
         )
         if last_product_date is not None:
-            start_date = last_product_date
+            start_date = last_product_date + timedelta(days=1)
+            start_date = start_date.strftime("%Y-%m-%d")
         else:
             start_date =  self.source_config.get('start_date')
 
         start_date = datetime.strptime(start_date, "%Y-%m-%d")
         end_date =  self.source_config.get('end_date', False)
-        end_date = datetime.strptime(end_date, "%Y-%m-%d") if end_date else datetime.now()
+        end_date = datetime.strptime(end_date, "%Y-%m-%d") if end_date else datetime.now()  # noqa: E501
 
         ftp_source = create_ftp_source(ftp_info)
 
@@ -157,6 +159,10 @@ class FSSCATHarvester(NextGEOSSHarvester, FSSCATBase):
         return True
 
     def _get_last_harvesting_date(self, source_id):
+        """
+        Return the ingestion date of the last product harvested or none
+        if no previous harvesting job
+        """
         objects = self._get_imported_harvest_objects_by_source(source_id)
         sorted_objects = objects.order_by(desc(HarvestObject.import_finished))
         last_object = sorted_objects.limit(1).first()
@@ -213,6 +219,10 @@ class FtpSource(object):
         self.timeout = float(timeout)
 
     def get_products_path(self, start_date, end_date, max_datasets):
+        """
+        Parse the FTP contrained by time interval and maximum datasets
+        and return a list of product URL
+        """
         ftp_urls = set()
         ftp = self._connect_ftp()
         prod_type_exists = self._check_ftp_prod_type_path(ftp,
@@ -232,9 +242,17 @@ class FtpSource(object):
             date_path = self._date_path(harvest_date)
             path_list = date_path.strip("/").split("/")
             path_list_len = len(path_list)
+
+            # Assumption: date_path follows the structure "/Year/month/day"
+            # inverse_depth stores:
+            # 0 - found ftp path corresponding to date_path
+            # 1 - missing the "day" folder in the ftp
+            # 2 - missing the "month" folder in the ftp
+            # 3 - missing the "year" folder in the ftp
             inverse_depth = self._check_ftp_date_path(ftp, path_list)
-            
+
             if inverse_depth:
+                # Depth inverted to represent 
                 fail_depth = path_list_len - inverse_depth
                 harvest_date = self._get_new_harvest_date(harvest_date, fail_depth)
                 if not harvest_date:
@@ -242,11 +260,13 @@ class FtpSource(object):
                     return ftp_urls
 
             else:
-
                 new_product_count = products_count + len(ftp.nlst())
                 _to_harvest = self._to_harvest(harvest_date, start_date,
                                                end_date, new_product_count,
                                                max_datasets)
+                # Check if the number of products in the current folder plus
+                # already collected is larger than max_datasets
+                # NOTE: Rule ignored if no product has been collected 
                 _to_harvest = _to_harvest or products_count == 0
                 if _to_harvest:
                     ftp_urls |= set(self._ftp_path(date_path, product)
@@ -286,6 +306,12 @@ class FtpSource(object):
             return None 
 
     def _check_ftp_date_path(self, ftp, path_list):
+        """
+        Check if the date path is in the ftp.
+        Returns 0 if path exists, else returns the depth at which
+        the folder was not found.
+        The depth starts at the most granular (day)
+        """
         path = path_list.pop(0)
         if path in ftp.nlst():
             ftp.cwd("{}".format(path))
@@ -298,6 +324,9 @@ class FtpSource(object):
             return len(path_list) + 1
 
     def _check_ftp_prod_type_path(self, ftp, prod_type_path):
+        """
+        Check if the product type path is within the ftp.
+        """
         path_list = prod_type_path.strip("/").split("/")
         for _path in path_list:
             if _path in ftp.nlst():
@@ -308,6 +337,12 @@ class FtpSource(object):
         return True
 
     def _to_harvest(self, date, start, end, products_count, max_products):
+        """
+        Check the harvesting conditions are being met.
+        Time contraint: harvesting date within time interval
+        Size constraint: the number of products collected is less than the maximum
+        allowed
+        """
         time_constraint = date >= start and date <= end
         product_constraint = (products_count <= max_products)
         return time_constraint and product_constraint
@@ -338,18 +373,25 @@ class FtpSource(object):
     def _get_ftp_path(self):
         return self.path
 
-    def get_resources_url(self, dataset):
+    def get_resources_url(self, ftp_path):
+        """
+        Retrieves the list of all ftp url for all files and folders 
+        found on the ftp path
+        """
         resources = set()
         ftp = self._connect_ftp()
-        ftp.cwd(dataset)
-        resources |=set(self._ftp_url(dataset, resource_url)
+        ftp.cwd(ftp_path)
+        resources |=set(self._ftp_url(ftp_path, resource_url)
                         for resource_url in ftp.nlst())
         ftp.quit()
         return resources
 
-    def get_file_content(self, manifest_url):
+    def get_file_content(self, file_url):
+        """
+        Retrieve ftp file content into string via stream
+        """
         ftp = self._connect_ftp()
-        ftp_path = self._ftp_path_from_url(manifest_url)
+        ftp_path = self._ftp_path_from_url(file_url)
         r = StringIO()
         ftp.retrbinary('RETR {}'.format(ftp_path), r.write)
         ftp.quit()

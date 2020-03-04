@@ -59,10 +59,18 @@ class FSSCATBase(HarvesterBase):
         return tags_list
 
     def _parse_collection(self):
+        """
+        Retrieves the collection information from the configuration
+        file, and returns the dictionary with id, name and description
+        """
         collection_info = COLLECTION[self.harvester_type]
         return collection_info
     
     def _parse_platform_info(self, content):
+        """
+        Parse the information from the xml regarding the platform.
+        Returns the dictionary with the fields gathered
+        """
         item = {}
         info = content.find("metadataobject", id="platform")
         item['family_name'] = info.find('safe:familyname').text
@@ -72,6 +80,11 @@ class FSSCATBase(HarvesterBase):
         return item
 
     def _parse_general_product_info(self, content):
+        """
+        Parse the information from the xml regarding the general
+        information of the product.
+        Returns the dictionary with the fields gathered
+        """
         info = content.find("metadataobject", id="generalProductInformation")
         normalized_names = {
             "fssp:productname": "identifier",
@@ -86,6 +99,10 @@ class FSSCATBase(HarvesterBase):
         return item
 
     def _parse_acquisition_period(self, content):
+        """
+        Parse the information from the xml regarding the acquisition period.
+        Returns the dictionary with the fields gathered
+        """
         info = content.find("metadataobject", id="acquisitionPeriod")
         normalized_names = {
             "safe:starttime": "timerange_start",
@@ -137,6 +154,10 @@ class FSSCATBase(HarvesterBase):
         return metadata
 
     def _parse_resources(self, resources_url, content):
+        """
+        Parse the resources of the entry and return a list of dictionaries
+        using the CKAN nomenclature.
+        """
         
         resources = []
         resources_block = content.find('dataobjectsection')
@@ -159,6 +180,9 @@ class FSSCATBase(HarvesterBase):
         return resources
 
     def _make_resource(self, url, name, mimetype=None, size=None):
+        """
+        Create the resource dictionary.
+        """
         filename = parse_filename(url)
         extension = parse_file_extension(url).strip('.').upper()
         description_template = ("Download {} from FSSCAT FTP.",
@@ -180,6 +204,10 @@ class FSSCATBase(HarvesterBase):
         return resource
 
     def _get_elements(self, normalized_names, item_node):
+        """
+        Parse xml block to retrieve the wanted fields and return a
+        dictionary containing standard metadata terms and its values
+        """
         item = {}
         for subitem_node in item_node.findChildren():
             if subitem_node.name in normalized_names:
