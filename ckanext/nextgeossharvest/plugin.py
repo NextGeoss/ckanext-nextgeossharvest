@@ -2,7 +2,7 @@ import ckan.plugins as plugins
 import shapely
 import json
 import ast
-from ckanext.nextgeossharvest.ignore_list import IGNORE_LIST
+from ignore_list.ignore_list import IGNORE_LIST
 import logging
 
 log = logging.getLogger(__name__)
@@ -13,22 +13,27 @@ class NextgeossharvestPlugin(plugins.SingletonPlugin):
 
     def before_index(self, pkg_dict):
         """Expand extras if they're saved as a single string."""
-        dataset_extra = pkg_dict.pop("dataset_extra", None)
-        if dataset_extra:
-            pkg_dict.update(convert_dataset_extra(dataset_extra))
-        pkg_dict.pop("extras_dataset_extra", None)
+        # dataset_type:
+        # 'dataset' means that a dataset is being indexed
+        # 'harvest' means that a harvest job is being indexed
+        dataset_type =  pkg_dict.get('dataset_type', None)
+        if 'dataset' == dataset_type:
+            dataset_extra = pkg_dict.pop("dataset_extra", None)
+            if dataset_extra:
+                pkg_dict.update(convert_dataset_extra(dataset_extra))
+            pkg_dict.pop("extras_dataset_extra", None)
 
-        collection_id = pkg_dict.get('collection_id', None)
-        if collection_id:
-            try:
-                fields_list = IGNORE_LIST[collection_id]
-                pkg_dict = remove_fields_from_index(pkg_dict, fields_list)
-            except:
-                error_message = "Collection {} not found."
-                log.error(error_message.format(collection_id))
-        else:
-            error_message = "Collection ID not found in pkg_dict"
-            log.error(error_message)
+            collection_id = pkg_dict.get('collection_id', None)
+            if collection_id:
+                try:
+                    fields_list = IGNORE_LIST[collection_id]
+                    pkg_dict = remove_fields_from_index(pkg_dict, fields_list)
+                except:
+                    error_message = "Collection {} not found."
+                    log.error(error_message.format(collection_id))
+            else:
+                error_message = "Collection ID not found in pkg_dict"
+                log.error(error_message)
 
         return pkg_dict
 

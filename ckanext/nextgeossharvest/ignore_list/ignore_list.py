@@ -1,4 +1,4 @@
-from ckanext.nextgeossharvest.ignore_list.sentinel import SENTINEL_IGNORE_LIST
+from sentinel import SENTINEL_IGNORE_LIST
 
 IGNORE_LIST = {
     "SENTINEL1_L1_SLC": SENTINEL_IGNORE_LIST,
