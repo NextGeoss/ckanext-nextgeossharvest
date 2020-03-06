@@ -2,6 +2,11 @@ import ckan.plugins as plugins
 import shapely
 import json
 import ast
+from ckanext.nextgeossharvest.ignore_list import IGNORE_LIST
+import logging
+
+log = logging.getLogger(__name__)
+
 
 class NextgeossharvestPlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IPackageController, inherit=True)
@@ -13,10 +18,17 @@ class NextgeossharvestPlugin(plugins.SingletonPlugin):
             pkg_dict.update(convert_dataset_extra(dataset_extra))
         pkg_dict.pop("extras_dataset_extra", None)
 
-        # Handle spatial indexing here since the string extras break
-        # the spatial extension.
-        print('without comment')
-        pkg_dict = remove_sentinel_fields_from_index(pkg_dict)
+        collection_id = pkg_dict.get('collection_id', None)
+        if collection_id:
+            try:
+                fields_list = IGNORE_LIST[collection_id]
+                pkg_dict = remove_fields_from_index(pkg_dict, fields_list)
+            except:
+                error_message = "Collection {} not found."
+                log.error(error_message.format(collection_id))
+        else:
+            error_message = "Collection ID not found in pkg_dict"
+            log.error(error_message)
 
         return pkg_dict
 
@@ -35,33 +47,12 @@ def remove_from_dict(pkg_dict, key):
     return pkg_dict
 
 
-def remove_sentinel_fields_from_index(pkg_dict):
-    field_list = [
-        "FamilyName",
-        "InstrumentName",
-        "ProductClass",
-        "uuid",
-        "AcquisitionType",
-        "noa_expiration_date",
-        "Filename",
-        "size",
-        "thumbnail",
-        "summary",
-        "scihub_download_url",
-        "scihub_product_url",
-        "scihub_manifest_url",
-        "scihub_thumbnail",
-        "noa_download_url",
-        "noa_product_url",
-        "noa_manifest_url",
-        "noa_thumbnail",
-        "code_download_url",
-        "code_product_url",
-        "code_manifest_url",
-        "code_thumbnail",
-    ]
+def remove_fields_from_index(pkg_dict, field_list):
 
+    extras_field_template = "extras_{}"
     for field in field_list:
         pkg_dict = remove_from_dict(pkg_dict, field)
+        extras_field = extras_field_template.format(field)
+        pkg_dict = remove_from_dict(pkg_dict, extras_field)
 
     return pkg_dict
