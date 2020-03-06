@@ -13,7 +13,7 @@ class NextgeossharvestPlugin(plugins.SingletonPlugin):
 
     def before_index(self, pkg_dict):
         """Expand extras if they're saved as a single string."""
-        # dataset_type:
+        # If dataset_type is:
         # 'dataset' means that a dataset is being indexed
         # 'harvest' means that a harvest job is being indexed
         dataset_type =  pkg_dict.get('dataset_type', None)
