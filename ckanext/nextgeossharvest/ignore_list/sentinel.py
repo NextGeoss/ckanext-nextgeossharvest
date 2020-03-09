@@ -21,4 +21,6 @@ SENTINEL_IGNORE_LIST = [
         "code_product_url",
         "code_manifest_url",
         "code_thumbnail",
+        "StartTime",
+        "StopTime"
 ]
