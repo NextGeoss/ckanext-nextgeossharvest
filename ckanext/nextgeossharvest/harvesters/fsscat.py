@@ -131,8 +131,9 @@ class FSSCATHarvester(NextGEOSSHarvester, FSSCATBase):
 
         ftp_source = create_ftp_source(ftp_info)
 
-        products = ftp_source.get_products_path(start_date, end_date,
-                                                max_datasets)
+        products, last_date = ftp_source.get_products_path(start_date,
+                                                           end_date,
+                                                           max_datasets)
 
         ids = []
         for product in products:
@@ -145,7 +146,7 @@ class FSSCATHarvester(NextGEOSSHarvester, FSSCATBase):
                 manifest_content = ftp_source.get_file_content(manifest_url)
 
             ids.append(self._gather_object(harvest_job, product, resources,
-                                           manifest_content))
+                                           manifest_content, last_date))
 
         return ids
 
@@ -174,9 +175,8 @@ class FSSCATHarvester(NextGEOSSHarvester, FSSCATBase):
     def _get_config(self, harvest_job):
         return json.loads(harvest_job.source.config)
 
-    def _gather_object(self, job, product, resources, manifest_content):
+    def _gather_object(self, job, product, resources, manifest_content, last_harvest_date):
         name = parse_filename(product).lower()
-        restart_date = parse_date_path(product)
 
         status, package = self._was_harvested(name, self.update_all)
 
@@ -184,7 +184,7 @@ class FSSCATHarvester(NextGEOSSHarvester, FSSCATBase):
 
         content = json.dumps({
             'name': name,
-            'restart_date': restart_date,
+            'restart_date': last_harvest_date,
             'manifest_content': manifest_content,
             'resources': resources
         }, default=str
@@ -273,7 +273,8 @@ class FtpSource(object):
                 else:
                     harvest_date += timedelta(days=1)
         ftp.quit()
-        return ftp_urls
+        last_harvest_date = harvest_date - timedelta(days=1)
+        return ftp_urls, last_harvest_date
 
     def _get_new_harvest_date(self, harvest_date, fail_depth):
         if fail_depth == 0:
