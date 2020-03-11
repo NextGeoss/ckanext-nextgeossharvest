@@ -184,7 +184,7 @@ class FSSCATHarvester(NextGEOSSHarvester, FSSCATBase):
 
         content = json.dumps({
             'name': name,
-            'restart_date': last_harvest_date,
+            'restart_date': last_harvest_date.strftime('%Y-%m-%d'),
             'manifest_content': manifest_content,
             'resources': resources
         }, default=str
