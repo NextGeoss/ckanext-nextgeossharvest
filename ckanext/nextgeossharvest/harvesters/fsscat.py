@@ -248,7 +248,7 @@ class FtpSource(object):
                     return ftp_urls
 
             else:
-                products_list = self._get_product_list_from_file(harvest_date)
+                products_list = self._get_product_list_from_file(harvest_date, ftp)
                 if products_list:
                     new_product_count = products_count + len(products_list)
                     _to_harvest = self._to_harvest(harvest_date, start_date,
