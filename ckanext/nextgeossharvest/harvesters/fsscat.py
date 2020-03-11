@@ -52,10 +52,6 @@ class FSSCATHarvester(NextGEOSSHarvester, FSSCATBase):
 
         try:
             config_obj = json.loads(config)
-            product_types = [key for key in COLLECTION]
-            if config_obj.get('harvester_type') not in product_types:
-                error_template = "harvester type is required and must be one of {}"
-                raise ValueError(error_template.format(product_types))  # noqa: E501
     
             if 'start_date' in config_obj:
                 try:
