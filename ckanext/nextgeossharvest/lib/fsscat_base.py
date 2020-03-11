@@ -79,8 +79,9 @@ class FSSCATBase(HarvesterBase):
         info = content.find("metadataobject", id="platform")
         item['family_name'] = info.find('safe:familyname').text
         instrument_info = info.find('safe:instrument')
-        instrument_name = instrument_info.find('safe:familyname')
-        item['instrument_name'] = instrument_name.text
+        if instrument_info:
+            instrument_name = instrument_info.find('safe:familyname')
+            item['instrument_name'] = instrument_name.text
         return item
 
     def _parse_general_product_info(self, content):
