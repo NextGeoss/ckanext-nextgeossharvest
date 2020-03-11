@@ -29,6 +29,10 @@ def parse_file_extension(url):
     fname = url.split('/')[-1]
     return path.splitext(fname)[1]
 
+def parse_creation_time(date_str):
+    date_datetime = datetime.strptime(date_str, "%Y%m%dT%H%M%S")
+    return date_datetime.strftime("%Y-%m-%dT%H:%M:%S.000Z")
+
 class FSSCATBase(HarvesterBase):
 
     def _was_harvested(self, identifier, update_flag):
@@ -58,12 +62,12 @@ class FSSCATBase(HarvesterBase):
 
         return tags_list
 
-    def _parse_collection(self):
+    def _parse_collection(self, product_type):
         """
         Retrieves the collection information from the configuration
         file, and returns the dictionary with id, name and description
         """
-        collection_info = COLLECTION[self.harvester_type]
+        collection_info = COLLECTION[product_type]
         return collection_info
     
     def _parse_platform_info(self, content):
@@ -91,10 +95,14 @@ class FSSCATBase(HarvesterBase):
             "fssp:producttype": "product_type",
             "fssp:class": "class",
             "fssp:baseline": "baseline",
-            "fssp:scheme": "scheme"
+            "fssp:scheme": "scheme",
+            "fssp:creationtime": "creation_time"
         }
         item = self._get_elements(normalized_names, info)
         item['identifier'] = parse_filename(item['identifier'])
+        creation_time = item.get('creation_time', None)
+        if creation_time:
+            item['creation_time'] = parse_creation_time(creation_time)
 
         return item
 
@@ -140,10 +148,10 @@ class FSSCATBase(HarvesterBase):
                                                        [-180, -90],
                                                        [-180, 90]])
 
-        metadata.update(self._parse_collection())
         metadata.update(self._parse_platform_info(manifest_content))
         metadata.update(self._parse_general_product_info(manifest_content))
         metadata.update(self._parse_acquisition_period(manifest_content))
+        metadata.update(self._parse_collection(metadata['product_type']))
 
         metadata['resource'] = self._parse_resources(resources_url, manifest_content)
 

@@ -1,33 +1,26 @@
 # -*- coding: utf-8 -*-
-import re
-import os
-
 import json
 import logging
-from datetime import datetime, timedelta
-from dateutil.relativedelta import relativedelta
-
+import os
+import re
 import uuid
-
+from datetime import datetime, timedelta
 from ftplib import FTP
-
-from ckan.plugins.core import implements
-from ckan.model import Session
-
-
-from ckanext.harvest.interfaces import IHarvester
-from ckanext.harvest.model import HarvestObject
-from ckanext.nextgeossharvest.lib.fsscat_base import FSSCATBase
-from ckanext.nextgeossharvest.lib.nextgeoss_base import NextGEOSSHarvester
-
-from ckanext.harvest.model import HarvestObjectExtra as HOExtra
-
-from sqlalchemy import desc
-
-from ckanext.nextgeossharvest.lib.fsscat_config import COLLECTION
-
 from StringIO import StringIO
 
+from dateutil.relativedelta import relativedelta
+from sqlalchemy import desc
+
+from ckan.model import Session
+from ckan.plugins.core import implements
+from ckanext.harvest.interfaces import IHarvester
+from ckanext.harvest.model import HarvestObject
+from ckanext.harvest.model import HarvestObjectExtra as HOExtra
+from ckanext.nextgeossharvest.lib.fsscat_base import FSSCATBase
+from ckanext.nextgeossharvest.lib.fsscat_config import COLLECTION
+from ckanext.nextgeossharvest.lib.nextgeoss_base import NextGEOSSHarvester
+
+log = logging.getLogger(__name__)
 
 def parse_date_path(url):
     datepath = url.split('/')[-4:-1]
@@ -89,7 +82,7 @@ class FSSCATHarvester(NextGEOSSHarvester, FSSCATBase):
             if type(config_obj.get('ftp_pass', None)) != unicode:
                 raise ValueError('ftp_pass is required and must be a string')
             if type(config_obj.get('ftp_user', None)) != unicode:
-                raise ValueError('ftp_user is requred and must be a string')
+                raise ValueError('ftp_user is required and must be a string')
             if type(config_obj.get('ftp_port', 21)) != int:
                 raise ValueError('ftp_port must be an integer')
             if type(config_obj.get('ftp_timeout', 20)) != int:
@@ -225,9 +218,8 @@ class FtpSource(object):
         """
         ftp_urls = set()
         ftp = self._connect_ftp()
-        prod_type_exists = self._check_ftp_prod_type_path(ftp,
-                                                          self._get_ftp_path())
-        if not prod_type_exists:
+        ftp_path_exists = self._check_ftp_path(ftp, self._get_ftp_path())
+        if not ftp_path_exists:
             print("{} does not exists in the FTP.".format(self._get_ftp_path()))
             ftp.quit()
             return ftp_urls
@@ -260,23 +252,25 @@ class FtpSource(object):
                     return ftp_urls
 
             else:
-                new_product_count = products_count + len(ftp.nlst())
-                _to_harvest = self._to_harvest(harvest_date, start_date,
-                                               end_date, new_product_count,
-                                               max_datasets)
-                # Check if the number of products in the current folder plus
-                # already collected is larger than max_datasets
-                # NOTE: Rule ignored if no product has been collected 
-                _to_harvest = _to_harvest or products_count == 0
-                if _to_harvest:
-                    ftp_urls |= set(self._ftp_path(date_path, product)
-                                    for product in ftp.nlst())
-                    
-                    harvest_date += timedelta(days=1)
-                    products_count = len(ftp_urls)
+                products_list = self._get_product_list_from_file(harvest_date)
+                if products_list:
+                    new_product_count = products_count + len(products_list)
+                    _to_harvest = self._to_harvest(harvest_date, start_date,
+                                                end_date, new_product_count,
+                                                max_datasets)
+                    # Check if the number of products in the current folder plus
+                    # already collected is larger than max_datasets
+                    # NOTE: Rule ignored if no product has been collected 
+                    _to_harvest = _to_harvest or products_count == 0
+                    if _to_harvest:
+                        ftp_urls |= set(product for product in products_list)
+                        harvest_date += timedelta(days=1)
+                        products_count = len(ftp_urls)
+                    else:
+                        ftp.quit()
+                        return ftp_urls
                 else:
-                    ftp.quit()
-                    return ftp_urls
+                    harvest_date += timedelta(days=1)
         ftp.quit()
         return ftp_urls
 
@@ -323,11 +317,11 @@ class FtpSource(object):
         else:
             return len(path_list) + 1
 
-    def _check_ftp_prod_type_path(self, ftp, prod_type_path):
+    def _check_ftp_path(self, ftp, path):
         """
-        Check if the product type path is within the ftp.
+        Check if the path exists within the ftp.
         """
-        path_list = prod_type_path.strip("/").split("/")
+        path_list = path.strip("/").split("/")
         for _path in path_list:
             if _path in ftp.nlst():
                 ftp.cwd(_path)
@@ -403,3 +397,21 @@ class FtpSource(object):
         ftp.login(self.username, self.password)
 
         return ftp
+
+    def _get_file_list_name(self, date):
+        filename_template = "{}_file_list.txt"
+        filename = filename_template.format(date.strftime("%Y%m%d"))
+        return filename
+
+    def _get_product_list_from_file(self, date, ftp):
+        filename = self._get_file_list_name(date)
+        date_path = self._date_path(date)
+        ftp_path =self._ftp_path(date_path, "")
+        if filename in ftp.nlst():
+            file_url = self._ftp_url(ftp_path , filename)
+            file_content = self.get_file_content(file_url)
+            return file_content.split()
+        else:
+            warning_msg = "File {} does could not be found at {}. Skipping it!"
+            log.warning(warning_msg.format(filename, ftp_path))
+            return None
