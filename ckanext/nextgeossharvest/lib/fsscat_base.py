@@ -131,7 +131,6 @@ class FSSCATBase(HarvesterBase):
         Parse the entry content and return a dictionary using our standard
         metadata terms.
         """
-        self.harvester_type = self.source_config['harvester_type']
 
         content = json.loads(content)
          

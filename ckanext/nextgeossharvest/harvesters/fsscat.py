@@ -114,15 +114,20 @@ class FSSCATHarvester(NextGEOSSHarvester, FSSCATBase):
         last_product_date = (
             self._get_last_harvesting_date(harvest_job.source_id)
         )
+        today = datetime.now().strftime("%Y-%m-%d")
+        today = datetime.strptime(today, "%Y-%m-%d")
         if last_product_date is not None:
-            start_date = last_product_date + timedelta(days=1)
+            if last_product_date < today:
+                start_date = last_product_date + timedelta(days=1)
+            else:
+                start_date = last_product_date
             start_date = start_date.strftime("%Y-%m-%d")
         else:
             start_date =  self.source_config.get('start_date')
 
         start_date = datetime.strptime(start_date, "%Y-%m-%d")
         end_date =  self.source_config.get('end_date', False)
-        end_date = datetime.strptime(end_date, "%Y-%m-%d") if end_date else datetime.now()  # noqa: E501
+        end_date = datetime.strptime(end_date, "%Y-%m-%d") if end_date else today  # noqa: E501
 
         ftp_source = create_ftp_source(ftp_info)
 
