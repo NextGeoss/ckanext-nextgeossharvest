@@ -21,7 +21,8 @@ EBAS_IGNORE_LIST = [
         "Filecreation",
         "Unit",
         "topicCategory",
-        "Matrix"
+        "Matrix",
+        "Organization"
 ]
 
 EBAS_IGNORE_DICT = {

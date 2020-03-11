@@ -29,10 +29,10 @@ class NextgeossharvestPlugin(plugins.SingletonPlugin):
                     fields_list = IGNORE_LIST[collection_id]
                     pkg_dict = remove_fields_from_index(pkg_dict, fields_list)
                 except:
-                    error_message = "Collection {} not found."
-                    log.error(error_message.format(collection_id))
+                    pass
             else:
-                error_message = "Collection ID not found in pkg_dict"
+                error_message = ("Couldn't check ignore list in before_index."
+                                 " Collection ID not found in package metadata.")
                 log.error(error_message)
 
         return pkg_dict
