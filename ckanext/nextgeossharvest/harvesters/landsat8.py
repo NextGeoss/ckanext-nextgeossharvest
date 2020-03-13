@@ -288,8 +288,8 @@ class Landsat8Harvester(NextGEOSSHarvester):
 
         parsed_content['collection_name'] = collection.get_name()
         parsed_content['collection_description'] = collection.get_description()
+        parsed_content['collection_id'] = str(collection)
         parsed_content['title'] = collection.get_name()
-        parsed_content['description'] = collection.get_description()
         parsed_content['tags'] = self._create_ckan_tags(collection.get_tags())
         parsed_content['uuid'] = str(uuid.uuid4())
 
@@ -301,14 +301,11 @@ class Landsat8Harvester(NextGEOSSHarvester):
         parsed_content['timerange_start'] = '{}T00:00:00.000Z'.format(date_std)
         parsed_content['timerange_end'] = '{}T23:59:59.999Z'.format(date_std)
 
-        parsed_content['collection_id'] = str(collection)
         parsed_content['notes'] = parsed_content['collection_description']
-        parsed_content['Collection'] = str(collection)
-        parsed_content['notes'] = parsed_content['description']
 
         parsed_content['identifier'] = scene_id
         parsed_content['name'] = identifier
-        parsed_content['spatial'] = parsed_content.pop('geometry')
+        parsed_content['spatial'] = str(parsed_content.pop('geometry'))
         return parsed_content
 
     def get_l8_info(self, scene_id, full=False, s3=None):
@@ -327,7 +324,7 @@ class Landsat8Harvester(NextGEOSSHarvester):
                                                            band)
 
         scene_url = '{}/{}'.format(aws_url, scene_key)
-        info['browseURL'] = scene_url + '_thumb_large.jpg'
+
         info['thumbURL'] = scene_url + '_thumb_small.jpg'
 
         if full:
