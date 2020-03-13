@@ -280,6 +280,8 @@ class Landsat8Harvester(NextGEOSSHarvester):
 
         meta['scene_id'] = sceneid
         meta['satellite'] = 'L{}'.format(meta['satellite'].lstrip('0'))
+        meta['key'] = os.path.join(collection, 'L8', meta['path'],
+                                   meta['row'], sceneid, sceneid)
 
         return meta
 
@@ -314,6 +316,7 @@ class Landsat8Harvester(NextGEOSSHarvester):
 
         parsed_content['name'] = identifier
         parsed_content['spatial'] = json.dumps(parsed_content.pop('geometry'))
+        parsed_content.pop('key')
         return parsed_content
 
     def get_l8_info(self, scene_id, full=False, s3=None):
