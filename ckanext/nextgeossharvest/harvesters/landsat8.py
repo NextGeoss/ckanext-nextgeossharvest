@@ -316,6 +316,10 @@ class Landsat8Harvester(NextGEOSSHarvester):
 
         parsed_content['name'] = identifier
         parsed_content['spatial'] = json.dumps(parsed_content.pop('geometry'))
+
+        resources = parsed_content.get('resource', None)
+        if resources:
+            parsed_content['resource'] = self._parse_resources(resources)
         parsed_content.pop('key')
         return parsed_content
 
@@ -336,7 +340,7 @@ class Landsat8Harvester(NextGEOSSHarvester):
 
         scene_url = '{}/{}'.format(aws_url, scene_key)
 
-        info['thumbnail'] = scene_url + '_thumb_small.jpg'
+        info['resource']['thumbnail'] = scene_url + '_thumb_small.jpg'
 
         if full:
             try:
@@ -371,68 +375,89 @@ class Landsat8Harvester(NextGEOSSHarvester):
         return info
 
     def get_l8_resources(self, aws_url, scene_key, band):
-        resource = {}
         url = '{}/{}_{}'.format(aws_url, scene_key, band)
-        resource['tif'] = url + '.TIF'
-        resource['ovr'] = url + '.TIF.ovr'
-        resource['imd'] = url + '_wrk.IMD'
+        resource = url + '.TIF'
         return resource
 
     def _create_ckan_tags(self, tags):
         return [{'name': tag} for tag in tags]
 
     def _get_resources(self, parsed_content):
-        resources = parsed_content['resource']
+        resources = parsed_content['resource'].sort(key=lambda x: x['name'])
+        return resources
+
+    def _parse_resources(self, resources):
         resource_list = []
         for key in resources:
             if key.startswith('B'):
-                band_resources = self._parse_band_resource(key, resources[key])
-                for band_resource in band_resources:
-                    resource_list.append(band_resource)
+                resource = self._parse_band_resource(key, resources[key])
             elif key == 'mtl':
-                parsed_resource = {
-                    'name': 'Download L1 Metadata file',
-                    'url': resources[key],
-                    'format': 'JSON',
-                    'mimetype': 'application/json'}
-                resource_list.append(parsed_resource)
+                resource = self._parse_manifest_resource(key, resources[key])
             elif key == 'ang':
-                parsed_resource = {
-                    'name': 'Download Angle-coefficent file.',
-                    'url': resources[key],
-                    'format': 'TXT',
-                    'mimetype': 'text/plain'}
-                resource_list.append(parsed_resource)
+                resource = self._parse_aux_resource(key, resources[key])
+            elif key == 'thumbnail':
+                resource = self._parse_thumbnail_resource(key, resources[key])
+            else:
+                continue
+            resource_list.append(resource)
         return resource_list
 
-    def _parse_band_resource(self, key, content):
+    def _parse_band_resource(self, key, url):
 
-        band_resource = []
-        for resource in content:
-            if resource == 'tif':
-                name = '{} GeoTIF Download'.format(key)
-                url = content[resource]
-                file_ext = 'TIF'
-                mimetype = 'image/tif'
-            elif resource == 'ovr':
-                name = '{} Overlay Marker Download'.format(key)
-                url = content[resource]
-                file_ext = 'OVR'
-                mimetype = 'application/octet-stream'
-            elif resource == 'imd':
-                name = 'Georeferencing information for {}'.format(key)
-                url = content[resource]
-                file_ext = 'IMD'
-                mimetype = 'application/octet-stream'
+        name = '{} GeoTIF Download'.format(key)
+        description = "Download the band from Amazon AWS S3"
+        file_ext = 'TIF'
+        mimetype = 'image/tif'
 
-            parsed_resource = {
-                'name': name,
-                'url': url,
-                'format': file_ext,
-                'mimetype': mimetype}
+        parsed_resource = self._parsed_resource(name, url, description,
+                                                file_ext, mimetype)
 
-            band_resource.append(parsed_resource)
-        return band_resource
+        return parsed_resource
+
+    def _parse_manifest_resource(self, key, url):
+
+        name = 'Download L1 Metadata file'
+        description = "Download the manifest from Amazon AWS S3"
+        file_ext = 'JSON'
+        mimetype = 'application/json'
+
+        parsed_resource = self._parsed_resource(name, url, description,
+                                                file_ext, mimetype)
+
+        return parsed_resource
+
+    def _parse_aux_resource(self, key, url):
+
+        name = 'Download Angle-coefficent file'
+        description = "Download the auxiliary file from Amazon AWS S3"
+        file_ext = 'TXT'
+        mimetype = 'text/plain'
+
+        parsed_resource = self._parsed_resource(name, url, description,
+                                                file_ext, mimetype)
+
+        return parsed_resource
+        
+    def _parse_thumbnail_resource(self, key, url):
+
+        name = 'Quicklook download'
+        description = "Download the quicklook from Amazon AWS S3"
+        file_ext = 'JPEG'
+        mimetype = 'image/jpeg'
+
+        parsed_resource = self._parsed_resource(name, url, description,
+                                                file_ext, mimetype)
+
+        return parsed_resource
+    
+    def _parsed_resource(self, name, url, description, file_ext, mimetype):
+        parsed_resource = {
+            'name': name,
+            'url': url,
+            "description": description,
+            'format': file_ext,
+            'mimetype': mimetype}
+        return parsed_resource
 
     def _gather_entry(self, entry, path, row, update_all=False):
         # Create a harvest object for each entry
