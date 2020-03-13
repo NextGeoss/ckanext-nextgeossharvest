@@ -4,6 +4,7 @@ from enum import Enum
 import logging
 import json
 import uuid
+from datetime import datetime
 from sqlalchemy import desc
 
 import os
@@ -37,6 +38,17 @@ ROW_MAX = 233
 PATH_MAX = 248
 
 log = logging.getLogger(__name__)
+
+
+def parse_date(date_str, scenario=None):
+    date = datetime.strptime(date_str, "%Y%m%d")
+    if scenario == "start":
+        return date.strftime("%Y-%m-%dT00:00:00.000Z")
+    elif scenario == "end":
+        return date.strftime("%Y-%m-%dT23:59:59.999Z")
+    else:
+        return date.strftime("%Y-%m-%d")
+
 
 
 """Errors and warnings."""
@@ -268,8 +280,6 @@ class Landsat8Harvester(NextGEOSSHarvester):
 
         meta['scene_id'] = sceneid
         meta['satellite'] = 'L{}'.format(meta['satellite'].lstrip('0'))
-        meta['key'] = os.path.join(collection, 'L8', meta['path'],
-                                   meta['row'], sceneid, sceneid)
 
         return meta
 
@@ -291,21 +301,19 @@ class Landsat8Harvester(NextGEOSSHarvester):
         parsed_content['collection_id'] = str(collection)
         parsed_content['title'] = collection.get_name()
         parsed_content['tags'] = self._create_ckan_tags(collection.get_tags())
-        parsed_content['uuid'] = str(uuid.uuid4())
 
-        raw_date = parsed_content['acquisition_date']
-        year = raw_date[0:4]
-        month = raw_date[4:6]
-        day = raw_date[6:8]
-        date_std = '{}-{}-{}'.format(year, month, day)
-        parsed_content['timerange_start'] = '{}T00:00:00.000Z'.format(date_std)
-        parsed_content['timerange_end'] = '{}T23:59:59.999Z'.format(date_std)
+        acquisition_date = parsed_content.pop('acquisition_date')
+        parsed_content['timerange_start'] = parse_date(acquisition_date, "start")
+        parsed_content['timerange_end'] = parse_date(acquisition_date, "end")
+
+        ingestion_date = parsed_content.get("ingestion_date", None)
+        if ingestion_date:
+            parsed_content["ingestion_date"] = parse_date(ingestion_date)
 
         parsed_content['notes'] = parsed_content['collection_description']
 
-        parsed_content['identifier'] = scene_id
         parsed_content['name'] = identifier
-        parsed_content['spatial'] = str(parsed_content.pop('geometry'))
+        parsed_content['spatial'] = json.dumps(parsed_content.pop('geometry'))
         return parsed_content
 
     def get_l8_info(self, scene_id, full=False, s3=None):
@@ -325,7 +333,7 @@ class Landsat8Harvester(NextGEOSSHarvester):
 
         scene_url = '{}/{}'.format(aws_url, scene_key)
 
-        info['thumbURL'] = scene_url + '_thumb_small.jpg'
+        info['thumbnail'] = scene_url + '_thumb_small.jpg'
 
         if full:
             try:
