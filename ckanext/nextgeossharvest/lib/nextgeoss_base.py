@@ -265,7 +265,7 @@ class NextGEOSSHarvester(HarvesterBase):
     def _get_extras(self, parsed_content):
         """Return a list of CKAN extras."""
         skip = {'id', 'title', 'tags', 'status', 'notes', 'name', 'resource', 'groups'}  # noqa: E501
-        extras_tmp = [{'key': key, 'value': value}
+        extras_tmp = [{'key': stringcase.snakecase(key.lower()), 'value': value}
                       for key, value in parsed_content.items()
                       if key not in skip]
         extras = [{'key': 'dataset_extra', 'value': str(extras_tmp)}]
@@ -328,6 +328,7 @@ class NextGEOSSHarvester(HarvesterBase):
             for old_extra in old_extras:
                 if ((old_extra['key'] not in new_extra_keys) and 
                     (old_extra['key'] not in ignore_list)):
+                    old_extra['key'] = stringcase.snakecase(old_extra['key'].lower())
                     new_values.append(old_extra)
             return [{'key': 'dataset_extra', 'value': str(new_values)}]
         else:
