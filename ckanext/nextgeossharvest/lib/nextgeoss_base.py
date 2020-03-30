@@ -5,27 +5,23 @@ import json
 import logging
 import os
 import uuid
-from string import Template
 from datetime import datetime
+from string import Template
+
 import requests
 from requests.auth import HTTPBasicAuth
-import requests_ftp
 from requests.exceptions import ConnectTimeout, ReadTimeout
+from sqlalchemy.sql import bindparam, update
 
-from sqlalchemy.sql import update, bindparam
+import requests_ftp
 import shapely.wkt
-from shapely.errors import ReadingError, WKTReadingError
-
+from ckan import logic, model
 from ckan import plugins as p
-from ckan import model
 from ckan.common import config
-from ckan.model import Session
-from ckan.model import Package
-from ckan import logic
 from ckan.lib.navl.validators import not_empty
-
+from ckan.model import Package, Session
 from ckanext.harvest.harvesters.base import HarvesterBase
-
+from shapely.errors import ReadingError, WKTReadingError
 
 log = logging.getLogger(__name__)
 
@@ -289,23 +285,55 @@ class NextGEOSSHarvester(HarvesterBase):
 
     def _update_extras(self, old_extras, new_extras):
         """
-        Add new extras from the harvester, but preserve existing extras
-        so that we don't lose any from iTag.
-
-        In the future, we should restrict the filter to only extras from iTag
-        so that we can update metadata names more easily. We don't know what
-        we'll get from iTag, though, so that's off the table for now.
+        Replace the old extras with the new extras from the harvester,
+        or extend the new extras with the different fields from
+        old_extras
         """
 
-        if "dataset_extra" in new_extras[0]['key']:
-            new_values = eval(new_extras[0]['value'])
+        ignore_list = [
+            "StartTime",
+            "StopTime",
+            "thumbnail",
+            "summary",
+            "Filename",
+            "size",
+            "scihub_download_url",
+            "scihub_product_url",
+            "scihub_manifest_url",
+            "scihub_thumbnail",
+            "noa_download_url",
+            "noa_product_url",
+            "noa_manifest_url",
+            "noa_thumbnail",
+            "code_download_url",
+            "code_product_url",
+            "code_manifest_url",
+            "code_thumbnail",
+        ]
+        # Robustness for harvesters that do not save configuration
+        # into self.source_config
+        extend_extras = False
+        if hasattr(self, 'source_config'):
+            extend_extras = self.source_config.get('multiple_sources', False)
 
-        old_extra_keys = [old_value['key'] for old_value in old_extras]
-        for new_extra in new_values:
-            if new_extra['key'] not in old_extra_keys:
-                old_extras.append(new_extra)
+        if extend_extras:
+            # For datasets with multiple sources, the extras are expanded
+            # with new fields
+            if "dataset_extra" in new_extras[0]['key']:
+                new_values = eval(new_extras[0]['value'])
+            else:
+                new_values = new_extras
+            new_extra_keys = [new_value['key'] for new_value in new_values]
 
-        return [{'key': 'dataset_extra', 'value': str(old_extras)}]
+            for old_extra in old_extras:
+                if ((old_extra['key'] not in new_extra_keys) and 
+                    (old_extra['key'] not in ignore_list)):
+                    new_values.append(old_extra)
+            return [{'key': 'dataset_extra', 'value': str(new_values)}]
+        else:
+            # For datasets with single source, the extras are replaced
+            # with the fields collected in the most recent harvest
+            return new_extras
 
     def make_provider_logger(self, filename='dataproviders_info.log'):
         """Create a logger just for provider uptimes."""
