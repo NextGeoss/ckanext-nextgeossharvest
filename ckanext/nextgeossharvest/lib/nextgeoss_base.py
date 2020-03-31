@@ -8,6 +8,7 @@ import uuid
 from datetime import datetime
 from string import Template
 import stringcase
+import re
 
 import requests
 from requests.auth import HTTPBasicAuth
