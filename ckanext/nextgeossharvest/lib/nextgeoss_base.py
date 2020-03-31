@@ -266,7 +266,7 @@ class NextGEOSSHarvester(HarvesterBase):
     def _get_extras(self, parsed_content):
         """Return a list of CKAN extras."""
         skip = {'id', 'title', 'tags', 'status', 'notes', 'name', 'resource', 'groups'}  # noqa: E501
-        extras_tmp = [{'key': stringcase.snakecase(key.lower()), 'value': value}
+        extras_tmp = [{'key': self.convert_to_clean_snakecase(key), 'value': value}
                       for key, value in parsed_content.items()
                       if key not in skip]
         extras = [{'key': 'dataset_extra', 'value': str(extras_tmp)}]
@@ -329,7 +329,7 @@ class NextGEOSSHarvester(HarvesterBase):
             for old_extra in old_extras:
                 if ((old_extra['key'] not in new_extra_keys) and 
                     (old_extra['key'] not in ignore_list)):
-                    old_extra['key'] = stringcase.snakecase(old_extra['key'].lower())
+                    old_extra['key'] = self.convert_to_clean_snakecase(old_extra['key'])
                     new_values.append(old_extra)
             return [{'key': 'dataset_extra', 'value': str(new_values)}]
         else:
@@ -425,6 +425,10 @@ class NextGEOSSHarvester(HarvesterBase):
         self.provider_logger.info(log_message.format(provider, timestamp,
                                                      status_code, elapsed))
         return size
+
+    def convert_to_clean_snakecase(self, extra_key):
+        clean_extra_key = re.sub('[^0-9a-zA-Z]+', '_', stringcase.snakecase(extra_key)).strip('_')
+        return clean_extra_key
 
     def import_stage(self, harvest_object):
         log = logging.getLogger(__name__ + '.import')
