@@ -182,8 +182,7 @@ class GDACSBase(HarvesterBase):
         log_message = '{:<12} | {} | {} | {}s'
         elapsed = 9999
         try:
-            s = requests.Session()
-            r = s.get(url)
+            r = requests.head(url, allow_redirects=True)
             status_code = r.status_code
             elapsed = r.elapsed.total_seconds()
         except (ConnectTimeout, ReadTimeout) as e:
