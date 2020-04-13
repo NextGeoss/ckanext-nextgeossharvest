@@ -762,7 +762,7 @@ The Cold Regions harvester harvests the NERSC pilot outputs for the following co
 ### <a name="running-coldregions"></a>Running a Cold Regions Harvester
 This harvester only runs once and it will collect all the cold regions datasets (static data). In the command line run:
 
-    $ python coldregions.py "http://thredds.nersc.no/thredds/catalog/nextgeoss/Svalbard_classification_2018/catalog.xml" <destination_ckan_URL> <destination_ckan_apikey> "nersc"
+    $ python ./ckanext/nextgeossharvest/harvesters/coldregions.py "http://thredds.nersc.no/thredds/catalog/nextgeoss/Svalbard_classification_2018/catalog.xml" <destination_ckan_URL> <destination_ckan_apikey> "nersc"
 
 ## <a name="develop"></a>Developing new harvesters
 ### <a name="basicworkflow"></a>The basic harvester workflow
