@@ -60,19 +60,21 @@ This extension contains harvester plugins for harvesting from sources used by Ne
 17. [Harvesting VITO CGS S1 products](#harvesting-vitocgss1)
     1. [VITO CGS S1 Settings](#vitocgss1-settings)
     2. [Running a VITO CGS S1 harvester](#running-vitocgss1)
-18. [Developing new harvesters](#develop)
+18. [Harvesting Cold Regions pilot outputs](#harvesting-coldregions)
+    1. [Running a Cold Regions harvester](#running-coldregions)
+19. [Developing new harvesters](#develop)
     1. [The basic harvester workflow](#basicworkflow)
         1. [gather_stage](#gather_stage)
         2. [fetch_stage](#fetch_stage)
         3. [import_stage](#import_stage)
     2. [Example of an OpenSearch-based harvester](#opensearchexample)
-19. [iTag](#itag)
+20. [iTag](#itag)
     1. [How ITagEnricher works](#itagprocess)
     2. [Setting up ITagEnricher](#setupitag)
     3. [Handling iTag errors](#handlingitagerrors)
-20. [Testing testing testing](#tests)
-21. [Suggested cron jobs](#cron)
-22. [Logs](#logs)
+21. [Testing testing testing](#tests)
+22. [Suggested cron jobs](#cron)
+23. [Logs](#logs)
     1. [How ITagEnricher works](#itagprocess)
     2. [Setting up ITagEnricher](#setupitag)
     3. [Handling iTag errors](#handlingitagerrors)
@@ -757,7 +759,7 @@ The Cold Regions harvester harvests the NERSC pilot outputs for the following co
 
     1. Sentinel-1 HH/HV based ice/water classification
 
-### <a name="coldregions-settings"></a>Run Cold Regions Harvester
+### <a name="running-coldregions"></a>Running a Cold Regions Harvester
 This harvester only runs once and it will collect all the cold regions datasets (static data). In the command line run:
 $ python coldregions.py "http://thredds.nersc.no/thredds/catalog/nextgeoss/Svalbard_classification_2018/catalog.xml" <destination_ckan_URL> <destination_ckan_apikey> "nersc"
 
