@@ -4,16 +4,12 @@
 """
 ---------------------------------------------------------------------
 – Project : NextGEOSS
-– Customer : EC
 ---------------------------------------------------------------------
 – Author : João Andrade
 – Issue : 0.1
-– Date : 06/04/2020
+– Date : 13/04/2020
 – Purpose : Catalogue the outputs of Cold Regions Pilot
 - Source : http://thredds.nersc.no/thredds/catalog/nextgeoss/Svalbard_classification_2018/catalog.xml
----------------------------------------------------------------------
-– Copyright Deimos, 2018
-– All rights reserved
 ---------------------------------------------------------------------
 """
 
