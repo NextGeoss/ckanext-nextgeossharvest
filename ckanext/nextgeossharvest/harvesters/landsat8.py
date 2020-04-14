@@ -322,6 +322,8 @@ class Landsat8Harvester(NextGEOSSHarvester):
         if resources:
             parsed_content['resource'] = self._parse_resources(resources)
         parsed_content.pop('key')
+        parsed_content['identifier'] = parsed_content['scene_id']
+        parsed_content.pop('scene_id')
         return parsed_content
 
     def get_l8_info(self, scene_id, full=False, s3=None):
