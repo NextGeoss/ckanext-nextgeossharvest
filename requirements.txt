@@ -8,3 +8,4 @@ requests-ftp
 enum34
 python-dateutil
 monthdelta
+OWSLib
