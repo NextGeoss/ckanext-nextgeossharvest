@@ -25,3 +25,17 @@ class TestConvertToGeoJSON(object):
         geo_dict = json.loads(geojson)
         assert geo_dict['type'] == 'Polygon'
         assert geo_dict['coordinates'][0] == [[-12.947799, 27.343195], [-15.513319, 27.760723], [-15.19667, 29.384781], [-12.589683, 28.970003], [-12.947799, 27.343195]]  # noqa: E501
+
+    def test_convert_to_clean_snakecase(self):
+        cases = {
+            'Data definition',
+            'dataDefinition',
+            'data_definition',
+            'Data. definition.',
+            'Data Definition  ',
+            'DataDefinition',
+            'Data Definition >',
+        }
+
+        for case in cases:
+            assert NextGEOSSHarvester().convert_to_clean_snakecase(case) == 'data_definition'
