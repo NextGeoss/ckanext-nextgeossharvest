@@ -57,17 +57,14 @@ This extension contains harvester plugins for harvesting from sources used by Ne
 16. [Harvesting Food Security pilot outputs](#harvesting-foodsecurity)
     1. [Food Security Settings](#foodsecurity-settings)
     2. [Running a Food Security harvester](#running-foodsecurity)
-<<<<<<< HEAD
 11. [Harvesting Landsat-8 outputs](#harvesting-landsat8)
     1. [Landsat-8 Settings](#flandsat8-settings)
     2. [Running a Landsat-8 harvester](#running-landsat8)
 12. [Developing new harvesters](#develop)
-=======
 17. [Harvesting VITO CGS S1 products](#harvesting-vitocgss1)
     1. [VITO CGS S1 Settings](#vitocgss1-settings)
     2. [Running a VITO CGS S1 harvester](#running-vitocgss1)
 18. [Developing new harvesters](#develop)
->>>>>>> master
     1. [The basic harvester workflow](#basicworkflow)
         1. [gather_stage](#gather_stage)
         2. [fetch_stage](#fetch_stage)
@@ -721,7 +718,6 @@ The Food Security harvester has configuration has:
 "password":"nextgeoss",
 }
 ```
-<<<<<<< HEAD
 
 ### <a name="running-foodsecurity"></a>Running a Food Security harvester
 1. Add `foodsecurity` to the list of plugins in your .ini file.
@@ -731,8 +727,6 @@ The Food Security harvester has configuration has:
 5. Select `Manual` from the frequency options.
 6. Run the harvester. It will programmatically create datasets.
 
-=======
->>>>>>> master
 
 ## <a name="harvesting-vitocgss1"></a>Harvesting VITO CGS S1 products
 The VITO CGS S1 harvester collects the products of an external VITO project for the following collections:
@@ -763,24 +757,20 @@ The Food Security harvester has configuration has:
 }
 ```
 
-<<<<<<< HEAD
 
 ### <a name="running-gdacs"></a>Running a GDACS harvester
 1. Add `gdacs` to the list of plugins in your .ini file.
 2. Create a new harvester via the harvester interface.
 3. Select `GDACS Harvester` from the list of harvesters.
-=======
 ### <a name="running-vitocgss1"></a>Running a VITO CGS S1 harvester
 1. Add `cgss1` to the list of plugins in your .ini file.
 2. Create a new harvester via the harvester interface.
 3. Select `VITO CGS S1 Harvester` from the list of harvesters.
->>>>>>> master
 4. Add a config as described above.
 5. Select `Manual` from the frequency options.
 6. Run the harvester. It will programmatically create datasets.
 
 
-<<<<<<< HEAD
 ## <a name="harvesting-landsat8"></a>Harvesting Landsat-8 products
 The Landsat-8 harvester collects the Level-1 data products generated from Landsat 8 Operational Land Imager (OLI)/Thermal Infrared Sensor (TIRS). The following collection 1 Tiers are harvested:
 
@@ -817,8 +807,6 @@ The Landsat-8 harvester has configuration has:
 4. Add a config as described above.
 5. Select `Manual` from the frequency options.
 6. Run the harvester. It will programmatically create datasets.
-=======
->>>>>>> master
 
 ## <a name="develop"></a>Developing new harvesters
 ### <a name="basicworkflow"></a>The basic harvester workflow
