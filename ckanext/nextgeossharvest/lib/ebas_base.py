@@ -9,6 +9,7 @@ from ckanext.harvest.harvesters.base import HarvesterBase
 
 from string import Template
 
+from ckan import model
 from ckan.model import Package
 
 from ckan.model import Session
@@ -49,9 +50,9 @@ class EBASbaseHarvester(HarvesterBase):
         # Find out which package names have been taken. Restrict it to names
         # derived from the ideal name plus and numbers added
         like_q = u'%s%%' % \
-            ideal_name[:PACKAGE_NAME_MAX_LENGTH - APPEND_MAX_CHARS]
-        name_results = Session.query(Package.name) \
-                              .filter(Package.name.ilike(like_q)) \
+            ideal_name[:PACKAGE_NAME_MAX_LENGTH-APPEND_MAX_CHARS]
+        name_results = Session.query(Package.name)\
+                              .filter(Package.name.ilike(like_q))\
                               .all()
         taken = set([name_result[0] for name_result in name_results])
         if ideal_name not in taken:
@@ -60,9 +61,11 @@ class EBASbaseHarvester(HarvesterBase):
         elif append_type == 'number-sequence':
             # find the next available number
             counter = 1
-            l_counter = len(str(counter)) + 1
             while counter <= MAX_NUMBER_APPENDED:
-                candidate_name = ideal_name[:PACKAGE_NAME_MAX_LENGTH - l_counter] + '_' + str(counter)  # noqa: E501
+                candidate_name = \
+                    ideal_name[:PACKAGE_NAME_MAX_LENGTH-len(str(counter))-1] \
+                    + '_' + str(counter)
+
                 if candidate_name not in taken:
                     return candidate_name
                 counter = counter + 1
@@ -86,11 +89,10 @@ class EBASbaseHarvester(HarvesterBase):
             'gmd:southboundlatitude': 'spatial',
             'gmd:northboundlatitude': 'spatial',
             'gmd:topiccategory': 'topicCategory',
-            'gml:beginposition': 'StartTime',
-            'gml:endposition': 'StopTime',
+            'gml:beginposition': 'timerange_start',
+            'gml:endposition': 'timerange_end',
             'gmd:minimumvalue': 'MinimumAltitude',
             'gmd:maximumvalue': 'MaximumAltitude'
-
         }
 
         item = {'spatial': spatial_dict}
@@ -116,9 +118,11 @@ class EBASbaseHarvester(HarvesterBase):
 
     def _point_of_contact(self, soup, item):
 
-        normalized_names = {'gmd:individualname': 'PointOfContact',
-                            'gmd:organisationname': 'OrganizationName',
-                            'gmd:linkage': 'OrganizationLink'}
+        normalized_names = {
+                    'gmd:individualname': 'PointOfContact',
+                    'gmd:organisationname': 'OrganizationName',
+                    'gmd:linkage': 'OrganizationLink'
+        }
 
         for subitem_node in soup.findChildren():
             if subitem_node.name in normalized_names:
@@ -158,29 +162,41 @@ class EBASbaseHarvester(HarvesterBase):
         if xml_block:
             item = self._normalize_names(xml_block)
 
+        resources = []
+
         prod_tagID = 'THREDDS_HTTP_Service'
         xml_block = soup.find('srv:sv_serviceidentification', id=prod_tagID)
         if xml_block:
             url = xml_block.find('srv:connectpoint').find('gmd:linkage').text
-            item['product_url'] = url.strip('\n')
+            product_url = url.strip('\n')
+            resources.append(self._make_product_resource(product_url))
 
         prod_tagID = 'OPeNDAP'
         xml_block = soup.find('srv:sv_serviceidentification', id=prod_tagID)
         if xml_block:
             url = xml_block.find('srv:connectpoint').find('gmd:linkage').text
-            item['manifest_url'] = url.strip('\n') + '.html'
+            manifest_url = url.strip('\n') + '.html'
+            resources.append(self._make_manifest_resource(manifest_url))
+
+        item['resource'] = resources
 
         xml_block = soup.find('gmd:contact')
         if xml_block:
             item = self._point_of_contact(xml_block, item)
+
+        ignore_list = [
+            "File name",
+            "Startdate"
+        ]
 
         xml_block = soup.find('gmd:othercitationdetails')
         if xml_block:
             try:
                 json_item = json.loads(xml_block.text.strip('\n'))
                 for key in json_item:
-                    item[key] = json_item[key]
-            except Exception:
+                    if key not in ignore_list:
+                        item[key] = json_item[key]
+            except:
                 json_item = '1'
 
         # If there's a spatial element, convert it to GeoJSON
@@ -197,17 +213,17 @@ class EBASbaseHarvester(HarvesterBase):
             geojson = template.substitute(coords_list=coords_list)
             item['spatial'] = geojson
 
-        date = item.pop('StartTime', None)
+        date = item.pop('timerange_start', None)
         if date:
             value = date.split('Z')[0]
             value = value + '.000Z'
-            item['StartTime'] = value
+            item['timerange_start'] = value
 
-        date = item.pop('StopTime', None)
+        date = item.pop('timerange_end', None)
         if date:
             value = date.split('Z')[0]
             value = value + '.000Z'
-            item['StopTime'] = value
+            item['timerange_end'] = value
 
         identifier = soup.find('identifier').text.strip('\n')
         item['identifier'] = identifier
@@ -230,70 +246,44 @@ class EBASbaseHarvester(HarvesterBase):
 
         item['tags'] = self._get_tags_for_dataset(item)
 
-        # Add time range metadata that's not tied to product-specific fields
-        # like StartTime so that we can filter by a dataset's time range
-        # without having to cram other kinds of temporal data into StartTime
-        # and StopTime fields, etc.
-        item['timerange_start'] = item['StartTime']
-        item['timerange_end'] = item['StopTime']
-
         return item
 
-    def _make_manifest_resource(self, item):
+    def _make_manifest_resource(self, url):
         """
         Return a manifest resource dictionary.
         """
-        if item.get('manifest_url'):
-            name = 'OPeNDAP html interface'
-            description = 'Standard OPeNDAP html interface for selecting data from this dataset.'  # noqa: E501
-            url = item.get('manifest_url')
-            order = 3
-            _type = 'manifest'
+        name = 'OPeNDAP html interface'
+        description = 'Standard OPeNDAP html interface for selecting data from this dataset.'  # noqa: E501
+        _type = 'manifest'
 
-            manifest = {'name': name,
-                        'description': description,
-                        'url': url,
-                        'format': 'HTML',
-                        'mimetype': 'text/html',
-                        'resource_type': _type,
-                        'order': order}
+        manifest = {'name': name,
+                    'description': description,
+                    'url': url,
+                    'format': 'HTML',
+                    'mimetype': 'text/html',
+                    'resource_type': _type}
 
-            return manifest
+        return manifest
 
-        else:
-            return None
-
-    def _make_product_resource(self, item):
+    def _make_product_resource(self, url):
         """
         Return a product resource dictionary depending on the product.
         """
-        if item.get('product_url'):
-            name = 'Product Download'
-            description = 'Download the product.'  # noqa: E501
-            url = item['product_url']
-            mimetype = 'application/x-netcdf'
-            file_ext = 'NC'
-            order = 1
-            _type = 'nc_product'
+        name = 'Product Download'
+        description = 'Download the product.'  # noqa: E501
+        mimetype = 'application/x-netcdf'
+        file_ext = 'NC'
+        _type = 'nc_product'
 
-            product = {'name': name,
-                       'description': description,
-                       'url': url,
-                       'format': file_ext,
-                       'mimetype': mimetype,
-                       'resource_type': _type,
-                       'order': order}
+        product = {'name': name,
+                    'description': description,
+                    'url': url,
+                    'format': file_ext,
+                    'mimetype': mimetype,
+                    'resource_type': _type}
 
-            return product
-        else:
-            return None
+        return product
 
     def _get_resources(self, parsed_content):
         """Return a list of resource dicts."""
-
-        product = self._make_product_resource(parsed_content)
-        thumbnail = self._make_manifest_resource(parsed_content)
-
-        resources = [x for x in [product, thumbnail] if x]
-
-        return resources
+        return parsed_content['resource']

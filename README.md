@@ -42,38 +42,44 @@ This extension contains harvester plugins for harvesting from sources used by Ne
 11. [Harvesting SIMOcean products](#harvesting-simocean)
     1. [SIMOcean Settings](#simocean-settings)
     2. [Running a SIMOcean harvester](#running-simocean)
-11. [Harvesting EPOS-Sat products](#harvesting-epos)
+12. [Harvesting EPOS-Sat products](#harvesting-epos)
     1. [EPOS-Sat Settings](#epos-settings)
     2. [Running a EPOS-Sat harvester](#running-epos)
-10. [Harvesting MODIS products](#harvesting-modis)
+13. [Harvesting MODIS products](#harvesting-modis)
     1. [MODIS Settings](#modis-settings)
     2. [Running a MODIS harvester](#running-modis)
-11. [Developing new harvesters](#develop)
-10. [Harvesting GDACS Average Flood products](#harvesting-gdacs)
+14. [Harvesting GDACS Average Flood products](#harvesting-gdacs)
     1. [GDACS Settings](#gdacs-settings)
     2. [Running a GDACS harvester](#running-gdacs)
-11. [Harvesting DEIMOS-2 products](#harvesting-deimos2)
+15. [Harvesting DEIMOS-2 products](#harvesting-deimos2)
     1. [DEIMOS-2 Settings](#deimos2-settings)
     2. [Running a DEIMOS-2 harvester](#running-deimos2)
-11. [Harvesting Food Security pilot outputs](#harvesting-foodsecurity)
+16. [Harvesting Food Security pilot outputs](#harvesting-foodsecurity)
     1. [Food Security Settings](#foodsecurity-settings)
     2. [Running a Food Security harvester](#running-foodsecurity)
+<<<<<<< HEAD
 11. [Harvesting Landsat-8 outputs](#harvesting-landsat8)
     1. [Landsat-8 Settings](#flandsat8-settings)
     2. [Running a Landsat-8 harvester](#running-landsat8)
 12. [Developing new harvesters](#develop)
+=======
+17. [Harvesting VITO CGS S1 products](#harvesting-vitocgss1)
+    1. [VITO CGS S1 Settings](#vitocgss1-settings)
+    2. [Running a VITO CGS S1 harvester](#running-vitocgss1)
+18. [Developing new harvesters](#develop)
+>>>>>>> master
     1. [The basic harvester workflow](#basicworkflow)
         1. [gather_stage](#gather_stage)
         2. [fetch_stage](#fetch_stage)
         3. [import_stage](#import_stage)
     2. [Example of an OpenSearch-based harvester](#opensearchexample)
-13. [iTag](#itag)
+19. [iTag](#itag)
     1. [How ITagEnricher works](#itagprocess)
     2. [Setting up ITagEnricher](#setupitag)
     3. [Handling iTag errors](#handlingitagerrors)
-13. [Testing testing testing](#tests)
-14. [Suggested cron jobs](#cron)
-15. [Logs](#logs)
+20. [Testing testing testing](#tests)
+21. [Suggested cron jobs](#cron)
+22. [Logs](#logs)
     1. [How ITagEnricher works](#itagprocess)
     2. [Setting up ITagEnricher](#setupitag)
     3. [Handling iTag errors](#handlingitagerrors)
@@ -110,6 +116,8 @@ The repository contains four plugins:
 
 ## <a name="harvesting"></a>Harvesting Sentinel products
 To harvest Sentinel products, activate the `esa` plugin, which you will use to create a harvester that harvests from SciHub, NOA or CODE-DE. To harvest from more than one of those sources, just create more than one harvester and point it at a different source.
+
+Note: The [configuration object](#generalsettings) is _required_ for all of these harvesters.
 
 ### <a name="scihub"></a>Harvesting from SciHub
 Create a new harvest source and select `ESA Sentinel Harvester New`. The URL does not matter—the harvester only harvests from SciHub, NOA, or CODE-DE, depending on the configuration below.
@@ -155,10 +163,10 @@ Example configuration with all variables present:
   "update_all": false,
   "start_date": "2018-01-16T10:30:00.000Z",
   "end_date": "2018-01-16T11:00:00.000Z",
-  "datasets_per_job": 1000,
+  "datasets_per_job": 100,
   "timeout": 4,
   "skip_raw": true,
-  "make_private: false"
+  "make_private": false
 }
 ```
 Note: you must place your username and password in the `.ini` file as described above.
@@ -486,13 +494,58 @@ The MODIS harvester has configuration has:
 }
 ```
 
-
 ### <a name="running-modis"></a>Running a MODIS harvester
 1. Add `modis` to the list of plugins in your .ini file.
 2. Create a new harvester via the harvester interface.
 3. Select `MODIS Harvester` from the list of harvesters.
 4. Add a config as described above.
 5. Select `Manual` from the freuqency options. 
+
+## <a name="harvesting-gdacs"></a>Harvesting GDACS Average Flood products
+The GDACS harvester harvests products from the following collections:
+- AVERAGE_FLOOD_SIGNAL (from 1997/12 to present - 1 dataset per day)
+- AVERAGE_FLOOD_MAGNITUDE (from 1997/12 to present - 1 dataset per day)
+
+### <a name="gdacs-settings"></a>GDACS Settings
+The GDACS harvester has configuration as:
+1. `data_type` determines which collection will be harvested. It must be one of the following two strings: `signal` or `magnitude`.
+
+2. `request_check` determines if the URL of each harvested dataset will be tested. It must be one of the following two strings: `yes` or `no`.
+
+3. `start_date` determines the start date for the harvester job. It must be the string `YESTERDAY` or a string describing a date in the format `YYYY-MM-DD`, like `1997-12-01`.
+
+4. `end_date` determines the end date for the harvester job. It must be the string `TODAY` or a string describing a date in the format `YYYY-MM-DD`, like `1997-12-01`. The end_date is not mandatory and if not included the harvester will run until catch up the current day.
+
+5. `timeout` determines how long the harvester will wait for a response from a server before cancelling the attempt. It must be a postive integer. Not mandatory.
+
+6. `make_private` is optional and defaults to `false`. If `true`, the datasets created by the harvester will be marked private. This setting is not retroactive. It only applies to datasets created by the harvester while the setting is `true`.
+
+#### Examples of GDACS settings
+```
+{
+"data_type":"signal",
+"request_check":"yes",
+"start_date":"1997-12-01",
+"make_private":false
+}
+
+or
+
+{
+"data_type":"magnitude",
+"request_check":"yes",
+"start_date":"1997-12-01",
+"make_private":false
+}
+```
+
+### <a name="running-gdacs"></a>Running a GDACS harvester
+1. Add `gdacs` to the list of plugins in your .ini file.
+2. Create a new harvester via the harvester interface.
+3. Select `GDACS` from the list of harvesters.
+4. Add a config as described above.
+5. Select `Manual` from the frequency options. 
+6. Run the harvester. It will programmatically create datasets.
 
 ## <a name="harvesting-deimos2"></a>Harvesting DEIMOS-2 products
 The DEIMOS-2 harvester harvests products from the following collections:
@@ -668,6 +721,7 @@ The Food Security harvester has configuration has:
 "password":"nextgeoss",
 }
 ```
+<<<<<<< HEAD
 
 ### <a name="running-foodsecurity"></a>Running a Food Security harvester
 1. Add `foodsecurity` to the list of plugins in your .ini file.
@@ -677,55 +731,56 @@ The Food Security harvester has configuration has:
 5. Select `Manual` from the frequency options.
 6. Run the harvester. It will programmatically create datasets.
 
+=======
+>>>>>>> master
 
-## <a name="harvesting-gdacs"></a>Harvesting GDACS Average Flood products
-The GDACS harvester harvests products from the following collections:
-- AVERAGE_FLOOD_SIGNAL (from 1997/12 to present - 1 dataset per day)
-- AVERAGE_FLOOD_MAGNITUDE (from 1997/12 to present - 1 dataset per day)
+## <a name="harvesting-vitocgss1"></a>Harvesting VITO CGS S1 products
+The VITO CGS S1 harvester collects the products of an external VITO project for the following collections:
 
-### <a name="gdacs-settings"></a>GDACS Settings
-The GDACS harvester has configuration as:
-1. `data_type` determines which collection will be harvested. It must be one of the following two strings: `signal` or `magnitude`.
+    1. VITO CGS S1
+    2. CGS S1 GRD L1
+    3. CGS S1 GRD SIGMA0 L1 (NOT AVAILABLE YET)
 
-2. `request_check` determines if the URL of each harvested dataset will be tested. It must be one of the following two strings: `yes` or `no`.
 
-3. `start_date` determines the start date for the harvester job. It must be the string `YESTERDAY` or a string describing a date in the format `YYYY-MM-DD`, like `1997-12-01`.
 
-4. `end_date` determines the end date for the harvester job. It must be the string `TODAY` or a string describing a date in the format `YYYY-MM-DD`, like `1997-12-01`. The end_date is not mandatory and if not included the harvester will run until catch up the current day.
+### <a name="vitocgss1-settings"></a>VITO CGS S1 Settings
+The Food Security harvester has configuration has:
+1. `start_date` (required) determines the date on which the harvesting begins. It must be in the format `YYYY-MM-DD`. If you want to harvest from the earliest product onwards, use `2017-01-01`
+2. `timeout` (optional, integer, defaults to 4) determines the number of seconds to wait before timing out a request.
+3. `username` and `password` are your username and password for accessing the PROBA-V products at the source.
+4. `collection` (required) to define the collection that will be collected. It can be `SLC_L1`, `GRD_L1`.
+5. `make_private` (optional) determines whether the datasets created by the harvester will be private or public. The default is `false`, i.e., by default, all datasets created by the harvester will be public.
 
-5. `timeout` determines how long the harvester will wait for a response from a server before cancelling the attempt. It must be a postive integer. Not mandatory.
-
-6. `make_private` is optional and defaults to `false`. If `true`, the datasets created by the harvester will be marked private. This setting is not retroactive. It only applies to datasets created by the harvester while the setting is `true`.
-
-#### Examples of GDACS settings
+#### Examples of VITO CGS S1 settings
 ```
 {
-"data_type":"signal",
-"request_check":"yes",
-"start_date":"1997-12-01",
-"make_private":false
-}
-
-or
-
-{
-"data_type":"magnitude",
-"request_check":"yes",
-"start_date":"1997-12-01",
+"start_date":"2018-01-01",
+"collection":"SLC_L1",
+"username":"username",
+"password":"password",
+"timeout":1,
 "make_private":false
 }
 ```
 
+<<<<<<< HEAD
 
 ### <a name="running-gdacs"></a>Running a GDACS harvester
 1. Add `gdacs` to the list of plugins in your .ini file.
 2. Create a new harvester via the harvester interface.
 3. Select `GDACS Harvester` from the list of harvesters.
+=======
+### <a name="running-vitocgss1"></a>Running a VITO CGS S1 harvester
+1. Add `cgss1` to the list of plugins in your .ini file.
+2. Create a new harvester via the harvester interface.
+3. Select `VITO CGS S1 Harvester` from the list of harvesters.
+>>>>>>> master
 4. Add a config as described above.
 5. Select `Manual` from the frequency options.
 6. Run the harvester. It will programmatically create datasets.
 
 
+<<<<<<< HEAD
 ## <a name="harvesting-landsat8"></a>Harvesting Landsat-8 products
 The Landsat-8 harvester collects the Level-1 data products generated from Landsat 8 Operational Land Imager (OLI)/Thermal Infrared Sensor (TIRS). The following collection 1 Tiers are harvested:
 
@@ -762,6 +817,8 @@ The Landsat-8 harvester has configuration has:
 4. Add a config as described above.
 5. Select `Manual` from the frequency options.
 6. Run the harvester. It will programmatically create datasets.
+=======
+>>>>>>> master
 
 ## <a name="develop"></a>Developing new harvesters
 ### <a name="basicworkflow"></a>The basic harvester workflow

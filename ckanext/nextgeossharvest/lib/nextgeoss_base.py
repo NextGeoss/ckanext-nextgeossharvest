@@ -5,27 +5,23 @@ import json
 import logging
 import os
 import uuid
-from string import Template
 from datetime import datetime
+from string import Template
+
 import requests
 from requests.auth import HTTPBasicAuth
-import requests_ftp
 from requests.exceptions import ConnectTimeout, ReadTimeout
+from sqlalchemy.sql import bindparam, update
 
-from sqlalchemy.sql import update, bindparam
+import requests_ftp
 import shapely.wkt
-from shapely.errors import ReadingError, WKTReadingError
-
+from ckan import logic, model
 from ckan import plugins as p
-from ckan import model
 from ckan.common import config
-from ckan.model import Session
-from ckan.model import Package
-from ckan import logic
 from ckan.lib.navl.validators import not_empty
-
+from ckan.model import Package, Session
 from ckanext.harvest.harvesters.base import HarvesterBase
-
+from shapely.errors import ReadingError, WKTReadingError
 
 log = logging.getLogger(__name__)
 
@@ -142,6 +138,8 @@ class NextGEOSSHarvester(HarvesterBase):
         package_dict['title'] = parsed_content['title']
         package_dict['notes'] = parsed_content['notes']
         package_dict['tags'] = parsed_content['tags']
+        if 'groups' in parsed_content:
+            package_dict['groups'] = parsed_content['groups']
         package_dict['extras'] = self._get_extras(parsed_content)
         package_dict['resources'] = self._get_resources(parsed_content)
         package_dict['private'] = self.source_config.get('make_private', False)
@@ -242,13 +240,19 @@ class NextGEOSSHarvester(HarvesterBase):
             return None
 
         coords_type = coords.type.upper()
-        if coords_type != 'POLYGON':
+        if coords_type == 'MULTIPOLYGON':
+            c = coords.geoms[0].exterior.coords
+            c_list = list(c[0])
+        elif coords_type == 'POLYGON':
+            c = coords.exterior.coords
+            c_list = list(c[0])
+        else:
             return None
 
         # Remove double coordinates -- they are not valid GeoJSON and Solr
         # will reject them.
-        coords_list = [list(coords.exterior.coords[0])]
-        for i in coords.exterior.coords[1:]:
+        coords_list = [c_list]
+        for i in c[1:]:
             new_coord = list(i)
             if new_coord != coords_list[-1]:
                 coords_list.append(new_coord)
@@ -260,7 +264,7 @@ class NextGEOSSHarvester(HarvesterBase):
 
     def _get_extras(self, parsed_content):
         """Return a list of CKAN extras."""
-        skip = {'id', 'title', 'tags', 'status', 'notes', 'name', 'resource'}
+        skip = {'id', 'title', 'tags', 'status', 'notes', 'name', 'resource', 'groups'}  # noqa: E501
         extras_tmp = [{'key': key, 'value': value}
                       for key, value in parsed_content.items()
                       if key not in skip]
@@ -281,19 +285,55 @@ class NextGEOSSHarvester(HarvesterBase):
 
     def _update_extras(self, old_extras, new_extras):
         """
-        Add new extras from the harvester, but preserve existing extras
-        so that we don't lose any from iTag.
-
-        In the future, we should restrict the filter to only extras from iTag
-        so that we can update metadata names more easily. We don't know what
-        we'll get from iTag, though, so that's off the table for now.
+        Replace the old extras with the new extras from the harvester,
+        or extend the new extras with the different fields from
+        old_extras
         """
-        old_extra_keys = {old_extra['key'] for old_extra in old_extras}
-        for new_extra in new_extras:
-            if new_extra['key'] not in old_extra_keys:
-                old_extras.append(new_extra)
 
-        return old_extras
+        ignore_list = [
+            "StartTime",
+            "StopTime",
+            "thumbnail",
+            "summary",
+            "Filename",
+            "size",
+            "scihub_download_url",
+            "scihub_product_url",
+            "scihub_manifest_url",
+            "scihub_thumbnail",
+            "noa_download_url",
+            "noa_product_url",
+            "noa_manifest_url",
+            "noa_thumbnail",
+            "code_download_url",
+            "code_product_url",
+            "code_manifest_url",
+            "code_thumbnail",
+        ]
+        # Robustness for harvesters that do not save configuration
+        # into self.source_config
+        extend_extras = False
+        if hasattr(self, 'source_config'):
+            extend_extras = self.source_config.get('multiple_sources', False)
+
+        if extend_extras:
+            # For datasets with multiple sources, the extras are expanded
+            # with new fields
+            if "dataset_extra" in new_extras[0]['key']:
+                new_values = eval(new_extras[0]['value'])
+            else:
+                new_values = new_extras
+            new_extra_keys = [new_value['key'] for new_value in new_values]
+
+            for old_extra in old_extras:
+                if ((old_extra['key'] not in new_extra_keys) and 
+                    (old_extra['key'] not in ignore_list)):
+                    new_values.append(old_extra)
+            return [{'key': 'dataset_extra', 'value': str(new_values)}]
+        else:
+            # For datasets with single source, the extras are replaced
+            # with the fields collected in the most recent harvest
+            return new_extras
 
     def make_provider_logger(self, filename='dataproviders_info.log'):
         """Create a logger just for provider uptimes."""

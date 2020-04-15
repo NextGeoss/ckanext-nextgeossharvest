@@ -58,10 +58,9 @@ class ESAHarvester(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
                 timeout = config_obj['timeout']
                 if not isinstance(timeout, int) and not timeout > 0:
                     raise ValueError('timeout must be a positive integer')
-            for key in ['update_all', 'skip_raw']:
-                if key in config_obj:
-                    if not isinstance(config_obj[key], bool):
-                        raise ValueError('{} must be boolean'.format(key))
+            for key in ['update_all', 'skip_raw', 'multiple_sources']:
+                if key in config_obj and not isinstance(config_obj[key], bool):
+                    raise ValueError('{} must be boolean'.format(key))
             if type(config_obj.get('make_private', False)) != bool:
                 raise ValueError('make_private must be true or false')
 
@@ -101,7 +100,11 @@ class ESAHarvester(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
             restart_date = '*'
         log.debug('Restart date is {}'.format(restart_date))
 
-        start_date = self.source_config.get('start_date', restart_date)
+        if restart_date == '*':
+            start_date = self.source_config.get('start_date', restart_date)
+        else:
+            start_date = restart_date
+
         end_date = self.source_config.get('end_date', 'NOW')
         date_range = '[{} TO {}]'.format(start_date, end_date)
 
@@ -170,7 +173,6 @@ class ESAHarvester(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
         self.provider = source
 
         # This can be a hook
-        print harvest_url
         ids = self._crawl_results(harvest_url, limit, timeout, username,
                                   password)
         # This can be a hook

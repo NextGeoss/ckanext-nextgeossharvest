@@ -28,8 +28,9 @@ class SentinelHarvester(HarvesterBase):
         """
         name_elements = ['str', 'int', 'date', 'double']
         normalized_names = {
-            'beginposition': 'StartTime',
-            'endposition': 'StopTime',
+            'beginposition': 'timerange_start',
+            'endposition': 'timerange_end',
+            'ingestiondate': 'IngestionDate',
             'footprint': 'spatial',
             'filename': 'Filename',
             'platformname': 'FamilyName',
@@ -47,12 +48,18 @@ class SentinelHarvester(HarvesterBase):
             'uuid': 'uuid',
             'identifier': 'identifier',
             'size': 'size',
+            'platformidentifier': 'PlatformIdentifier',
+            'platformserialidentifier': 'PlatformSerialIdentifier',
+            'relativeorbitnumber': 'RelativeOrbitNumber',
+            'tileid': 'Tileid',
         }
         item = {}
 
         for subitem_node in item_node.findChildren():
             if subitem_node.name in name_elements:
                 key = normalized_names.get(subitem_node.get('name'))
+                if key == 'Filename':
+                    item['psn'] = subitem_node.text[:3]
                 if key:
                     item[key] = subitem_node.text
 
@@ -102,6 +109,30 @@ class SentinelHarvester(HarvesterBase):
                 item['collection_id'] = 'SENTINEL3_SRAL_L2_WAT'
                 item['collection_name'] = 'Sentinel-3 SRAL Level-2 Water'
                 item['collection_description'] = 'SENTINEL-3 is the first Earth Observation Altimetry mission to provide 100% SAR altimetry coverage where LRM is maintained as a back-up operating mode. This is a product of Level 2 processing and geographical coverage over water.'  # noqa: E501
+            elif 'sy_1_misr' in identifier:
+                item['collection_id'] = 'SENTINEL3_SY_1_MISR'
+                item['collection_name'] = 'Sentinel-3 Synergy Level-1B'
+                item['collection_description'] = 'Correspondence and collocation grids between OLCI/SLSTR L1b product and SYN Level 2 grid.'  # noqa: E501
+            elif 'sy_2_syn' in identifier:
+                item['collection_id'] = 'SENTINEL3_SY_2_SYN'
+                item['collection_name'] = 'Sentinel-3 Synergy Level-2 SYN'
+                item['collection_description'] = 'Surface Reflectance and Aerosol parameters over Land.'  # noqa: E501
+            elif 'sy_2_vgp' in identifier:
+                item['collection_id'] = 'SENTINEL3_SY_2_VGP'
+                item['collection_name'] = 'Sentinel-3 Synergy Level-2 VGP'
+                item['collection_description'] = '1 km VEGETATION-Like product (~VGT-P) - TOA Reflectance.'  # noqa: E501
+            elif 'sy_2_vgk' in identifier:
+                item['collection_id'] = 'SENTINEL3_SY_2_VGK'
+                item['collection_name'] = 'Sentinel-3 Synergy Level-2 VGK'
+                item['collection_description'] = 'Surface reflectance over Land– used as input for VG-S product.'  # noqa: E501
+            elif 'sy_2_vg1' in identifier:
+                item['collection_id'] = 'SENTINEL3_SY_2_VG1'
+                item['collection_name'] = 'Sentinel-3 Synergy Level-2 VG1'
+                item['collection_description'] = '1 km VEGETATION-Like product (~VGT-S1) 1 day synthesis surface reflectance and NDVI.'  # noqa: E501
+            elif 'sy_2_v10' in identifier:
+                item['collection_id'] = 'SENTINEL3_SY_2_V10'
+                item['collection_name'] = 'Sentinel-3 Synergy Level-2 V10'
+                item['collection_description'] = '1 km VEGETATION-Like product (~VGT-S10) 10 day synthesis surface reflectance and NDVI.'  # noqa: E501
             else:
                 message = 'No collection for Sentinel-3 product {}'.format(
                     item["identifier"])
@@ -224,6 +255,7 @@ class SentinelHarvester(HarvesterBase):
         Parse the entry content and return a dictionary using our standard
         metadata terms.
         """
+        source = self.source_config.get('source', None)
         soup = Soup(content, 'lxml')
 
         # Create an item dictionary and add metadata with normalized names.
@@ -237,43 +269,13 @@ class SentinelHarvester(HarvesterBase):
 
         item['name'] = item['identifier'].lower()
 
-        # Thumbnail, alternative and enclosure
-        enclosure = soup.find('link', rel=None)['href']
-        alternative = soup.find('link', rel='alternative')['href']
-        thumbnail = soup.find('link', rel='icon')
-        if enclosure.startswith('https://scihub'):
-            item['scihub_download_url'] = enclosure
-            item['scihub_product_url'] = alternative
-            if 's5p' not in item['name']:
-                item['scihub_manifest_url'] = self._make_manifest_url(item)
-            if thumbnail:
-                item['scihub_thumbnail'] = thumbnail['href']
-        elif enclosure.startswith('https://sentinels'):
-            item['noa_download_url'] = enclosure
-            item['noa_product_url'] = alternative
-            if 's5p' not in item['name']:
-                item['noa_manifest_url'] = self._make_manifest_url(item)
-            if thumbnail:
-                item['noa_thumbnail'] = thumbnail['href']
-            ingestion_date = soup.find('date',
-                                       {'name': 'ingestiondate'}).text
-            if '.' not in ingestion_date:
-                ingestion_date = ingestion_date.replace('Z', '.000Z')
-            ingestion_date = datetime.datetime.strptime(ingestion_date,
-                                                        '%Y-%m-%dT%H:%M:%S.%fZ')  # noqa: E501
-            expiration_date = ingestion_date + datetime.timedelta(days=30)
-            item['noa_expiration_date'] = datetime.datetime.strftime(expiration_date, '%Y-%m-%d')  # noqa: E501
-        elif enclosure.startswith('https://code-de'):
-            item['code_download_url'] = enclosure
-            item['code_product_url'] = alternative
-            if 's5p' not in item['name']:
-                item['code_manifest_url'] = self._make_manifest_url(item)
-            if thumbnail:
-                item['code_thumbnail'] = thumbnail['href']
-        item['thumbnail'] = item.get('scihub_thumbnail') or item.get('noa_thumbnail') or item.get('code_thumbnail')  # noqa: E501
+        if source == 'esa_noa':
+            item['noa_expiration_date'] = self._get_noa_expiration_date(soup)
 
         # Convert size (298.74 MB to an integer representing bytes)
-        item['size'] = int(float(item['size'].split(' ')[0]) * 1000000)
+        size = int(float(item.pop('size').split(' ')[0]) * 1000000)
+
+        item['resource'] = self._parse_resources(item, soup, source, size)
 
         # Add the collection info
         item = self._add_collection(item)
@@ -282,58 +284,89 @@ class SentinelHarvester(HarvesterBase):
 
         item['notes'] = item['collection_description']
 
-        # I think this should be the description of the dataset itself
-        item['summary'] = soup.find('summary').text
-
         item['tags'] = self._get_tags_for_dataset(item)
 
-        # Add time range metadata that's not tied to product-specific fields
-        # like StartTime so that we can filter by a dataset's time range
-        # without having to cram other kinds of temporal data into StartTime
-        # and StopTime fields, etc.
-        item['timerange_start'] = item['StartTime']
-        item['timerange_end'] = item['StopTime']
+
+        # Remove from the package dictionary the metadata fields that will not
+        # be added to the database
+        item.pop('Filename')
 
         return item
 
-    def _make_manifest_url(self, item):
+    def _get_noa_expiration_date(self, content):
+        ingestion_date = content.find('date',
+                                      {'name': 'ingestiondate'}).text
+        if '.' not in ingestion_date:
+            ingestion_date = ingestion_date.replace('Z', '.000Z')
+        ingestion_date = datetime.datetime.strptime(ingestion_date,
+                                                    '%Y-%m-%dT%H:%M:%S.%fZ')
+        expiration_date = ingestion_date + datetime.timedelta(days=30)
+
+        return datetime.datetime.strftime(expiration_date, '%Y-%m-%d')
+
+    def _parse_resources(self, item, content, source, size):
+        resources = []
+
+        expiration_date = item.get('noa_expiration_date', None)
+        identifier = item.get('identifier', None)
+
+        # Thumbnail, alternative and enclosure
+        enclosure = content.find('link', rel=None)['href']
+        prod_resource = self._make_product_resource(source, enclosure, size,
+                                                    identifier,
+                                                    expiration_date)
+        resources.append(prod_resource)
+
+        if 's5p' not in item['name']:
+            manifest_url = self._make_manifest_url(item, source)
+            manifest_resource = self._make_manifest_resource(source,
+                                                             manifest_url,
+                                                             expiration_date)
+            resources.append(manifest_resource)
+
+        thumbnail = content.find('link', rel='icon')
+        if thumbnail:
+            thumbnail_url = thumbnail['href']
+            thumbnail_resource = self._make_thumbnail_resource(source,
+                                                               thumbnail_url,
+                                                               expiration_date)
+            resources.append(thumbnail_resource)
+
+        return resources
+
+    def _make_manifest_url(self, item, source):
         """Create the URL for manifests on SciHub, NOA, or CODE-DE."""
         if item['name'].startswith('s3'):
             manifest_file = 'xfdumanifest.xml'
         else:
             manifest_file = 'manifest.safe'
-        if item.get('scihub_product_url'):
+
+        if source == 'esa_scihub':
             base_url = 'https://scihub.copernicus.eu/dhus/'
-        elif item.get('noa_product_url'):
+        elif source == 'esa_noa':
             base_url = 'https://sentinels.space.noa.gr/dhus/'
-        elif item.get('code_product_url'):
+        elif source == 'esa_code':
             base_url = 'https://code-de.org/dhus/'
 
         manifest_url = "{}odata/v1/Products('{}')/Nodes('{}')/Nodes('{}')/$value".format(base_url, item['uuid'], item['Filename'], manifest_file)  # noqa: E501
 
         return manifest_url
 
-    def _make_manifest_resource(self, item):
+    def _make_manifest_resource(self, source, url, expiration_date):
         """
         Return a manifest resource dictionary depending on the harvest source.
         """
-        if item.get('scihub_manifest_url'):
+        if source == 'esa_scihub':
             name = 'Metadata Download from SciHub'
             description = 'Download the metadata manifest from SciHub. NOTE: DOWNLOAD REQUIRES LOGIN'  # noqa: E501
-            url = item['scihub_manifest_url']
-            order = 4
             _type = 'scihub_manifest'
-        elif item.get('noa_manifest_url'):
-            name = 'Metadata Download from NOA (valid until {})'.format(item['noa_expiration_date'])  # noqa: E501'
-            description = 'Download the metadata manifest from NOA (valid until {}). NOTE: DOWNLOAD REQUIRES LOGIN'.format(item['noa_expiration_date'])  # noqa: E501'
-            url = item['noa_manifest_url']
-            order = 5
+        elif source == 'esa_noa':
+            name = 'Metadata Download from NOA (valid until {})'.format(expiration_date)  # noqa: E501
+            description = 'Download the metadata manifest from NOA (valid until {}). NOTE: DOWNLOAD REQUIRES LOGIN'.format(expiration_date)  # noqa: E501
             _type = 'noa_manifest'
-        elif item.get('code_manifest_url'):
+        elif source == 'esa_code':
             name = 'Metadata Download from CODE-DE'
             description = 'Download the metadata manifest from CODE-DE. NOTE: DOWNLOAD REQUIRES LOGIN'  # noqa: E501
-            url = item['code_manifest_url']
-            order = 6
             _type = 'code_manifest'
         else:
             return None
@@ -343,32 +376,25 @@ class SentinelHarvester(HarvesterBase):
                     'url': url,
                     'format': 'XML',
                     'mimetype': 'application/xml',
-                    'resource_type': _type,
-                    'order': order}
+                    'resource_type': _type}
 
         return manifest
 
-    def _make_thumbnail_resource(self, item):
+    def _make_thumbnail_resource(self, source, url, expiration_date):
         """
         Return a thumbnail resource dictionary depending on the harvest source.
         """
-        if item.get('scihub_thumbnail'):
+        if source == 'esa_scihub':
             name = 'Thumbnail Download from SciHub'
             description = 'Download the thumbnail from SciHub. NOTE: DOWNLOAD REQUIRES LOGIN'  # noqa: E501
-            url = item['scihub_thumbnail']
-            order = 7
             _type = 'scihub_thumbnail'
-        elif item.get('noa_thumbnail'):
-            name = 'Thumbnail Download from NOA (valid until {})'.format(item['noa_expiration_date'])  # noqa: E501
-            description = 'Download the thumbnail from NOA (valid until {}). NOTE: DOWNLOAD REQUIRES LOGIN'.format(item['noa_expiration_date'])  # noqa: E501
-            url = item['noa_thumbnail']
-            order = 8
+        elif source == 'esa_noa':
+            name = 'Thumbnail Download from NOA (valid until {})'.format(expiration_date)  # noqa: E501
+            description = 'Download the thumbnail from NOA (valid until {}). NOTE: DOWNLOAD REQUIRES LOGIN'.format(expiration_date)  # noqa: E501
             _type = 'noa_thumbnail'
-        elif item.get('code_thumbnail'):
+        elif source == 'esa_code':
             name = 'Thumbnail Download from CODE-DE'
             description = 'Download the thumbnail from CODE-DE.'  # noqa: E501
-            url = item['code_thumbnail']
-            order = 9
             _type = 'code_thumbnail'
         else:
             return None
@@ -378,53 +404,42 @@ class SentinelHarvester(HarvesterBase):
                      'url': url,
                      'format': 'JPEG',
                      'mimetype': 'image/jpeg',
-                     'resource_type': _type,
-                     'order': order}
+                     'resource_type': _type}
 
         return thumbnail
 
-    def _make_product_resource(self, item):
+    def _make_product_resource(self, source, url, size,
+                               identifier, expiration_date):
         """
         Return a product resource dictionary depending on the harvest source.
         """
-        if item.get('scihub_download_url'):
+        if source == 'esa_scihub':
             name = 'Product Download from SciHub'
             description = 'Download the product from SciHub. NOTE: DOWNLOAD REQUIRES LOGIN'  # noqa: E501
-            url = item['scihub_download_url']
-            order = 1
             _type = 'scihub_product'
-        elif item.get('noa_download_url'):
-            name = 'Product Download from NOA (valid until {})'.format(item['noa_expiration_date'])  # noqa: E501'
-            description = 'Download the product from NOA (valid until {}). NOTE: DOWNLOAD REQUIRES LOGIN'.format(item['noa_expiration_date'])  # noqa: E501
-            url = item['noa_download_url']
-            order = 2
+        elif source == 'esa_noa':
+            name = 'Product Download from NOA (valid until {})'.format(expiration_date)  # noqa: E501'
+            description = 'Download the product from NOA (valid until {}). NOTE: DOWNLOAD REQUIRES LOGIN'.format(expiration_date)  # noqa: E501
             _type = 'noa_product'
-        elif item.get('code_download_url'):
+        elif source == 'esa_code':
             name = 'Product Download from CODE-DE'
             description = 'Download the product from CODE-DE. NOTE: DOWNLOAD REQUIRES LOGIN'  # noqa: E501
-            url = item['code_download_url']
-            order = 3
             _type = 'code_product'
-        size = item['size']
 
-        if 's5p' not in item['identifier']:
-            product = {'name': name,
-                       'description': description,
-                       'url': url,
-                       'format': 'SAFE',
-                       'mimetype': 'application/zip',
-                       'size': size,
-                       'resource_type': _type,
-                       'order': order}
+        if 's5p' not in identifier:
+            file_type = 'SAFE'
+            mime_type = 'application/zip'
         else:
-            product = {'name': name,
-                       'description': description,
-                       'url': url,
-                       'format': 'netCDF',
-                       'mimetype': 'application/x-netcdf',
-                       'size': size,
-                       'resource_type': _type,
-                       'order': order}
+            file_type = 'netCDF'
+            mime_type = 'application/x-netcdf'
+
+        product = {'name': name,
+                   'description': description,
+                   'url': url,
+                   'format': file_type,
+                   'mimetype': mime_type,
+                   'size': size,
+                   'resource_type': _type}
 
         return product
 
@@ -434,15 +449,9 @@ class SentinelHarvester(HarvesterBase):
             old_resources = [x.as_dict() for x in self.obj.package.resources]
         else:
             old_resources = None
+        parsed_resources = parsed_content['resource']
+        new_resources = [x for x in parsed_resources if x]
 
-        product = self._make_product_resource(parsed_content)
-        manifest = self._make_manifest_resource(parsed_content)
-        thumbnail = self._make_thumbnail_resource(parsed_content)
-
-        if manifest is None:
-            new_resources = [x for x in [product, thumbnail] if x]
-        else:
-            new_resources = [x for x in [product, manifest, thumbnail] if x]
         if not old_resources:
             resources = new_resources
         else:
@@ -451,11 +460,10 @@ class SentinelHarvester(HarvesterBase):
             resources = []
             for old in old_resources:
                 old_type = old.get('resource_type')
-                order = old.get('order')
-                if old_type not in new_resource_types and order:
+                if old_type not in new_resource_types:
                     resources.append(old)
             resources += new_resources
 
-            resources.sort(key=lambda x: x['order'])
+        resources.sort(key=lambda x: x['name'])
 
         return resources

@@ -71,6 +71,8 @@ class EBASHarvester(EBASbaseHarvester, NextGEOSSHarvester, HarvesterBase):
 
             if type(config_obj.get('make_private', False)) != bool:
                 raise ValueError('make_private must be true or false')
+            if type(config_obj.get('update_all', False)) != bool:
+                raise ValueError('update_all must be true or false')
 
         except ValueError as e:
             raise e
@@ -204,12 +206,13 @@ class EBASHarvester(EBASbaseHarvester, NextGEOSSHarvester, HarvesterBase):
                 return True
             else:
                 return False
-        except Exception:
+        except:
             return False
 
     def _get_entries_from_results(self, soup, restart_date, token):
         """Extract the entries from an OpenSearch response."""
         entries = []
+        replace_chars = [',', ':', '.', '/', '-']
 
         for entry in soup.find_all('record'):
             header = entry.find('header')
@@ -274,18 +277,17 @@ class EBASHarvester(EBASbaseHarvester, NextGEOSSHarvester, HarvesterBase):
         # Find out which package names have been taken. Restrict it to names
         # derived from the ideal name plus and numbers added
         like_q = u'%s%%' % \
-            template_name[:PACKAGE_NAME_MAX_LENGTH - APPEND_MAX_CHARS]
-        results = Session.query(Package) \
-                         .filter(Package.name.ilike(like_q)) \
-                         .all()
+            template_name[:PACKAGE_NAME_MAX_LENGTH-APPEND_MAX_CHARS]
+        results = Session.query(Package)\
+                              .filter(Package.name.ilike(like_q))\
+                              .all()
         if results:
-            for result in results:
-                package_dict = self._get_package_dict(result)
-                extra_identifier = self._get_package_extra(package_dict,
-                                                           'identifier')
+            for package in results:
+                package_dict = self._get_package_dict(package)
+                extra_identifier = self._get_package_extra(package_dict, 'identifier')
 
                 if identifier == extra_identifier:
-                    return result
+                    return package
                 else:
                     return None
         else:
@@ -332,6 +334,8 @@ class EBASHarvester(EBASbaseHarvester, NextGEOSSHarvester, HarvesterBase):
             soup = Soup(r.content, 'lxml')
 
             # Get the URL for the next loop, or None to break the loop
+            log.debug(harvest_url)
+
             harvest_url = self._get_next_url(harvest_url, soup)
 
             # Get the entries from the results
@@ -358,10 +362,13 @@ class EBASHarvester(EBASbaseHarvester, NextGEOSSHarvester, HarvesterBase):
                         previous_obj.current = False
                         previous_obj.save()
 
-                    # If the package already exists it
-                    # will not create a new one
-                    log.debug('{} already exists and will be updated.'.format(entry_name))  # noqa: E501
-                    status = 'change'
+                    if self.update_all:
+                        log.debug('{} already exists and will be updated.'.format(entry_name))  # noqa: E501
+                        status = 'change'
+                        update_counter += 1
+                    else:
+                        log.debug('{} will not be updated.'.format(entry_name))  # noqa: E501
+                        status = 'unchanged'
 
                     obj = HarvestObject(guid=entry_guid, job=self.job,
                                         extras=[HOExtra(key='status',
@@ -370,7 +377,6 @@ class EBASHarvester(EBASbaseHarvester, NextGEOSSHarvester, HarvesterBase):
                                                 value=entry_restart_date),
                                                 HOExtra(key='restart_token',
                                                 value=entry_restart_token)])
-                    update_counter += 1
                     obj.content = entry['content']
                     obj.package = package
                     obj.save()

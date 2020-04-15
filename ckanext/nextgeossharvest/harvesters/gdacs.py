@@ -76,12 +76,10 @@ class GDACSHarvester(NextGEOSSHarvester, GDACSBase):
                 end_date = self.convert_date_config('TODAY')
             if not end_date > start_date:
                 raise ValueError('end_date must be after start_date')
-            if 'timeout' in config_obj:
-                timeout = config_obj['timeout']
-                if not isinstance(timeout, int) and not timeout > 0:
-                    raise ValueError('timeout must be a positive integer')
             if type(config_obj.get('make_private', False)) != bool:
                 raise ValueError('make_private must be true or false')
+            if type(config_obj.get('update_all', False)) != bool:
+                raise ValueError('update_all must be true or false')
         except ValueError as e:
             raise e
 
@@ -125,6 +123,7 @@ class GDACSHarvester(NextGEOSSHarvester, GDACSBase):
         existing_files = (
             http_source._get_http_urls(start_date, end_date)
         )
+        self.update_all = config.get('update_all', False)
         harvested_files = self._get_ckan_guids(start_date, end_date, source_id)
         non_harvested_files = existing_files - harvested_files
         ids = []
@@ -180,8 +179,10 @@ class GDACSHarvester(NextGEOSSHarvester, GDACSBase):
     def _gather_object(self, job, url, start_date):
         filename = parse_filename(url)
         filename_id = filename
-        print('gathering %s', filename)
-        extras = [HOExtra(key='status', value='new')]
+
+        status, package = self._was_harvested(filename_id, self.update_all)
+
+        extras = [HOExtra(key='status', value=status)]
         assert start_date
         content = json.dumps({
             'identifier': filename_id,
@@ -194,6 +195,7 @@ class GDACSHarvester(NextGEOSSHarvester, GDACSBase):
                             guid=url,
                             extras=extras,
                             content=content)
+        obj.package = package
         obj.save()
         return obj.id
 

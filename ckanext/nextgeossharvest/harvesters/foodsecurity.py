@@ -137,6 +137,12 @@ class FoodSecurityHarvester(OpenSearchHarvester, NextGEOSSHarvester):
                  "FAPAR", "FCOVER", "LAI" or "NDVI"''')
             if type(config_obj.get('make_private', False)) != bool:
                 raise ValueError('make_private must be true or false')
+            if 'groups' in config_obj:
+                if not isinstance(config_obj['groups'], list):
+                    raise ValueError('groups must be like [{"name":"group-id"}]')  # noqa E501
+            for key in ['update_all']:
+                if key in config_obj and not isinstance(config_obj[key], bool):
+                    raise ValueError('{} must be boolean'.format(key))
         except ValueError as e:
             raise e
 
@@ -202,6 +208,8 @@ class FoodSecurityHarvester(OpenSearchHarvester, NextGEOSSHarvester):
 
         collection = self.source_config['collection']
 
+        update_all = self.source_config.get('update_all', False)
+
         last_product_date = (
             self._get_last_harvesting_date(harvest_job.source_id)
         )
@@ -217,11 +225,11 @@ class FoodSecurityHarvester(OpenSearchHarvester, NextGEOSSHarvester):
                                                  start_date, end_date)
         log.info('Harvesting {}'.format(harvest_url))
         for harvest_object in self._gather_(harvest_url):
-            _id = self._gather_entry(harvest_object)
+            _id = self._gather_entry(harvest_object, update_all=update_all)
             if _id:
                 ids.append(_id)
 
-        if (start_date != datetime.now() and len(ids) == 0):
+        if (start_date != datetime.now() and (len(ids) == 0 or update_all)):
             end_date = datetime.now()
             harvest_url = self._generate_harvest_url(collection,
                                                  start_date + timedelta(days=1), end_date)  # noqa E501
@@ -237,7 +245,8 @@ class FoodSecurityHarvester(OpenSearchHarvester, NextGEOSSHarvester):
                                                  start_date, end_date)
                 log.info('Harvesting {}'.format(harvest_url))
                 for harvest_object in self._gather_(harvest_url):
-                    _id = self._gather_entry(harvest_object)
+                    _id = self._gather_entry(harvest_object,
+                                             update_all=update_all)
                     if _id:
                         ids.append(_id)
             else:
@@ -287,23 +296,25 @@ class FoodSecurityHarvester(OpenSearchHarvester, NextGEOSSHarvester):
         parsed_content['collection_name'] = collection.get_name()
         parsed_content['collection_description'] = collection.get_description()  # noqa: E501
         parsed_content['title'] = collection.get_name()
-        parsed_content['description'] = collection.get_description()
         parsed_content['tags'] = self._create_ckan_tags(collection.get_tags())  # noqa: E501
         parsed_content['uuid'] = str(uuid.uuid4())
         parsed_content['timerange_start'], parsed_content[
             'timerange_end'] = self._parse_interval(content)
         parsed_content['collection_id'] = str(collection)
         parsed_content['notes'] = parsed_content['collection_description']
-        parsed_content['Collection'] = str(collection)
-        parsed_content['notes'] = parsed_content['description']
         parsed_content['identifier'] = self._parse_identifier(identifier)
         parsed_content['name'] = self._parse_name(identifier)
-        parsed_content['filename'] = self._parse_filename(identifier)
         parsed_content['spatial'] = json.dumps(
             self._bbox_to_geojson(self._parse_bbox(content)))
-        parsed_content['metadata_download'] = self._get_metadata_url(content)  # noqa: E501
-        parsed_content['product_download'] = self._get_product_url(content)  # noqa: E501
-        parsed_content['thumbnail_download'] = self._get_thumbnail_url(content)  # noqa: E501
+        if 'groups' in self.source_config:
+            parsed_content['groups'] = self.source_config['groups']
+        parsed_content['is_output'] = True
+        metadata_url = self._get_metadata_url(content)
+        product_url = self._get_product_url(content)
+        thumbnail_url = self._get_thumbnail_url(content)
+        parsed_content['resource'] = self._set_resources(metadata_url,
+                                                         product_url,
+                                                         thumbnail_url)
         return parsed_content
 
     def _parse_file_name(self, file_entry):
@@ -343,10 +354,6 @@ class FoodSecurityHarvester(OpenSearchHarvester, NextGEOSSHarvester):
     def _parse_name(self, identifier):
         identifier_parts = identifier.split(':')
         return '{}'.format(identifier_parts[-1]).lower()
-
-    def _parse_filename(self, identifier):
-        identifier_parts = identifier.split(':')
-        return '{}.tif'.format(identifier_parts[-1])
 
     def _bbox_to_geojson(self, bbox):
         return {
@@ -392,24 +399,27 @@ class FoodSecurityHarvester(OpenSearchHarvester, NextGEOSSHarvester):
             value = int(resolution_str[:-1])
         return Resolution(value, units)
 
-    def _get_resources(self, parsed_content):
+    def _set_resources(self, metadata_url, product_url, thumbnail_url):
         return [{
             'name': 'Metadata Download',
-            'url': parsed_content['metadata_download'],
+            'url': metadata_url,
             'format': 'xml',
             'mimetype': 'application/xml'
         }, {
             'name': 'Product Download',
             'description': 'Multiple tif files inside the available URL',
-            'url': parsed_content['product_download'],
+            'url': product_url,
             'format': 'tif',
             'mimetype': 'application/octet-stream'
         }, {
             'name': 'Thumbnail Download',
-            'url': parsed_content['thumbnail_download'],
+            'url': thumbnail_url,
             'format': 'png',
             'mimetype': 'image/png'
         }]
+
+    def _get_resources(self, parsed_content):
+        return parsed_content['resource']
 
     def _get_metadata_url(self, content):
         return str(content.find('link', title='Inspire')['href'])
