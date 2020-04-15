@@ -79,7 +79,7 @@ class Landsat8Collection(object):
         return ['Landsat-8', 'L8-{}'.format(self.product_type)]
 
     def __str__(self):
-        return 'Landsat_8_{}'.format(self.product_type)
+        return 'LANDSAT_8_{}'.format(self.product_type)
 
     def get_name(self):
         return 'Landsat-8 {}'.format(self.product_type)
