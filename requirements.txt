@@ -8,4 +8,5 @@ requests-ftp
 enum34
 python-dateutil
 monthdelta
-OWSLib
+pyproj==1.9.6
+OWSLib==0.16

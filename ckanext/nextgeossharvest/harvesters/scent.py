@@ -9,6 +9,7 @@ from os import path
 import mimetypes
 
 from ckan.model import Session
+from ckan.model import Package
 from ckan.plugins.core import implements
 from ckanext.harvest.interfaces import IHarvester
 from ckanext.harvest.model import HarvestObject
@@ -97,6 +98,7 @@ class SCENTHarvester(NextGEOSSHarvester):
 
         wfs.set_collection(typename)
         sortby=['When']
+
         result = wfs.make_request(max_dataset, sortby, last_product_index)
         entries = result['features']
         name = '{}_{}'.format(collection.lower(), '{}')
