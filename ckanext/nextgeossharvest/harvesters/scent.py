@@ -206,6 +206,8 @@ class SCENTHarvester(NextGEOSSHarvester):
         item['timerange_end'] = when_date
         item['spatial'] = json.dumps(collection_content['geometry'])
 
+        return item
+
     def _parse_properties(self, properties, parsed_dict, collection):
         for key in properties:
             if key not in COLLECTION[collection].get('property_ignore_list', None):
