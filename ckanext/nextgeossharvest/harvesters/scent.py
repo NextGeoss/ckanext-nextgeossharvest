@@ -163,6 +163,11 @@ class SCENTHarvester(NextGEOSSHarvester):
     def fetch_stage(self, harvest_object):
         return True
 
+    def _get_imported_harvest_objects_by_source(self, source_id):   
+        return Session.query(HarvestObject).filter(
+            HarvestObject.harvest_source_id == source_id,
+            HarvestObject.import_finished is not None)
+
     def _get_last_harvesting_index(self, source_id):
         """
         Return the index of the last product harvested or none
