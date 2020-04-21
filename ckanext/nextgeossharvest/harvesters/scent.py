@@ -161,6 +161,7 @@ class SCENTHarvester(NextGEOSSHarvester):
             obj.package = None
             obj.save()
             last_product_index += 1
+            ids.append(obj.id)
         return ids
 
     def fetch_stage(self, harvest_object):
