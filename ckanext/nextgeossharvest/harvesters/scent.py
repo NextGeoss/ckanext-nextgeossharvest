@@ -274,6 +274,8 @@ class SCENTHarvester(NextGEOSSHarvester):
         resources.append(self._make_resource(main_url, title, description, extension, file_mimetype))
 
         if tag_url:
+            if 'query' in tag_url:
+                tag_url = tag_url.replace('query', 'filter')
             extension = ".json"
             file_mimetype = mimetypes.types_map[extension]
             extension = extension.strip('.').upper()
