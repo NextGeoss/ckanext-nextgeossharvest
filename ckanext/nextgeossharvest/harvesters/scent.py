@@ -206,6 +206,20 @@ class SCENTHarvester(NextGEOSSHarvester):
         item['timerange_end'] = when_date
         item['spatial'] = json.dumps(collection_content['geometry'])
 
+        item = self._add_collection(item, collection)
+    
+        id_number = collection_content['id']
+        identifier = '{}_{}'.format(collection.lower(), id_number)
+        item['identifier'] = identifier
+        item['name'] = identifier.lower()
+
+        item['title'] = item['collection_name']
+        item['notes'] = item['collection_description']
+
+        item['tags'] = self._get_tags_for_dataset()
+        tag_url = content.get('tag_url', None)
+        item['resource'] = self._parse_resources(resource_url, tag_url)
+
         return item
 
     def _parse_properties(self, properties, parsed_dict, collection):
