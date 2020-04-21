@@ -76,6 +76,7 @@ class SCENTHarvester(NextGEOSSHarvester):
         self.log = logging.getLogger(__file__)
         self.log.debug('SCENT Harvester gather_stage for job: %r', harvest_job)
 
+        self.job = harvest_job
         self.source_config = self._get_config(harvest_job)
         max_dataset = self.source_config.get('max_dataset', 100)
         wfs_url = self.source_config.get('wfs_url')
