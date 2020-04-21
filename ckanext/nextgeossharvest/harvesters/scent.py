@@ -5,6 +5,8 @@ import logging
 from datetime import datetime
 from sqlalchemy import desc
 import uuid
+from os import path
+import mimetypes
 
 from ckan.model import Session
 from ckan.plugins.core import implements
@@ -16,6 +18,10 @@ from ckanext.nextgeossharvest.lib.scent_config import COLLECTION
 from ckanext.nextgeossharvest.lib.nextgeoss_base import NextGEOSSHarvester
 
 log = logging.getLogger(__name__)
+
+def parse_file_extension(url):
+    fname = url.split('/')[-1]
+    return path.splitext(fname)[1]
 
 class SCENTHarvester(NextGEOSSHarvester):
     '''
@@ -85,11 +91,8 @@ class SCENTHarvester(NextGEOSSHarvester):
             last_product_index = 0
 
         wfs = WFS(url=wfs_url, version=wfs_version)
-        if tag_typename and wfs.set_collection(tag_typename):
-            tag_schema = wfs.get_schema()
 
         wfs.set_collection(typename)
-        collection_schema = wfs.get_schema()
         sortby=['When']
         result = wfs.make_request(max_dataset, sortby, last_product_index)
         entries = result['features']
@@ -100,16 +103,15 @@ class SCENTHarvester(NextGEOSSHarvester):
             entry_name = name.format(entry['id'])
             log.debug('gathering %s', entry_name)
 
-            wfs.set_collection(tag_typename)
-            filterxml = wfs.set_filter_equal_to('image_id', entry['id'])
-            result = wfs.make_request(constraint=filterxml)
-            tag_list = result['features']
+            
             content = {}
-            content['collection_schema'] = collection_schema
             content['collection_content'] = entry
-            if tag_list:
-                content['tag_schema'] = tag_schema
-                content['tag_content'] = tag_list
+            if tag_typename:
+                wfs.set_collection(tag_typename)
+                filterxml = wfs.set_filter_equal_to('image_id', entry['id'])
+                result = wfs.make_request(constraint=filterxml)
+                result = wfs.get_request(constraint=filterxml)
+                content['tag_url'] = result
 
             package_query = Session.query(Package)
             query_filtered = package_query.filter(Package.name == entry_name)
@@ -171,3 +173,89 @@ class SCENTHarvester(NextGEOSSHarvester):
             return int(index)
         else:
             return None
+
+    # Required by NextGEOSS base harvester
+    def _parse_content(self, content):
+        """
+        Parse the entry content and return a dictionary using our standard
+        metadata terms.
+        """
+        content = json.loads(content)
+        collection_content = content['collection_content']
+        tag_url = content.get('tag_url', None)
+        collection = self.source_config.get('collection')
+
+        item = {}
+        properties = collection_content['properties']
+        item = self._parse_properties(properties, item, collection)
+        resource_url = self._get_main_resource(properties, collection)
+        when_date = item.pop('When')
+        item['timerange_start'] = when_date
+        item['timerange_end'] = when_date
+        item['spatial'] = json.dumps(collection_content['geometry'])
+
+    def _parse_properties(self, properties, parsed_dict, collection):
+        for key in properties:
+            if key not in COLLECTION[collection].get('property_ignore_list', None):
+                parsed_dict[key] = properties[key]
+        return parsed_dict
+
+    def _get_main_resource(self,properties, collection):
+        url_key = COLLECTION[collection].get('url_key', None)
+        url_value = properties.get(url_key, None)
+        return url_value
+
+    def _add_collection(self, item, collection):
+
+        name = COLLECTION[collection].get('collection_name')
+        description = COLLECTION[collection].get('collection_description')
+
+        item['collection_id'] = collection
+        item['collection_name'] = name
+        item['collection_description'] = description
+        return item
+
+    def _get_tags_for_dataset(self):
+        tags = [{'name': 'Scent'}]
+        return tags
+
+    def _make_resource(self, url, name, description, extension, file_mimetype=None):
+            """
+            Create the resource dictionary.
+            """
+            
+            resource = {
+                "name": name,
+                "description": description,
+                "url": url,
+                "format": extension
+            }
+            if file_mimetype:
+                resource["mimetype"] = file_mimetype
+
+            return resource
+
+    def _parse_resources(self, main_url, tag_url=None):
+        resources = []
+
+        extension = parse_file_extension(main_url)
+        file_mimetype = mimetypes.types_map[extension]
+        extension = extension.strip('.').upper()
+        title = "Product Download"
+        description = "URI for accessing the {} file.".format(file_mimetype.split('/')[0])
+        resources.append(self._make_resource(main_url, title, description, extension, file_mimetype))
+
+        if tag_url:
+            extension = ".json"
+            file_mimetype = mimetypes.types_map[extension]
+            extension = extension.strip('.').upper()
+            title = "Image tags"
+            description = "URI for accessing the {} file containing the different tags information.".format(file_mimetype.split('/')[0])
+            resources.append(self._make_resource(tag_url, title, description, extension, file_mimetype))
+        
+        return resources
+
+    # Required by NextGEOSS base harvester
+    def _get_resources(self, metadata):
+        """Return a list of resource dictionaries."""
+        return metadata['resource']

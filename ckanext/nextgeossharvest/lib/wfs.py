@@ -42,6 +42,17 @@ class WFS():
         else:
             return result
 
+    def get_request(self, max_dataset=None, sort_by=None, start_index=0, constraint=None):
+        output_format = self._get_outputformat()
+        result = self.wfs.getGETGetFeatureRequest(typename=self.collection,
+                                                  filter=constraint,
+                                                  maxfeatures=max_dataset,
+                                                  sortby=sort_by,
+                                                  startindex=start_index,
+                                                  outputFormat=output_format)
+        
+        return result
+
     def _get_outputformat(self):
         getfeature_param = self.wfs.getOperationByName('GetFeature').parameters
         allowed_output_format = getfeature_param["outputFormat"]["value"]
