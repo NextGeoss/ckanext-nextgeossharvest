@@ -55,7 +55,7 @@ class WFS():
 
     def _get_outputformat(self):
         getfeature_param = self.wfs.getOperationByName('GetFeature').parameters
-        allowed_output_format = getfeature_param["outputFormat"]["value"]
+        allowed_output_format = getfeature_param["outputFormat"]["values"]
 
         for output_format in OUTPUT_FORMAT:
             if output_format in allowed_output_format:
