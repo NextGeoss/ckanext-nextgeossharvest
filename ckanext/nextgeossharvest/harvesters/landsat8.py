@@ -215,7 +215,8 @@ class Landsat8Harvester(NextGEOSSHarvester):
             scene_ids = [os.path.basename(key.strip('/')) for key in results]
 
         for scene in scene_ids:
-            _id = self._gather_entry(scene, int(path), int(row))
+            update_all = self.source_config['update_all']
+            _id = self._gather_entry(scene, int(path), int(row), update_all)
             if _id:
                 ids.append(_id)
 
