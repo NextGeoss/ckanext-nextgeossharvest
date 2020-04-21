@@ -67,6 +67,9 @@ class SCENTHarvester(NextGEOSSHarvester):
 
         return config
 
+    def _get_config(self, harvest_job):
+        return json.loads(harvest_job.source.config)
+
     # Required by NextGEOSS base harvester
     def gather_stage(self, harvest_job):
         self.log = logging.getLogger(__file__)
