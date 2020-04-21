@@ -181,7 +181,7 @@ class SCENTHarvester(NextGEOSSHarvester):
         sorted_objects = objects.order_by(desc(HarvestObject.import_finished))
         last_object = sorted_objects.limit(1).first()
         if last_object is not None:
-            index = json.loads(last_object.content)['index']
+            index = self._get_object_extra(last_object,'index', '1')
             return int(index)
         else:
             return None
