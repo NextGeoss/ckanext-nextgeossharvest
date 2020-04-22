@@ -195,23 +195,23 @@ if __name__ == "__main__":
         apikey = sys.argv[3]
         owner_org = sys.argv[4]
 	harvest_url = sys.argv[1]
-	r = requests.get(harvest_url)
-	soup = Soup(r.content, 'lxml')
-
-	files = []
-	for dataset in soup.find_all('dataset'):
-        	try:
-                	files.append(dataset['urlpath'])
-	        except Exception:
-        	        pass
-
-        if len(files) == 0:
-            print "Data Source provided does not have datasets to catalogue.\n"
-            sys.exit()
-
-	session = _create_session()
-	upload_to_catalogue(session, files, ckan_url, apikey, owner_org)
-	_close_session(session)
-
     except Exception as e:
         print("Exception: " + str(e))
+
+    r = requests.get(harvest_url)
+    soup = Soup(r.content, 'lxml')
+
+    files = []
+    for dataset in soup.find_all('dataset'):
+        try:
+            files.append(dataset['urlpath'])
+	except Exception:
+            pass
+
+    if len(files) == 0:
+        print "Data Source provided does not have datasets to catalogue.\n"
+        sys.exit()
+
+    session = _create_session()
+    upload_to_catalogue(session, files, ckan_url, apikey, owner_org)
+    _close_session(session)
