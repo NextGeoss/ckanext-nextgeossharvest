@@ -175,21 +175,22 @@ def _set_resources(metadata_url, product_url, thumbnail_url):
         }]
 
 
-# MAIN
 
-help_msg = """
-                Usage: $ python coldregions.py <data_source_URL> <destination_ckan_URL> <destination_ckan_apikey> <organization_id>
-                <data_source_URL> e.g.: "http://thredds.nersc.no/thredds/catalog/nextgeoss/Svalbard_classification_2018/catalog.xml"
-                <destination_ckan_URL> e.g.: "http://your-ckan-catalogue"
-                <destination_ckan_apikey> : get the API Key of your CKAN admin user"
-                <organization_id> e.g.: nersc
-        """
+if __name__ == "__main__":
 
-if sys.argv[1] == '-h':
-	print help_msg
+    help_msg = """
+                    Usage: $ python coldregions.py <data_source_URL> <destination_ckan_URL> <destination_ckan_apikey> <organization_id>
+                    <data_source_URL> e.g.: "http://thredds.nersc.no/thredds/catalog/nextgeoss/Svalbard_classification_2018/catalog.xml"
+                    <destination_ckan_URL> e.g.: "http://your-ckan-catalogue"
+                    <destination_ckan_apikey> : get the API Key of your CKAN admin user"
+                    <organization_id> e.g.: nersc
+                """
+
+    if sys.argv[1] == '-h':
+        print help_msg
 	sys.exit()
 
-try:
+    try:
         ckan_url = sys.argv[2]
         apikey = sys.argv[3]
         owner_org = sys.argv[4]
@@ -212,5 +213,5 @@ try:
 	upload_to_catalogue(session, files, ckan_url, apikey, owner_org)
 	_close_session(session)
 
-except Exception:
-	print help_msg
+    except Exception as e:
+        print("Exception: " + str(e))
