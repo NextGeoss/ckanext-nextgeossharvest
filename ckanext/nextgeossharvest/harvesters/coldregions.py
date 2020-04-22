@@ -7,7 +7,7 @@
 ---------------------------------------------------------------------
 – Author : João Andrade
 – Issue : 0.1
-– Date : 13/04/2020
+– Date : 22/04/2020
 – Purpose : Catalogue the outputs of Cold Regions Pilot
 - Source : http://thredds.nersc.no/thredds/catalog/nextgeoss/Svalbard_classification_2018/catalog.xml
 ---------------------------------------------------------------------
@@ -23,6 +23,7 @@ from enum import Enum
 import uuid
 from bs4 import BeautifulSoup as Soup
 import requests
+from datetime import datetime
 
 
 def _create_session():
@@ -101,7 +102,7 @@ def _create_dataset(package_dict, session, ckan_url, api_key, counter):
         print(rsp.json())
 
 
-def upload_to_catalogue(session, files, ckan_url, api_key, owner_org):
+def upload_to_catalogue(session, files, ckan_url, api_key, owner_org, collection):
     """Uploads the cold region outputs to the catalogue"""
 
     counter = 0
@@ -112,38 +113,57 @@ def upload_to_catalogue(session, files, ckan_url, api_key, owner_org):
         metadata_url = "http://thredds.nersc.no/thredds/dodsC/" + nc_file + ".html"
         getCapabilities = "http://thredds.nersc.no/thredds/wms/" + nc_file + "?service=WMS&version=1.3.0&request=GetCapabilities"
 
-	r = requests.get(getCapabilities)
-	soup = Soup(r.content, 'lxml')
-	for layer in soup.find_all(queryable = "1"):
-	        if layer.find_all("name")[0].text == "ice":
-        	        coordinates = layer.find_all("boundingbox")[0]
-                	lon_min = coordinates['minx']
-	                lon_max = coordinates['maxx']
-        	        lat_min = coordinates['miny']
-                	lat_max = coordinates['maxy']
-	                time = layer.find_all("dimension")[0]['default']
+        r = requests.get(getCapabilities)
+        soup = Soup(r.content, 'lxml')
 
-	thumbnail_url = "http://thredds.nersc.no/thredds/wms/" + nc_file + "?service=WMS&version=1.3.0&request=GetMap&layers=ice&CRS=CRS:84&BBOX=" + lon_min + "," + lat_min + "," + lon_max + "," + lat_max + "&width=2048&height=2048&styles=boxfill/ncview&format=image/png&time=" + time
+        date_format_orig = "%Y%m%dT%H%M%S"
+        date_format_new = "%Y-%m-%dT%H:%M:%S.000Z"
 
-	identifier = "NERSC_ARCTIC_SEAICEEDGE_" + time.replace("-","").replace(":","").replace(".000Z","")
+        for layer in soup.find_all(queryable = "1"):
+            if layer.find_all("name")[0].text == "ice" or layer.find_all("name")[0].text == "ice_water":
+                coordinates = layer.find_all("boundingbox")[0]
+                lon_min = coordinates['minx']
+                lon_max = coordinates['maxx']
+                lat_min = coordinates['miny']
+                lat_max = coordinates['maxy']
+                if layer.find_all("name")[0].text == "ice":
+	            start_time = layer.find_all("dimension")[0]['default']
+                    stop_time = start_time
+                    identifier = "NERSC_ARCTIC_SEAICEEDGE_" + start_time.replace("-","").replace(":","").replace(".000Z","")
+                    layer_name = "ice"
+                    contributor_name = "Mohamed Babiker, Anton Korosov, Jeong-Won Park, Torill Hamre, Asuka Yamakawa"
+                    creator_name = "Mohamed Babiker"
+                    contributor_email = "mohamed.babiker@nersc.no, anton.korosov@nersc.no, jeong-won.park@nersc.no, torill.hamre@nersc.no, asuka.yamakawa@nersc.no"
+                elif layer.find_all("name")[0].text == "ice_water":
+                    start_time = filename.split('_')[4]
+                    identifier = "NERSC_ARCTIC_SEAICEEDGE_" + start_time
+                    start_time = datetime.strptime(start_time, date_format_orig).strftime(date_format_new)
+                    stop_time = filename.split('_')[5]
+                    stop_time = datetime.strptime(stop_time, date_format_orig).strftime(date_format_new)
+                    layer_name = "ice_water"
+                    contributor_name = "Frode Monsen, Torill Hamre, Mohamed Babiker, Anton Korosov, Jeong-Won Park"
+                    creator_name = "Frode Monsen"
+                    contributor_email = "frode.monsen@nersc.no, torill.hamre@nersc.no, mohamed.babiker@nersc.no, anton.korosov@nersc.no, jeong-won.park@nersc.no"
 
-        extras_dict = {'collection_name': 'Sentinel-1 HH/HV based ice/water classification', 'collection_id': 'S1_ARCTIC_SEAICEEDGE_CLASSIFICATION', 'collection_description': 'Sea ice and water classification in the Arctic using Sentinel-1. These datasets have been generated with support from the European Commission in the Horizon 2020 NextGEOSS project (grant agreement No 730329). The algorithms used for Sentinel-1 SAR noise removal and sea ice classification have been developed in the Research Council of Norway project SONARC (Project No 243608) and the Horizon 2020 SPICES project (grant agreement No 640161).', 'spatial': '{"type":"Polygon", "coordinates":[[[' + lon_min + ', ' + lat_max + '], [' + lon_max + ', ' + lat_max + '], [' + lon_max + ', ' + lat_min + '], [' + lon_min + ', ' + lat_min + '], [' + lon_min + ', ' + lat_max + ']]]}', 'timerange_start': time, 'timerange_end': time, 'identifier': identifier, 'filename': filename, 'iso_topic_category': 'oceans', 'institution': 'Nansen Environmental and Remote Sensing Center (NERSC)', 'contributor_name': 'Mohamed Babiker, Anton Korosov, Jeong-Won Park, Torill Hamre, Asuka Yamakawa', 'creator_name': 'Mohamed Babiker', 'contributor_email': 'mohamed.babiker@nersc.no, anton.korosov@nersc.no, jeong-won.park@nersc.no, torill.hamre@nersc.no, asuka.yamakawa@nersc.no', 'source': 'satellite remote sensing', 'satellite': 'Sentinel-1', 'sensor': 'SAR', 'processing_level': 'Level 3', 'groups': [{"name":"cold_regions"}], 'is_output': True}
+                thumbnail_url = "http://thredds.nersc.no/thredds/wms/" + nc_file + "?service=WMS&version=1.3.0&request=GetMap&layers=" + layer_name + "&CRS=CRS:84&BBOX=" + lon_min + "," + lat_min + "," + lon_max + "," + lat_max + "&width=2048&height=2048&styles=boxfill/ncview&format=image/png"
 
-	package_dict = {}
-	package_dict['name'] = extras_dict['identifier'].lower()
-	package_dict['title'] = extras_dict['collection_name']
-	package_dict['notes'] = extras_dict['collection_description']
-	package_dict['tags'] = [{'name': 'earth science'}, {'name': 'ocean'}, {'name': 'sea ice'}]
-	if 'groups' in extras_dict:
-        	package_dict['groups'] = extras_dict['groups']
-	package_dict['extras'] = _get_extras(extras_dict)
-	package_dict['resources'] = _set_resources(metadata_url, product_url, thumbnail_url)
-	package_dict['private'] = False
-	package_dict['id'] = unicode(uuid.uuid4())  # noqa: F821
-	package_dict['owner_org'] = owner_org
+                extras_dict = {'collection_name': collection[0], 'collection_id': collection[1], 'collection_description': collection[2], 'spatial': '{"type":"Polygon", "coordinates":[[[' + lon_min + ', ' + lat_max + '], [' + lon_max + ', ' + lat_max + '], [' + lon_max + ', ' + lat_min + '], [' + lon_min + ', ' + lat_min + '], [' + lon_min + ', ' + lat_max + ']]]}', 'timerange_start': start_time, 'timerange_end': stop_time, 'identifier': identifier, 'filename': filename, 'iso_topic_category': 'oceans', 'institution': 'Nansen Environmental and Remote Sensing Center (NERSC)', 'contributor_name': contributor_name, 'creator_name': creator_name, 'contributor_email': contributor_email, 'source': 'satellite remote sensing', 'satellite': 'Sentinel-1', 'sensor': 'SAR', 'processing_level': 'Level 3', 'groups': [{"name":"cold_regions"}], 'is_output': True}
 
-	_create_dataset(package_dict, session, ckan_url, api_key, counter)
-        counter += 1
+                package_dict = {}
+                package_dict['name'] = extras_dict['identifier'].lower()
+                package_dict['title'] = extras_dict['collection_name']
+                package_dict['notes'] = extras_dict['collection_description']
+                package_dict['tags'] = [{'name': 'earth science'}, {'name': 'ocean'}, {'name': 'sea ice'}, {'name': 'climate'}, {'name': 'atmosphere'}, {'name': 'meteorology'}]
+                if 'groups' in extras_dict:
+       	            package_dict['groups'] = extras_dict['groups']
+                package_dict['extras'] = _get_extras(extras_dict)
+                package_dict['resources'] = _set_resources(metadata_url, product_url, thumbnail_url)
+                package_dict['private'] = False
+                package_dict['id'] = unicode(uuid.uuid4())  # noqa: F821
+                package_dict['owner_org'] = owner_org
+
+                _create_dataset(package_dict, session, ckan_url, api_key, counter)
+                counter += 1
 
 
 def _get_extras(extras_dict):
@@ -156,7 +176,7 @@ def _get_extras(extras_dict):
 
 
 def _set_resources(metadata_url, product_url, thumbnail_url):
-        return [{
+    return [{
             'name': 'Metadata on Thredds',
             'url': metadata_url,
             'format': 'html',
@@ -175,15 +195,14 @@ def _set_resources(metadata_url, product_url, thumbnail_url):
         }]
 
 
-
 if __name__ == "__main__":
 
     help_msg = """
-                    Usage: $ python coldregions.py <data_source_URL> <destination_ckan_URL> <destination_ckan_apikey> <organization_id>
-                    <data_source_URL> e.g.: "http://thredds.nersc.no/thredds/catalog/nextgeoss/Svalbard_classification_2018/catalog.xml"
+                    Usage: $ python coldregions.py <destination_ckan_URL> <destination_ckan_apikey> <organization_id> <collection_id>
                     <destination_ckan_URL> e.g.: "http://your-ckan-catalogue"
                     <destination_ckan_apikey> : get the API Key of your CKAN admin user"
                     <organization_id> e.g.: nersc
+                    <collection_id> e.g.: S1_ARCTIC_SEAICEEDGE_CLASSIFICATION, S1_ARCTIC_SEAICEEDGE_CLASSIFICATION_INTAROS_2018 or S1_ARCTIC_SEAICEEDGE_CLASSIFICATION_CAATEX_INTAROS_2019
                 """
 
     if sys.argv[1] == '-h':
@@ -191,12 +210,29 @@ if __name__ == "__main__":
 	sys.exit()
 
     try:
-        ckan_url = sys.argv[2]
-        apikey = sys.argv[3]
-        owner_org = sys.argv[4]
-	harvest_url = sys.argv[1]
+        ckan_url = sys.argv[1]
+        apikey = sys.argv[2]
+        owner_org = sys.argv[3]
+        collection_id = sys.argv[4]
     except Exception as e:
-        print("Exception: " + str(e))
+        print("Exception: " + str(e) + "\n")
+        print help_msg
+        sys.exit()
+
+    if collection_id == 'S1_ARCTIC_SEAICEEDGE_CLASSIFICATION':
+        harvest_url = 'http://thredds.nersc.no/thredds/catalog/nextgeoss/Svalbard_sea_ice_classification_2018/catalog.xml'
+        collection_name = 'Sentinel-1 HH/HV based ice/water classification'
+        collection_description = 'Sea ice and water classification in the Arctic using Sentinel-1. These datasets have been generated with support from the European Commission in the Horizon 2020 NextGEOSS project (grant agreement No 730329). The algorithms used for Sentinel-1 SAR noise removal and sea ice classification have been developed in the Research Council of Norway project SONARC (Project No 243608) and the Horizon 2020 SPICES project (grant agreement No 640161).'
+    elif collection_id == 'S1_ARCTIC_SEAICEEDGE_CLASSIFICATION_INTAROS_2018':
+        harvest_url = 'http://thredds.nersc.no/thredds/catalog/nextgeoss/Sea_ice_and_water_classification_in_the_Arctic_for_INTAROS__2018_field_experiment/catalog.xml'
+        collection_name = 'Sea ice and water classification in the Arctic for INTAROS 2018 field experiment'
+        collection_description = 'Sea ice and water classification in the Arctic, for INTAROS 2018 field experiment, using Sentinel-1 SAR. Extended Wide (EW) swath images at medium resolution (GRDM). Prior to classification, a thermal noise reduction algorithm is applied. A machine learning algorithm is then used to classify sea ice and open water in the noise corrected images. This data is made freely available by NERSC. User must display this citation in any publication or product using data: "These data were produced with support from the Horizon 2020 NextGEOSS project (Grant Agreement No 730329), and made freely available by NERSC (ref. Frode Monsen, Torill Hamre and Mohamed Babiker at NERSC)."'
+    elif collection_id == 'S1_ARCTIC_SEAICEEDGE_CLASSIFICATION_CAATEX_INTAROS_2019':
+        harvest_url = 'http://thredds.nersc.no/thredds/catalog/nextgeoss/Sea_ice_and_water_classification_in_the_Arctic_for_CAATEX_INTAROS_2019_field_experiment/catalog.xml'
+        collection_name = 'Sea ice and water classification in the Arctic for CAATEX/INTAROS 2019 field experiment'
+        collection_description = 'Sea ice and water classification in the Arctic, for CAATEX/INTAROS 2019 field experiment, using Sentinel-1 SAR. Extended Wide (EW) swath images at medium resolution (GRDM). Prior to classification, a thermal noise reduction algorithm is applied. A machine learning algorithm is then used to classify sea ice and open water in the noise corrected images. This data is made freely available by NERSC. User must display this citation in any publication or product using data: "These data were produced with support from the Horizon 2020 NextGEOSS project (Grant Agreement No 730329), and made freely available by NERSC (ref. Frode Monsen, Torill Hamre and Mohamed Babiker at NERSC)."'
+
+    collection = [collection_name, collection_id, collection_description]
 
     r = requests.get(harvest_url)
     soup = Soup(r.content, 'lxml')
@@ -205,7 +241,7 @@ if __name__ == "__main__":
     for dataset in soup.find_all('dataset'):
         try:
             files.append(dataset['urlpath'])
-	except Exception:
+        except Exception:
             pass
 
     if len(files) == 0:
@@ -213,5 +249,5 @@ if __name__ == "__main__":
         sys.exit()
 
     session = _create_session()
-    upload_to_catalogue(session, files, ckan_url, apikey, owner_org)
+    upload_to_catalogue(session, files, ckan_url, apikey, owner_org, collection)
     _close_session(session)

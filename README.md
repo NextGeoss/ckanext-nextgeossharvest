@@ -758,11 +758,20 @@ The Food Security harvester has configuration has:
 The Cold Regions harvester harvests the NERSC pilot outputs for the following collections:
 
     1. Sentinel-1 HH/HV based ice/water classification
+    2. Sea ice and water classification in the Arctic for INTAROS 2018 field experiment
+    3. Sea ice and water classification in the Arctic for CAATEX/INTAROS 2019 field experiment
 
 ### <a name="running-coldregions"></a>Running a Cold Regions Harvester
-This harvester only runs once and it will collect all the cold regions datasets (static data). In the command line run:
+The Cold Regions harvester will run one time per collection and it will collect all the cold regions datasets within the input collection(static data). In the command line run:
 
-    $ python ./ckanext/nextgeossharvest/harvesters/coldregions.py "http://thredds.nersc.no/thredds/catalog/nextgeoss/Svalbard_classification_2018/catalog.xml" <destination_ckan_URL> <destination_ckan_apikey> "nersc"
+```
+$ python ./ckanext/nextgeossharvest/harvesters/coldregions.py <destination_ckan_URL> <destination_ckan_apikey> "nersc" <collection_id>
+```
+The following collection IDs are available:
+- S1_ARCTIC_SEAICEEDGE_CLASSIFICATION
+- S1_ARCTIC_SEAICEEDGE_CLASSIFICATION_INTAROS_2018
+- S1_ARCTIC_SEAICEEDGE_CLASSIFICATION_CAATEX_INTAROS_2019
+
 
 ## <a name="develop"></a>Developing new harvesters
 ### <a name="basicworkflow"></a>The basic harvester workflow
