@@ -61,7 +61,7 @@ def _create_organization(name_id, session, ckan_url, api_key):
         'title': 'NERSC'
     }
     headers = {
-        'Content-Type': 'application/x-www-form-urlencoded',
+        'Content-Type': 'application/json',
         'Authorization': api_key
     }
     rsp = session.post(ckan_url + '/api/action/organization_create',
@@ -87,7 +87,7 @@ def _create_dataset(package_dict, session, ckan_url, api_key, counter):
     #groups = package_dict['groups']
 
     headers = {
-        'Content-Type': 'application/x-www-form-urlencoded',
+        'Content-Type': 'application/json',
         'Authorization': api_key
     }
     rsp = session.post(ckan_url + '/api/action/package_create',
