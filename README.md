@@ -36,43 +36,46 @@ This extension contains harvester plugins for harvesting from sources used by Ne
 10. [Harvesting DEIMOS-2 products](#harvesting-deimos2)
     1. [DEIMOS-2 Settings](#deimos2-settings)
     2. [Running a DEIMOS-2 harvester](#running-deimos2)
-11. [Harvesting EBAS-NILU products](#harvesting-ebasnilu)
+12. [Harvesting EBAS-NILU products](#harvesting-ebasnilu)
     1. [EBAS-NILU Settings](#ebasnilu-settings)
     2. [Running a EBAS-NILU harvester](#running-ebasnilu)
-11. [Harvesting SIMOcean products](#harvesting-simocean)
+13. [Harvesting SIMOcean products](#harvesting-simocean)
     1. [SIMOcean Settings](#simocean-settings)
     2. [Running a SIMOcean harvester](#running-simocean)
-12. [Harvesting EPOS-Sat products](#harvesting-epos)
+14. [Harvesting EPOS-Sat products](#harvesting-epos)
     1. [EPOS-Sat Settings](#epos-settings)
     2. [Running a EPOS-Sat harvester](#running-epos)
-13. [Harvesting MODIS products](#harvesting-modis)
+15. [Harvesting MODIS products](#harvesting-modis)
     1. [MODIS Settings](#modis-settings)
     2. [Running a MODIS harvester](#running-modis)
-14. [Harvesting GDACS Average Flood products](#harvesting-gdacs)
+16. [Harvesting GDACS Average Flood products](#harvesting-gdacs)
     1. [GDACS Settings](#gdacs-settings)
     2. [Running a GDACS harvester](#running-gdacs)
-15. [Harvesting DEIMOS-2 products](#harvesting-deimos2)
+17. [Harvesting DEIMOS-2 products](#harvesting-deimos2)
     1. [DEIMOS-2 Settings](#deimos2-settings)
     2. [Running a DEIMOS-2 harvester](#running-deimos2)
-16. [Harvesting Food Security pilot outputs](#harvesting-foodsecurity)
+18. [Harvesting Food Security pilot outputs](#harvesting-foodsecurity)
     1. [Food Security Settings](#foodsecurity-settings)
     2. [Running a Food Security harvester](#running-foodsecurity)
-17. [Harvesting VITO CGS S1 products](#harvesting-vitocgss1)
+19. [Harvesting VITO CGS S1 products](#harvesting-vitocgss1)
     1. [VITO CGS S1 Settings](#vitocgss1-settings)
     2. [Running a VITO CGS S1 harvester](#running-vitocgss1)
-18. [Developing new harvesters](#develop)
+20. [Harvesting SAEON products](#harvesting-saeon)
+    1. [SAEON Settings](#saeon-settings)
+    2. [Running a SAEON harvester](#running-saeon)
+21. [Developing new harvesters](#develop)
     1. [The basic harvester workflow](#basicworkflow)
         1. [gather_stage](#gather_stage)
         2. [fetch_stage](#fetch_stage)
         3. [import_stage](#import_stage)
     2. [Example of an OpenSearch-based harvester](#opensearchexample)
-19. [iTag](#itag)
+22. [iTag](#itag)
     1. [How ITagEnricher works](#itagprocess)
     2. [Setting up ITagEnricher](#setupitag)
     3. [Handling iTag errors](#handlingitagerrors)
-20. [Testing testing testing](#tests)
-21. [Suggested cron jobs](#cron)
-22. [Logs](#logs)
+23. [Testing testing testing](#tests)
+24. [Suggested cron jobs](#cron)
+25. [Logs](#logs)
     1. [How ITagEnricher works](#itagprocess)
     2. [Setting up ITagEnricher](#setupitag)
     3. [Handling iTag errors](#handlingitagerrors)
@@ -750,6 +753,38 @@ The Food Security harvester has configuration has:
 3. Select `VITO CGS S1 Harvester` from the list of harvesters.
 4. Add a config as described above.
 5. Select `Manual` from the frequency options.
+6. Run the harvester. It will programmatically create datasets.
+
+
+
+## <a name="harvesting-saeon"></a>Harvesting SAEON products
+The SAEON harvester collects the products for the following collections:
+
+    1. Climate Systems Analysis Group (South Africa)
+
+### <a name="saeon-settings"></a>SAEON Settings
+The SAEON harvester has configuration has:
+1. `datasets_per_job` (optional, integer, defaults to 100) determines the maximum number of products that will be harvested during each job. If a query returns 2,501 results, only the first 100 will be harvested if you're using the default. This is useful for running the harvester via recurring jobs intended to harvest products incrementally (i.e., you want to start from the beginning and harvest all available products). The harvester will harvest products in groups of 100, rather than attmepting to harvest all x-hundred-thousand at once. You'll get feedback after each job, so you'll know if there are errors without waiting for the whole job to run. And the harvester will automatically resume from the harvested dataset if you're running it via a recurring cron job.
+2. `timeout` (optional, integer, defaults to 60) determines the number of seconds to wait before timing out a request.
+3. `update_all` (optional, boolean, default is false) determines whether or not the harvester updates datasets that already have metadadata from this source. For example: if we have "update_all": true, and dataset Foo has already been created or updated by harvesting, then it will be updated again when the harvester runs. If we have "update_all": false and Foo has already been created or updated by harvesting, then the dataset will not be updated when the harvester runs. And regardless of whether update_all is true or false, if a dataset has not been collected, then it will be created in the catalogue.
+4. `make_private` (optional) determines whether the datasets created by the harvester will be private or public. The default is `false`, i.e., by default, all datasets created by the harvester will be public.
+5. `source_url` determines the base URL for the data source to query.
+
+#### Examples of Plan4All settings
+```
+{
+  "datasets_per_job": 100,
+  "timeout": 60,
+  "make_private": false,
+  "source_url": https://staging.saeon.ac.za
+}
+```
+### <a name="running-saeon"></a>Running a SAEON harvester
+1. Add `saeon` to the list of plugins in your .ini file.
+2. Create a new harvester via the harvester interface.
+3. Select `SAEON Harvester` from the list of harvesters.
+4. Add a config as described above.
+5. Select `Manual` from the frequency options. 
 6. Run the harvester. It will programmatically create datasets.
 
 
