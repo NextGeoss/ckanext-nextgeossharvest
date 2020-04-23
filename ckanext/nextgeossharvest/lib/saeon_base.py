@@ -1,10 +1,20 @@
 # -*- coding: utf-8 -*-
 
 from ckanext.harvest.harvesters.base import HarvesterBase
-import logging
+from ckan import model
+from ckan.model import Package
+from ckan.model import Session
+from ckanext.harvest.model import HarvestObject
+from ckanext.harvest.model import HarvestObjectExtra as HOExtra
+from datetime import datetime
 from string import Template
-
 from bs4 import BeautifulSoup as Soup
+import logging
+import requests
+from requests.exceptions import Timeout
+import time
+import uuid
+import re
 
 
 log = logging.getLogger(__name__)
@@ -26,8 +36,8 @@ class CSAGHarvester(HarvesterBase):
         list of elements added in the original version.
         """
 
-        spatial_dict = {'ows:LowerCorner': None,
-                        'ows:UpperCorner': None}
+        spatial_dict = {'ows:lowercorner': None,
+                        'ows:uppercorner': None}
 
         # Since Saeon Catalogue datasets refer to an entire year,
         # there is only one datastamp. Thus, this value will be
@@ -35,8 +45,8 @@ class CSAGHarvester(HarvesterBase):
         # pos-processed
         normalized_names = {
             'dct:modified': 'timerange_start',
-            'ows:LowerCorner': 'spatial',
-            'ows:UpperCorner': 'spatial',
+            'ows:lowercorner': 'spatial',
+            'ows:uppercorner': 'spatial',
             'dc:identifier': 'identifier',
             'dc:title': 'title',
             'dc:type': 'type',
@@ -59,6 +69,7 @@ class CSAGHarvester(HarvesterBase):
             if item['spatial'][key] is None:
                 del item['spatial']
                 break
+        print(item['spatial'])
 
         if ('timerange_start' in item) and ('timerange_end' not in item):
             item['timerange_end'] = item['timerange_start']
@@ -69,11 +80,9 @@ class CSAGHarvester(HarvesterBase):
 
     def _add_collection(self, item):
         """Return the item with collection ID, name, and description."""
-        identifier = item['identifier'].lower()
-        if identifier.startswith('olu'):
-            item['collection_name'] = 'Climate Systems Analysis Group (South Africa)'  # noqa: E501
-            item['collection_description'] = 'A collection of datasets produced by the Climate Systems Analysis Group, University of Cape Town. The data were harvested through the SAEON Open Data Platform. The collection contains model runs produced by downscaling Global Climate Models (GCMs) using the Self-Organising Map (SOM) technique. SOM is a leading empirical downscaled technique and provides meteorological station level response to global climate change forcing. The SOM technique was employed to project rainfall and temperature changes for 1950-1999 (current climate), 2046–2065 (near future) and 2080–2100 (far future) periods for South Africa.'  # noqa: E501
-            item['collection_id'] = 'CLIMATE_SYSTEMS_ANALYSIS_GROUP_SOUTH_AFRICA'
+        item['collection_name'] = 'Climate Systems Analysis Group (South Africa)'  # noqa: E501
+        item['collection_description'] = 'A collection of datasets produced by the Climate Systems Analysis Group, University of Cape Town. The data were harvested through the SAEON Open Data Platform. The collection contains model runs produced by downscaling Global Climate Models (GCMs) using the Self-Organising Map (SOM) technique. SOM is a leading empirical downscaled technique and provides meteorological station level response to global climate change forcing. The SOM technique was employed to project rainfall and temperature changes for 1950-1999 (current climate), 2046–2065 (near future) and 2080–2100 (far future) periods for South Africa.'  # noqa: E501
+        item['collection_id'] = 'CLIMATE_SYSTEMS_ANALYSIS_GROUP_SOUTH_AFRICA'
 
         return item
 
@@ -100,8 +109,8 @@ class CSAGHarvester(HarvesterBase):
         spatial_data = item.pop('spatial', None)
         if spatial_data:
             template = Template('''{"type": "Polygon", "coordinates": [$coords_list]}''')  # noqa: E501
-            spatial_data['gmd:westboundlongitude'], spatial_data['gmd:northboundlatitude'] = spatial_data['ows:LowerCorner'].split(' ')
-            spatial_data['gmd:eastboundlongitude'], spatial_data['gmd:southboundlatitude'] = spatial_data['ows:UpperCorner'].split(' ')
+            spatial_data['gmd:westboundlongitude'], spatial_data['gmd:northboundlatitude'] = spatial_data['ows:lowercorner'].split(' ')
+            spatial_data['gmd:eastboundlongitude'], spatial_data['gmd:southboundlatitude'] = spatial_data['ows:uppercorner'].split(' ')
             coords_NW = [float(spatial_data['gmd:westboundlongitude']), float(spatial_data['gmd:northboundlatitude'])]  # noqa: E501
             coords_NE = [float(spatial_data['gmd:eastboundlongitude']), float(spatial_data['gmd:northboundlatitude'])]  # noqa: E501
             coords_SE = [float(spatial_data['gmd:eastboundlongitude']), float(spatial_data['gmd:southboundlatitude'])]  # noqa: E501
@@ -112,7 +121,7 @@ class CSAGHarvester(HarvesterBase):
             item['spatial'] = geojson
 
         name = item['identifier'].lower()
-        item['name'] = name.replace('.', '_')
+        item['name'] = name.replace('.', '_').replace('/', '-')
 
         resources = []
         # Thumbnail, alternative and enclosure
@@ -120,11 +129,11 @@ class CSAGHarvester(HarvesterBase):
         resources_list = soup.find_all({'dct:references'})
         for resource in resources_list:
             if resource['scheme'] == 'Query':
-                self._make_thumbnail_resource(resource.text)
+                resources.append(self._make_thumbnail_resource(resource.text))
             elif resource['scheme'] == 'Information':
-                self._make_information_resource(resource.text)
+                resources.append(self._make_information_resource(resource.text))
             elif resource['scheme'] == 'Download':
-                self._make_dataset_link(resource.text)
+                resources.append(self._make_dataset_link(resource.text))
 
         # Add the collection info
         item = self._add_collection(item)
