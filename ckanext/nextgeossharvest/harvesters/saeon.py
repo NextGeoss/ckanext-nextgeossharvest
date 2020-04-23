@@ -48,6 +48,10 @@ class SAEONHarvester(CSAGHarvester, NextGEOSSHarvester):
             if type(config_obj.get('make_private', False)) != bool:
                 raise ValueError('make_private must be true or false')
 
+            if 'source_url' in config_obj:
+                source_url = config_obj['source_url']
+            else:
+                raise ValueError('source_url is required')
         except ValueError as e:
             raise e
 
@@ -84,7 +88,7 @@ class SAEONHarvester(CSAGHarvester, NextGEOSSHarvester):
             restart_record = '1'
         log.debug('Restart Record is {}'.format(restart_record))
 
-        base_url = 'https://staging.saeon.ac.za'
+        base_url = self.source_config.get('source_url')
 
         limit = self.source_config.get('datasets_per_job', 100)
 
