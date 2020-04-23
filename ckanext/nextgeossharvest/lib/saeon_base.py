@@ -229,7 +229,7 @@ class CSAGHarvester(HarvesterBase):
             # The lowercase identifier will serve as the dataset's name,
             # so we need the lowercase version for the lookup in the next step.
             identifier = entry.find('dc:identifier').text.lower()  # noqa: E501
-            identifier = identifier.replace('.', '_').replace('/', '_')
+            identifier = identifier.replace('.', '_').replace('/', '-')
             guid = unicode(uuid.uuid4())
 
             entries.append({'content': content, 'identifier': identifier, 'guid': guid, 'restart_record': restart_record})  # noqa: E501

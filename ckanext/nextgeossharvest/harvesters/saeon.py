@@ -94,7 +94,7 @@ class SAEONHarvester(CSAGHarvester, NextGEOSSHarvester):
                         '&typenames=csw:Record&elementSetName=summary' +
                         '&resulttype=results&SortBy=dc:date:A' +
                         '&version=2.0.2&maxrecords={limit}' +
-                        '&StartPosition=1')
+                        '&StartPosition={restart_record}')
 
         harvest_url = url_template.format(base_url=base_url, limit=limit, restart_record=restart_record)  # noqa: E501
         log.debug('Harvest URL is {}'.format(harvest_url))
