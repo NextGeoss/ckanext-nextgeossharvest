@@ -158,7 +158,7 @@ class SCENTHarvester(NextGEOSSHarvester):
                     HOExtra(key='index', value=last_product_index)
                 ])
             obj.content = json.dumps(content)
-            obj.package = None
+            obj.package = None if status == 'new' else package
             obj.save()
             last_product_index += 1
             ids.append(obj.id)
