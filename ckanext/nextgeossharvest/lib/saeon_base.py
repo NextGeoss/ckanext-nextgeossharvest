@@ -191,8 +191,8 @@ class CSAGHarvester(HarvesterBase):
         dataset = {'name': name,
                    'description': description,
                    'url': url,
-                   'format': 'HTML',
-                   'mimetype': 'text/html',
+                   'format': 'ZIP',
+                   'mimetype': 'application/zip',
                    'resource_type': _type}
 
         return dataset
