@@ -7,6 +7,8 @@ from sqlalchemy import desc
 import uuid
 from os import path
 import mimetypes
+import stringcase
+import re
 
 from ckan.model import Session
 from ckan.model import Package
@@ -23,6 +25,10 @@ log = logging.getLogger(__name__)
 def parse_file_extension(url):
     fname = url.split('/')[-1]
     return path.splitext(fname)[1]
+
+def convert_to_clean_snakecase(extra_key):
+        clean_extra_key = re.sub('[^0-9a-zA-Z]+', '_', stringcase.snakecase(extra_key)).strip('_')
+        return clean_extra_key
 
 class SCENTHarvester(NextGEOSSHarvester):
     '''
@@ -220,7 +226,12 @@ class SCENTHarvester(NextGEOSSHarvester):
         tag_url = content.get('tag_url', None)
         item['resource'] = self._parse_resources(resource_url, tag_url)
 
-        return item
+        parsed_content = {}
+        for key in item:
+            new_key = convert_to_clean_snakecase(key)
+            parsed_content[new_key] = item[key]
+
+        return parsed_content
 
     def _parse_properties(self, properties, parsed_dict, collection):
         for key in properties:
