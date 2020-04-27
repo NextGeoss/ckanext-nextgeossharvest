@@ -277,12 +277,13 @@ class SCENTHarvester(NextGEOSSHarvester):
     def _parse_resources(self, main_url, tag_url=None):
         resources = []
 
-        extension = parse_file_extension(main_url)
-        file_mimetype = mimetypes.types_map[extension]
-        extension = extension.strip('.').upper()
-        title = "Product Download"
-        description = "URI for accessing the {} file.".format(file_mimetype.split('/')[0])
-        resources.append(self._make_resource(main_url, title, description, extension, file_mimetype))
+        if main_url:
+            extension = parse_file_extension(main_url)
+            file_mimetype = mimetypes.types_map[extension]
+            extension = extension.strip('.').upper()
+            title = "Product Download"
+            description = "URI for accessing the {} file.".format(file_mimetype.split('/')[0])
+            resources.append(self._make_resource(main_url, title, description, extension, file_mimetype))
 
         if tag_url:
             if 'query' in tag_url:
