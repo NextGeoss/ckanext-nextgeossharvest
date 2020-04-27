@@ -47,12 +47,12 @@ COLLECTION = {
         "collection_name": "TBD",
         "collection_description": "TBD",
         "collection_typename": "geomesa:kifisosMoistureMetadata",
-        "property_ignore_list": ["userId", "measurement_accuracy", "trustLevel", "trustLevel"]
+        "property_ignore_list": ["userId", "measurement_accuracy", "trustLevel"]
     },
     "SCENT_KIFISOS_TEMPERATURE": {
         "collection_name": "TBD",
         "collection_description": "TBD",
         "collection_typename": "geomesa:kifisosTempMetadata",
-        "property_ignore_list": ["userId", "measurement_accuracy", "trustLevel", "trustLevel"]
+        "property_ignore_list": ["userId", "measurement_accuracy", "trustLevel"]
     }
 }
