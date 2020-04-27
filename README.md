@@ -776,7 +776,7 @@ The SAEON harvester has configuration has:
   "datasets_per_job": 100,
   "timeout": 60,
   "make_private": false,
-  "source_url": https://staging.saeon.ac.za
+  "source_url": "https://staging.saeon.ac.za"
 }
 ```
 ### <a name="running-saeon"></a>Running a SAEON harvester
