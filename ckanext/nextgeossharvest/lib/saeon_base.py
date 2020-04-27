@@ -69,7 +69,6 @@ class CSAGHarvester(HarvesterBase):
             if item['spatial'][key] is None:
                 del item['spatial']
                 break
-        print(item['spatial'])
 
         if ('timerange_start' in item) and ('timerange_end' not in item):
             item['publication_date'] = item['timerange_start']
