@@ -174,6 +174,7 @@ class Landsat8Harvester(NextGEOSSHarvester):
             path = self.source_config.get('path', 1)
             row = self.source_config.get('row', 1)
 
+        update_all = self.source_config.get('update_all', False)
         bucket = self.source_config['bucket']
         s3 = self._set_s3_session()
         _ls_worker = partial(aws.list_directory, bucket, s3=s3)
@@ -213,11 +214,6 @@ class Landsat8Harvester(NextGEOSSHarvester):
                 results = itertools.chain.from_iterable(results)
 
             scene_ids = [os.path.basename(key.strip('/')) for key in results]
-
-        if 'update_all' in self.source_config
-            update_all = self.source_config['update_all']
-        else:
-            update_all = False
 
         for scene in scene_ids:
             _id = self._gather_entry(scene, int(path), int(row), update_all)
