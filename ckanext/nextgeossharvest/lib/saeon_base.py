@@ -15,6 +15,7 @@ from requests.exceptions import Timeout
 import time
 import uuid
 import re
+import json
 
 
 log = logging.getLogger(__name__)
@@ -44,7 +45,7 @@ class CSAGHarvester(HarvesterBase):
         # added to both timerange_start and timerange_end, and later
         # pos-processed
         normalized_names = {
-            'dct:modified': 'timerange_start',
+            'dct:modified': 'publication_year',
             'ows:lowercorner': 'spatial',
             'ows:uppercorner': 'spatial',
             'dc:identifier': 'identifier',
@@ -70,12 +71,6 @@ class CSAGHarvester(HarvesterBase):
                 del item['spatial']
                 break
 
-        if ('timerange_start' in item) and ('timerange_end' not in item):
-            item['publication_date'] = item['timerange_start']
-            item['timerange_end'] = item['timerange_start']
-            item['timerange_start'] += '-01-01T00:00:00.000Z'
-            item['timerange_end'] += '-12-31T23:59:59.999Z'
-
         return item
 
     def _add_collection(self, item):
@@ -99,7 +94,9 @@ class CSAGHarvester(HarvesterBase):
         Parse the entry content and return a dictionary using our standard
         metadata terms.
         """
-        soup = Soup(content, 'lxml')
+
+        full_content = json.loads(content)
+        soup = Soup(full_content['raw_content'], 'lxml')
 
         # Create an item dictionary and add metadata with normalized names.
         item = self._normalize_names(soup)
@@ -122,6 +119,14 @@ class CSAGHarvester(HarvesterBase):
 
         name = item['identifier'].lower()
         item['name'] = 'saeon_csag_' + name.replace('.', '_').replace('/', '-')
+
+        time_content = full_content['time_content']
+        if (time_content['timerange_start'] == None) or (time_content['timerange_end'] == None):
+            item['timerange_start'] += item['publication_year'] + '-01-01T00:00:00.000Z'
+            item['timerange_end'] += item['publication_year'] + '-12-31T23:59:59.999Z'
+        else:
+            item['timerange_start'] = time_content['timerange_start']
+            item['timerange_end'] = time_content['timerange_end']
 
         resources = []
         # Thumbnail, alternative and enclosure
@@ -228,8 +233,7 @@ class CSAGHarvester(HarvesterBase):
             content = entry.encode()
             # The lowercase identifier will serve as the dataset's name,
             # so we need the lowercase version for the lookup in the next step.
-            identifier = entry.find('dc:identifier').text.lower()  # noqa: E501
-            identifier = 'saeon_csag_' + identifier.replace('.', '_').replace('/', '-')
+            identifier = entry.find('dc:identifier').text  # noqa: E501
             guid = unicode(uuid.uuid4())
 
             entries.append({'content': content, 'identifier': identifier, 'guid': guid, 'restart_record': restart_record})  # noqa: E501
@@ -256,6 +260,52 @@ class CSAGHarvester(HarvesterBase):
         else:
             return None
 
+    def _get_entry_time_info(self, base_url, identifier, timeout):
+        """Extract time information from an entry"""
+        record_url = base_url + '/pycsw/?service=CSW&request=GetRecordById&version=2.0.2&id=' + identifier + '&mode=opensearch'  # noqa: E501
+        response = self._make_request(record_url, timeout)
+        time_content = {}
+        if response == None:
+            time_content['timerange_start'] = None
+            time_content['timerange_end'] = None
+        else:
+            for entry in response.find_all({'atom:entry'}):
+                time_content['timerange_start'] = entry.find('timerange_start').text
+                time_content['timerange_end'] = entry.find('timerange_end').text
+
+        return time_content
+
+    def _make_request(self, harvest_url, timeout):
+        """Make request to the data source interface"""
+
+        # Make a request to the website
+        timestamp = str(datetime.utcnow())
+        log_message = '{:<12} | {} | {} | {}s'
+        try:
+            r = requests.get(harvest_url, timeout=timeout)
+        except Timeout as e:
+            self._save_gather_error('Request timed out: {}'.format(e), self.job)  # noqa: E501
+            status_code = 408
+            elapsed = 9999
+            if hasattr(self, 'provider_logger'):
+                self.provider_logger.info(log_message.format(self.provider,
+                    timestamp, status_code, timeout))  # noqa: E128
+            return None
+        if r.status_code != 200:
+            self._save_gather_error('{} error: {}'.format(r.status_code, r.text), self.job)  # noqa: E501
+            elapsed = 9999
+            if hasattr(self, 'provider_logger'):
+                self.provider_logger.info(log_message.format(self.provider,
+                    timestamp, r.status_code, elapsed))  # noqa: E128
+            return None
+
+        if hasattr(self, 'provider_logger'):
+            self.provider_logger.info(log_message.format(self.provider,
+                timestamp, r.status_code, r.elapsed.total_seconds()))  # noqa: E128, E501
+
+        soup = Soup(r.content, 'lxml')
+        return soup
+
     def _crawl_results(self, harvest_url, limit=100, timeout=5):  # noqa: E501
         """
         Iterate through the results, create harvest objects,
@@ -264,37 +314,16 @@ class CSAGHarvester(HarvesterBase):
         ids = []
         new_counter = 0
         update_counter = 0
+        base_url = self.source_config.get('source_url')
 
         while len(ids) < limit and harvest_url:
             # We'll limit ourselves to one request per second
             start_request = time.time()
 
-            # Make a request to the website
-            timestamp = str(datetime.utcnow())
-            log_message = '{:<12} | {} | {} | {}s'
-            try:
-                r = requests.get(harvest_url, timeout=timeout)
-            except Timeout as e:
-                self._save_gather_error('Request timed out: {}'.format(e), self.job)  # noqa: E501
-                status_code = 408
-                elapsed = 9999
-                if hasattr(self, 'provider_logger'):
-                    self.provider_logger.info(log_message.format(self.provider,
-                        timestamp, status_code, timeout))  # noqa: E128
-                return ids
-            if r.status_code != 200:
-                self._save_gather_error('{} error: {}'.format(r.status_code, r.text), self.job)  # noqa: E501
-                elapsed = 9999
-                if hasattr(self, 'provider_logger'):
-                    self.provider_logger.info(log_message.format(self.provider,
-                        timestamp, r.status_code, elapsed))  # noqa: E128
-                return ids
+            soup = self._make_request(harvest_url, timeout)
 
-            if hasattr(self, 'provider_logger'):
-                self.provider_logger.info(log_message.format(self.provider,
-                    timestamp, r.status_code, r.elapsed.total_seconds()))  # noqa: E128, E501
-
-            soup = Soup(r.content, 'lxml')
+            if not soup:
+                return ids
 
             next_url = soup.find('csw:searchresults', elementset="summary")
             records_returned = next_url['numberofrecordsreturned']
@@ -316,7 +345,11 @@ class CSAGHarvester(HarvesterBase):
             # Create a harvest object for each entry
             for entry in entries:
                 entry_guid = entry['guid']
-                entry_name = entry['identifier']
+                entry_name = 'saeon_csag_' + entry['identifier'].lower().replace('.', '_').replace('/', '-')
+
+                full_content = {}
+                full_content['time_content'] = self._get_entry_time_info(base_url, entry['identifier'], timeout)
+                full_content['raw_content'] = entry['content']
 
                 package = Session.query(Package) \
                     .filter(Package.name == entry_name).first()
@@ -345,7 +378,7 @@ class CSAGHarvester(HarvesterBase):
                                                 value=status),
                                                 HOExtra(key='restart_record',
                                                 value=entry['restart_record'])])  # noqa: E501
-                    obj.content = entry['content']
+                    obj.content = json.dumps(full_content)
                     obj.package = package
                     obj.save()
                     ids.append(obj.id)
@@ -358,7 +391,7 @@ class CSAGHarvester(HarvesterBase):
                                                 HOExtra(key='restart_record',
                                                 value=entry['restart_record'])])  # noqa: E501
                     new_counter += 1
-                    obj.content = entry['content']
+                    obj.content = json.dumps(full_content)
                     obj.package = None
                     obj.save()
                     ids.append(obj.id)
