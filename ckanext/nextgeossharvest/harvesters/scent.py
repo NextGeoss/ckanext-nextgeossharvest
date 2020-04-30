@@ -219,7 +219,7 @@ class SCENTHarvester(NextGEOSSHarvester):
         item['identifier'] = identifier
         item['name'] = identifier.lower()
 
-        item['title'] = item['collection_name']
+        item['title'] = "{} - {}".format(item['collection_name'], id_number
         item['notes'] = item['collection_description']
 
         item['tags'] = self._get_tags_for_dataset()
