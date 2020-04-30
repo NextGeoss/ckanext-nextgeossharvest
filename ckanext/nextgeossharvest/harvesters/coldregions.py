@@ -24,6 +24,7 @@ import uuid
 from bs4 import BeautifulSoup as Soup
 import requests
 from datetime import datetime
+import shlex
 
 
 def _create_session():
@@ -205,15 +206,17 @@ if __name__ == "__main__":
                     <collection_id> e.g.: S1_ARCTIC_SEAICEEDGE_CLASSIFICATION, S1_ARCTIC_SEAICEEDGE_CLASSIFICATION_INTAROS_2018 or S1_ARCTIC_SEAICEEDGE_CLASSIFICATION_CAATEX_INTAROS_2019
                 """
 
-    if sys.argv[1] == '-h':
+    args = shlex.split(' '.join(sys.argv[1:]))
+
+    if args[0] == '-h':
         print help_msg
 	sys.exit()
 
     try:
-        ckan_url = sys.argv[1]
-        apikey = sys.argv[2]
-        owner_org = sys.argv[3]
-        collection_id = sys.argv[4]
+        ckan_url = args[0]
+        apikey = args[1]
+        owner_org = args[2]
+        collection_id = args[3]
     except Exception as e:
         print("Exception: " + str(e) + "\n")
         print help_msg
