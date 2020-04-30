@@ -1,6 +1,7 @@
 SAEON_IGNORE_LIST = [
         "type",
-        "publication_year"
+        "publication_year",
+        "author"
 ]
 
 SAEON_IGNORE_DICT = {

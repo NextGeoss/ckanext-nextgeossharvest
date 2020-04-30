@@ -120,13 +120,14 @@ class CSAGHarvester(HarvesterBase):
         name = item['identifier'].lower()
         item['name'] = 'saeon_csag_' + name.replace('.', '_').replace('/', '-')
 
-        time_content = full_content['time_content']
-        if (time_content['timerange_start'] == None) or (time_content['timerange_end'] == None):
+        extra_content = full_content['extra_content']
+        if (extra_content['timerange_start'] == None) or (extra_content['timerange_end'] == None):
             item['timerange_start'] += item['publication_year'] + '-01-01T00:00:00.000Z'
             item['timerange_end'] += item['publication_year'] + '-12-31T23:59:59.999Z'
         else:
-            item['timerange_start'] = time_content['timerange_start']
-            item['timerange_end'] = time_content['timerange_end']
+            item['timerange_start'] = extra_content['timerange_start']
+            item['timerange_end'] = extra_content['timerange_end']
+            item['author'] = extra_content['author']
 
         resources = []
         # Thumbnail, alternative and enclosure
@@ -260,20 +261,21 @@ class CSAGHarvester(HarvesterBase):
         else:
             return None
 
-    def _get_entry_time_info(self, base_url, identifier, timeout):
+    def _get_entry_time_and_author(self, base_url, identifier, timeout):
         """Extract time information from an entry"""
         record_url = base_url + '/pycsw/?service=CSW&request=GetRecordById&version=2.0.2&id=' + identifier + '&mode=opensearch'  # noqa: E501
         response = self._make_request(record_url, timeout)
-        time_content = {}
+        extra_content = {}
         if response == None:
-            time_content['timerange_start'] = None
-            time_content['timerange_end'] = None
+            extra_content['timerange_start'] = None
+            extra_content['timerange_end'] = None
         else:
             for entry in response.find_all({'atom:entry'}):
-                time_content['timerange_start'] = entry.find('timerange_start').text
-                time_content['timerange_end'] = entry.find('timerange_end').text
+                extra_content['timerange_start'] = entry.find('timerange_start').text
+                extra_content['timerange_end'] = entry.find('timerange_end').text
+                extra_content['author'] = entry.find('atom:name').text
 
-        return time_content
+        return extra_content
 
     def _make_request(self, harvest_url, timeout):
         """Make request to the data source interface"""
@@ -345,10 +347,10 @@ class CSAGHarvester(HarvesterBase):
             # Create a harvest object for each entry
             for entry in entries:
                 entry_guid = entry['guid']
-                entry_name = 'saeon_csag_' + entry['identifier'].lower().replace('.', '_').replace('/', '-')
+                entry_name = 'saeon_csag_' + entry['identifier'].lower().replace('.', '_').replace('/', '-')  # noqa: E501
 
                 full_content = {}
-                full_content['time_content'] = self._get_entry_time_info(base_url, entry['identifier'], timeout)
+                full_content['extra_content'] = self._get_entry_time_and_author(base_url, entry['identifier'], timeout)  # noqa: E501
                 full_content['raw_content'] = entry['content']
 
                 package = Session.query(Package) \
