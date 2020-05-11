@@ -96,8 +96,8 @@ class SCENTHarvester(NextGEOSSHarvester):
             self._get_last_harvesting_index(harvest_job.source_id)
         )
 
-        if last_product_index is not None:
-            last_product_index =+ 1
+        if last_product_index:
+            last_product_index = last_product_index + 1
         else:
             last_product_index = 0
 
