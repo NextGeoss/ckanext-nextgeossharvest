@@ -62,7 +62,7 @@ class WFS():
                 return output_format
         return None
     
-    def set_filter_equal_to(self, property, value):
-        constraint = PropertyIsLike(propertyname='image_id', literal="17131")
+    def set_filter_equal_to(self, propertyname, value):
+        constraint = PropertyIsLike(propertyname=propertyname, literal=value)
         filterxml = etree.tostring(constraint.toXML()).decode("utf-8")
         return filterxml
