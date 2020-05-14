@@ -58,8 +58,9 @@ class ESAHarvester(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
                 timeout = config_obj['timeout']
                 if not isinstance(timeout, int) and not timeout > 0:
                     raise ValueError('timeout must be a positive integer')
-            if type(config_obj.get('aoi', False)) != str:
-                raise ValueError('aoi must be a string like POLYGON((-180 -90,-180 90,180 90,180 -90,-180 -90)) (you can add more points)')  # noqa: E501
+            if 'aoi' in config_obj:
+                if type(config_obj.get('aoi')) != str:
+                    raise ValueError('aoi must be a string like POLYGON((-180 -90,-180 90,180 90,180 -90,-180 -90)) (you can add more points)')  # noqa: E501
             if 'product_type' in config_obj:
                 if config_obj.get('product_type') not in {'SLC', 'GRD', 'OCN', 'S2MSI1C', 'S2MSI2A', \
                      'S2MSI2Ap', 'OL_1_EFR___', 'OL_1_ERR___', 'OL_2_LFR___', \
