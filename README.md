@@ -57,6 +57,10 @@ This extension contains harvester plugins for harvesting from sources used by Ne
 16. [Harvesting Food Security pilot outputs](#harvesting-foodsecurity)
     1. [Food Security Settings](#foodsecurity-settings)
     2. [Running a Food Security harvester](#running-foodsecurity)
+11. [Harvesting Landsat-8 outputs](#harvesting-landsat8)
+    1. [Landsat-8 Settings](#flandsat8-settings)
+    2. [Running a Landsat-8 harvester](#running-landsat8)
+12. [Developing new harvesters](#develop)
 17. [Harvesting VITO CGS S1 products](#harvesting-vitocgss1)
     1. [VITO CGS S1 Settings](#vitocgss1-settings)
     2. [Running a VITO CGS S1 harvester](#running-vitocgss1)
@@ -717,6 +721,15 @@ The Food Security harvester has configuration has:
 }
 ```
 
+### <a name="running-foodsecurity"></a>Running a Food Security harvester
+1. Add `foodsecurity` to the list of plugins in your .ini file.
+2. Create a new harvester via the harvester interface.
+3. Select `Food Security Harvester` from the list of harvesters.
+4. Add a config as described above.
+5. Select `Manual` from the frequency options.
+6. Run the harvester. It will programmatically create datasets.
+
+
 ## <a name="harvesting-vitocgss1"></a>Harvesting VITO CGS S1 products
 The VITO CGS S1 harvester collects the products of an external VITO project for the following collections:
 
@@ -746,6 +759,11 @@ The Food Security harvester has configuration has:
 }
 ```
 
+
+### <a name="running-gdacs"></a>Running a GDACS harvester
+1. Add `gdacs` to the list of plugins in your .ini file.
+2. Create a new harvester via the harvester interface.
+3. Select `GDACS Harvester` from the list of harvesters.
 ### <a name="running-vitocgss1"></a>Running a VITO CGS S1 harvester
 1. Add `cgss1` to the list of plugins in your .ini file.
 2. Create a new harvester via the harvester interface.
@@ -772,6 +790,42 @@ The following collection IDs are available:
 - S1_ARCTIC_SEAICEEDGE_CLASSIFICATION_INTAROS_2018
 - S1_ARCTIC_SEAICEEDGE_CLASSIFICATION_CAATEX_INTAROS_2019
 
+## <a name="harvesting-landsat8"></a>Harvesting Landsat-8 products
+The Landsat-8 harvester collects the Level-1 data products generated from Landsat 8 Operational Land Imager (OLI)/Thermal Infrared Sensor (TIRS). The following collection 1 Tiers are harvested:
+
+    1. Landsat-8 Real-Time (RT)
+    2. Landsat-8 Tier 1 (T1)
+    3. Landsat-8 Tier 2 (T2)
+
+The pre-processed products are not harvested due to the fact that they are deleted in a time interval of 6 months in favor of calibrated products.
+
+### <a name="landsat8-settings"></a>Landsat-8 Settings
+The Landsat-8 harvester has configuration has:
+1. `path` (optional) determines the WRS path, where the product collection will start.
+2. `row` (optional) determines the WRS row, where the product collection will start.
+3. `access_key` and `secret_key` (required) are your AWS account access and secret key.
+4. `bucket` (required) to define the AWS S3 bucket to harvest, for Landsat-8 use `landsat-pds`.
+5. `make_private` (optional) determines whether the datasets created by the harvester will be private or public. The default is `false`, i.e., by default, all datasets created by the harvester will be public.
+
+#### Examples of Landsat-8 settings
+```
+{
+  "path":1,
+  "row":1,
+  "access_key":"your_access_key",
+  "secret_key": "your_secret_key",
+  "bucket": "landsat-pds",
+  "make_private": false
+}
+```
+
+### <a name="running-landsat8"></a>Running a Landsat-8 harvester
+1. Add `landsat8` to the list of plugins in your .ini file.
+2. Create a new harvester via the harvester interface.
+3. Select `Landsat-8 Harvester` from the list of harvesters.
+4. Add a config as described above.
+5. Select `Manual` from the frequency options.
+6. Run the harvester. It will programmatically create datasets.
 
 ## <a name="develop"></a>Developing new harvesters
 ### <a name="basicworkflow"></a>The basic harvester workflow

@@ -97,6 +97,7 @@ setup(
         itag=ckanext.nextgeossharvest.harvesters:ITagEnricher
         ebvs=ckanext.nextgeossharvest.harvesters:EBVSHarvester
         cgss1=ckanext.nextgeossharvest.harvesters:CGSHarvester
+        landsat8=ckanext.nextgeossharvest.harvesters:Landsat8Harvester
         [babel.extractors]
         ckan = ckan.lib.extract:extract_ckan
     ''',
