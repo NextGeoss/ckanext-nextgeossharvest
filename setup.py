@@ -98,6 +98,8 @@ setup(
         ebvs=ckanext.nextgeossharvest.harvesters:EBVSHarvester
         cgss1=ckanext.nextgeossharvest.harvesters:CGSHarvester
         scent=ckanext.nextgeossharvest.harvesters:SCENTHarvester
+        landsat8=ckanext.nextgeossharvest.harvesters:Landsat8Harvester
+
         [babel.extractors]
         ckan = ckan.lib.extract:extract_ckan
     ''',

@@ -11,3 +11,4 @@ monthdelta
 pyproj==1.9.6
 OWSLib==0.16
 stringcase
+boto3
