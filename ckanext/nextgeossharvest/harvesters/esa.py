@@ -59,7 +59,7 @@ class ESAHarvester(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
                 if not isinstance(timeout, int) and not timeout > 0:
                     raise ValueError('timeout must be a positive integer')
             if 'aoi' in config_obj:
-                if type(config_obj.get('aoi')) != str:
+                if type(config_obj.get('aoi')) != unicode:
                     raise ValueError('aoi must be a string like POLYGON((-180 -90,-180 90,180 90,180 -90,-180 -90)) (you can add more points)')  # noqa: E501
             if 'product_type' in config_obj:
                 if config_obj.get('product_type') not in {'SLC', 'GRD', 'OCN', 'S2MSI1C', 'S2MSI2A', \
