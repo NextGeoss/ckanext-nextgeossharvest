@@ -67,7 +67,7 @@ class ESAHarvester(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
                      'OL_2_LRR___', 'SR_1_SRA___', 'SR_1_SRA_A_', 'SR_1_SRA_BS', \
                      'SR_2_LAN___', 'SL_1_RBT___', 'SL_2_LST___', 'SY_2_SYN___', \
                      'SY_2_V10___', 'SY_2_VG1___', 'SY_2_VGP___'}:  # noqa: E501
-                    raise ValueError('product_type must be SLC, , GRD, OCN, S2MSI1C, S2MSI2A, \
+                    raise ValueError('product_type must be SLC, GRD, OCN, S2MSI1C, S2MSI2A, \
                      S2MSI2Ap, OL_1_EFR___, OL_1_ERR___, OL_2_LFR___, \
                      OL_2_LRR___, SR_1_SRA___, SR_1_SRA_A_, SR_1_SRA_BS, \
                      SR_2_LAN___, SL_1_RBT___, SL_2_LST___, SY_2_SYN___, \
