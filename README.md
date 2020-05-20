@@ -150,10 +150,12 @@ After saving the configuration, you can click Reharvest and the job will begin (
 2. `update_all`: (optional, boolean, default is `false`) determines whether or not the harvester updates datasets that already have metadadata from _this_ source. For example: if we have `"update_all": true`, and dataset Foo has already been created or updated by harvesting from SciHub, then it will be updated again when the harvester runs. If we have `"update_all": false` and Foo has already been created or updated by harvesting from SciHub, then the dataset will _not_ be updated when the harvester runs. And regardless of whether `update_all` is `true` or `false`, if a dataset has _not_ been created or updated with metadata from SciHub (it's new, or it was created via NOA or CODE-DE and has no SciHub metadata), then it will be updated with the additional SciHub metadata.
 3. `start_date`: (optional, datetime string, default is "any" or "from the earliest date onwards" if the harvester is new, or from the ingestion date of the most recently harvested product if it has been run before) determines the end of the date range for harvester queries. Example: "start_date": "2018-01-16T10:30:00.000Z". Note that the entire datetime string is required. `2018-01-01` is not valid. Using full datetimes is especially useful when testing, as it is possible to restrict the number of possible results by searching only within a small time span, like 20 minutes. 
 4. `end_date`: (optional, datetime string, default is "now" or "to the latest possible date") determines the end of the date range for harvester queries. Example: "end_date": "2018-01-16T11:00:00.000Z". Note that the entire datetime string is required. `2018-01-01` is not valid. Using full datetimes is especially useful when testing, as it is possible to restrict the number of possible results by searching only within a small time span, like 20 minutes.
-5. `datasets_per_job`: (optional, integer, defaults to 1000) determines the maximum number of products that will be harvested during each job. If a query returns 2,501 results, only the first 1000 will be harvested if you're using the default. This is useful for running the harvester via recurring jobs intended to harvest products incrementally (i.e., you want to start from the beginning and harvest all available products). The harvester will harvest products in groups of 1000, rather than attmepting to harvest all x-hundred-thousand at once. You'll get feedback after each job, so you'll know if there are errors without waiting for the whole job to run. And the harvester will automatically resume from the harvested dataset if you're running it via a recurring cron job.
-6. `timeout`: (optional, integer, defaults to 4) determines the number of seconds to wait before timing out a request.
-7. `skip_raw`: (optional, boolean, defaults to false) determines whether RAW products are skipped or included in the harvest.
-8. `make_private` is optional and defaults to `false`. If `true`, the datasets created by the harvester will be marked private. This setting is not retroactive. It only applies to datasets created by the harvester while the setting is `true`.
+5. `product_type`: (optional, string) determines the Sentinel collection (product type) to be considered by the harvester when querying the data provider interface. The possible values are `SLC`, `GRD`, `OCN`, `S2MSI1C`, `S2MSI2A`, `S2MSI2Ap`, `OL_1_EFR___`, `OL_1_ERR___`, `OL_2_LFR___`, `OL_2_LRR___`, `SR_1_SRA___`, `SR_1_SRA_A_`, `SR_1_SRA_BS`, `SR_2_LAN___`, `SL_1_RBT___`, `SL_2_LST___`, `SY_2_SYN___`, `SY_2_V10___`, `SY_2_VG1___` or `SY_2_VGP___`. If no product_type is provided, the harvester will have the normal behavior and consider all.
+6. `aoi`: (optional, string with POLYGON) determines the Area of Interest to be considered by the harvester when querying the data provider interface. The aoi shall be provided with the following format: `POLYGON((-180 -90,-180 90,180 90,180 -90,-180 -90))`. More points can be added to the polygon. If no aoi is provided, the harvester will consider as global.
+7. `datasets_per_job`: (optional, integer, defaults to 1000) determines the maximum number of products that will be harvested during each job. If a query returns 2,501 results, only the first 1000 will be harvested if you're using the default. This is useful for running the harvester via recurring jobs intended to harvest products incrementally (i.e., you want to start from the beginning and harvest all available products). The harvester will harvest products in groups of 1000, rather than attmepting to harvest all x-hundred-thousand at once. You'll get feedback after each job, so you'll know if there are errors without waiting for the whole job to run. And the harvester will automatically resume from the harvested dataset if you're running it via a recurring cron job.
+8. `timeout`: (optional, integer, defaults to 4) determines the number of seconds to wait before timing out a request.
+9. `skip_raw`: (optional, boolean, defaults to false) determines whether RAW products are skipped or included in the harvest.
+10. `make_private` is optional and defaults to `false`. If `true`, the datasets created by the harvester will be marked private. This setting is not retroactive. It only applies to datasets created by the harvester while the setting is `true`.
 
 Example configuration with all variables present:
 ```
@@ -168,6 +170,20 @@ Example configuration with all variables present:
   "make_private": false
 }
 ```
+```
+{
+  "source": "esa_scihub",
+  "update_all": false,
+  "start_date": "2019-01-01T00:00:00.000Z",
+  "aoi": "POLYGON((2.0524444097380456 51.60572085265915,5.184653052425238 51.67771256185287,7.138937077349725 50.43826001622307,5.612989277066222 49.25292867929642,1.9721313676178616 50.83443942461676,2.0524444097380456 51.60572085265915,2.0524444097380456 51.60572085265915))",
+  "product_type": "S2MSI2A",
+  "datasets_per_job": 100,
+  "timeout": 20,
+  "skip_raw": true,
+  "make_private": false
+}
+```
+
 Note: you must place your username and password in the `.ini` file as described above.
 
 ### <a name="multi"></a>Harvesting from more than one Sentinel source
