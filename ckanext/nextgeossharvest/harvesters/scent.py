@@ -112,7 +112,7 @@ class SCENTHarvester(NextGEOSSHarvester):
         ids = []
         for entry in entries:
             entry_guid = unicode(uuid.uuid4())
-            entry_name = name.format(entry['id'])
+            entry_name = name.format(convert_to_clean_snakecase(entry['id']))
             log.debug('gathering %s', entry_name)
 
             
@@ -217,7 +217,7 @@ class SCENTHarvester(NextGEOSSHarvester):
         id_number = collection_content['id']
         identifier = '{}_{}'.format(collection.lower(), id_number)
         item['identifier'] = identifier
-        item['name'] = identifier.lower()
+        item['name'] = convert_to_clean_snakecase(identifier.lower())
 
         item['title'] = "{} - {}".format(item['collection_name'], id_number)
         item['notes'] = item['collection_description']
