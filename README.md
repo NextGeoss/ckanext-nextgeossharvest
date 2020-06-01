@@ -57,22 +57,28 @@ This extension contains harvester plugins for harvesting from sources used by Ne
 16. [Harvesting Food Security pilot outputs](#harvesting-foodsecurity)
     1. [Food Security Settings](#foodsecurity-settings)
     2. [Running a Food Security harvester](#running-foodsecurity)
+11. [Harvesting Landsat-8 outputs](#harvesting-landsat8)
+    1. [Landsat-8 Settings](#flandsat8-settings)
+    2. [Running a Landsat-8 harvester](#running-landsat8)
+12. [Developing new harvesters](#develop)
 17. [Harvesting VITO CGS S1 products](#harvesting-vitocgss1)
     1. [VITO CGS S1 Settings](#vitocgss1-settings)
     2. [Running a VITO CGS S1 harvester](#running-vitocgss1)
-18. [Developing new harvesters](#develop)
+18. [Harvesting Cold Regions pilot outputs](#harvesting-coldregions)
+    1. [Running a Cold Regions harvester](#running-coldregions)
+19. [Developing new harvesters](#develop)
     1. [The basic harvester workflow](#basicworkflow)
         1. [gather_stage](#gather_stage)
         2. [fetch_stage](#fetch_stage)
         3. [import_stage](#import_stage)
     2. [Example of an OpenSearch-based harvester](#opensearchexample)
-19. [iTag](#itag)
+20. [iTag](#itag)
     1. [How ITagEnricher works](#itagprocess)
     2. [Setting up ITagEnricher](#setupitag)
     3. [Handling iTag errors](#handlingitagerrors)
-20. [Testing testing testing](#tests)
-21. [Suggested cron jobs](#cron)
-22. [Logs](#logs)
+21. [Testing testing testing](#tests)
+22. [Suggested cron jobs](#cron)
+23. [Logs](#logs)
     1. [How ITagEnricher works](#itagprocess)
     2. [Setting up ITagEnricher](#setupitag)
     3. [Handling iTag errors](#handlingitagerrors)
@@ -144,10 +150,12 @@ After saving the configuration, you can click Reharvest and the job will begin (
 2. `update_all`: (optional, boolean, default is `false`) determines whether or not the harvester updates datasets that already have metadadata from _this_ source. For example: if we have `"update_all": true`, and dataset Foo has already been created or updated by harvesting from SciHub, then it will be updated again when the harvester runs. If we have `"update_all": false` and Foo has already been created or updated by harvesting from SciHub, then the dataset will _not_ be updated when the harvester runs. And regardless of whether `update_all` is `true` or `false`, if a dataset has _not_ been created or updated with metadata from SciHub (it's new, or it was created via NOA or CODE-DE and has no SciHub metadata), then it will be updated with the additional SciHub metadata.
 3. `start_date`: (optional, datetime string, default is "any" or "from the earliest date onwards" if the harvester is new, or from the ingestion date of the most recently harvested product if it has been run before) determines the end of the date range for harvester queries. Example: "start_date": "2018-01-16T10:30:00.000Z". Note that the entire datetime string is required. `2018-01-01` is not valid. Using full datetimes is especially useful when testing, as it is possible to restrict the number of possible results by searching only within a small time span, like 20 minutes. 
 4. `end_date`: (optional, datetime string, default is "now" or "to the latest possible date") determines the end of the date range for harvester queries. Example: "end_date": "2018-01-16T11:00:00.000Z". Note that the entire datetime string is required. `2018-01-01` is not valid. Using full datetimes is especially useful when testing, as it is possible to restrict the number of possible results by searching only within a small time span, like 20 minutes.
-5. `datasets_per_job`: (optional, integer, defaults to 1000) determines the maximum number of products that will be harvested during each job. If a query returns 2,501 results, only the first 1000 will be harvested if you're using the default. This is useful for running the harvester via recurring jobs intended to harvest products incrementally (i.e., you want to start from the beginning and harvest all available products). The harvester will harvest products in groups of 1000, rather than attmepting to harvest all x-hundred-thousand at once. You'll get feedback after each job, so you'll know if there are errors without waiting for the whole job to run. And the harvester will automatically resume from the harvested dataset if you're running it via a recurring cron job.
-6. `timeout`: (optional, integer, defaults to 4) determines the number of seconds to wait before timing out a request.
-7. `skip_raw`: (optional, boolean, defaults to false) determines whether RAW products are skipped or included in the harvest.
-8. `make_private` is optional and defaults to `false`. If `true`, the datasets created by the harvester will be marked private. This setting is not retroactive. It only applies to datasets created by the harvester while the setting is `true`.
+5. `product_type`: (optional, string) determines the Sentinel collection (product type) to be considered by the harvester when querying the data provider interface. The possible values are `SLC`, `GRD`, `OCN`, `S2MSI1C`, `S2MSI2A`, `S2MSI2Ap`, `OL_1_EFR___`, `OL_1_ERR___`, `OL_2_LFR___`, `OL_2_LRR___`, `SR_1_SRA___`, `SR_1_SRA_A_`, `SR_1_SRA_BS`, `SR_2_LAN___`, `SL_1_RBT___`, `SL_2_LST___`, `SY_2_SYN___`, `SY_2_V10___`, `SY_2_VG1___` or `SY_2_VGP___`. If no product_type is provided, the harvester will have the normal behavior and consider all.
+6. `aoi`: (optional, string with POLYGON) determines the Area of Interest to be considered by the harvester when querying the data provider interface. The aoi shall be provided with the following format: `POLYGON((-180 -90,-180 90,180 90,180 -90,-180 -90))`. More points can be added to the polygon. If no aoi is provided, the harvester will consider as global.
+7. `datasets_per_job`: (optional, integer, defaults to 1000) determines the maximum number of products that will be harvested during each job. If a query returns 2,501 results, only the first 1000 will be harvested if you're using the default. This is useful for running the harvester via recurring jobs intended to harvest products incrementally (i.e., you want to start from the beginning and harvest all available products). The harvester will harvest products in groups of 1000, rather than attmepting to harvest all x-hundred-thousand at once. You'll get feedback after each job, so you'll know if there are errors without waiting for the whole job to run. And the harvester will automatically resume from the harvested dataset if you're running it via a recurring cron job.
+8. `timeout`: (optional, integer, defaults to 4) determines the number of seconds to wait before timing out a request.
+9. `skip_raw`: (optional, boolean, defaults to false) determines whether RAW products are skipped or included in the harvest.
+10. `make_private` is optional and defaults to `false`. If `true`, the datasets created by the harvester will be marked private. This setting is not retroactive. It only applies to datasets created by the harvester while the setting is `true`.
 
 Example configuration with all variables present:
 ```
@@ -162,6 +170,20 @@ Example configuration with all variables present:
   "make_private": false
 }
 ```
+```
+{
+  "source": "esa_scihub",
+  "update_all": false,
+  "start_date": "2019-01-01T00:00:00.000Z",
+  "aoi": "POLYGON((2.0524444097380456 51.60572085265915,5.184653052425238 51.67771256185287,7.138937077349725 50.43826001622307,5.612989277066222 49.25292867929642,1.9721313676178616 50.83443942461676,2.0524444097380456 51.60572085265915,2.0524444097380456 51.60572085265915))",
+  "product_type": "S2MSI2A",
+  "datasets_per_job": 100,
+  "timeout": 20,
+  "skip_raw": true,
+  "make_private": false
+}
+```
+
 Note: you must place your username and password in the `.ini` file as described above.
 
 ### <a name="multi"></a>Harvesting from more than one Sentinel source
@@ -715,6 +737,15 @@ The Food Security harvester has configuration has:
 }
 ```
 
+### <a name="running-foodsecurity"></a>Running a Food Security harvester
+1. Add `foodsecurity` to the list of plugins in your .ini file.
+2. Create a new harvester via the harvester interface.
+3. Select `Food Security Harvester` from the list of harvesters.
+4. Add a config as described above.
+5. Select `Manual` from the frequency options.
+6. Run the harvester. It will programmatically create datasets.
+
+
 ## <a name="harvesting-vitocgss1"></a>Harvesting VITO CGS S1 products
 The VITO CGS S1 harvester collects the products of an external VITO project for the following collections:
 
@@ -744,6 +775,11 @@ The Food Security harvester has configuration has:
 }
 ```
 
+
+### <a name="running-gdacs"></a>Running a GDACS harvester
+1. Add `gdacs` to the list of plugins in your .ini file.
+2. Create a new harvester via the harvester interface.
+3. Select `GDACS Harvester` from the list of harvesters.
 ### <a name="running-vitocgss1"></a>Running a VITO CGS S1 harvester
 1. Add `cgss1` to the list of plugins in your .ini file.
 2. Create a new harvester via the harvester interface.
@@ -752,7 +788,60 @@ The Food Security harvester has configuration has:
 5. Select `Manual` from the frequency options.
 6. Run the harvester. It will programmatically create datasets.
 
+## <a name="harvesting-coldregions"></a>Harvesting Cold Regions pilot outputs
+The Cold Regions harvester harvests the NERSC pilot outputs for the following collections:
 
+    1. Sentinel-1 HH/HV based ice/water classification
+    2. Sea ice and water classification in the Arctic for INTAROS 2018 field experiment
+    3. Sea ice and water classification in the Arctic for CAATEX/INTAROS 2019 field experiment
+
+### <a name="running-coldregions"></a>Running a Cold Regions Harvester
+The Cold Regions harvester will run one time per collection and it will collect all the cold regions datasets within the input collection(static data). In the command line run:
+
+```
+$ python ./ckanext/nextgeossharvest/harvesters/coldregions.py <destination_ckan_URL> <destination_ckan_apikey> "nersc" <collection_id>
+```
+The following collection IDs are available:
+- S1_ARCTIC_SEAICEEDGE_CLASSIFICATION
+- S1_ARCTIC_SEAICEEDGE_CLASSIFICATION_INTAROS_2018
+- S1_ARCTIC_SEAICEEDGE_CLASSIFICATION_CAATEX_INTAROS_2019
+
+## <a name="harvesting-landsat8"></a>Harvesting Landsat-8 products
+The Landsat-8 harvester collects the Level-1 data products generated from Landsat 8 Operational Land Imager (OLI)/Thermal Infrared Sensor (TIRS). The following collection 1 Tiers are harvested:
+
+    1. Landsat-8 Real-Time (RT)
+    2. Landsat-8 Tier 1 (T1)
+    3. Landsat-8 Tier 2 (T2)
+
+The pre-processed products are not harvested due to the fact that they are deleted in a time interval of 6 months in favor of calibrated products.
+
+### <a name="landsat8-settings"></a>Landsat-8 Settings
+The Landsat-8 harvester has configuration has:
+1. `path` (optional) determines the WRS path, where the product collection will start.
+2. `row` (optional) determines the WRS row, where the product collection will start.
+3. `access_key` and `secret_key` (required) are your AWS account access and secret key.
+4. `bucket` (required) to define the AWS S3 bucket to harvest, for Landsat-8 use `landsat-pds`.
+5. `make_private` (optional) determines whether the datasets created by the harvester will be private or public. The default is `false`, i.e., by default, all datasets created by the harvester will be public.
+
+#### Examples of Landsat-8 settings
+```
+{
+  "path":1,
+  "row":1,
+  "access_key":"your_access_key",
+  "secret_key": "your_secret_key",
+  "bucket": "landsat-pds",
+  "make_private": false
+}
+```
+
+### <a name="running-landsat8"></a>Running a Landsat-8 harvester
+1. Add `landsat8` to the list of plugins in your .ini file.
+2. Create a new harvester via the harvester interface.
+3. Select `Landsat-8 Harvester` from the list of harvesters.
+4. Add a config as described above.
+5. Select `Manual` from the frequency options.
+6. Run the harvester. It will programmatically create datasets.
 
 ## <a name="develop"></a>Developing new harvesters
 ### <a name="basicworkflow"></a>The basic harvester workflow

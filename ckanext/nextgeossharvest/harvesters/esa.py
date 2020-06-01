@@ -58,6 +58,20 @@ class ESAHarvester(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
                 timeout = config_obj['timeout']
                 if not isinstance(timeout, int) and not timeout > 0:
                     raise ValueError('timeout must be a positive integer')
+            if 'aoi' in config_obj:
+                if type(config_obj.get('aoi')) != unicode:
+                    raise ValueError('aoi must be a string like POLYGON((-180 -90,-180 90,180 90,180 -90,-180 -90)) (you can add more points)')  # noqa: E501
+            if 'product_type' in config_obj:
+                if config_obj.get('product_type') not in {'SLC', 'GRD', 'OCN', 'S2MSI1C', 'S2MSI2A', \
+                     'S2MSI2Ap', 'OL_1_EFR___', 'OL_1_ERR___', 'OL_2_LFR___', \
+                     'OL_2_LRR___', 'SR_1_SRA___', 'SR_1_SRA_A_', 'SR_1_SRA_BS', \
+                     'SR_2_LAN___', 'SL_1_RBT___', 'SL_2_LST___', 'SY_2_SYN___', \
+                     'SY_2_V10___', 'SY_2_VG1___', 'SY_2_VGP___'}:  # noqa: E501
+                    raise ValueError('product_type must be SLC, GRD, OCN, S2MSI1C, S2MSI2A, \
+                     S2MSI2Ap, OL_1_EFR___, OL_1_ERR___, OL_2_LFR___, \
+                     OL_2_LRR___, SR_1_SRA___, SR_1_SRA_A_, SR_1_SRA_BS, \
+                     SR_2_LAN___, SL_1_RBT___, SL_2_LST___, SY_2_SYN___, \
+                     SY_2_V10___, SY_2_VG1___, SY_2_VGP___)')  # noqa: E501
             for key in ['update_all', 'skip_raw', 'multiple_sources']:
                 if key in config_obj and not isinstance(config_obj[key], bool):
                     raise ValueError('{} must be boolean'.format(key))
@@ -148,14 +162,34 @@ class ESAHarvester(SentinelHarvester, OpenSearchHarvester, NextGEOSSHarvester):
 
         limit = self.source_config.get('datasets_per_job', 100)
 
+        if self.source_config.get('product_type'):
+            producttype = self.source_config.get('product_type')
+            if producttype == 'SLC' or producttype == 'GRD' or producttype == 'OCN':  # noqa: E711, E501
+                platformname = 'Sentinel-1'
+            elif producttype == 'S2MSI1C' or producttype == 'S2MSI2A' or producttype == 'S2MSI2Ap':  # noqa: E711, E501
+                platformname = 'Sentinel-2'
+            else:
+                platformname = 'Sentinel-3'
+            product_type = ' AND platformname:' + platformname + ' AND producttype:' + producttype  # noqa: E711, E501
+        else:
+            product_type = ''
+
+        if self.source_config.get('aoi'):
+            aoi = ' AND footprint:"Intersects(' + self.source_config.get('aoi') + ')"'  # noqa: E711, E501
+        else:
+            aoi = ''
+
         url_template = ('{base_url}/dhus/search?' +
                         'q=ingestiondate:{date_range}' +
+                        '{aoi}' +
+                        '{product_type}' +
                         '{skip_raw}' +
                         '&orderby=ingestiondate asc' +
                         '&start=0' +
                         '&rows={limit}')
         harvest_url = url_template.format(base_url=base_url,
                                           date_range=date_range,
+                                          aoi=aoi, product_type=product_type,
                                           skip_raw=skip_raw, limit=limit)
         log.debug('Harvest URL is {}'.format(harvest_url))
         username = config.get('ckanext.nextgeossharvest.nextgeoss_username')
