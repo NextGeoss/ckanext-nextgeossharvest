@@ -1,5 +1,10 @@
 import ckan.plugins as plugins
+from ignore_list.ignore_list import IGNORE_LIST
+import json
+import ast
+import logging
 
+log = logging.getLogger(__name__)
 
 class NextgeossharvestPlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IConfigurer, inherit=True)
