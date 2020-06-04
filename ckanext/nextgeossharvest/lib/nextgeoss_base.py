@@ -199,7 +199,6 @@ class NextGEOSSHarvester(HarvesterBase):
         package_schema['tags'] = tag_schema
         package_schema['extras'] = extras_schema
         context['schema'] = package_schema
-
         try:
             package = p.toolkit.get_action(action)(context, package_dict)
         # IMPROVE: I think ckan.logic.ValidationError is the only Exception we
@@ -267,9 +266,14 @@ class NextGEOSSHarvester(HarvesterBase):
     def _get_extras(self, parsed_content):
         """Return a list of CKAN extras."""
         skip = {'id', 'title', 'tags', 'status', 'notes', 'name', 'resource', 'groups'}  # noqa: E501
-        extras_tmp = [{'key': self.convert_to_clean_snakecase(key), 'value': value}
-                      for key, value in parsed_content.items()
-                      if key not in skip]
+        extras_tmp = []
+        for key, value in parsed_content.items():
+            key = self.convert_to_clean_snakecase(key)
+            if key not in skip:
+                if key.endswith('_date'):
+                    value = value.strip('Z')
+                extras_tmp.append({'key': key, 'value': value})
+
         extras = [{'key': 'dataset_extra', 'value': str(extras_tmp)}]
 
         return extras
@@ -328,9 +332,10 @@ class NextGEOSSHarvester(HarvesterBase):
             new_extra_keys = [new_value['key'] for new_value in new_values]
 
             for old_extra in old_extras:
-                if ((old_extra['key'] not in new_extra_keys) and 
-                    (old_extra['key'] not in ignore_list)):
-                    old_extra['key'] = self.convert_to_clean_snakecase(old_extra['key'])
+                old_key = self.convert_to_clean_snakecase(old_extra['key'])
+                if ((old_key not in new_extra_keys) and 
+                    (old_key not in ignore_list)):
+                    old_extra['key'] = old_key
                     new_values.append(old_extra)
             return [{'key': 'dataset_extra', 'value': str(new_values)}]
         else:

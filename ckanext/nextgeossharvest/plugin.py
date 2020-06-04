@@ -3,6 +3,8 @@ from ignore_list.ignore_list import IGNORE_LIST
 import json
 import ast
 import logging
+import stringcase
+import re
 
 log = logging.getLogger(__name__)
 
@@ -55,8 +57,13 @@ def remove_fields_from_index(pkg_dict, field_list):
 
     extras_field_template = "extras_{}"
     for field in field_list:
+        field = convert_to_clean_snakecase(field)
         pkg_dict = remove_from_dict(pkg_dict, field)
         extras_field = extras_field_template.format(field)
         pkg_dict = remove_from_dict(pkg_dict, extras_field)
 
     return pkg_dict
+
+def convert_to_clean_snakecase(extra_key):
+    clean_extra_key = re.sub('[^0-9a-zA-Z]+', '_', stringcase.snakecase(extra_key)).strip('_')
+    return clean_extra_key
