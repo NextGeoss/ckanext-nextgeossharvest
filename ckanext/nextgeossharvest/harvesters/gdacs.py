@@ -76,6 +76,10 @@ class GDACSHarvester(NextGEOSSHarvester, GDACSBase):
                 end_date = self.convert_date_config('TODAY')
             if not end_date > start_date:
                 raise ValueError('end_date must be after start_date')
+            if 'timeout' in config_obj:
+                timeout = config_obj['timeout']
+                if not isinstance(timeout, int) and not timeout > 0:
+                    raise ValueError('timeout must be a positive integer')
             if type(config_obj.get('make_private', False)) != bool:
                 raise ValueError('make_private must be true or false')
             if type(config_obj.get('update_all', False)) != bool:
