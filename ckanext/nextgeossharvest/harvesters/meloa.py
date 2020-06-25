@@ -179,7 +179,7 @@ class MELOAHarvester(MELOAbaseHarvester, NextGEOSSHarvester,
         # In this harvester, only the WAVY datasets will be harvested,
         # since 'satellite' (CMEMS) is already being collected by
         # a different harvester
-        group_api_url = 'http://catalogue.ec-meloa.eu/api'
+        group_api_url = 'http://catalogue.ec-meloa.eu/api/3/action/group_list'
         timeout = self.source_config.get('timeout', 60)
 
         try:
