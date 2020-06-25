@@ -99,6 +99,7 @@ setup(
         cgss1=ckanext.nextgeossharvest.harvesters:CGSHarvester
         scent=ckanext.nextgeossharvest.harvesters:SCENTHarvester
         landsat8=ckanext.nextgeossharvest.harvesters:Landsat8Harvester
+        meloa=ckanext.nextgeossharvest.harvesters:MELOAHarvester
 
         [babel.extractors]
         ckan = ckan.lib.extract:extract_ckan
