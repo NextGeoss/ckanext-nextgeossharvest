@@ -180,9 +180,10 @@ class MELOAHarvester(MELOAbaseHarvester, NextGEOSSHarvester,
         # since 'satellite' (CMEMS) is already being collected by
         # a different harvester
         group_api_url = 'http://catalogue.ec-meloa.eu/api'
+        timeout = self.source_config.get('timeout', 60)
 
         try:
-            r = requests.get(harvest_url,
+            r = requests.get(group_api_url,
                         verify=False, timeout=timeout)
             groups_soup = Soup(r.content, 'lxml')
             group_list = json.loads(groups_soup.text)['result']
