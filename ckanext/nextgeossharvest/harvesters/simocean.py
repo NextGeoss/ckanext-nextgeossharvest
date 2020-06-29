@@ -119,7 +119,7 @@ class SIMOceanHarvester(SIMOceanbaseHarvester, NextGEOSSHarvester,
         log.debug('Restart date is {}'.format(restart_date))
 
         start_date = self.source_config.get('start_date', '*')
-        end_date = self.source_config.get('end_date', 'NOW')
+        end_date = self.source_config.get('end_date', 'NOW-1DAY')
 
         if restart_date != '*':
             start_date = restart_date
