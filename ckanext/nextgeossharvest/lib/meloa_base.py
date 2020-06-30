@@ -37,13 +37,14 @@ class MELOAbaseHarvester(HarvesterBase):
 
         item = {}
 
+        # to have a name such as wavydata_50 add 'name' to package_fields
         package_fields = ['notes',
-                          'name',
                           'title']
 
         for field in package_fields:
             item[field] = content[field]
 
+        item['name'] = item['title'].replace(' ', '_')
         item = self._get_extra_fields(content, item)
 
         return item
@@ -62,19 +63,19 @@ class MELOAbaseHarvester(HarvesterBase):
         collection_id = collection_name.replace(' - ', '_').replace(' ', '_')
         item['collection_id'] = collection_id.upper()
 
-        item['collection_description'] = '''In-situ Data collected using extra
-         light surface drifters (WAVYs) in all water environments. The data
-         produced have far-reaching applications, directly providing valuable
-         information that will help to derive answers to diverse scientific,
-         environmental and societal needs and achieving multiple objectives,
-         from complementing observational gaps in ocean observation, to delivering
-         validation datasets to satellite ground-truthing, along with the real
-         possibility of their effective use by the common citizen. A dataset in
-         MELOA is the collection of data samples acquired by a WAVY during a campaign.
-         The contents of the data samples depend on the type of WAVY drifter. 
-         The common information for all the types is the GNSS (Time, position,
-         velocity and direction) and the battery power. This collection contains
-         datasets collected by a WAVY ''' + wavy_type + '.'
+        item['collection_description'] = '''In-situ Data collected using extra \
+        light surface drifters (WAVYs) in all water environments. The data \
+        produced have far-reaching applications, directly providing valuable \
+        information that will help to derive answers to diverse scientific, \
+        environmental and societal needs and achieving multiple objectives, \
+        from complementing observational gaps in ocean observation, to delivering \
+        validation datasets to satellite ground-truthing, along with the real \
+        possibility of their effective use by the common citizen. A dataset in \
+        MELOA is the collection of data samples acquired by a WAVY during a campaign. \
+        The contents of the data samples depend on the type of WAVY drifter. \
+        The common information for all the types is the GNSS (Time, position, \
+        velocity and direction) and the battery power. This collection contains \
+        datasets collected by a WAVY ''' + wavy_type + '.'
 
         if item['notes'] is None:
             item['notes'] = item['collection_description']
@@ -116,8 +117,8 @@ class MELOAbaseHarvester(HarvesterBase):
         # Rename StartTime and StopTime to timerange_start
         # and timerange_end, respectively and remove former
         # from the package
-        item['timerange_start'] = item.pop('Measurements Start-time')
-        item['timerange_end'] = item.pop('Measurements End-time')
+        item['timerange_start'] = item['Measurements Start-time']
+        item['timerange_end'] = item['Measurements End-time']
 
         return item
 
