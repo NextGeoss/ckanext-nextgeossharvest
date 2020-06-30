@@ -44,7 +44,7 @@ class MELOAbaseHarvester(HarvesterBase):
         for field in package_fields:
             item[field] = content[field]
 
-        item['name'] = item['title'].replace(' ', '_')
+        item['name'] = item['title'].replace(' ', '_').replace(':','')
         item = self._get_extra_fields(content, item)
 
         return item
