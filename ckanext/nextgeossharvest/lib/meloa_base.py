@@ -55,7 +55,7 @@ class MELOAbaseHarvester(HarvesterBase):
 
         """
 
-        wavy_type = content['Wavy ID']
+        wavy_type = item['Wavy Type']
 
         collection_name = 'MELOA Wavy Measurements - ' + wavy_type
         item['collection_name'] = collection_name
@@ -74,18 +74,18 @@ class MELOAbaseHarvester(HarvesterBase):
          The contents of the data samples depend on the type of WAVY drifter. 
          The common information for all the types is the GNSS (Time, position,
          velocity and direction) and the battery power. This collection contains
-         datasets clloected by a WAVY ''' + wavy_type + '.'
+         datasets collected by a WAVY ''' + wavy_type + '.'
 
         return item
 
-    def _get_tags_for_dataset(self, content):
+    def _get_tags_for_dataset(self, content, item):
         """
             Return a dictionary of metadata fields retrieved from
             the CKAN tags of the dataset.
 
         """
 
-        tags_list = [{"name": "meloa"}, {"name": "wavy"}, {"name": content["Wavy ID"]}]
+        tags_list = [{"name": "meloa"}, {"name": "wavy"}, {"name": item["Wavy Type"]}]
 
         tags = content['tags']
         for tag in tags:
@@ -106,7 +106,7 @@ class MELOAbaseHarvester(HarvesterBase):
 
         item = self._get_collection(content, item)
 
-        item['tags'] = self._get_tags_for_dataset(content)
+        item['tags'] = self._get_tags_for_dataset(content, item)
 
         item['resource'] = self._parse_resources(content['resources'])
 
