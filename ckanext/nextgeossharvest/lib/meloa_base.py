@@ -76,6 +76,9 @@ class MELOAbaseHarvester(HarvesterBase):
          velocity and direction) and the battery power. This collection contains
          datasets collected by a WAVY ''' + wavy_type + '.'
 
+        if item['notes'] == null:
+            item['notes'] = item['collection_description']
+
         return item
 
     def _get_tags_for_dataset(self, content, item):
