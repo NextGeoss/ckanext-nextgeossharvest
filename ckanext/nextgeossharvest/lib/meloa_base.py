@@ -38,6 +38,7 @@ class MELOAbaseHarvester(HarvesterBase):
         item = {}
 
         # to have a name such as wavydata_50 add 'name' to package_fields
+        # and comment line 48
         package_fields = ['notes',
                           'title']
 
@@ -114,11 +115,14 @@ class MELOAbaseHarvester(HarvesterBase):
 
         item['resource'] = self._parse_resources(content['resources'])
 
+        identifier_template = 'meloa_{}'
+        item['identifier'] = identifier_template.format(item['name'])
+
         # Rename StartTime and StopTime to timerange_start
         # and timerange_end, respectively and remove former
         # from the package
-        item['timerange_start'] = item['Measurements Start-time']
-        item['timerange_end'] = item['Measurements End-time']
+        item['timerange_start'] = item.pop('Measurements Start-time')
+        item['timerange_end'] = item.pop('Measurements End-time')
 
         return item
 
@@ -147,7 +151,7 @@ class MELOAbaseHarvester(HarvesterBase):
         """
         Return a metadata resource dictionary.
         """
-        description = 'Download the metadata files from MELOA catalogue.'  # noqa: E501
+        description = 'Download the metadata file from MELOA catalogue.'  # noqa: E501
         mimetype = 'application/json'
 
         resource = {'name': name,

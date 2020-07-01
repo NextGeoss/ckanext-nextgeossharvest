@@ -218,7 +218,7 @@ class MELOAHarvester(MELOAbaseHarvester, NextGEOSSHarvester,
         Return None of there is none next URL (end of results).
         """
 
-        if json_result['result']['count'] == 0:
+        if json_result['result']['count'] == 0 or json_result['result']['count'] == 1::
             return None
         else:
             last_entry = json_result['result']['results'][-1]
