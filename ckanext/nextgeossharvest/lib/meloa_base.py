@@ -37,15 +37,14 @@ class MELOAbaseHarvester(HarvesterBase):
 
         item = {}
 
-        # to have a name such as wavydata_50 add 'name' to package_fields
-        # and comment line 48
         package_fields = ['notes',
+                          'name',
                           'title']
 
         for field in package_fields:
             item[field] = content[field]
 
-        item['name'] = item['title'].replace(' ', '_').replace(':','').lower()
+        item['name'] = 'meloa_' + item['name']
         item = self._get_extra_fields(content, item)
 
         return item

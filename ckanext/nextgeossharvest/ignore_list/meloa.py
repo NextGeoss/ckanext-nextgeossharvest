@@ -1,10 +1,16 @@
 MELOA_IGNORE_LIST = [
         "Campaign ID",
+        "CampaignID",
         "Campaign Name",
+        "CampaignName",
         "Contact e-mail",
+        "Contacte-mail",
         "Contact institution",
+        "Contactinstitution",
         "Contact name",
-        "Wavy Name"
+        "Contactname",
+        "Wavy Name",
+        "WavyName"
 ]
 
 MELOA_IGNORE_DICT = {
