@@ -114,8 +114,7 @@ class MELOAbaseHarvester(HarvesterBase):
 
         item['resource'] = self._parse_resources(content['resources'])
 
-        identifier_template = 'meloa_{}'
-        item['identifier'] = identifier_template.format(item['name'])
+        item['identifier'] = item['name']
 
         # Rename StartTime and StopTime to timerange_start
         # and timerange_end, respectively and remove former
