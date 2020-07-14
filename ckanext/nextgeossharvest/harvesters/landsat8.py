@@ -318,7 +318,14 @@ class Landsat8Harvester(NextGEOSSHarvester):
         parsed_content['notes'] = parsed_content['collection_description']
 
         parsed_content['name'] = identifier
-        parsed_content['spatial'] = json.dumps(parsed_content.pop('geometry'))
+        if 'geometry' not in parsed_content:
+            with open("landsat_spatial.json") as f:
+                landsat_spatial = json.loads(f.read())
+            path = str(int(parsed_content['path']))
+            row = str(int(parsed_content['row']))
+            parsed_content['spatial'] = json.dumps(landsat_spatial[path][row])
+        else:
+            parsed_content['spatial'] = json.dumps(parsed_content.pop('geometry'))
         resources = parsed_content.get('resource', None)
         if resources:
             parsed_content['resource'] = self._parse_resources(resources)
