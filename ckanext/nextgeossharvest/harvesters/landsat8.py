@@ -319,7 +319,8 @@ class Landsat8Harvester(NextGEOSSHarvester):
 
         parsed_content['name'] = identifier
         if 'geometry' not in parsed_content:
-            with open("landsat_spatial.json") as f:
+            filedir = os.path.dirname(os.path.abspath(__file__)))
+            with open(os.path.join(filedir, "landsat_spatial.json")) as f:
                 landsat_spatial = json.loads(f.read())
             path = str(int(parsed_content['path']))
             row = str(int(parsed_content['row']))
