@@ -19,11 +19,11 @@ class OPENSEARCH():
     
     @staticmethod
     def get_pagination_mechanism():
-        return 'index'
+        return 'startIndex'
     
     @staticmethod
     def get_mininum_pagination_value():
-        return '1'
+        return 1
 
     @staticmethod
     def validate_config(config, COLLECTION):
@@ -58,7 +58,7 @@ class OPENSEARCH():
         self.current_url = config.get('base_query_url')
         self.max_dataset = config.get('max_dataset', 100)
         self.orderby = config.get('sortby', None)
-        self.start_index = 1
+        self.start_index = self.get_mininum_pagination_value()
         self.build_url()
         
         collection_id = config.get('collection')
@@ -75,16 +75,23 @@ class OPENSEARCH():
         for i, component in enumerate(query_components):
             if 'count=' in component:
                 query_components[i] = 'count=' + self.max_dataset
-            elif 'startIndex=' in component:
-                query_components[i] = 'startIndex=' + self.start_index
+            elif self.get_pagination_mechanism + '=' in component:
+                query_components[i] = self.get_pagination_mechanism() + '=' + self.start_index
             elif 'orderby=' in component and self.orderby:
                 query_components[i] = 'orderby=' + self.orderby
         query = '&'.join(query_components)
         self.current_url = '{}?{}'.format(base_url, query)
     
     def update_index(self, index):
-        self.start_index = index
-        self.build_url()
+        if self.get_pagination_mechanism() == 'startIndex':
+            self.start_index = int(index)
+
+    def increment_index(self):
+        if self.get_pagination_mechanism() == 'startIndex':
+            self.start_index += 1
+
+    def get_index(self):
+        return self.start_index
 
     def get_results(self):
 
@@ -111,5 +118,12 @@ class OPENSEARCH():
                 return get_entries(results, dataset_path)
     
     def get_name_path(self):
-        return self._collection["mandatory_fields"]["name"]
+        mandatory_fields = self.get_mandatory_fields()
+        return mandatory_fields["name"]
+
+    def get_mandatory_fields(self):
+        return self._collection["mandatory_fields"]
+
+    def get_resource_fields(self):
+        return self._collection["resources"]
 

@@ -21,6 +21,9 @@ import uuid
 import time
 from datetime import datetime
 
+import shapely.wkt
+import shapely.geometry
+
 
 log = logging.getLogger(__name__)
 
@@ -101,15 +104,16 @@ class SatcenBetterHarvester(NextGEOSSHarvester):
         self.log.debug('SatcenBetter Harvester gather_stage for job: %r', harvest_job)
 
         self.job = harvest_job
-        source_config = self._get_config(harvest_job)
-        self.update_all = source_config.get('update_all', False)
-        interface = INTERFACE(source_config, COLLECTION)
+        self.source_config = self._get_config(harvest_job)
+        self.update_all = self.source_config.get('update_all', False)
+        interface = INTERFACE(self.source_config, COLLECTION)
 
         last_product_index = (
             self._get_last_harvesting_index(harvest_job.source_id, interface)
         )
 
         interface.update_index(last_product_index)
+        interface.build_url()
 
         ids = []
         try:
@@ -118,14 +122,14 @@ class SatcenBetterHarvester(NextGEOSSHarvester):
             self._save_gather_error('Request timed out: {}'.format(e), self.job)  # noqa: E501
             return ids
         if type(results) is not list:
-            self._save_gather_error('{} error: {}'.format(results.status_code, results.text), self.job)  # noqa: E501
+            self._save_gather_error('{} error: {}'.format(results['status_code'], results['message']), self.job)  # noqa: E501
             return ids
 
         for entry in results:
             name_path = interface.get_name_path()
             name_url = get_field(entry,
-                                    name_path['relative_location'].split(","),
-                                    name_path['fixed_attributes'])
+                                 name_path['relative_location'].split(","),
+                                 name_path['fixed_attributes'])
             entry_name = self.parse_name(name_url).lower()
             entry_guid = unicode(uuid.uuid4())
             package_query = Session.query(Package)
@@ -164,12 +168,12 @@ class SatcenBetterHarvester(NextGEOSSHarvester):
                 job=self.job,
                 extras=[
                     HOExtra(key='status', value=status),
-                    HOExtra(key='index', value=last_product_index)
+                    HOExtra(key=interface.get_pagination_mechanism(), value=interface.get_index())
                 ])
             obj.content = json.dumps(entry)
             obj.package = None if status == 'new' else package
             obj.save()
-            last_product_index += 1
+            interface.increment_index()
             ids.append(obj.id)
         return ids
 
@@ -187,3 +191,80 @@ class SatcenBetterHarvester(NextGEOSSHarvester):
         Parse the entry content and return a dictionary using our standard
         metadata terms.
         """
+
+        interface = INTERFACE(self.source_config, COLLECTION)
+        mandatory_fields = interface.get_mandatory_fields()
+        parsed_content = {}
+
+        for key, path in mandatory_fields.items():
+            if 'timerange_start' in key:
+                field_value = get_field(content,
+                                    path['location']['relative_location'].split(","),
+                                    path['location']['fixed_attributes'])
+
+                timerange_start = parse_time(field_value, path['parse_function'], 0)
+                parsed_content['timerange_start'] = timerange_start
+            elif 'timerange_end' in key:
+                field_value = get_field(content,
+                                    path['location']['relative_location'].split(","),
+                                    path['location']['fixed_attributes'])
+
+                timerange_end = parse_time(field_value, path['parse_function'], 1)
+                parsed_content['timerange_end'] = timerange_end
+            elif 'spatial' in key:
+                field_value = get_field(content,
+                                    path['location']['relative_location'].split(","),
+                                    path['location']['fixed_attributes'])
+
+                spatial = parse_spatial(field_value, path['parse_function'])
+                parsed_content['spatial'] = spatial
+            else:
+                field_value = get_field(content,
+                                        path['relative_location'].split(","),
+                                        path['fixed_attributes'])
+                parsed_content[key] = field_value
+
+        title = parsed_content.pop('title')
+        parsed_content['title'] = self.parse_name(title)
+        parsed_content['identifier'] = self.parse_name(title)
+        parsed_content['title'] = self.parse_name(title).lower()
+
+        resource_fields = interface.get_resource_fields()
+        parsed_content['resource'] = _parse_resources(content, resource_fields)
+
+    # Required by NextGEOSS base harvester
+    def _get_resources(self, metadata):
+        """Return a list of resource dictionaries."""
+        return metadata['resource']
+
+def parse_time(field_value, parsing_type, instance=0):
+    if parsing_type == 'complete_slash':
+        start, end = field_value.split('/')
+        return end if instance else start
+
+def parse_spatial(field_value, parsing_type):
+    if parsing_type == 'GeoJSON':
+        return json.dumps(field_value)
+    elif parsing_type == 'WKT':
+        g1 = shapely.wkt.loads(field_value)
+        g2 = shapely.geometry.mapping(g1)
+        return json.dumps(g2)
+
+def _parse_resources(content, resource_fields):
+    resources = []
+    for resource in resource_fields:
+        single_resource = {}
+        for key, field in resource.items():
+            if field["field_type"] == 'freeText':
+                single_resource[key] = field["location"]["relative_location"]
+            elif field["field_type"] == 'path':
+                field_value = get_field(content,
+                                        field['location']['relative_location'].split(","),
+                                        field['location']['fixed_attributes'])
+                if field_value:
+                    single_resource[key] = field_value
+                else:
+                    break
+        resources.append(single_resource)
+    return resources
+

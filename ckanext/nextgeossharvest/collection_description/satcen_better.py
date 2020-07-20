@@ -65,15 +65,18 @@ COLLECTION = {
         "resources": [
             {
                 "url": {
-                    "relative_location": "properties,links,@href",
-                    "fixed_attributes": [{
-                        "attribute": "@rel",
-                        "value": "enclosure"
-                    },
-                    {
-                        "attribute": "@type",
-                        "value": "image/tiff"
-                    }]
+                    "field_type": "path",
+                    "location":{
+                        "relative_location": "properties,links,@href",
+                        "fixed_attributes": [{
+                            "attribute": "@rel",
+                            "value": "enclosure"
+                        },
+                        {
+                            "attribute": "@type",
+                            "value": "image/tiff"
+                        }]
+                    }
                 },
                 "description": {
                     "field_type": "freeText",
@@ -110,11 +113,14 @@ COLLECTION = {
             },
             {
                 "url": {
-                    "relative_location": "properties,offering,operation,@href",
-                    "fixed_attributes": [{
-                        "attribute": "@code",
-                        "value": "GetMap"
-                    }]
+                    "field_type": "path",
+                    "location":{
+                        "relative_location": "properties,offering,operation,@href",
+                        "fixed_attributes": [{
+                            "attribute": "@code",
+                            "value": "GetMap"
+                        }]
+                    }
                 },
                 "description": {
                     "field_type": "freeText",
@@ -213,15 +219,18 @@ COLLECTION = {
         "resources": [
             {
                 "url": {
-                    "relative_location": "properties,links,@href",
-                    "fixed_attributes": [{
-                        "attribute": "@rel",
-                        "value": "enclosure"
-                    },
-                    {
-                        "attribute": "@type",
-                        "value": "image/tiff"
-                    }]
+                    "field_type": "path",
+                    "location":{
+                        "relative_location": "properties,links,@href",
+                        "fixed_attributes": [{
+                            "attribute": "@rel",
+                            "value": "enclosure"
+                        },
+                        {
+                            "attribute": "@type",
+                            "value": "image/tiff"
+                        }]
+                    }
                 },
                 "description": {
                     "field_type": "freeText",
@@ -258,11 +267,14 @@ COLLECTION = {
             },
             {
                 "url": {
-                    "relative_location": "properties,offering,operation,@href",
-                    "fixed_attributes": [{
-                        "attribute": "@code",
-                        "value": "GetMap"
-                    }]
+                    "field_type": "path",
+                    "location":{
+                        "relative_location": "properties,offering,operation,@href",
+                        "fixed_attributes": [{
+                            "attribute": "@code",
+                            "value": "GetMap"
+                        }]
+                    }
                 },
                 "description": {
                     "field_type": "freeText",
@@ -361,15 +373,18 @@ COLLECTION = {
         "resources": [
             {
                 "url": {
-                    "relative_location": "properties,links,@href",
-                    "fixed_attributes": [{
-                        "attribute": "@rel",
-                        "value": "enclosure"
-                    },
-                    {
-                        "attribute": "@type",
-                        "value": "image/tiff"
-                    }]
+                    "field_type": "path",
+                    "location":{
+                        "relative_location": "properties,links,@href",
+                        "fixed_attributes": [{
+                            "attribute": "@rel",
+                            "value": "enclosure"
+                        },
+                        {
+                            "attribute": "@type",
+                            "value": "image/tiff"
+                        }]
+                    }
                 },
                 "description": {
                     "field_type": "freeText",
@@ -406,11 +421,14 @@ COLLECTION = {
             },
             {
                 "url": {
-                    "relative_location": "properties,offering,operation,@href",
-                    "fixed_attributes": [{
-                        "attribute": "@code",
-                        "value": "GetMap"
-                    }]
+                    "field_type": "path",
+                    "location":{
+                        "relative_location": "properties,offering,operation,@href",
+                        "fixed_attributes": [{
+                            "attribute": "@code",
+                            "value": "GetMap"
+                        }]
+                    }
                 },
                 "description": {
                     "field_type": "freeText",
