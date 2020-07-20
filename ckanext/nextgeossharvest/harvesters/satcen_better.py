@@ -36,19 +36,28 @@ def check_attributes(pre_attribute_field, fixed_attributes):
     return True
 
 
-def get_field(entry, relative_path, fixed_attributes):
+def get_field(entry, relative_path, fixed_attributes=[]):
+    if len(relative_path) == 1 and relative_path[0] in entry:
+        return entry[relative_path[0]]
     tag = relative_path.pop(0)
     if len(relative_path) == 1:
-        pre_content = entry[tag]
-        if type(pre_content) is list:
-            pre_content = [pre_content]
-        for pre_attribute_field in pre_content:
-            if check_attributes(pre_attribute_field, fixed_attributes):
-                return pre_attribute_field[relative_path[0]]
-        return None
-           
+        if tag in entry:
+            pre_content = entry[tag]
+            if type(pre_content) is not list:
+                pre_content = [pre_content]
+            for pre_attribute_field in pre_content:
+                if check_attributes(pre_attribute_field, fixed_attributes):
+                    return pre_attribute_field[relative_path[0]]
+            return None  
+        else: 
+            return None 
     else:
-        field = get_field(entry[tag], relative_path, fixed_attributes)
+        new_entry = entry.get(tag, None)
+        if new_entry:
+            field = get_field(new_entry, relative_path, fixed_attributes)
+        else:
+            return None
+
         return field
 
 class SatcenBetterHarvester(NextGEOSSHarvester):
@@ -111,9 +120,10 @@ class SatcenBetterHarvester(NextGEOSSHarvester):
         last_product_index = (
             self._get_last_harvesting_index(harvest_job.source_id, interface)
         )
-
         interface.update_index(last_product_index)
         interface.build_url()
+        
+        log.debug('URL: {}'.format(interface.current_url) ) # noqa: E501
 
         ids = []
         try:
@@ -127,10 +137,11 @@ class SatcenBetterHarvester(NextGEOSSHarvester):
 
         for entry in results:
             name_path = interface.get_name_path()
+
             name_url = get_field(entry,
                                  name_path['relative_location'].split(","),
                                  name_path['fixed_attributes'])
-            entry_name = self.parse_name(name_url).lower()
+            entry_name = parse_name(name_url).lower()
             entry_guid = unicode(uuid.uuid4())
             package_query = Session.query(Package)
             query_filtered = package_query.filter(Package.name == entry_name)
@@ -177,10 +188,6 @@ class SatcenBetterHarvester(NextGEOSSHarvester):
             ids.append(obj.id)
         return ids
 
-    def parse_name(self, url):
-        filename = url.split('/')[-1]
-        name = '.'.join(filename.split('.')[:-1])
-        return name
 
     def fetch_stage(self, harvest_object):
         return True
@@ -191,7 +198,7 @@ class SatcenBetterHarvester(NextGEOSSHarvester):
         Parse the entry content and return a dictionary using our standard
         metadata terms.
         """
-
+        content = json.loads(content)
         interface = INTERFACE(self.source_config, COLLECTION)
         mandatory_fields = interface.get_mandatory_fields()
         parsed_content = {}
@@ -200,46 +207,63 @@ class SatcenBetterHarvester(NextGEOSSHarvester):
             if 'timerange_start' in key:
                 field_value = get_field(content,
                                     path['location']['relative_location'].split(","),
-                                    path['location']['fixed_attributes'])
+                                    path['location'].get('fixed_attributes', []))
 
                 timerange_start = parse_time(field_value, path['parse_function'], 0)
                 parsed_content['timerange_start'] = timerange_start
             elif 'timerange_end' in key:
                 field_value = get_field(content,
                                     path['location']['relative_location'].split(","),
-                                    path['location']['fixed_attributes'])
+                                    path['location'].get('fixed_attributes', []))
 
                 timerange_end = parse_time(field_value, path['parse_function'], 1)
                 parsed_content['timerange_end'] = timerange_end
             elif 'spatial' in key:
                 field_value = get_field(content,
                                     path['location']['relative_location'].split(","),
-                                    path['location']['fixed_attributes'])
+                                    path['location'].get('fixed_attributes', []))
 
                 spatial = parse_spatial(field_value, path['parse_function'])
                 parsed_content['spatial'] = spatial
             else:
                 field_value = get_field(content,
                                         path['relative_location'].split(","),
-                                        path['fixed_attributes'])
+                                        path.get('fixed_attributes', []))
                 parsed_content[key] = field_value
 
         title = parsed_content.pop('title')
-        parsed_content['title'] = self.parse_name(title)
-        parsed_content['identifier'] = self.parse_name(title)
-        parsed_content['title'] = self.parse_name(title).lower()
+        parsed_content['title'] = parse_name(title)
+        parsed_content['identifier'] = parse_name(title)
+        parsed_content['name'] = parse_name(title).lower()
 
         resource_fields = interface.get_resource_fields()
         parsed_content['resource'] = _parse_resources(content, resource_fields)
+
+        parsed_content['tags'] = []
+        return parsed_content
 
     # Required by NextGEOSS base harvester
     def _get_resources(self, metadata):
         """Return a list of resource dictionaries."""
         return metadata['resource']
 
+
+def parse_name(url):
+    filename = url.split('/')[-1]
+    name = '.'.join(filename.split('.')[:-1])
+    return name
+
 def parse_time(field_value, parsing_type, instance=0):
-    if parsing_type == 'complete_slash':
-        start, end = field_value.split('/')
+    if parsing_type == 'custom':
+        split_title = field_value.split(' ')
+        return split_title[-1] if instance else split_title[-3]
+    elif parsing_type == 'complete_slash':
+        if '/' in field_value:
+            start, end = field_value.split('/')
+        else:
+            start = field_value
+            end = start
+            
         return end if instance else start
 
 def parse_spatial(field_value, parsing_type):
@@ -260,7 +284,7 @@ def _parse_resources(content, resource_fields):
             elif field["field_type"] == 'path':
                 field_value = get_field(content,
                                         field['location']['relative_location'].split(","),
-                                        field['location']['fixed_attributes'])
+                                        field['location'].get('fixed_attributes', []))
                 if field_value:
                     single_resource[key] = field_value
                 else:

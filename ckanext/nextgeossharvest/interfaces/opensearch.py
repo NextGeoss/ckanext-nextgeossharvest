@@ -71,20 +71,25 @@ class OPENSEARCH():
 
     def build_url(self):
         base_url, query = self.current_url.split('?')
+        if self.get_pagination_mechanism() not in query:
+            query += '&' + self.get_pagination_mechanism() + '=' + str(self.start_index)
+        if 'count=' not in query:
+            query += '&count=' + str(self.max_dataset)
         query_components = query.split('&')
         for i, component in enumerate(query_components):
             if 'count=' in component:
-                query_components[i] = 'count=' + self.max_dataset
-            elif self.get_pagination_mechanism + '=' in component:
-                query_components[i] = self.get_pagination_mechanism() + '=' + self.start_index
+                query_components[i] = 'count=' + str(self.max_dataset)
+            elif self.get_pagination_mechanism() + '=' in component:
+                query_components[i] = self.get_pagination_mechanism() + '=' + str(self.start_index)
             elif 'orderby=' in component and self.orderby:
                 query_components[i] = 'orderby=' + self.orderby
         query = '&'.join(query_components)
         self.current_url = '{}?{}'.format(base_url, query)
     
     def update_index(self, index):
+        min_index = self.get_mininum_pagination_value()
         if self.get_pagination_mechanism() == 'startIndex':
-            self.start_index = int(index)
+            self.start_index = int(index) if index else min_index
 
     def increment_index(self):
         if self.get_pagination_mechanism() == 'startIndex':
@@ -94,10 +99,13 @@ class OPENSEARCH():
         return self.start_index
 
     def get_results(self):
-
-        r = requests.get(self.current_url,
-                        auth=HTTPBasicAuth(self.username, self.password),
-                        verify=False, timeout=self.timeout)
+        if self.username and self.password:
+            r = requests.get(self.current_url,
+                            auth=HTTPBasicAuth(self.username, self.password),
+                            verify=False, timeout=self.timeout)
+        else:
+            r = requests.get(self.current_url,
+                            verify=False, timeout=self.timeout)
 
         if r.status_code != 200:
             return {'status_code': r.status_code,

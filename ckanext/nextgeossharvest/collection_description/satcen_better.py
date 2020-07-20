@@ -8,7 +8,7 @@ COLLECTION = {
         },
         "mandatory_fields": {
             "title": {
-                "relative_location": "properties,links,@ref",
+                "relative_location": "properties,links,@href",
                 "fixed_attributes": [{
                     "attribute": "@rel",
                     "value": "enclosure"
@@ -22,7 +22,7 @@ COLLECTION = {
                 "relative_location": "properties,title"
             },
             "identifier": {
-                "relative_location": "properties,links,@ref",
+                "relative_location": "properties,links,@href",
                 "fixed_attributes": [{
                     "attribute": "@rel",
                     "value": "enclosure"
@@ -33,7 +33,7 @@ COLLECTION = {
                 }]
             },
             "name": {
-                "relative_location": "properties,links,@ref",
+                "relative_location": "properties,links,@href",
                 "fixed_attributes": [{
                     "attribute": "@rel",
                     "value": "enclosure"
@@ -162,7 +162,7 @@ COLLECTION = {
         },
         "mandatory_fields": {
             "title": {
-                "relative_location": "properties,links,@ref",
+                "relative_location": "properties,links,@href",
                 "fixed_attributes": [{
                     "attribute": "@rel",
                     "value": "enclosure"
@@ -176,7 +176,7 @@ COLLECTION = {
                 "relative_location": "properties,title"
             },
             "identifier": {
-                "relative_location": "properties,links,@ref",
+                "relative_location": "properties,links,@href",
                 "fixed_attributes": [{
                     "attribute": "@rel",
                     "value": "enclosure"
@@ -187,7 +187,7 @@ COLLECTION = {
                 }]
             },
             "name": {
-                "relative_location": "properties,links,@ref",
+                "relative_location": "properties,links,@href",
                 "fixed_attributes": [{
                     "attribute": "@rel",
                     "value": "enclosure"
@@ -316,7 +316,7 @@ COLLECTION = {
         },
         "mandatory_fields": {
             "title": {
-                "relative_location": "properties,links,@ref",
+                "relative_location": "properties,links,@href",
                 "fixed_attributes": [{
                     "attribute": "@rel",
                     "value": "enclosure"
@@ -330,7 +330,7 @@ COLLECTION = {
                 "relative_location": "properties,title"
             },
             "identifier": {
-                "relative_location": "properties,links,@ref",
+                "relative_location": "properties,links,@href",
                 "fixed_attributes": [{
                     "attribute": "@rel",
                     "value": "enclosure"
@@ -341,7 +341,7 @@ COLLECTION = {
                 }]
             },
             "name": {
-                "relative_location": "properties,links,@ref",
+                "relative_location": "properties,links,@href",
                 "fixed_attributes": [{
                     "attribute": "@rel",
                     "value": "enclosure"
@@ -353,7 +353,7 @@ COLLECTION = {
             },
             "spatial": {
                 "location": {
-                    "relative_location": "properties,geometry"
+                    "relative_location": "geometry"
                 },
                 "parse_function": "GeoJSON"
             },
