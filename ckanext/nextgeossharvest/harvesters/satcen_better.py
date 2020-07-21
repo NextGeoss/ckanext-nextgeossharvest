@@ -254,9 +254,12 @@ def parse_name(url):
     return name
 
 def parse_time(field_value, parsing_type, instance=0):
-    if parsing_type == 'custom':
+    if parsing_type == 'custom1':
         split_title = field_value.split(' ')
         return split_title[-1] if instance else split_title[-3]
+    if parsing_type == 'custom2':
+        split_title = field_value.split(' ')
+        return split_title[-1] if instance else split_title[-2]
     elif parsing_type == 'complete_slash':
         if '/' in field_value:
             start, end = field_value.split('/')

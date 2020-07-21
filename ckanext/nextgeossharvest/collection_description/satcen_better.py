@@ -53,13 +53,13 @@ COLLECTION = {
                 "location": {
                     "relative_location": "properties,title"
                 },
-                "parse_function": "custom"
+                "parse_function": "custom1"
             },
             "timerange_end":{
                 "location": {
                     "relative_location": "properties,title"
                 },
-                "parse_function": "custom"
+                "parse_function": "custom1"
             },
         },
         "resources": [
@@ -359,15 +359,15 @@ COLLECTION = {
             },
             "timerange_start": {
                 "location": {
-                    "relative_location": "properties,date"
+                    "relative_location": "properties,title"
                 },
-                "parse_function": "complete_slash"
+                "parse_function": "custom2"
             },
             "timerange_end": {
                 "location": {
-                    "relative_location": "properties,date"
+                    "relative_location": "properties,title"
                 },
-                "parse_function": "complete_slash"
+                "parse_function": "custom2"
             },
         },
         "resources": [
