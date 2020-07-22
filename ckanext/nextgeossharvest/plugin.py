@@ -9,6 +9,7 @@ log = logging.getLogger(__name__)
 
 
 class NextgeossharvestPlugin(plugins.SingletonPlugin):
+    plugins.implements(plugins.IConfigurer, inherit=True)
     plugins.implements(plugins.IPackageController, inherit=True)
 
     def before_index(self, pkg_dict):
