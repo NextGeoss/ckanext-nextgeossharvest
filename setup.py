@@ -100,6 +100,7 @@ setup(
         saeon=ckanext.nextgeossharvest.harvesters:SAEONHarvester
         scent=ckanext.nextgeossharvest.harvesters:SCENTHarvester
         landsat8=ckanext.nextgeossharvest.harvesters:Landsat8Harvester
+        satcenbetter=ckanext.nextgeossharvest.harvesters:SatcenBetterHarvester
 
         [babel.extractors]
         ckan = ckan.lib.extract:extract_ckan
