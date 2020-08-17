@@ -14,6 +14,7 @@ from ckanext.nextgeossharvest.harvesters.gdacs import GDACSHarvester  # noqa: F4
 from ckanext.nextgeossharvest.harvesters.itag import ITagEnricher  # noqa: F401, E501
 from ckanext.nextgeossharvest.harvesters.ebvs import EBVSHarvester  # noqa: F401, E501
 from ckanext.nextgeossharvest.harvesters.cgss1 import CGSHarvester  # noqa: F401, E501
+from ckanext.nextgeossharvest.harvesters.saeon import SAEONHarvester  # noqa: F401, E501
 from ckanext.nextgeossharvest.harvesters.scent import SCENTHarvester  # noqa: F401, E501
 from ckanext.nextgeossharvest.harvesters.landsat8 import Landsat8Harvester  # noqa: F401, E501
 from ckanext.nextgeossharvest.harvesters.satcen_better import SatcenBetterHarvester  # noqa: F401, E501
