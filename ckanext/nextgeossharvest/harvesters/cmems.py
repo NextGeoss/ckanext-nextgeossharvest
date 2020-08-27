@@ -347,7 +347,7 @@ FTP_SOURCE_CONF = {
     'mog': {
         'domain': 'nrt.cmems-du.eu',
         'path': 'Core/MULTIOBS_GLO_PHY_NRT_015_003/dataset-uv-nrt-hourly',
-        'fname_pattern': r'dataset-uv-nrt-hourly_(?P<date>\d{8,8})T0000Z'
+        'fname_pattern': r'dataset-uv-nrt-hourly_(?P<date>\d{8,8})T0000Z_P\d{8,8}T\d{4}Z.nc'
         '_P\d{8,8}T\d{4}Z.nc',
     }
 
