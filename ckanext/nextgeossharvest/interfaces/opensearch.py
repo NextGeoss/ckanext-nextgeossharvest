@@ -61,8 +61,8 @@ class OPENSEARCH():
         self.start_index = self.get_mininum_pagination_value()
         self.build_url()
         
-        collection_id = config.get('collection')
-        self._collection = COLLECTION[collection_id]
+        self._collection_id = config.get('collection')
+        self._collection = COLLECTION[self._collection_id]
 
         self.results_format = config.get('results_format')
         self.timeout = config.get('timeout', 10)
@@ -134,4 +134,11 @@ class OPENSEARCH():
 
     def get_resource_fields(self):
         return self._collection["resources"]
+
+    def get_collection_info(self):
+        collection_info = {}
+        collection_info['collection_id'] = self._collection_id
+        collection_info['collection_name'] = self._collection['collection_name']
+        collection_info['collection_description'] = self._collection['collection_description']
+        return collection_info
 
