@@ -240,6 +240,8 @@ class SatcenBetterHarvester(NextGEOSSHarvester):
         parsed_content['resource'] = _parse_resources(content, resource_fields)
 
         parsed_content['tags'] = []
+
+        parsed_content.update(interface.get_collection_info())
         return parsed_content
 
     # Required by NextGEOSS base harvester
