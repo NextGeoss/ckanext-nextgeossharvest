@@ -307,8 +307,8 @@ COLLECTION = {
             }
         ]
     },
-    "S2_VEGETAION_MASK_SATCEN_BETTER": {
-        "collection_id": "S2_VEGETAION_MASK_SATCEN_BETTER",
+    "S2_VEGETATION_MASK_SATCEN_BETTER": {
+        "collection_id": "S2_VEGETATION_MASK_SATCEN_BETTER",
         "collection_name": "Sentinel-2 Vegetation mask BETTER project",
         "collection_description": "A product with six bands containing the following information: Band 1 (NDVI_class); Band 2 (BSI_class); Band 3 (Mask); Band 4 (Vegetation_mask); Band 5 (BSI_mask); Band 6 (NDVI_mask). It has been computed using Sentinel-2 images.",
         "dataset_tag": {
