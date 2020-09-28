@@ -101,6 +101,7 @@ setup(
         scent=ckanext.nextgeossharvest.harvesters:SCENTHarvester
         landsat8=ckanext.nextgeossharvest.harvesters:Landsat8Harvester
         satcenbetter=ckanext.nextgeossharvest.harvesters:SatcenBetterHarvester
+        noa_groundsegment=ckanext.nextgeossharvest.harvesters:NoaGroundsegmentHarvester
 
         [babel.extractors]
         ckan = ckan.lib.extract:extract_ckan
