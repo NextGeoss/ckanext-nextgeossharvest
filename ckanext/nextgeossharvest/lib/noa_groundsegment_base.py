@@ -44,7 +44,7 @@ class NoaGroundsegmentBaseHarvester(HarvesterBase):
         item = {}
 
         item['name'] = content['filename'][:-3].lower() #Remove the .h5 filetype and lowercase
-        item['title'] = content['filename'].split('_')[0]
+        item['title'] = item['name']                    #content['filename'].split('_')[0]
         item['notes'] = "Visible Infrared Imaging Radiometer Suite (VIIRS) products collected from the premises of the National Observatory of Athens (NOA). \
             For specific product information please consult the following link: https://groundsegment.space.noa.gr/products"
 
@@ -58,12 +58,12 @@ class NoaGroundsegmentBaseHarvester(HarvesterBase):
                         {"name":content["instrument"].lower()},
                         {"name":content["satellite"].lower()}]
 
-        item['identifier'] = content['filename'][:-3].lower()
+        item['identifier'] = item['name']
         
         # Product resource only
         item['resource'] = [{'name': content['filename'][:-3],
                     'description': "Download the product from NOA Groundsegment. NOTE: DOWNLOAD REQUIRES LOGIN",
-                    'url': "https://groundsegment.space.noa.gr/reception?id={}".format(content["reception_id"]),
+                    'url': "https://groundsegment.space.noa.gr/download?reception_id={}&filename={}".format(content["reception_id"], content['filename']),
                     'format': "H5",
                     'mimetype': "H5"}]
 
@@ -83,7 +83,7 @@ class NoaGroundsegmentBaseHarvester(HarvesterBase):
         name = content['filename'][:-4].lower().replace('.', '_') #Remove the .hdf filetype and lowercase #Remove the .hdf filetype and lowercase
 
         item['name'] = name
-        item['title'] = name.split('_')[0]
+        item['title'] = name        #name.split('_')[0]
         item['notes'] = "Moderate Resolution Imaging Spectroradiometer (MODIS) products collected from the premises of the National Observatory of Athens (NOA). \
             For specific product information please consult the following link: https://groundsegment.space.noa.gr/products"
 
@@ -102,7 +102,7 @@ class NoaGroundsegmentBaseHarvester(HarvesterBase):
         # Product resource only
         item['resource'] = [{'name': name,
                     'description': "Download the product from NOA Groundsegment. NOTE: DOWNLOAD REQUIRES LOGIN",
-                    'url': "https://groundsegment.space.noa.gr/reception?id={}".format(content["reception_id"]),
+                    'url': "https://groundsegment.space.noa.gr/download?reception_id={}&filename={}".format(content["reception_id"], content['filename']),
                     'format': "HDF",
                     'mimetype': "HDF"}]
 
@@ -127,7 +127,7 @@ class NoaGroundsegmentBaseHarvester(HarvesterBase):
             file_format = "H5"
 
         item['name'] = name
-        item['title'] = name.split('_')[0]
+        item['title'] = name        #name.split('_')[0]
         item['notes'] = "Atmospheric InfraRed Sounder (AIRS) products collected from the premises of the National Observatory of Athens (NOA). \
             For specific product information please consult the following link: https://groundsegment.space.noa.gr/products"
 
@@ -146,7 +146,7 @@ class NoaGroundsegmentBaseHarvester(HarvesterBase):
         # Product resource only
         item['resource'] = [{'name': name,
                     'description': "Download the product from NOA Groundsegment. NOTE: DOWNLOAD REQUIRES LOGIN",
-                    'url': "https://groundsegment.space.noa.gr/reception?id={}".format(content["reception_id"]),
+                    'url': "https://groundsegment.space.noa.gr/download?reception_id={}&filename={}".format(content["reception_id"], content['filename']),
                     'format': file_format,
                     'mimetype': file_format}]
 
@@ -166,7 +166,7 @@ class NoaGroundsegmentBaseHarvester(HarvesterBase):
         name = content['filename'][:-4].lower().replace('.', '_') #Remove the .hdf filetype and lowercase
 
         item['name'] = name
-        item['title'] = name.split('_')[0] + name.split('_')[1]
+        item['title'] = name        #name.split('_')[0] + name.split('_')[1]
         item['notes'] = "Advanced Very High Resolution Radiometer (AVHRR/3) products collected from the premises of the National Observatory of Athens (NOA). \
             For specific product information please consult the following link: https://groundsegment.space.noa.gr/products"
 
@@ -185,7 +185,7 @@ class NoaGroundsegmentBaseHarvester(HarvesterBase):
         # Product resource only
         item['resource'] = [{'name': name,
                     'description': "Download the product from NOA Groundsegment. NOTE: DOWNLOAD REQUIRES LOGIN",
-                    'url': "https://groundsegment.space.noa.gr/reception?id={}".format(content["reception_id"]),
+                    'url': "https://groundsegment.space.noa.gr/download?reception_id={}&filename={}".format(content["reception_id"], content['filename']),
                     'format': "HDF",
                     'mimetype': "HDF"}]
 
@@ -205,7 +205,7 @@ class NoaGroundsegmentBaseHarvester(HarvesterBase):
         name = content['filename'][:-3].lower().replace('.', '_') #Remove the .hdf filetype and lowercase
 
         item['name'] = name
-        item['title'] = content['filename'][:-3].split('.')[-1]
+        item['title'] = name            #content['filename'][:-3].split('.')[-1]
         item['notes'] = "MEdium Resolution Spectral Imager (MERSI) products collected from the premises of the National Observatory of Athens (NOA). \
             For specific product information please consult the following link: https://groundsegment.space.noa.gr/products"
 
@@ -224,7 +224,7 @@ class NoaGroundsegmentBaseHarvester(HarvesterBase):
         # Product resource only
         item['resource'] = [{'name': name,
                     'description': "Download the product from NOA Groundsegment. NOTE: DOWNLOAD REQUIRES LOGIN",
-                    'url': "https://groundsegment.space.noa.gr/reception?id={}".format(content["reception_id"]),
+                    'url': "https://groundsegment.space.noa.gr/download?reception_id={}&filename={}".format(content["reception_id"], content['filename']),
                     'format': "H5",
                     'mimetype': "H5"}]
 

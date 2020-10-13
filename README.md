@@ -894,7 +894,7 @@ The NOA Groundsegment harvester has configuration has:
 2. `end_date` (optional) determines the date on which the harvesting ends. It must be in the format `YYYY-MM-DDTHH:mm:ssZ`.
 3. `username`  (required) Enter your NOA groundsegment username.
 4. `password`  (required) Enter your NOA groundsegment password.
-5. `page_timeout` (optional, integer, defaults to 5) determines the maximum number of pages that will be harvested during each job. If a query returns 25 pages, only the first 5 will be harvested if you're using the default. Each page corresponds to 100 products. This is useful for running the harvester via recurring jobs intended to harvest products incrementally (i.e., you want to start from the beginning and harvest all available products). The harvester will harvest products in groups of 500, rather than attmepting to harvest all x-hundred-thousand at once. You'll get feedback after each job, so you'll know if there are errors without waiting for the whole job to run. And the harvester will automatically resume from the harvested dataset if you're running it via a recurring cron job.
+5. `page_timeout` (optional, integer, defaults to 2) determines the maximum number of pages that will be harvested during each job. If a query returns 25 pages, only the first 5 will be harvested if you're using the default. Each page corresponds to 100 products. This is useful for running the harvester via recurring jobs intended to harvest products incrementally (i.e., you want to start from the beginning and harvest all available products). The harvester will harvest products in groups of 500, rather than attmepting to harvest all x-hundred-thousand at once. You'll get feedback after each job, so you'll know if there are errors without waiting for the whole job to run. And the harvester will automatically resume from the harvested dataset if you're running it via a recurring cron job.
 6. `update_all` (optional, boolean, default is `false`) determines whether or not the harvester updates datasets that already have metadadata from this source. For example: if we have "update_all": true, and dataset Foo has already been created or updated by harvesting, then it will be updated again when the harvester runs. If we have "update_all": false and Foo has already been created or updated by harvesting, then the dataset will not be updated when the harvester runs. And regardless of whether update_all is true or false, if a dataset has not been collected, then it will be created in the catalogue.
 7. `make_private` (optional) determines whether the datasets created by the harvester will be private or public. The default is `false`, i.e., by default, all datasets created by the harvester will be public.
 
@@ -905,7 +905,7 @@ The NOA Groundsegment harvester has configuration has:
   "end_date":"2020-08-01T23:59:00Z",
   "username":"your_username",
   "password":"your_password",
-  "page_timeout": "3"
+  "page_timeout": "2"
 }
 ```
 ### <a name="running-noa_gs"></a>Running a NOA Groundsegment harvester

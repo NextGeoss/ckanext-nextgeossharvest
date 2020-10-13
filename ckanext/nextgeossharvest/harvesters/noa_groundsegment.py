@@ -131,7 +131,7 @@ class NoaGroundsegmentHarvester(NoaGroundsegmentBaseHarvester, NextGEOSSHarveste
         # range at once and the harvester will resume from the last gathered
         # date each time it runs.
         # Each page corresponds to 100 products
-        page_timeout = int(self.source_config.get('page_timeout', '5'))
+        page_timeout = int(self.source_config.get('page_timeout', '2'))
 
         if restart_date != '*':
             start_date = restart_date
