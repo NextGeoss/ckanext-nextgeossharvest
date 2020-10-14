@@ -64,7 +64,7 @@ class MELOAbaseHarvester(HarvesterBase):
         item['collection_id'] = collection_id.upper()
         item['collection_description'] = '''In-situ Data collected using extra light surface drifters (WAVYs) in all water environments. The data produced have far-reaching applications, directly providing valuable information that will help to derive answers to diverse scientific, environmental and societal needs and achieving multiple objectives, from complementing observational gaps in ocean observation, to delivering validation datasets to satellite ground-truthing, along with the real possibility of their effective use by the common citizen. A dataset in MELOA is the collection of data samples acquired by a WAVY during a campaign. The contents of the data samples depend on the type of WAVY drifter. The common information for all the types is the GNSS (Time, position, velocity and direction) and the battery power. This collection contains datasets collected by a WAVY ''' + wavy_type + '.'  # noqa: E501
 
-        if item['notes'] is None:
+        if item['notes'] is None or item['notes'] == "":
             item['notes'] = item['collection_description']
 
         return item
@@ -98,6 +98,8 @@ class MELOAbaseHarvester(HarvesterBase):
         item = self._get_collection(content, item)
 
         item['tags'] = self._get_tags_for_dataset(content, item)
+
+        item['Organization'] = content['organization']['title']
 
         item['resource'] = self._parse_resources(content['resources'])
 
