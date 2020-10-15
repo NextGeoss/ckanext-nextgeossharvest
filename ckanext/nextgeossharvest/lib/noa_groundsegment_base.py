@@ -45,8 +45,7 @@ class NoaGroundsegmentBaseHarvester(HarvesterBase):
 
         item['name'] = content['filename'][:-3].lower() #Remove the .h5 filetype and lowercase
         item['title'] = item['name']                    #content['filename'].split('_')[0]
-        item['notes'] = "Visible Infrared Imaging Radiometer Suite (VIIRS) products collected from the premises of the National Observatory of Athens (NOA). \
-            For specific product information please consult the following link: https://groundsegment.space.noa.gr/products"
+        item['notes'] = "Visible Infrared Imaging Radiometer Suite (VIIRS) products collected from the premises of the National Observatory of Athens (NOA). For specific product information please consult the following link: https://groundsegment.space.noa.gr/products"  # noqa: E501
 
         item['spatial'] = content['spatial']
 
@@ -72,8 +71,7 @@ class NoaGroundsegmentBaseHarvester(HarvesterBase):
 
         item['collection_id'] = 'NOA_VIIRS_PRODUCTS'
         item['collection_name'] = 'NOA VIIRS Products'  # noqa: E501
-        item['collection_description'] = 'Visible Infrared Imaging Radiometer Suite (VIIRS) products collected from the premises of \
-        the National Observatory of Athens (NOA).'  # noqa: E501
+        item['collection_description'] = 'Visible Infrared Imaging Radiometer Suite (VIIRS) products collected from the premises of the National Observatory of Athens (NOA).'  # noqa: E501
 
         return item
 
@@ -84,8 +82,7 @@ class NoaGroundsegmentBaseHarvester(HarvesterBase):
 
         item['name'] = name
         item['title'] = name        #name.split('_')[0]
-        item['notes'] = "Moderate Resolution Imaging Spectroradiometer (MODIS) products collected from the premises of the National Observatory of Athens (NOA). \
-            For specific product information please consult the following link: https://groundsegment.space.noa.gr/products"
+        item['notes'] = "Moderate Resolution Imaging Spectroradiometer (MODIS) products collected from the premises of the National Observatory of Athens (NOA). For specific product information please consult the following link: https://groundsegment.space.noa.gr/products"  # noqa: E501
 
         item['spatial'] = content['spatial']
 
@@ -111,8 +108,7 @@ class NoaGroundsegmentBaseHarvester(HarvesterBase):
 
         item['collection_id'] = 'NOA_MODIS_PRODUCTS'
         item['collection_name'] = 'NOA MODIS Products'  # noqa: E501
-        item['collection_description'] = 'Moderate Resolution Imaging Spectroradiometer (MODIS) products collected from the premises of \
-        the National Observatory of Athens (NOA).'  # noqa: E501
+        item['collection_description'] = 'Moderate Resolution Imaging Spectroradiometer (MODIS) products collected from the premises of the National Observatory of Athens (NOA).'  # noqa: E501
 
         return item
 
@@ -128,8 +124,7 @@ class NoaGroundsegmentBaseHarvester(HarvesterBase):
 
         item['name'] = name
         item['title'] = name        #name.split('_')[0]
-        item['notes'] = "Atmospheric InfraRed Sounder (AIRS) products collected from the premises of the National Observatory of Athens (NOA). \
-            For specific product information please consult the following link: https://groundsegment.space.noa.gr/products"
+        item['notes'] = "Atmospheric InfraRed Sounder (AIRS) products collected from the premises of the National Observatory of Athens (NOA). For specific product information please consult the following link: https://groundsegment.space.noa.gr/products"  # noqa: E501
 
         item['spatial'] = content['spatial']
 
@@ -155,8 +150,7 @@ class NoaGroundsegmentBaseHarvester(HarvesterBase):
 
         item['collection_id'] = 'NOA_AIRS_PRODUCTS'
         item['collection_name'] = 'NOA AIRS Products'  # noqa: E501
-        item['collection_description'] = 'Atmospheric InfraRed Sounder (AIRS) products collected from the premises of \
-        the National Observatory of Athens (NOA).'  # noqa: E501
+        item['collection_description'] = 'Atmospheric InfraRed Sounder (AIRS) products collected from the premises of the National Observatory of Athens (NOA).'  # noqa: E501
 
         return item
 
@@ -167,8 +161,7 @@ class NoaGroundsegmentBaseHarvester(HarvesterBase):
 
         item['name'] = name
         item['title'] = name        #name.split('_')[0] + name.split('_')[1]
-        item['notes'] = "Advanced Very High Resolution Radiometer (AVHRR/3) products collected from the premises of the National Observatory of Athens (NOA). \
-            For specific product information please consult the following link: https://groundsegment.space.noa.gr/products"
+        item['notes'] = "Advanced Very High Resolution Radiometer (AVHRR/3) products collected from the premises of the National Observatory of Athens (NOA). For specific product information please consult the following link: https://groundsegment.space.noa.gr/products"  # noqa: E501
 
         item['spatial'] = content['spatial']
 
@@ -194,8 +187,7 @@ class NoaGroundsegmentBaseHarvester(HarvesterBase):
 
         item['collection_id'] = 'NOA_AVHRR_PRODUCTS'
         item['collection_name'] = 'NOA AVHRR/3 Products'  # noqa: E501
-        item['collection_description'] = 'Advanced Very High Resolution Radiometer (AVHRR/3) products collected from the premises of \
-        the National Observatory of Athens (NOA).'  # noqa: E501
+        item['collection_description'] = 'Advanced Very High Resolution Radiometer (AVHRR/3) products collected from the premises of the National Observatory of Athens (NOA).'  # noqa: E501
 
         return item
 
@@ -206,8 +198,7 @@ class NoaGroundsegmentBaseHarvester(HarvesterBase):
 
         item['name'] = name
         item['title'] = name            #content['filename'][:-3].split('.')[-1]
-        item['notes'] = "Medium Resolution Spectral Imager (MERSI) products collected from the premises of the National Observatory of Athens (NOA). \
-            For specific product information please consult the following link: https://groundsegment.space.noa.gr/products"
+        item['notes'] = "Medium Resolution Spectral Imager (MERSI) products collected from the premises of the National Observatory of Athens (NOA). For specific product information please consult the following link: https://groundsegment.space.noa.gr/products"  # noqa: E501
 
         item['spatial'] = content['spatial']
 
@@ -233,7 +224,6 @@ class NoaGroundsegmentBaseHarvester(HarvesterBase):
 
         item['collection_id'] = 'NOA_MERSI_PRODUCTS'
         item['collection_name'] = 'NOA MERSI Products'  # noqa: E501
-        item['collection_description'] = 'Medium Resolution Spectral Imager (MERSI) products collected from the premises of \
-        the National Observatory of Athens (NOA).'  # noqa: E501
+        item['collection_description'] = 'Medium Resolution Spectral Imager (MERSI) products collected from the premises of the National Observatory of Athens (NOA).'  # noqa: E501
 
         return item
