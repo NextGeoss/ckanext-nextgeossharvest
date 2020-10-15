@@ -70,7 +70,7 @@ class NoaGroundsegmentBaseHarvester(HarvesterBase):
         item['timerange_start'] = str(content['sensing_start']) + ".000Z"
         item['timerange_end'] = str(content['sensing_stop']) + ".000Z"
 
-        item['collection_id'] = 'noa_viirs_products'
+        item['collection_id'] = 'NOA_VIIRS_PRODUCTS'
         item['collection_name'] = 'NOA VIIRS Products'  # noqa: E501
         item['collection_description'] = 'Visible Infrared Imaging Radiometer Suite (VIIRS) products collected from the premises of \
         the National Observatory of Athens (NOA).'  # noqa: E501
@@ -109,7 +109,7 @@ class NoaGroundsegmentBaseHarvester(HarvesterBase):
         item['timerange_start'] = str(content['sensing_start']) + ".000Z"
         item['timerange_end'] = str(content['sensing_stop']) + ".000Z"
 
-        item['collection_id'] = 'noa_modis_products'
+        item['collection_id'] = 'NOA_MODIS_PRODUCTS'
         item['collection_name'] = 'NOA MODIS Products'  # noqa: E501
         item['collection_description'] = 'Moderate Resolution Imaging Spectroradiometer (MODIS) products collected from the premises of \
         the National Observatory of Athens (NOA).'  # noqa: E501
@@ -153,7 +153,7 @@ class NoaGroundsegmentBaseHarvester(HarvesterBase):
         item['timerange_start'] = str(content['sensing_start']) + ".000Z"
         item['timerange_end'] = str(content['sensing_stop']) + ".000Z"
 
-        item['collection_id'] = 'noa_airs_products'
+        item['collection_id'] = 'NOA_AIRS_PRODUCTS'
         item['collection_name'] = 'NOA AIRS Products'  # noqa: E501
         item['collection_description'] = 'Atmospheric InfraRed Sounder (AIRS) products collected from the premises of \
         the National Observatory of Athens (NOA).'  # noqa: E501
@@ -192,7 +192,7 @@ class NoaGroundsegmentBaseHarvester(HarvesterBase):
         item['timerange_start'] = str(content['sensing_start']) + ".000Z"
         item['timerange_end'] = str(content['sensing_stop']) + ".000Z"
 
-        item['collection_id'] = 'noa_avhrr_products'
+        item['collection_id'] = 'NOA_AVHRR_PRODUCTS'
         item['collection_name'] = 'NOA AVHRR/3 Products'  # noqa: E501
         item['collection_description'] = 'Advanced Very High Resolution Radiometer (AVHRR/3) products collected from the premises of \
         the National Observatory of Athens (NOA).'  # noqa: E501
@@ -206,13 +206,13 @@ class NoaGroundsegmentBaseHarvester(HarvesterBase):
 
         item['name'] = name
         item['title'] = name            #content['filename'][:-3].split('.')[-1]
-        item['notes'] = "MEdium Resolution Spectral Imager (MERSI) products collected from the premises of the National Observatory of Athens (NOA). \
+        item['notes'] = "Medium Resolution Spectral Imager (MERSI) products collected from the premises of the National Observatory of Athens (NOA). \
             For specific product information please consult the following link: https://groundsegment.space.noa.gr/products"
 
         item['spatial'] = content['spatial']
 
         item['InstrumentFamilyName'] = 'MERSI'
-        item['InstrumentName'] = 'MEdium Resolution Spectral Imager'
+        item['InstrumentName'] = 'Medium Resolution Spectral Imager'
         item['PlatformSerialIdentifier'] = content["satellite"]
         
         item['tags'] = [{"name": "noa_groundsegment"},
@@ -231,9 +231,9 @@ class NoaGroundsegmentBaseHarvester(HarvesterBase):
         item['timerange_start'] = str(content['sensing_start']) + ".000Z"
         item['timerange_end'] = str(content['sensing_stop']) + ".000Z"
 
-        item['collection_id'] = 'noa_mersi_products'
+        item['collection_id'] = 'NOA_MERSI_PRODUCTS'
         item['collection_name'] = 'NOA MERSI Products'  # noqa: E501
-        item['collection_description'] = 'MEdium Resolution Spectral Imager (MERSI) products collected from the premises of \
+        item['collection_description'] = 'Medium Resolution Spectral Imager (MERSI) products collected from the premises of \
         the National Observatory of Athens (NOA).'  # noqa: E501
 
         return item
