@@ -68,6 +68,9 @@ This extension contains harvester plugins for harvesting from sources used by Ne
     2. [Running a VITO CGS S1 harvester](#running-vitocgss1)
 21. [Harvesting Cold Regions pilot outputs](#harvesting-coldregions)
     1. [Running a Cold Regions harvester](#running-coldregions)
+21. [Harvesting MELOA products](#harvesting-meloa)
+    1. [MELOA Settings](#meloa-settings)
+    2. [Running a MELOA harvester](#running-meloa)
 22. [Developing new harvesters](#develop)
     1. [The basic harvester workflow](#basicworkflow)
         1. [gather_stage](#gather_stage)
@@ -844,6 +847,40 @@ The Landsat-8 harvester has configuration has:
 4. Add a config as described above.
 5. Select `Manual` from the frequency options.
 6. Run the harvester. It will programmatically create datasets.
+
+## <a name="harvesting-meloa"></a>Harvesting MELOA products
+The MELOA harvester harvests products from the following collections:
+
+- MELOA Wavy Measurements - Littoral
+- MELOA Wavy Measurements - Ocean
+- MELOA Wavy Measurements - Basic
+
+New products of these collections are created and published after the campaigns.
+
+### <a name="meloa-settings"></a>MELOA Settings
+The MELOA harvester has configuration as:
+1. `start_date`: (required, datetime string, if the harvester is new, or from the ingestion date of the most recently harvested product if it has been run before) determines the start of the date range for harvester queries. Example: "start_date": "2019-10-01T00:00:00Z". Note that the entire datetime string is required. `2019-10-01` is not valid. 
+2. `end_date`: (optional, datetime string, default is "NOW") determines the end of the date range for harvester queries. Example: "end_date": "2020-01-01T00:00:00Z". Note that the entire datetime string is required. `2020-01-01` is not valid.
+3. `datasets_per_job`: (optional, integer, defaults to 100) determines the maximum number of products that will be harvested during each job. 
+4. `timeout`: (optional, integer, defaults to 10) determines the number of seconds to wait before timing out a request.
+5. `make_private` (optional) determines whether the datasets created by the harvester will be private or public. The default is `false`, i.e., by default, all datasets created by the harvester will be public.
+
+#### Examples of MELOA settings
+```
+{
+"start_date": "2019-10-01T00:00:00Z",
+"timeout": 4,
+"datasets_per_job": 100,
+"make_private": false
+}
+```
+
+### <a name="running-meloa"></a>Running a MELOA harvester
+1. Add `meloa` to the list of plugins in your .ini file.
+2. Create a new harvester via the harvester interface.
+3. Select `MELOA Harvester` from the list of harvesters.
+4. Add a config as described above.
+5. Select `Manual` from the frequency options. 
 
 ## <a name="harvesting-saeon"></a>Harvesting SAEON products
 The SAEON harvester collects the products for the following collections:
