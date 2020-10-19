@@ -100,6 +100,7 @@ setup(
         saeon=ckanext.nextgeossharvest.harvesters:SAEONHarvester
         scent=ckanext.nextgeossharvest.harvesters:SCENTHarvester
         landsat8=ckanext.nextgeossharvest.harvesters:Landsat8Harvester
+        meloa=ckanext.nextgeossharvest.harvesters:MELOAHarvester
         satcenbetter=ckanext.nextgeossharvest.harvesters:SatcenBetterHarvester
         noa_groundsegment=ckanext.nextgeossharvest.harvesters:NoaGroundsegmentHarvester
 
