@@ -121,6 +121,9 @@ class SIMOceanbaseHarvester(HarvesterBase):
 
         item['resource'] = self._parse_resources(content['resources'])
 
+        identifier_template = 'simocean-{}'
+        item['identifier'] = identifier_template.format(item['name'])
+
         # Rename StartTime and StopTime to timerange_start
         # and timerange_end, respectively and remove former
         # from the package

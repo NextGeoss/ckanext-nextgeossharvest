@@ -57,13 +57,16 @@ This extension contains harvester plugins for harvesting from sources used by Ne
 17. [Harvesting Food Security pilot outputs](#harvesting-foodsecurity)
     1. [Food Security Settings](#foodsecurity-settings)
     2. [Running a Food Security harvester](#running-foodsecurity)
-18. [Harvesting Landsat-8 outputs](#harvesting-landsat8)
+18. [Harvesting SAEON products](#harvesting-saeon)
+    1. [SAEON Settings](#saeon-settings)
+    2. [Running a SAEON harvester](#running-saeon)
+19. [Harvesting Landsat-8 outputs](#harvesting-landsat8)
     1. [Landsat-8 Settings](#flandsat8-settings)
     2. [Running a Landsat-8 harvester](#running-landsat8)
-19. [Harvesting VITO CGS S1 products](#harvesting-vitocgss1)
+20. [Harvesting VITO CGS S1 products](#harvesting-vitocgss1)
     1. [VITO CGS S1 Settings](#vitocgss1-settings)
     2. [Running a VITO CGS S1 harvester](#running-vitocgss1)
-20. [Harvesting Cold Regions pilot outputs](#harvesting-coldregions)
+21. [Harvesting Cold Regions pilot outputs](#harvesting-coldregions)
     1. [Running a Cold Regions harvester](#running-coldregions)
 21. [Harvesting MELOA products](#harvesting-meloa)
     1. [MELOA Settings](#meloa-settings)
@@ -878,6 +881,36 @@ The MELOA harvester has configuration as:
 3. Select `MELOA Harvester` from the list of harvesters.
 4. Add a config as described above.
 5. Select `Manual` from the frequency options. 
+
+## <a name="harvesting-saeon"></a>Harvesting SAEON products
+The SAEON harvester collects the products for the following collections:
+
+    1. Climate Systems Analysis Group (South Africa)
+
+### <a name="saeon-settings"></a>SAEON Settings
+The SAEON harvester has configuration has:
+1. `datasets_per_job` (optional, integer, defaults to 100) determines the maximum number of products that will be harvested during each job. If a query returns 2,501 results, only the first 100 will be harvested if you're using the default. This is useful for running the harvester via recurring jobs intended to harvest products incrementally (i.e., you want to start from the beginning and harvest all available products). The harvester will harvest products in groups of 100, rather than attmepting to harvest all x-hundred-thousand at once. You'll get feedback after each job, so you'll know if there are errors without waiting for the whole job to run. And the harvester will automatically resume from the harvested dataset if you're running it via a recurring cron job.
+2. `timeout` (optional, integer, defaults to 60) determines the number of seconds to wait before timing out a request.
+3. `update_all` (optional, boolean, default is `false`) determines whether or not the harvester updates datasets that already have metadadata from this source. For example: if we have "update_all": true, and dataset Foo has already been created or updated by harvesting, then it will be updated again when the harvester runs. If we have "update_all": false and Foo has already been created or updated by harvesting, then the dataset will not be updated when the harvester runs. And regardless of whether update_all is true or false, if a dataset has not been collected, then it will be created in the catalogue.
+4. `make_private` (optional) determines whether the datasets created by the harvester will be private or public. The default is `false`, i.e., by default, all datasets created by the harvester will be public.
+5. `source_url` determines the base URL for the data source to query.
+
+#### Examples of Plan4All settings
+```
+{
+  "datasets_per_job": 100,
+  "timeout": 60,
+  "make_private": false,
+  "source_url": "https://staging.saeon.ac.za"
+}
+```
+### <a name="running-saeon"></a>Running a SAEON harvester
+1. Add `saeon` to the list of plugins in your .ini file.
+2. Create a new harvester via the harvester interface.
+3. Select `SAEON Harvester` from the list of harvesters.
+4. Add a config as described above.
+5. Select `Manual` from the frequency options. 
+6. Run the harvester. It will programmatically create datasets.
 
 
 
