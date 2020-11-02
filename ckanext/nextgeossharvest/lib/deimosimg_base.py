@@ -97,6 +97,14 @@ class DEIMOSIMGBase(HarvesterBase):
             item['spatial'] = geojson
 
         ftp_link = item.pop('ftp_link')
+
+        if "http://" in ftp_link:
+            ftp_link = ftp_link.replace("http://", "https://")
+        elif "https://" in ftp_link or "ftp://" in ftp_link:
+            pass
+        else:
+            ftp_link = "https://" + ftp_link
+
         product_type = item.pop('product_type')
 
         item['productType'] = product_type

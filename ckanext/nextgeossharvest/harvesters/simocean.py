@@ -119,7 +119,7 @@ class SIMOceanHarvester(SIMOceanbaseHarvester, NextGEOSSHarvester,
         log.debug('Restart date is {}'.format(restart_date))
 
         start_date = self.source_config.get('start_date', '*')
-        end_date = self.source_config.get('end_date', 'NOW')
+        end_date = self.source_config.get('end_date', 'NOW-1DAY')
 
         if restart_date != '*':
             start_date = restart_date
@@ -209,7 +209,7 @@ class SIMOceanHarvester(SIMOceanbaseHarvester, NextGEOSSHarvester,
         Return None of there is none next URL (end of results).
         """
 
-        if json_result['result']['count'] == 0:
+        if json_result['result']['count'] == 0 or json_result['result']['count'] == 1:
             return None
         else:
             last_entry = json_result['result']['results'][-1]
@@ -222,7 +222,7 @@ class SIMOceanHarvester(SIMOceanbaseHarvester, NextGEOSSHarvester,
                 harvest_url = base_url + '[' + restart_date
                 harvest_url = harvest_url + ' TO' + query_url
             else:
-                time_query = 'q=metadata_modified:[{} TO NOW]&'
+                time_query = 'q=metadata_modified:[{} TO NOW-1DAY]&'
                 time_query = time_query.format(restart_date)
                 base_url = harvest_url.split('?')[0]
                 query_url = harvest_url.split('?')[1]

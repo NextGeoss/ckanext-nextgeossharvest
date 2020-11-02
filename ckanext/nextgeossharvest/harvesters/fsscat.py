@@ -71,6 +71,8 @@ class FSSCATHarvester(NextGEOSSHarvester, FSSCATBase):
 
                 if not end_date > start_date:
                     raise ValueError('end_date must be after start_date')
+            if config_obj.get('file_type') not in {'FS1_MWR_L1B_SCI', 'FS1_MWR_L1C_SCI', 'FS1_GRF_L1B_CAL', 'FS1_GRF_L1B_SCI', 'FS1_GRF_L1C_CAL', 'FS1_GRF_L1C_SCI', 'FS1_GRF_L2__SIE', 'FS2_HPS_L1C_SCI', 'FS2_HPS_L2__RDI'}:  # noqa: E501
+                raise ValueError('file_type is required and must be FS1_MWR_L1B_SCI, FS1_MWR_L1C_SCI, FS1_GRF_L1B_CAL, FS1_GRF_L1B_SCI, FS1_GRF_L1C_CAL, FS1_GRF_L1C_SCI, FS1_GRF_L2__SIE, FS2_HPS_L1C_SCI or FS2_HPS_L2__RDI')  # noqa: E501
             if type(config_obj.get('ftp_domain', None)) != unicode:
                 raise ValueError('ftp_domain is required and must be a string')
             if type(config_obj.get('ftp_path', None)) != unicode:
@@ -131,9 +133,10 @@ class FSSCATHarvester(NextGEOSSHarvester, FSSCATBase):
 
         ftp_source = create_ftp_source(ftp_info)
 
+        file_type = self.source_config.get('file_type')
         products, last_date = ftp_source.get_products_path(start_date,
                                                            end_date,
-                                                           max_datasets)
+                                                           max_datasets, file_type)
 
         ids = []
         for product in products:
@@ -212,7 +215,7 @@ class FtpSource(object):
         self.port = port
         self.timeout = float(timeout)
 
-    def get_products_path(self, start_date, end_date, max_datasets):
+    def get_products_path(self, start_date, end_date, max_datasets, file_type):
         """
         Parse the FTP contrained by time interval and maximum datasets
         and return a list of product URL
@@ -253,7 +256,7 @@ class FtpSource(object):
                     return ftp_urls
 
             else:
-                products_list = self._get_product_list_from_file(harvest_date, ftp)
+                products_list = self._get_product_list_from_file(harvest_date, ftp, file_type)
                 if products_list:
                     new_product_count = products_count + len(products_list)
                     _to_harvest = self._to_harvest(harvest_date, start_date,
@@ -400,13 +403,13 @@ class FtpSource(object):
 
         return ftp
 
-    def _get_file_list_name(self, date):
-        filename_template = "{}_file_list.txt"
-        filename = filename_template.format(date.strftime("%Y%m%d"))
+    def _get_file_list_name(self, date, file_type):
+        filename_template = "{}_{}.harvest"
+        filename = filename_template.format(file_type, date.strftime("%Y%m%d"))
         return filename
 
-    def _get_product_list_from_file(self, date, ftp):
-        filename = self._get_file_list_name(date)
+    def _get_product_list_from_file(self, date, ftp, file_type):
+        filename = self._get_file_list_name(date, file_type)
         date_path = self._date_path(date)
         ftp_path =self._ftp_path(date_path, "")
         if filename in ftp.nlst():

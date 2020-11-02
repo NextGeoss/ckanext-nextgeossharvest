@@ -7,7 +7,7 @@ import uuid
 from ftplib import FTP, error_perm as Ftp5xxErrors
 from os import path
 from bs4 import BeautifulSoup as Soup
-
+import shapely.geometry
 from dateutil.relativedelta import relativedelta
 
 from ckan.model import Session
@@ -30,7 +30,7 @@ def parse_file_extension(url):
     return path.splitext(fname)[1]
 
 def parse_creation_time(date_str):
-    date_datetime = datetime.strptime(date_str, "%Y%m%dT%H%M%S")
+    date_datetime = datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%SZ")
     return date_datetime.strftime("%Y-%m-%dT%H:%M:%S.000Z")
 
 class FSSCATBase(HarvesterBase):
@@ -77,6 +77,7 @@ class FSSCATBase(HarvesterBase):
         """
         item = {}
         info = content.find("metadataobject", id="platform")
+        #                                               [-180, 90]])
         item['family_name'] = info.find('safe:familyname').text
         instrument_info = info.find('safe:instrument')
         if instrument_info:
@@ -90,7 +91,7 @@ class FSSCATBase(HarvesterBase):
         information of the product.
         Returns the dictionary with the fields gathered
         """
-        info = content.find("metadataobject", id="generalProductInformation")
+        info = content.find("metadataobject", id="generalInformation")
         normalized_names = {
             "fssp:productname": "identifier",
             "fssp:producttype": "product_type",
@@ -112,19 +113,44 @@ class FSSCATBase(HarvesterBase):
         Parse the information from the xml regarding the acquisition period.
         Returns the dictionary with the fields gathered
         """
-        info = content.find("metadataobject", id="acquisitionPeriod")
+        info = content.find("metadataobject", id="measurementExtent")
         normalized_names = {
-            "safe:starttime": "timerange_start",
-            "safe:stoptime": "timerange_end"
+            "gml:beginposition": "timerange_start",
+            "gml:endposition": "timerange_end"
         }
         item = self._get_elements(normalized_names, info)
         
         for field in item:
             value = item[field]
-            date_value = datetime.strptime(value, "%Y-%m-%dT%H:%M:%S.%f")
+            date_value = datetime.strptime(value, "%Y-%m-%dT%H:%M:%S.%fZ")
             value = datetime.strftime(date_value, "%Y-%m-%dT%H:%M:%S.%fZ")
             item[field] = value
         return item
+
+    def _parse_spatial(self, content):
+        """
+        Parse the information from the xml regarding the spatial.
+        Returns the dictionary with the spatial field
+        """
+        info = content.find("metadataobject", id="measurementExtent")
+        normalized_names = {
+            "gmd:westboundlongitude": "west",
+            "gmd:eastboundlongitude": "east",
+	    "gmd:southboundlatitude": "south",
+            "gmd:northboundlatitude": "north"
+        }
+        tmp_item = self._get_elements(normalized_names, info)
+        geojson = self.bbcoords2geometry(float(tmp_item['west']),float(tmp_item['south']),float(tmp_item['east']),float(tmp_item['north']))
+        item = {}
+        item['spatial'] = json.dumps(geojson)
+        return item
+
+    def bbcoords2geometry(self, min_long, min_lat, max_long, max_lat):
+	shapely_polygon = shapely.geometry.Polygon([(min_long, min_lat),
+                                                    (min_long, max_lat),
+                                                    (max_long, max_lat),
+                                                    (max_long, min_lat)])
+        return json.loads(json.dumps(shapely.geometry.mapping(shapely_polygon)))
 
     # Required by NextGEOSS base harvester
     def _parse_content(self, content):
@@ -141,16 +167,11 @@ class FSSCATBase(HarvesterBase):
 
         metadata = {}
         metadata['name'] = name
-        spatial_template = '{{"type":"Polygon", "coordinates":[{}]}}'
-        metadata['spatial'] = spatial_template.format([[-180, 90],
-                                                       [180, 90],
-                                                       [180, -90],
-                                                       [-180, -90],
-                                                       [-180, 90]])
 
         metadata.update(self._parse_platform_info(manifest_content))
         metadata.update(self._parse_general_product_info(manifest_content))
         metadata.update(self._parse_acquisition_period(manifest_content))
+        metadata.update(self._parse_spatial(manifest_content))
         metadata.update(self._parse_collection(metadata['product_type']))
 
         metadata['resource'] = self._parse_resources(resources_url, manifest_content)
