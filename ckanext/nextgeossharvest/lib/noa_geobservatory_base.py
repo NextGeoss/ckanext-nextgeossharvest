@@ -50,8 +50,8 @@ class NoaGeobservatoryBaseHarvester(HarvesterBase):
                     'mimetype': "KML"},
                     ]
 
-        item['timerange_start'] = str(content['master'])
-        item['timerange_end'] = str(content['master'])
+        item['timerange_start'] = str(content['slave'])
+        item['timerange_end'] = str(content['slave'])
 
         item['collection_id'] = 'NOA_INTERFEROGRAMS'
         item['collection_name'] = 'NOA Interferograms'  # noqa: E501
