@@ -17,7 +17,11 @@ from ckanext.nextgeossharvest.harvesters.cgss1 import CGSHarvester  # noqa: F401
 from ckanext.nextgeossharvest.harvesters.saeon import SAEONHarvester  # noqa: F401, E501
 from ckanext.nextgeossharvest.harvesters.scent import SCENTHarvester  # noqa: F401, E501
 from ckanext.nextgeossharvest.harvesters.landsat8 import Landsat8Harvester  # noqa: F401, E501
-from ckanext.nextgeossharvest.harvesters.meloa import MELOAHarvester  # noqa: F401, E501
 from ckanext.nextgeossharvest.harvesters.satcen_better import SatcenBetterHarvester  # noqa: F401, E501
+<<<<<<< Updated upstream
 from ckanext.nextgeossharvest.harvesters.noa_groundsegment import NoaGroundsegmentHarvester  # noqa: F401, E501
 from ckanext.nextgeossharvest.harvesters.noa_geobservatory import NoaGeobservatoryHarvester  # noqa: F401, E501
+=======
+from ckanext.nextgeossharvest.harvesters.noa_groundsegment import NoaGroundsegmentHarvester
+from ckanext.nextgeossharvest.harvesters.jrc_emis import JrcEmisHarvester
+>>>>>>> Stashed changes
