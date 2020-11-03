@@ -21,11 +21,7 @@ class NoaGeobservatoryBaseHarvester(HarvesterBase):
         
         item['name'] = content['imgtif'].split('/')[1].lower() + "_" + content['type']+ "_" + str(content['intid'])
         item['title'] = item['name']
-        item['notes'] = """
-            For more information visit: [**geobservatory.beyond-eocenter.eu** ](http://geobservatory.beyond-eocenter.eu)  
-            Part of **Earthquake Event** with **Code**: **{}**  
-            **GeObservatory** is activated in major geohazard events (earthquakes, volcanic activity, landslides,etc.) and automatically produces a series of Sentinel-1 based co-event interferograms (DInSAR) to map the surface deformation associated with the event. It also produces pre-event interferograms to be used as a benchmark.
-        """.format(content['eventid'])
+        item['notes'] = "For more information visit: geobservatory.beyond-eocenter.eu  Part of Earthquake Event with Code: {}  The GeObservatory is activated in major geohazard events (earthquakes, volcanic activity, landslides,etc.) and automatically produces a series of Sentinel-1 based co-event interferograms (DInSAR) to map the surface deformation associated with the event. It also produces pre-event interferograms to be used as a benchmark.".format(content['eventid'])
 
         item['spatial'] = content['spatial']
         
@@ -58,8 +54,8 @@ class NoaGeobservatoryBaseHarvester(HarvesterBase):
         item['timerange_end'] = str(content['master'])
 
         item['collection_id'] = 'NOA_INTERFEROGRAMS'
-        item['collection_name'] = 'NOA INTERFEROGRAMS'  # noqa: E501
-        item['collection_description'] = 'Interferograms Earthquakes etc'  # noqa: E501
+        item['collection_name'] = 'NOA Interferograms'  # noqa: E501
+        item['collection_description'] = 'Sentinel-1 based pre-event and co-event interferograms'  # noqa: E501
 
         return item
 
