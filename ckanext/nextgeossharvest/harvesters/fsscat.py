@@ -71,8 +71,8 @@ class FSSCATHarvester(NextGEOSSHarvester, FSSCATBase):
 
                 if not end_date > start_date:
                     raise ValueError('end_date must be after start_date')
-            if config_obj.get('file_type') not in {'FS1_MWR_L1B_SCI', 'FS1_MWR_L1C_SCI', 'FS1_GRF_L1B_CAL', 'FS1_GRF_L1B_SCI', 'FS1_GRF_L1C_SCI', 'FS1_GRF_L2__SIE', 'FS2_HPS_L1C_SCI', 'FS2_HPS_L2__RDI'}:  # noqa: E501
-                raise ValueError('file_type is required and must be FS1_MWR_L1B_SCI, FS1_MWR_L1C_SCI, FS1_GRF_L1B_CAL, FS1_GRF_L1B_SCI, FS1_GRF_L1C_SCI, FS1_GRF_L2__SIE, FS2_HPS_L1C_SCI or FS2_HPS_L2__RDI')  # noqa: E501
+            if config_obj.get('file_type') not in {'FS1_GRF_L1B_CAL', 'FS1_GRF_L1B_SCI', 'FS1_GRF_L1C_SCI', 'FS1_GRF_L2__SIE', 'FS1_GRF_L3__ICM', 'FS1_MWR_L1B_SCI', 'FS1_MWR_L1C_SCI', 'FS1_MWR_L2A_TB_', 'FS1_MWR_L2B_SIT', 'FS1_MWR_L2B_SM_', 'FS1_MWR_L3__TB_', 'FS1_MWR_L3__SIT', 'FS1_MWR_L3__SM_', 'FS1_MWR_L4__SM_', 'FS2_HPS_L1C_SCI', 'FS2_HPS_L2__RDI', 'FSS_SYN_L4__SM_'}:  # noqa: E501
+                raise ValueError('file_type is required and must be FS1_GRF_L1B_CAL, FS1_GRF_L1B_SCI, FS1_GRF_L1C_SCI, FS1_GRF_L2__SIE, FS1_GRF_L3__ICM, FS1_MWR_L1B_SCI, FS1_MWR_L1C_SCI, FS1_MWR_L2A_TB_, FS1_MWR_L2B_SIT, FS1_MWR_L2B_SM_, FS1_MWR_L3__TB_, FS1_MWR_L3__SIT, FS1_MWR_L3__SM_, FS1_MWR_L4__SM_, FS2_HPS_L1C_SCI, FS2_HPS_L2__RDI or FSS_SYN_L4__SM_')  # noqa: E501
             if type(config_obj.get('ftp_domain', None)) != unicode:
                 raise ValueError('ftp_domain is required and must be a string')
             if type(config_obj.get('ftp_path', None)) != unicode:
