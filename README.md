@@ -71,22 +71,25 @@ This extension contains harvester plugins for harvesting from sources used by Ne
 22. [Harvesting NOA Groundsegment products](#harvesting-noa_gs)
     1. [NOA GS Settings](#noa_gs-settings)
     2. [Running a NOA GS harvester](#running-noa_gs)
-21. [Harvesting MELOA products](#harvesting-meloa)
+23. [Harvesting MELOA products](#harvesting-meloa)
     1. [MELOA Settings](#meloa-settings)
     2. [Running a MELOA harvester](#running-meloa)
-22. [Developing new harvesters](#develop)
+24. [Harvesting FSSCAT products](#harvesting-fsscat)
+    1. [FSSCAT Settings](#fsscat-settings)
+    2. [Running a FSSCAT harvester](#running-fsscat)
+25. [Developing new harvesters](#develop)
     1. [The basic harvester workflow](#basicworkflow)
         1. [gather_stage](#gather_stage)
         2. [fetch_stage](#fetch_stage)
         3. [import_stage](#import_stage)
     2. [Example of an OpenSearch-based harvester](#opensearchexample)
-24. [iTag](#itag)
+26. [iTag](#itag)
     1. [How ITagEnricher works](#itagprocess)
     2. [Setting up ITagEnricher](#setupitag)
     3. [Handling iTag errors](#handlingitagerrors)
-25. [Testing testing testing](#tests)
-26. [Suggested cron jobs](#cron)
-27. [Logs](#logs)
+27. [Testing testing testing](#tests)
+28. [Suggested cron jobs](#cron)
+29. [Logs](#logs)
     1. [How ITagEnricher works](#itagprocess)
     2. [Setting up ITagEnricher](#setupitag)
     3. [Handling iTag errors](#handlingitagerrors)
@@ -898,7 +901,7 @@ The SAEON harvester has configuration has:
 4. `make_private` (optional) determines whether the datasets created by the harvester will be private or public. The default is `false`, i.e., by default, all datasets created by the harvester will be public.
 5. `source_url` determines the base URL for the data source to query.
 
-#### Examples of Plan4All settings
+#### Examples of SAEON settings
 ```
 {
   "datasets_per_job": 100,
@@ -949,6 +952,66 @@ The NOA Groundsegment harvester has configuration has:
 1. Add `noa_groundsegment` to the list of plugins in your .ini file.
 2. Create a new harvester via the harvester interface.
 3. Select `NOA Groundsegment Harvester` from the list of harvesters.
+4. Add a config as described above.
+5. Select `Manual` from the frequency options. 
+6. Run the harvester. It will programmatically create datasets.
+
+
+## <a name="harvesting-fsscat"></a>Harvesting FSSCAT products
+The FSSCAT harvester collects the products for the following file types:
+
+    1. FS1_GRF_L1B_CAL
+    2. FS1_GRF_L1B_SCI
+    3. FS1_GRF_L1C_SCI
+    4. FS1_GRF_L2__SIE
+    5. FS1_GRF_L3__ICM
+    6. FS1_MWR_L1B_SCI
+    7. FS1_MWR_L1C_SCI
+    8. FS1_MWR_L2A_TB_
+    9. FS1_MWR_L2B_SIT
+    10. FS1_MWR_L2B_SM_
+    11. FS1_MWR_L3__TB_
+    12. FS1_MWR_L3__SIT
+    13. FS1_MWR_L3__SM_
+    14. FS1_MWR_L4__SM_
+    15. FS2_HPS_L1C_SCI
+    16. FS2_HPS_L2__RDI
+    17. FSS_SYN_L4__SM_
+
+### <a name="fsscat-settings"></a>FSSCAT Settings
+The FSSCAT harvester has configuration as:
+1. `file_type` (required) determines the FSSCAT file type to be catalogued.
+2. `start_date` (mandatory) determines the date on which the harvesting begins. It must be in the format `YYYY-MM-DD`.
+3. `end_date` (optional) determines the date on which the harvesting ends. It must be in the format `YYYY-MM-DD`.
+4. `ftp_domain` (required) URL of the FSSCAT FTP.
+5. `ftp_path` (required) Path of the FSSCAT FTP where the list of files are published.
+6. `ftp_pass` (required) Password of the FSSCAT FTP.
+7. `ftp_user` (required) Username of the user allowed to access the harvesting directory in the FSSCAT FTP.
+8. `ftp_port`  (optional, integer, defaults to 21) Port of the FSSCAT FTP.
+9. `ftp_timeout` (optional, integer, defaults to 20) determines the seconds until the timeout when accessing the FTP.
+10. `update_all` (optional, boolean, default is `false`) determines whether or not the harvester updates datasets that already have metadadata from this source. For example: if we have "update_all": true, and dataset Foo has already been created or updated by harvesting, then it will be updated again when the harvester runs. If we have "update_all": false and Foo has already been created or updated by harvesting, then the dataset will not be updated when the harvester runs. And regardless of whether update_all is true or false, if a dataset has not been collected, then it will be created in the catalogue.
+11. `make_private` (optional) determines whether the datasets created by the harvester will be private or public. The default is `false`, i.e., by default, all datasets created by the harvester will be public.
+12. `max_datasets` (optional, integer, defaults to 100) determines the maximum number of datasets to be catalogued.
+
+#### Examples of FSSCAT settings
+```
+{
+  "start_date": "2020-10-30",
+  "end_date": "2020-11-01",
+  "file_type": "FS1_GRF_L1C_SCI",
+  "ftp_domain": "<FSSCAT_FTP_DOMAIN>",
+  "ftp_path": "<FSSCAT_FTP_PATH>",
+  "ftp_pass": "<FSSCAT_FTP_PASS>",
+  "ftp_user": "<FSSCAT_FTP_USER>",
+  "ftp_port": 21,
+  "make_private": false,
+  "max_dataset": 10
+}
+```
+### <a name="running-fsscat"></a>Running a FSSCAT harvester
+1. Add `fsscat` to the list of plugins in your .ini file.
+2. Create a new harvester via the harvester interface.
+3. Select `FSSCAT Harvester` from the list of harvesters.
 4. Add a config as described above.
 5. Select `Manual` from the frequency options. 
 6. Run the harvester. It will programmatically create datasets.
