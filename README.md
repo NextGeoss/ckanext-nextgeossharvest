@@ -980,7 +980,7 @@ The FSSCAT harvester collects the products for the following file types:
 
 ### <a name="fsscat-settings"></a>FSSCAT Settings
 The FSSCAT harvester has configuration as:
-1. `file_type` (required) determines the FSSCAT file type to be catalogued.
+1. `file_type` (required) determines the FSSCAT file type to be catalogued. It can be `FS1_GRF_L1B_CAL`, `FS1_GRF_L1B_SCI`, `FS1_GRF_L1C_SCI`, `FS1_GRF_L2__SIE`, `FS1_GRF_L3__ICM`, `FS1_MWR_L1B_SCI`, `FS1_MWR_L1C_SCI`, `FS1_MWR_L2A_TB_`, `FS1_MWR_L2B_SIT`, `FS1_MWR_L2B_SM_`, `FS1_MWR_L3__TB_`, `FS1_MWR_L3__SIT`, `FS1_MWR_L3__SM_`, `FS1_MWR_L4__SM_`, `FS2_HPS_L1C_SCI`, `FS2_HPS_L2__RDI` or `FSS_SYN_L4__SM_`.
 2. `start_date` (mandatory) determines the date on which the harvesting begins. It must be in the format `YYYY-MM-DD`.
 3. `end_date` (optional) determines the date on which the harvesting ends. It must be in the format `YYYY-MM-DD`.
 4. `ftp_domain` (required) URL of the FSSCAT FTP.
