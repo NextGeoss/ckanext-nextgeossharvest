@@ -71,22 +71,25 @@ This extension contains harvester plugins for harvesting from sources used by Ne
 22. [Harvesting NOA Groundsegment products](#harvesting-noa_gs)
     1. [NOA GS Settings](#noa_gs-settings)
     2. [Running a NOA GS harvester](#running-noa_gs)
-21. [Harvesting MELOA products](#harvesting-meloa)
+23. [Harvesting MELOA products](#harvesting-meloa)
     1. [MELOA Settings](#meloa-settings)
     2. [Running a MELOA harvester](#running-meloa)
-22. [Developing new harvesters](#develop)
+24. [Harvesting NOA GeObservatory products](#harvesting-noa_geob)
+    1. [NOA GeObservatory Settings](#noa_geob-settings)
+    2. [Running a NOA GeObservatory harvester](#running-noa_geob)
+25. [Developing new harvesters](#develop)
     1. [The basic harvester workflow](#basicworkflow)
         1. [gather_stage](#gather_stage)
         2. [fetch_stage](#fetch_stage)
         3. [import_stage](#import_stage)
     2. [Example of an OpenSearch-based harvester](#opensearchexample)
-24. [iTag](#itag)
+26. [iTag](#itag)
     1. [How ITagEnricher works](#itagprocess)
     2. [Setting up ITagEnricher](#setupitag)
     3. [Handling iTag errors](#handlingitagerrors)
-25. [Testing testing testing](#tests)
-26. [Suggested cron jobs](#cron)
-27. [Logs](#logs)
+27. [Testing testing testing](#tests)
+28. [Suggested cron jobs](#cron)
+29. [Logs](#logs)
     1. [How ITagEnricher works](#itagprocess)
     2. [Setting up ITagEnricher](#setupitag)
     3. [Handling iTag errors](#handlingitagerrors)
@@ -926,12 +929,12 @@ The NOA Groundsegment harvester collects the products for the following instrume
     5. AVHRR/3 (Advanced Very-High-Resolution Radiometer)
 
 ### <a name="noa_gs-settings"></a>NOA Groundsegment Settings
-The NOA Groundsegment harvester has configuration has:
+The NOA Groundsegment harvester configuration contains the following options:
 1. `start_date` (optional) determines the date on which the harvesting begins. It must be in the format `YYYY-MM-DDTHH:mm:ssZ`.
 2. `end_date` (optional) determines the date on which the harvesting ends. It must be in the format `YYYY-MM-DDTHH:mm:ssZ`.
 3. `username`  (required) Enter your NOA groundsegment username.
 4. `password`  (required) Enter your NOA groundsegment password.
-5. `page_timeout` (optional, integer, defaults to 2) determines the maximum number of pages that will be harvested during each job. If a query returns 25 pages, only the first 5 will be harvested if you're using the default. Each page corresponds to 100 products. This is useful for running the harvester via recurring jobs intended to harvest products incrementally (i.e., you want to start from the beginning and harvest all available products). The harvester will harvest products in groups of 500, rather than attmepting to harvest all x-hundred-thousand at once. You'll get feedback after each job, so you'll know if there are errors without waiting for the whole job to run. And the harvester will automatically resume from the harvested dataset if you're running it via a recurring cron job.
+5. `page_timeout` (optional, integer, defaults to 2) determines the maximum number of pages that will be harvested during each job. If a query returns 25 pages, only the first 5 will be harvested if you're using the default. Each page corresponds to 100 products. This is useful for running the harvester via recurring jobs intended to harvest products incrementally (i.e., you want to start from the beginning and harvest all available products). The harvester will harvest products in groups of 500, rather than attempting to harvest all x-hundred-thousand at once. You'll get feedback after each job, so you'll know if there are errors without waiting for the whole job to run. And the harvester will automatically resume from the harvested dataset if you're running it via a recurring cron job.
 6. `update_all` (optional, boolean, default is `false`) determines whether or not the harvester updates datasets that already have metadadata from this source. For example: if we have "update_all": true, and dataset Foo has already been created or updated by harvesting, then it will be updated again when the harvester runs. If we have "update_all": false and Foo has already been created or updated by harvesting, then the dataset will not be updated when the harvester runs. And regardless of whether update_all is true or false, if a dataset has not been collected, then it will be created in the catalogue.
 7. `make_private` (optional) determines whether the datasets created by the harvester will be private or public. The default is `false`, i.e., by default, all datasets created by the harvester will be public.
 
@@ -949,6 +952,36 @@ The NOA Groundsegment harvester has configuration has:
 1. Add `noa_groundsegment` to the list of plugins in your .ini file.
 2. Create a new harvester via the harvester interface.
 3. Select `NOA Groundsegment Harvester` from the list of harvesters.
+4. Add a config as described above.
+5. Select `Manual` from the frequency options. 
+6. Run the harvester. It will programmatically create datasets.
+
+
+## <a name="harvesting-noa_geob"></a>Harvesting NOA GeObservatory products
+The NOA GeObservatory is activated in major geohazard events (earthquakes, volcanic activity, landslides,etc.) and automatically produces a series of Sentinel-1 based co-event interferograms (DInSAR) to map the surface deformation associated with the event. It also produces pre-event interferograms to be used as a benchmark.
+
+This harvester collects the aforementioned interferograms.
+
+### <a name="noa_geob-settings"></a>NOA GeObservatory Settings
+The NOA GeObservatory harvester configuration contains the following options:
+1. `start_date` (optional) determines the date on which the harvesting begins. It must be in the format `YYYY-MM-DDTHH:mm:ssZ`.
+2. `end_date` (optional) determines the date on which the harvesting ends. It must be in the format `YYYY-MM-DDTHH:mm:ssZ`.
+3. `page_timeout` (optional, integer, defaults to 2) determines the maximum number of pages that will be harvested during each job. If a query returns 25 pages, only the first 5 will be harvested if you're using the default. Each page corresponds to 100 products. This is useful for running the harvester via recurring jobs intended to harvest products incrementally (i.e., you want to start from the beginning and harvest all available products). The harvester will harvest products in groups of 500, rather than attempting to harvest all x-hundred-thousand at once. You'll get feedback after each job, so you'll know if there are errors without waiting for the whole job to run. And the harvester will automatically resume from the harvested dataset if you're running it via a recurring cron job.
+4. `update_all` (optional, boolean, default is `false`) determines whether or not the harvester updates datasets that already have metadadata from this source. For example: if we have "update_all": true, and dataset Foo has already been created or updated by harvesting, then it will be updated again when the harvester runs. If we have "update_all": false and Foo has already been created or updated by harvesting, then the dataset will not be updated when the harvester runs. And regardless of whether update_all is true or false, if a dataset has not been collected, then it will be created in the catalogue.
+5. `make_private` (optional) determines whether the datasets created by the harvester will be private or public. The default is `false`, i.e., by default, all datasets created by the harvester will be public.
+
+#### Examples of NOA GeObservatory settings
+```
+{
+  "start_date":"2017-01-01T00:00:00Z",
+  "end_date":"2020-08-01T23:59:00Z",
+  "page_timeout": "2"
+}
+```
+### <a name="running-noa_geob"></a>Running a NOA GeObservatory harvester
+1. Add `noa_geobservatory` to the list of plugins in your .ini file.
+2. Create a new harvester via the harvester interface.
+3. Select `NOA GeObservatory Harvester` from the list of harvesters.
 4. Add a config as described above.
 5. Select `Manual` from the frequency options. 
 6. Run the harvester. It will programmatically create datasets.
