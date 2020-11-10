@@ -77,19 +77,21 @@ This extension contains harvester plugins for harvesting from sources used by Ne
 24. [Harvesting NOA GeObservatory products](#harvesting-noa_geob)
     1. [NOA GeObservatory Settings](#noa_geob-settings)
     2. [Running a NOA GeObservatory harvester](#running-noa_geob)
-25. [Developing new harvesters](#develop)
+25. [Harvesting JRC Environmental Marine Information System](#harvesting-jrc_emis)
+    1. [JRC EMIS Settings](#jrc_emis-settings)
+26. [Developing new harvesters](#develop)
     1. [The basic harvester workflow](#basicworkflow)
         1. [gather_stage](#gather_stage)
         2. [fetch_stage](#fetch_stage)
         3. [import_stage](#import_stage)
     2. [Example of an OpenSearch-based harvester](#opensearchexample)
-26. [iTag](#itag)
+27. [iTag](#itag)
     1. [How ITagEnricher works](#itagprocess)
     2. [Setting up ITagEnricher](#setupitag)
     3. [Handling iTag errors](#handlingitagerrors)
-27. [Testing testing testing](#tests)
-28. [Suggested cron jobs](#cron)
-29. [Logs](#logs)
+28. [Testing testing testing](#tests)
+29. [Suggested cron jobs](#cron)
+30. [Logs](#logs)
     1. [How ITagEnricher works](#itagprocess)
     2. [Setting up ITagEnricher](#setupitag)
     3. [Handling iTag errors](#handlingitagerrors)
@@ -986,6 +988,11 @@ The NOA GeObservatory harvester configuration contains the following options:
 5. Select `Manual` from the frequency options. 
 6. Run the harvester. It will programmatically create datasets.
 
+## <a name="harvesting-jrc_emis"></a>Harvesting JRC Environmental Marine Information System
+The JRC Harvesting JRC Environmental Marine Information System will visit every Dataset in the EMIS collection and then from that dataset will harvest every interesting information.
+
+### <a name="jrc_emis-settings"></a>NOA Groundsegment Settings
+JRC EMIS Harvester does not use any configuration currently so the configuration section be left blank.
 
 ## <a name="develop"></a>Developing new harvesters
 ### <a name="basicworkflow"></a>The basic harvester workflow
