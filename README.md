@@ -68,6 +68,7 @@ This extension contains harvester plugins for harvesting from sources used by Ne
     2. [Running a VITO CGS S1 harvester](#running-vitocgss1)
 21. [Harvesting Cold Regions pilot outputs](#harvesting-coldregions)
     1. [Running a Cold Regions harvester](#running-coldregions)
+<<<<<<< Updated upstream
 22. [Harvesting NOA Groundsegment products](#harvesting-noa_gs)
     1. [NOA GS Settings](#noa_gs-settings)
     2. [Running a NOA GS harvester](#running-noa_gs)
@@ -77,9 +78,17 @@ This extension contains harvester plugins for harvesting from sources used by Ne
 24. [Harvesting NOA GeObservatory products](#harvesting-noa_geob)
     1. [NOA GeObservatory Settings](#noa_geob-settings)
     2. [Running a NOA GeObservatory harvester](#running-noa_geob)
+<<<<<<< HEAD
 25. [Harvesting JRC Environmental Marine Information System](#harvesting-jrc_emis)
     1. [JRC EMIS Settings](#jrc_emis-settings)
 26. [Developing new harvesters](#develop)
+=======
+25. [Developing new harvesters](#develop)
+=======
+22. [Harvesting JRC Environmental Marine Information System](#harvesting-jrcemis)
+23. [Developing new harvesters](#develop)
+>>>>>>> Stashed changes
+>>>>>>> 50a44f42e6b3dbf1f664b30b91aed382ec3640f0
     1. [The basic harvester workflow](#basicworkflow)
         1. [gather_stage](#gather_stage)
         2. [fetch_stage](#fetch_stage)
@@ -819,6 +828,12 @@ The following collection IDs are available:
 - S1_ARCTIC_SEAICEEDGE_CLASSIFICATION_INTAROS_2018
 - S1_ARCTIC_SEAICEEDGE_CLASSIFICATION_CAATEX_INTAROS_2019
 
+## <a name="harvesting-jrcemis"></a>Harvesting JRC Environmental Marine Information System
+The JRC Harvesting JRC Environmental Marine Information System will visit every Dataset in the EMIS collection and then from that dataset will harvest every interesting information.
+
+*The harvester is not complete as in my testing fails to return datasets. Although the web crawler built, works when tested alone*
+
+
 ## <a name="harvesting-landsat8"></a>Harvesting Landsat-8 products
 The Landsat-8 harvester collects the Level-1 data products generated from Landsat 8 Operational Land Imager (OLI)/Thermal Infrared Sensor (TIRS). The following collection 1 Tiers are harvested:
 
@@ -856,40 +871,6 @@ The Landsat-8 harvester has configuration has:
 5. Select `Manual` from the frequency options.
 6. Run the harvester. It will programmatically create datasets.
 
-## <a name="harvesting-meloa"></a>Harvesting MELOA products
-The MELOA harvester harvests products from the following collections:
-
-- MELOA Wavy Measurements - Littoral
-- MELOA Wavy Measurements - Ocean
-- MELOA Wavy Measurements - Basic
-
-New products of these collections are created and published after the campaigns.
-
-### <a name="meloa-settings"></a>MELOA Settings
-The MELOA harvester has configuration as:
-1. `start_date`: (required, datetime string, if the harvester is new, or from the ingestion date of the most recently harvested product if it has been run before) determines the start of the date range for harvester queries. Example: "start_date": "2019-10-01T00:00:00Z". Note that the entire datetime string is required. `2019-10-01` is not valid. 
-2. `end_date`: (optional, datetime string, default is "NOW") determines the end of the date range for harvester queries. Example: "end_date": "2020-01-01T00:00:00Z". Note that the entire datetime string is required. `2020-01-01` is not valid.
-3. `datasets_per_job`: (optional, integer, defaults to 100) determines the maximum number of products that will be harvested during each job. 
-4. `timeout`: (optional, integer, defaults to 10) determines the number of seconds to wait before timing out a request.
-5. `make_private` (optional) determines whether the datasets created by the harvester will be private or public. The default is `false`, i.e., by default, all datasets created by the harvester will be public.
-
-#### Examples of MELOA settings
-```
-{
-"start_date": "2019-10-01T00:00:00Z",
-"timeout": 4,
-"datasets_per_job": 100,
-"make_private": false
-}
-```
-
-### <a name="running-meloa"></a>Running a MELOA harvester
-1. Add `meloa` to the list of plugins in your .ini file.
-2. Create a new harvester via the harvester interface.
-3. Select `MELOA Harvester` from the list of harvesters.
-4. Add a config as described above.
-5. Select `Manual` from the frequency options. 
-
 ## <a name="harvesting-saeon"></a>Harvesting SAEON products
 The SAEON harvester collects the products for the following collections:
 
@@ -921,6 +902,7 @@ The SAEON harvester has configuration has:
 6. Run the harvester. It will programmatically create datasets.
 
 
+<<<<<<< Updated upstream
 ## <a name="harvesting-noa_gs"></a>Harvesting NOA Groundsegment products
 The NOA Groundsegment harvester collects the products for the following instruments:
 
@@ -958,6 +940,8 @@ The NOA Groundsegment harvester configuration contains the following options:
 5. Select `Manual` from the frequency options. 
 6. Run the harvester. It will programmatically create datasets.
 
+=======
+>>>>>>> Stashed changes
 
 ## <a name="harvesting-noa_geob"></a>Harvesting NOA GeObservatory products
 The NOA GeObservatory is activated in major geohazard events (earthquakes, volcanic activity, landslides,etc.) and automatically produces a series of Sentinel-1 based co-event interferograms (DInSAR) to map the surface deformation associated with the event. It also produces pre-event interferograms to be used as a benchmark.
@@ -991,7 +975,7 @@ The NOA GeObservatory harvester configuration contains the following options:
 ## <a name="harvesting-jrc_emis"></a>Harvesting JRC Environmental Marine Information System
 The JRC Harvesting JRC Environmental Marine Information System will visit every Dataset in the EMIS collection and then from that dataset will harvest every interesting information.
 
-### <a name="jrc_emis-settings"></a>NOA Groundsegment Settings
+### <a name="jrc_emis-settings"></a>JRC EMIS Settings
 JRC EMIS Harvester does not use any configuration currently so the configuration section be left blank.
 
 ## <a name="develop"></a>Developing new harvesters

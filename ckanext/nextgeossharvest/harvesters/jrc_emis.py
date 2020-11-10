@@ -155,6 +155,20 @@ class JrcEmisHarvester(JrcEmisBaseHarvester, NextGEOSSHarvester,
         # else:
         #     time_query = ''
 
+<<<<<<< HEAD
+=======
+        url = "https://data.jrc.ec.europa.eu/collection/emis"
+        url_prefix = 'https://data.jrc.ec.europa.eu'
+        page = requests.get(url)    
+        data = page.text
+        soup = BeautifulSoup(data)
+
+        datasets = []
+        for link in soup.findAll('a', href=True, recursive=False):
+            if str(link.get('href')).startswith('/dataset/'):
+                datasets.append(url_prefix+link.get('href'))
+
+>>>>>>> 50a44f42e6b3dbf1f664b30b91aed382ec3640f0
         # Set the limit for the maximum number of results per job.
         # Since the new harvester jobs will be created on a rolling basis
         # via cron jobs, we don't need to grab all the results from a date
@@ -172,7 +186,11 @@ class JrcEmisHarvester(JrcEmisBaseHarvester, NextGEOSSHarvester,
 
         self.provider = 'emis'
 
+<<<<<<< HEAD
         products = self._get_products()
+=======
+        products = self._get_products(datasets)
+>>>>>>> 50a44f42e6b3dbf1f664b30b91aed382ec3640f0
         log.debug("Products: {}".format(products))
 
         ids = self._parse_products(products)
@@ -185,7 +203,11 @@ class JrcEmisHarvester(JrcEmisBaseHarvester, NextGEOSSHarvester,
         """Fetch was completed during gather."""
         return True
 
+<<<<<<< HEAD
     def _get_products(self):
+=======
+    def _get_products(self, datasets):
+>>>>>>> 50a44f42e6b3dbf1f664b30b91aed382ec3640f0
         """
         Create a session and return the results
         """
@@ -199,6 +221,7 @@ class JrcEmisHarvester(JrcEmisBaseHarvester, NextGEOSSHarvester,
         # Make a request to the website
         timestamp = str(datetime.utcnow())
         log_message = '{:<12} | {} | {} | {}s'
+<<<<<<< HEAD
 
         try:
             url = "https://data.jrc.ec.europa.eu/collection/emis"
@@ -219,6 +242,17 @@ class JrcEmisHarvester(JrcEmisBaseHarvester, NextGEOSSHarvester,
 
                 table_add_info = soup.findAll('table')[1]
                 table_gen_info = soup.findAll('table')[2]
+=======
+        try:
+
+            for dataset in datasets:
+            # print(dataset)
+                html_string = datasets[0]
+                soup = BeautifulSoup(urlopen(html_string), 'lxml') # Parse the HTML as a string
+
+                table_add_info = soup.findAll('table', href=True, recursive=False)[1]
+                table_gen_info = soup.findAll('table', href=True, recursive=False)[2]
+>>>>>>> 50a44f42e6b3dbf1f664b30b91aed382ec3640f0
 
                 table_add = str(table_add_info).replace('<th', '<td')
                 table_add = table_add.replace('\n', '')
@@ -239,7 +273,11 @@ class JrcEmisHarvester(JrcEmisBaseHarvester, NextGEOSSHarvester,
                 table_gen_dict['Lineage'] = table_gen_dict['Lineage'].replace('\'', '')
                 # pprint(table_gen_dict)
 
+<<<<<<< HEAD
                 title_info = str(soup.findAll('h3')[0]).split('<h3>Title: ')[1].split('</h3>')[0]
+=======
+                title_info = str(soup.findAll('h3', href=True, recursive=False)[0]).split('<h3>Title: ')[1].split('</h3>')[0]
+>>>>>>> 50a44f42e6b3dbf1f664b30b91aed382ec3640f0
 
 
                 table = table_add_dict
@@ -286,12 +324,60 @@ class JrcEmisHarvester(JrcEmisBaseHarvester, NextGEOSSHarvester,
 
         # Create a harvest object for each entry
         for entry in products:
+<<<<<<< HEAD
 
             entry_guid = entry['uid']
             # entry_name = entry['filename']
             # entry_restart_date = entry['Issue date']
             entry_restart_date = datetime.today()
 
+=======
+            # Skip wkt and txt files
+            # if entry['filename'].endswith(('.wkt', '.txt')):
+            #     continue
+
+            entry_guid = entry['uid']
+            # entry_name = entry['filename']
+            entry_restart_date = entry['Issue date']
+
+            # package = Session.query(Package) \
+            #     .filter(Package.name == entry_name).first()
+
+            # if package:
+            #     # Meaning we've previously harvested this,
+            #     # but we may want to reharvest it now.
+            #     previous_obj = model.Session.query(HarvestObject) \
+            #         .filter(HarvestObject.guid == entry_guid)
+
+            #     # previous_obj = model.Session.query(HarvestObject) \
+            #     #     .filter(HarvestObject.guid == entry_guid) \
+            #     #     .filter(HarvestObject.current == True) \
+            #     #     .first()  # noqa: E712
+            #     if previous_obj:
+            #         previous_obj.current = False
+            #         previous_obj.save()
+
+            #     if self.update_all:
+            #         log.debug('{} already exists and will be updated.'.format(entry_guid))  # noqa: E501
+            #         status = 'change'
+            #     else:
+            #         log.debug('{} will not be updated.'.format(entry_guid))  # noqa: E501
+            #         status = 'unchanged'
+
+            #     obj = HarvestObject(guid=entry_guid, job=self.job,
+            #                         extras=[HOExtra(key='status',
+            #                                 value=status),
+            #                                 HOExtra(key='restart_date',
+            #                                 value=entry_restart_date)])
+            #     obj.content = json.dumps(entry)
+            #     obj.package = package
+            #     obj.save()
+            #     ids.append(obj.id)
+
+            # elif not package:
+                # It's a product we haven't harvested before.
+            log.debug('{} has not been harvested before. Creating a new harvest object.'.format(entry_name))  # noqa: E501
+>>>>>>> 50a44f42e6b3dbf1f664b30b91aed382ec3640f0
             obj = HarvestObject(guid=entry_guid, job=self.job,
                                 extras=[HOExtra(key='status',
                                         value='new'),
@@ -303,7 +389,11 @@ class JrcEmisHarvester(JrcEmisBaseHarvester, NextGEOSSHarvester,
             obj.save()
             ids.append(obj.id)
 
+<<<<<<< HEAD
         return ids
+=======
+        return
+>>>>>>> 50a44f42e6b3dbf1f664b30b91aed382ec3640f0
 
     def _get_spatial_info(self, req, products):
         return
