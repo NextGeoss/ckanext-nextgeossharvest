@@ -68,7 +68,6 @@ This extension contains harvester plugins for harvesting from sources used by Ne
     2. [Running a VITO CGS S1 harvester](#running-vitocgss1)
 21. [Harvesting Cold Regions pilot outputs](#harvesting-coldregions)
     1. [Running a Cold Regions harvester](#running-coldregions)
-<<<<<<< Updated upstream
 22. [Harvesting NOA Groundsegment products](#harvesting-noa_gs)
     1. [NOA GS Settings](#noa_gs-settings)
     2. [Running a NOA GS harvester](#running-noa_gs)
@@ -78,17 +77,9 @@ This extension contains harvester plugins for harvesting from sources used by Ne
 24. [Harvesting NOA GeObservatory products](#harvesting-noa_geob)
     1. [NOA GeObservatory Settings](#noa_geob-settings)
     2. [Running a NOA GeObservatory harvester](#running-noa_geob)
-<<<<<<< HEAD
 25. [Harvesting JRC Environmental Marine Information System](#harvesting-jrc_emis)
     1. [JRC EMIS Settings](#jrc_emis-settings)
 26. [Developing new harvesters](#develop)
-=======
-25. [Developing new harvesters](#develop)
-=======
-22. [Harvesting JRC Environmental Marine Information System](#harvesting-jrcemis)
-23. [Developing new harvesters](#develop)
->>>>>>> Stashed changes
->>>>>>> 50a44f42e6b3dbf1f664b30b91aed382ec3640f0
     1. [The basic harvester workflow](#basicworkflow)
         1. [gather_stage](#gather_stage)
         2. [fetch_stage](#fetch_stage)
@@ -902,7 +893,6 @@ The SAEON harvester has configuration has:
 6. Run the harvester. It will programmatically create datasets.
 
 
-<<<<<<< Updated upstream
 ## <a name="harvesting-noa_gs"></a>Harvesting NOA Groundsegment products
 The NOA Groundsegment harvester collects the products for the following instruments:
 
@@ -940,8 +930,6 @@ The NOA Groundsegment harvester configuration contains the following options:
 5. Select `Manual` from the frequency options. 
 6. Run the harvester. It will programmatically create datasets.
 
-=======
->>>>>>> Stashed changes
 
 ## <a name="harvesting-noa_geob"></a>Harvesting NOA GeObservatory products
 The NOA GeObservatory is activated in major geohazard events (earthquakes, volcanic activity, landslides,etc.) and automatically produces a series of Sentinel-1 based co-event interferograms (DInSAR) to map the surface deformation associated with the event. It also produces pre-event interferograms to be used as a benchmark.

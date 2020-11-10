@@ -102,11 +102,8 @@ setup(
         landsat8=ckanext.nextgeossharvest.harvesters:Landsat8Harvester
         satcenbetter=ckanext.nextgeossharvest.harvesters:SatcenBetterHarvester
         noa_groundsegment=ckanext.nextgeossharvest.harvesters:NoaGroundsegmentHarvester
-<<<<<<< Updated upstream
-        noa_geobservatory=ckanext.nextgeossharvest.harvesters:NoaGeobservatoryHarvester
-=======
         jrc_emis=ckanext.nextgeossharvest.harvesters:JrcEmisHarvester
->>>>>>> Stashed changes
+        eurogoos_intaros=ckanext.nextgeossharvest.harvesters:EurogoosIntarosHarvester
 
         [babel.extractors]
         ckan = ckan.lib.extract:extract_ckan
