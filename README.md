@@ -71,22 +71,24 @@ This extension contains harvester plugins for harvesting from sources used by Ne
 22. [Harvesting NOA Groundsegment products](#harvesting-noa_gs)
     1. [NOA GS Settings](#noa_gs-settings)
     2. [Running a NOA GS harvester](#running-noa_gs)
-21. [Harvesting MELOA products](#harvesting-meloa)
+23. [Harvesting MELOA products](#harvesting-meloa)
     1. [MELOA Settings](#meloa-settings)
     2. [Running a MELOA harvester](#running-meloa)
-22. [Developing new harvesters](#develop)
+24. [Harvesting EUROGOOS INTAROS products](#harvesting-eurogoos_intaros)
+    1. [EUROGOOS INTAROS Settings](#eurogoos_intaros-settings)
+25. [Developing new harvesters](#develop)
     1. [The basic harvester workflow](#basicworkflow)
         1. [gather_stage](#gather_stage)
         2. [fetch_stage](#fetch_stage)
         3. [import_stage](#import_stage)
     2. [Example of an OpenSearch-based harvester](#opensearchexample)
-24. [iTag](#itag)
+26. [iTag](#itag)
     1. [How ITagEnricher works](#itagprocess)
     2. [Setting up ITagEnricher](#setupitag)
     3. [Handling iTag errors](#handlingitagerrors)
-25. [Testing testing testing](#tests)
-26. [Suggested cron jobs](#cron)
-27. [Logs](#logs)
+27. [Testing testing testing](#tests)
+28. [Suggested cron jobs](#cron)
+29. [Logs](#logs)
     1. [How ITagEnricher works](#itagprocess)
     2. [Setting up ITagEnricher](#setupitag)
     3. [Handling iTag errors](#handlingitagerrors)
@@ -953,6 +955,11 @@ The NOA Groundsegment harvester has configuration has:
 5. Select `Manual` from the frequency options. 
 6. Run the harvester. It will programmatically create datasets.
 
+## <a name="harvesting-eurogoos_intaros"></a>Harvesting EUROGOOS INTAROS products
+The EUROGOOS INTAROS harvester will visit every Dataset in the Intaros catalog and then from that dataset will harvest every interesting information.
+
+### <a name="eurogoos_intaros-settings"></a>EUROGOOS INTAROS Settings
+EUROGOOS INTAROS Harvester does not use any configuration currently so the configuration section can be left blank.
 
 ## <a name="develop"></a>Developing new harvesters
 ### <a name="basicworkflow"></a>The basic harvester workflow
