@@ -205,6 +205,7 @@ class OSCARHarvester(NextGEOSSHarvester):
 
     # Required by NextGEOSS base harvester
     def gather_stage(self, harvest_job):
+        self.log = logging.getLogger(__file__)
         self.log.debug('SCENT Harvester gather_stage for job: %r', harvest_job)
 
         self.job = harvest_job
@@ -227,7 +228,7 @@ class OSCARHarvester(NextGEOSSHarvester):
             query_url = "{}?verb=ListIdentifiers&metadataPrefix={}".format(base_url, metadata_prefix)
 
         session = requests_cache.CachedSession()
-        log.debug('Querying: {}.'.format(query_url))
+        self.log.debug('Querying: {}.'.format(query_url))
         raw_list_ids = get_list_identifiers(session, query_url)
 
         token = self.get_resumption_token(raw_list_ids)
@@ -235,7 +236,7 @@ class OSCARHarvester(NextGEOSSHarvester):
 
         while token or not list_ids:
             query_url = "{}?verb=ListIdentifiers&ListIdentifiers&resumptionToken={}".format(base_url, last_token)
-            log.debug('No active station found, querying: {}.'.format(query_url))
+            self.log.debug('No active station found, querying: {}.'.format(query_url))
             raw_list_ids = get_list_identifiers(session, query_url)
 
             token = self.get_resumption_token(raw_list_ids)
@@ -248,7 +249,7 @@ class OSCARHarvester(NextGEOSSHarvester):
 
         for station in list_ids:
             station_query = '{}verb=GetRecord&metadataPrefix={}&identifier={}'.format(base_url, metadata_prefix, station)
-            log.debug('Querying station: {}.'.format(station))
+            self.log.debug('Querying station: {}.'.format(station))
             record = self.get_record(session, station_query)
             station_info = StationInfo(record)
             deployments = station_info.get_deployments(session, record)
@@ -258,7 +259,7 @@ class OSCARHarvester(NextGEOSSHarvester):
                 entry_guid = unicode(uuid.uuid4())
                 entry_id = '{}_{}'.format(station_info.id, deployment_info.id)
                 entry_name = clean_snakecase(entry_id)
-                log.debug('Gathering %s', entry_name)
+                self.log.debug('Gathering %s', entry_name)
 
                 
                 content = {}
@@ -281,18 +282,18 @@ class OSCARHarvester(NextGEOSSHarvester):
                         previous_obj.save()
 
                     if self.update_all:
-                        log.debug('{} already exists and will be updated.'.format(
+                        self.log.debug('{} already exists and will be updated.'.format(
                             entry_name))  # noqa: E501
                         status = 'change'
 
                     else:
-                        log.debug(
+                        self.log.debug(
                             '{} will not be updated.'.format(entry_name))  # noqa: E501
                         status = 'unchanged'
 
                 elif not package:
                     # It's a product we haven't harvested before.
-                    log.debug(
+                    self.log.debug(
                         '{} has not been harvested before. Creating a new harvest object.'.  # noqa: E501
                         format(entry_name))  # noqa: E501
                     status = 'new'
