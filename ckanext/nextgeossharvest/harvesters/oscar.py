@@ -139,7 +139,7 @@ class OSCARHarvester(NextGEOSSHarvester):
             if 'start_date' in config_obj:
                 try:
                     datetime.strptime(config_obj['start_date'],
-                                      '%Y-%m-%dT%H:%M:%S.%fZ')
+                                      '%Y-%m-%dT%H:%M:%SZ')
                 except ValueError:
                     raise ValueError('start_date format must be 2018-01-01T00:00:00Z')  # noqa: E501
 
