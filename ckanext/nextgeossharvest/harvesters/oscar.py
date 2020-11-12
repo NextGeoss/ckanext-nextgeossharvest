@@ -229,7 +229,7 @@ class OSCARHarvester(NextGEOSSHarvester):
 
         session = requests_cache.CachedSession()
         self.log.debug('Querying: {}.'.format(query_url))
-        raw_list_ids = get_list_identifiers(session, query_url)
+        raw_list_ids = self.get_list_identifiers(session, query_url)
 
         token = self.get_resumption_token(raw_list_ids)
         list_ids, largest_datastamp = self.get_station_ids(raw_list_ids)
@@ -237,7 +237,7 @@ class OSCARHarvester(NextGEOSSHarvester):
         while token or not list_ids:
             query_url = "{}?verb=ListIdentifiers&ListIdentifiers&resumptionToken={}".format(base_url, last_token)
             self.log.debug('No active station found, querying: {}.'.format(query_url))
-            raw_list_ids = get_list_identifiers(session, query_url)
+            raw_list_ids = self.get_list_identifiers(session, query_url)
 
             token = self.get_resumption_token(raw_list_ids)
             list_ids, largest_datastamp = self.get_station_ids(raw_list_ids)
