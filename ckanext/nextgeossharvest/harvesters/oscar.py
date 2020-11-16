@@ -208,6 +208,7 @@ class OSCARHarvester(NextGEOSSHarvester):
     def get_station_ids(self, raw_list_ids):
         list_ids = []
         highest_date = ''
+        raw_list_ids['header'] = raw_list_ids['header'] if type(raw_list_ids['header']) == list else [raw_list_ids['header']] 
         for record in raw_list_ids['header']:
             identifier = record['identifier']
             if '@status' in record and 'deleted' in record['@status']:
@@ -252,7 +253,7 @@ class OSCARHarvester(NextGEOSSHarvester):
 
         while token and list_ids==[]:
             query_url = "{}?verb=ListIdentifiers&resumptionToken={}".format(base_url, token)
-            print('Querying: {}.'.format(query_url))
+            self.log.debug('Querying: {}.'.format(query_url))
             raw_list_ids = self.get_list_identifiers(session, query_url)
 
             token = self.get_resumption_token(raw_list_ids)
@@ -264,7 +265,7 @@ class OSCARHarvester(NextGEOSSHarvester):
         ids = []
 
         for station in list_ids:
-            station_query = '{}verb=GetRecord&metadataPrefix={}&identifier={}'.format(base_url, metadata_prefix, station)
+            station_query = '{}?verb=GetRecord&metadataPrefix={}&identifier={}'.format(base_url, metadata_prefix, station)
             self.log.debug('Querying station: {}.'.format(station))
             record = self.get_record(session, station_query)
             if record:
@@ -283,9 +284,9 @@ class OSCARHarvester(NextGEOSSHarvester):
                             self.log.debug('Gathering %s', entry_name)
 
                             content = {}
-                            content['station'] = pickle.dumps(station_info)
-                            content['observation'] = pickle.dumps(observation_info)
-                            content['deployment'] = pickle.dumps(deployment_info)
+                            content['station'] = station_info
+                            content['observation'] = observation_info
+                            content['deployment'] = deployment_info
 
                             package_query = Session.query(Package)
                             query_filtered = package_query.filter(Package.name == entry_name)
@@ -327,7 +328,7 @@ class OSCARHarvester(NextGEOSSHarvester):
                                     HOExtra(key='restart_date', value=restart_date)
 
                                 ])
-                            obj.content = json.dumps(content)
+                            obj.content = pickle.dumps(content)
                             obj.package = None if status == 'new' else package
                             obj.save()
                             ids.append(obj.id)
@@ -348,10 +349,10 @@ class OSCARHarvester(NextGEOSSHarvester):
         Parse the entry content and return a dictionary using our standard
         metadata terms.
         """
-        #content = json.loads(content)
-        station = pickle.loads(content['station'])
-        observation = pickle.loads(content['observation'])
-        deployment = pickle.loads(content['deployment'])
+        content = pickle.loads(content)
+        station = content['station']
+        observation = content['observation']
+        deployment = content['deployment']
 
         item = {}
         item['collection_id'] = "WMO_INTEGRATED_OBSERVING_SYSTEM_SURFACE_BASED"
@@ -362,11 +363,13 @@ class OSCARHarvester(NextGEOSSHarvester):
         item['title'] = item['identifier']
         item['name']       = clean_snakecase(item['identifier'])
 
-        notes_tmp1 = "Dataset refers to metadata for the observed variable {variable}, associated with the Network(s)/Program(s) \"{affiliation}\"."
-        notes_tmp2 = " The observation was  primarily made for {application}."
-        notes1         = notes_tmp1.format(variable=deployment.variable, affiliation=observation.affiliation)
-        notes2         = notes_tmp2.format(application=deployment.application) if deployment.application else ""
-        item['notes']  = notes1 + notes2
+        notes_tmp1 = "Dataset refers to metadata for the observed variable {variable}"
+        notes_tmp2 = ", associated with the Network(s)/Program(s) \"{affiliation}\"."
+        notes_tmp3 = " The observation was  primarily made for {application}."
+        notes1         = notes_tmp1.format(variable=deployment.variable)
+        notes2         = notes_tmp2.format(affiliation=observation.affiliation) if observation.affiliation else "."
+        notes3         = notes_tmp3.format(application=deployment.application) if deployment.application else ""
+        item['notes']  = notes1 + notes2 + notes3
         item['tags']   = []
 
         item['timerange_start'] = deployment.t0
@@ -375,9 +378,9 @@ class OSCARHarvester(NextGEOSSHarvester):
             item['timerange_end'] = deployment.tf
         
         if deployment.spatial:
-            spatial = build_spatial(deployment.spatial)
+            spatial = self.build_spatial(deployment.spatial)
         else:
-            spatial = build_spatial(station.spatial)
+            spatial = self.build_spatial(station.spatial)
         item['spatial'] = json.dumps(spatial)
 
         ####### OPTIONAL FIELDS ########
