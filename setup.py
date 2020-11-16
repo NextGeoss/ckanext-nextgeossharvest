@@ -104,6 +104,7 @@ setup(
         satcenbetter=ckanext.nextgeossharvest.harvesters:SatcenBetterHarvester
         noa_groundsegment=ckanext.nextgeossharvest.harvesters:NoaGroundsegmentHarvester
         noa_geobservatory=ckanext.nextgeossharvest.harvesters:NoaGeobservatoryHarvester
+        energydata=ckanext.nextgeossharvest.harvesters:EnergyDataHarvester
 
         [babel.extractors]
         ckan = ckan.lib.extract:extract_ckan
