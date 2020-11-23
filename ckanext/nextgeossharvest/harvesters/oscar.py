@@ -440,7 +440,7 @@ class OSCARHarvester(NextGEOSSHarvester):
         resources.append({
                 "name": "WMDR XML",
                 "description": "Station report as WMDR XML",
-                "url": "https://oscar.wmo.int/oai/provider?verb=GetRecord&metadataPrefix=wmdr&identifier=oai:meteoswiss.ch:{wigos_id}".format(wigos_id=wigos_id)
+                "url": "https://oscar.wmo.int/oai/provider?verb=GetRecord&metadataPrefix=wmdr&identifier={wigos_id}".format(wigos_id=wigos_id)
         })
         return resources
 
