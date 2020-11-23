@@ -434,7 +434,7 @@ class OSCARHarvester(NextGEOSSHarvester):
         resources.append({
                 "name": "Website",
                 "description": "Station report as html",
-                "url": "https://oscar.wmo.int/surface/#/search/station/stationReportDetails/{wigos_id}".format(wigos_id=wigos_id)
+                "url": "https://oscar.wmo.int/surface/#/search/station/stationReportDetails/{wigos_id}".format(wigos_id=wigos_id.split(":")[-1])
         })
 
         resources.append({
