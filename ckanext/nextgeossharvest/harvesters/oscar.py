@@ -222,6 +222,9 @@ class OSCARHarvester(NextGEOSSHarvester):
     def gather_stage(self, harvest_job):
         requests_cache.install_cache()
         requests_cache.clear()
+
+        session = requests_cache.CachedSession()
+
         self.log = logging.getLogger(__file__)
         self.log.debug('OSCAR Harvester gather_stage for job: %r', harvest_job)
 
@@ -232,108 +235,126 @@ class OSCARHarvester(NextGEOSSHarvester):
         start_date = self.source_config.get('start_date', None)
         self.update_all =  self.source_config.get('update_all', False)
 
-        last_token = self._get_last_harvesting_index(self.job.source_id, 'token')
+        last_token = self._get_last_harvesting_index(self.job.source_id, 'last_token')
+        next_token = self._get_last_harvesting_index(self.job.source_id, 'next_token')
+        next_station = self._get_last_harvesting_index(self.job.source_id, 'next_station')
         restart_date = self._get_last_harvesting_index(self.job.source_id, 'restart_date')
+    
+        ids = []
+        first_query = True
+        while (ids==[] and next_token) or first_query :
+            first_query = False
 
-        if last_token:
-            query_url = "{}?verb=ListIdentifiers&ListIdentifiers&resumptionToken={}".format(base_url, last_token)
-        elif restart_date:
-            query_url = "{}?verb=ListIdentifiers&metadataPrefix={}&from={}".format(base_url, metadata_prefix, restart_date)
-        elif start_date:
-            query_url = "{}?verb=ListIdentifiers&metadataPrefix={}&from={}".format(base_url, metadata_prefix, start_date)
-        else:
-            query_url = "{}?verb=ListIdentifiers&metadataPrefix={}".format(base_url, metadata_prefix)
+            current_token = last_token if next_station else next_token
+            if current_token:
+                query_url = "{}?verb=ListIdentifiers&resumptionToken={}".format(base_url, current_token)
+            elif restart_date:
+                query_url = "{}?verb=ListIdentifiers&metadataPrefix={}&from={}".format(base_url, metadata_prefix, restart_date)
+            elif start_date:
+                query_url = "{}?verb=ListIdentifiers&metadataPrefix={}&from={}".format(base_url, metadata_prefix, start_date)
+            else:
+                query_url = "{}?verb=ListIdentifiers&metadataPrefix={}".format(base_url, metadata_prefix)
 
-        session = requests_cache.CachedSession()
-        self.log.debug('Querying: {}.'.format(query_url))
-        raw_list_ids = self.get_list_identifiers(session, query_url)
-
-        token = self.get_resumption_token(raw_list_ids)
-        list_ids, largest_datastamp = self.get_station_ids(raw_list_ids)
-
-        while token and list_ids==[]:
-            query_url = "{}?verb=ListIdentifiers&resumptionToken={}".format(base_url, token)
             self.log.debug('Querying: {}.'.format(query_url))
             raw_list_ids = self.get_list_identifiers(session, query_url)
 
-            token = self.get_resumption_token(raw_list_ids)
-            list_ids, largest_datastamp = self.get_station_ids(raw_list_ids)
+            list_stations, largest_datastamp = self.get_station_ids(raw_list_ids)
 
-        restart_date = restart_date if restart_date else ''
-        restart_date = largest_datastamp if largest_datastamp > restart_date else restart_date
+            next_token      = self.get_resumption_token(raw_list_ids)
+            last_token      = current_token
+            restart_date    = restart_date if restart_date else ''
+            restart_date    = largest_datastamp if largest_datastamp > restart_date else restart_date
 
-        ids = []
+            if list_stations == []:
+                next_station = None
+            else:
+                valid_deployment = None
+                station_index = 0
+                while not valid_deployment and station_index <= len(list_stations)-1:
+                    station = list_stations[station_index]
+                    next_station = None if (next_station == station) else next_station
+                    if not next_station:
+                        station_query = '{}?verb=GetRecord&metadataPrefix={}&identifier={}'.format(base_url, metadata_prefix, station)
+                        print('Querying station: {}.'.format(station))
+                        record = self.get_record(session, station_query)
+                        if record:
+                            station_info = StationInfo(record)
+                            if station_info.isValid():
+                                station_info.id = station
+                                observation_list = station_info.get_observations()
+                                for observation in observation_list:
+                                    observation_info = ObservationInfo(session, observation)
+                                    deployments_list = observation_info.get_deployments()
+                                    for deployment in deployments_list:
+                                        deployment_info = DeploymentInfo(session, deployment)
+                                        if deployment_info.isValid():
+                                            valid_deployment = True
+                                            if station_index+1 <= len(list_stations)-1:
+                                                next_station = list_stations[station_index+1]
+                                            else:
+                                                next_station = None
+                                            entry_guid = unicode(uuid.uuid4())
+                                            entry_id = '{}_{}'.format(station_info.id, deployment_info.id)
+                                            entry_name = clean_snakecase(entry_id)
+                                            self.log.debug('Gathering %s', entry_name)
 
-        for station in list_ids:
-            station_query = '{}?verb=GetRecord&metadataPrefix={}&identifier={}'.format(base_url, metadata_prefix, station)
-            self.log.debug('Querying station: {}.'.format(station))
-            record = self.get_record(session, station_query)
-            if record:
-                station_info = StationInfo(record)
-                station_info.id = station
-                observation_list = station_info.get_observations()
-                for observation in observation_list:
-                    observation_info = ObservationInfo(session, observation)
-                    deployments_list = observation_info.get_deployments()
-                    for deployment in deployments_list:
-                        deployment_info = DeploymentInfo(session, deployment)
-                        if deployment_info.id:
-                            entry_guid = unicode(uuid.uuid4())
-                            entry_id = '{}_{}'.format(station_info.id, deployment_info.id)
-                            entry_name = clean_snakecase(entry_id)
-                            self.log.debug('Gathering %s', entry_name)
+                                            content = {}
+                                            content['station'] = station_info
+                                            content['observation'] = observation_info
+                                            content['deployment'] = deployment_info
 
-                            content = {}
-                            content['station'] = station_info
-                            content['observation'] = observation_info
-                            content['deployment'] = deployment_info
+                                            package_query = Session.query(Package)
+                                            query_filtered = package_query.filter(Package.name == entry_name)
+                                            package = query_filtered.first()
 
-                            package_query = Session.query(Package)
-                            query_filtered = package_query.filter(Package.name == entry_name)
-                            package = query_filtered.first()
+                                            if package:
+                                                # Meaning we've previously harvested this,
+                                                # but we may want to reharvest it now.
+                                                previous_obj = Session.query(HarvestObject) \
+                                                    .filter(HarvestObject.guid == entry_guid) \
+                                                    .filter(HarvestObject.current == True) \
+                                                    .first()  # noqa: E712
+                                                if previous_obj:
+                                                    previous_obj.current = False
+                                                    previous_obj.save()
 
-                            if package:
-                                # Meaning we've previously harvested this,
-                                # but we may want to reharvest it now.
-                                previous_obj = Session.query(HarvestObject) \
-                                    .filter(HarvestObject.guid == entry_guid) \
-                                    .filter(HarvestObject.current == True) \
-                                    .first()  # noqa: E712
-                                if previous_obj:
-                                    previous_obj.current = False
-                                    previous_obj.save()
+                                                if self.update_all:
+                                                    self.log.debug('{} already exists and will be updated.'.format(
+                                                        entry_name))  # noqa: E501
+                                                    status = 'change'
 
-                                if self.update_all:
-                                    self.log.debug('{} already exists and will be updated.'.format(
-                                        entry_name))  # noqa: E501
-                                    status = 'change'
+                                                else:
+                                                    self.log.debug(
+                                                        '{} will not be updated.'.format(entry_name))  # noqa: E501
+                                                    status = 'unchanged'
 
-                                else:
-                                    self.log.debug(
-                                        '{} will not be updated.'.format(entry_name))  # noqa: E501
-                                    status = 'unchanged'
+                                            elif not package:
+                                                # It's a product we haven't harvested before.
+                                                self.log.debug(
+                                                    '{} has not been harvested before. Creating a new harvest object.'.  # noqa: E501
+                                                    format(entry_name))  # noqa: E501
+                                                status = 'new'
+                                            obj = HarvestObject(
+                                                guid=entry_guid,
+                                                job=self.job,
+                                                extras=[
+                                                    HOExtra(key='status', value=status),
+                                                    HOExtra(key='last_token', value=last_token),
+                                                    HOExtra(key='next_token', value=next_token),
+                                                    HOExtra(key='next_station', value=next_station),
+                                                    HOExtra(key='restart_date', value=restart_date)
+                                                ])
+                                            obj.content = pickle.dumps(content)
+                                            obj.package = None if status == 'new' else package
+                                            obj.save()
+                                            ids.append(obj.id)
 
-                            elif not package:
-                                # It's a product we haven't harvested before.
-                                self.log.debug(
-                                    '{} has not been harvested before. Creating a new harvest object.'.  # noqa: E501
-                                    format(entry_name))  # noqa: E501
-                                status = 'new'
-                            obj = HarvestObject(
-                                guid=entry_guid,
-                                job=self.job,
-                                extras=[
-                                    HOExtra(key='status', value=status),
-                                    HOExtra(key='token', value=token),
-                                    HOExtra(key='restart_date', value=restart_date)
-
-                                ])
-                            obj.content = pickle.dumps(content)
-                            obj.package = None if status == 'new' else package
-                            obj.save()
-                            ids.append(obj.id)
+                                if not valid_deployment:
+                                    self.log.debug('Station {} does not have valid deployments.'.format(station))
+                            else:
+                                self.log.debug('Station {} is not valid.'.format(station))
+                    station_index += 1    
         return ids
-    
 
     def fetch_stage(self, harvest_object):
         return True
