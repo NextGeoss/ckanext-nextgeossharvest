@@ -52,6 +52,12 @@ class StationInfo(object):
     def get_observations(self):
         return self.observations
 
+    def isValid(self):
+        if self.spatial:
+            if len(self.spatial.split(" ")) == 3:
+                return True
+        return False
+
 class ObservationInfo(object):
     listVars   = ['deployments']
     hrefVars   = ['affiliation']
@@ -90,7 +96,14 @@ class DeploymentInfo(object):
             field_value = get_field(path, deployment.copy())
             if field_value and attr in self.hrefVars:
                 field_value = get_label(session, field_value)
+            if attr == "spatial":
+                field_value = field_value if field_value and len(field_value.split(" ")) == 3 else None
             setattr(self, attr, field_value)
+    
+    def isValid(self):
+        if not self.id or not self.variable or not self.t0:
+            return False
+        return True
 
 def get_field(path_list, json_obj, isList=False):
     for path in path_list:
