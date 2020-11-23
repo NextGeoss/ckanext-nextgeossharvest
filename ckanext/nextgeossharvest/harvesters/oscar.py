@@ -434,12 +434,14 @@ class OSCARHarvester(NextGEOSSHarvester):
         resources.append({
                 "name": "Website",
                 "description": "Station report as html",
+                "format": "HTML",
                 "url": "https://oscar.wmo.int/surface/#/search/station/stationReportDetails/{wigos_id}".format(wigos_id=wigos_id.split(":")[-1])
         })
 
         resources.append({
                 "name": "WMDR XML",
                 "description": "Station report as WMDR XML",
+                "format": "XML",
                 "url": "https://oscar.wmo.int/oai/provider?verb=GetRecord&metadataPrefix=wmdr&identifier={wigos_id}".format(wigos_id=wigos_id)
         })
         return resources
