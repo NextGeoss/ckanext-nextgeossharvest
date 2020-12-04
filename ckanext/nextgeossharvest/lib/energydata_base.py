@@ -27,7 +27,6 @@ class EnergyDataBaseHarvester(HarvesterBase):
 
         item['Organization'] = content['organization']['title']
 
-
         return item
 
     def _get_collection(self, content, item):
@@ -41,7 +40,10 @@ class EnergyDataBaseHarvester(HarvesterBase):
         item['collection_name'] = collection_name
         collection_id = collection_name.replace('-', '_').replace(' ', '_')
         item['collection_id'] = collection_id.upper()
-        item['collection_description'] = "Data collected through the https://energydata.info website."
+        item['collection_description'] = """ENERGYDATA.INFO is an open data platform providing access to datasets and data analytics 
+        that are relevant to the energy sector. ENERGYDATA.INFO has been developed as a public good to share data and analytics that 
+        can help achieving the United Nations’ Sustainable Development Goal 7 of ensuring access to affordable, reliable, sustainable 
+        and modern energy for all."""
 
         if item['notes'] is None or item['notes'] == "":
             item['notes'] = item['collection_description']
@@ -88,11 +90,19 @@ class EnergyDataBaseHarvester(HarvesterBase):
         resources = []
 
         for resource in resources_content:
+            _format = resource['format']
+            mimetype = resource['mimetype']
+
+            if ".zip" in resource['url']:
+                _format = "ZIP"
+                mimetype = "ZIP"
+
+
             parsed_resource = {'name': resource['name'],
                         'description': resource['description'],
                         'url': resource['url'],
-                        'format': resource['format'],
-                        'mimetype': resource['mimetype']}
+                        'format': _format,
+                        'mimetype': mimetype}
 
             resources.append(parsed_resource)
         return resources
