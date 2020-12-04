@@ -41,9 +41,9 @@ class EnergyDataBaseHarvester(HarvesterBase):
         collection_id = collection_name.replace('-', '_').replace(' ', '_')
         item['collection_id'] = collection_id.upper()
         item['collection_description'] = """ENERGYDATA.INFO is an open data platform providing access to datasets and data analytics 
-        that are relevant to the energy sector. ENERGYDATA.INFO has been developed as a public good to share data and analytics that 
-        can help achieving the United Nations’ Sustainable Development Goal 7 of ensuring access to affordable, reliable, sustainable 
-        and modern energy for all."""
+that are relevant to the energy sector. ENERGYDATA.INFO has been developed as a public good to share data and analytics that 
+can help achieving the United Nations’ Sustainable Development Goal 7 of ensuring access to affordable, reliable, sustainable 
+and modern energy for all."""
 
         if item['notes'] is None or item['notes'] == "":
             item['notes'] = item['collection_description']
