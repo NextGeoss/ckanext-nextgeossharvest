@@ -78,20 +78,22 @@ This extension contains harvester plugins for harvesting from sources used by Ne
     1. [NOA GeObservatory Settings](#noa_geob-settings)
     2. [Running a NOA GeObservatory harvester](#running-noa_geob)
 25. [Harvesting JRC Environmental Marine Information System](#harvesting-jrc_emis)
-    1. [JRC EMIS Settings](#jrc_emis-settings)
-26. [Developing new harvesters](#develop)
+    1. [JRC EMIS Settings](#-settings)
+26. [Harvesting European Union Open Data Portal](#harvesting-eu_odp)
+    1. [EU ODP Settings](#eu_odp-settings)
+27. [Developing new harvesters](#develop)
     1. [The basic harvester workflow](#basicworkflow)
         1. [gather_stage](#gather_stage)
         2. [fetch_stage](#fetch_stage)
         3. [import_stage](#import_stage)
     2. [Example of an OpenSearch-based harvester](#opensearchexample)
-27. [iTag](#itag)
+28. [iTag](#itag)
     1. [How ITagEnricher works](#itagprocess)
     2. [Setting up ITagEnricher](#setupitag)
     3. [Handling iTag errors](#handlingitagerrors)
-28. [Testing testing testing](#tests)
-29. [Suggested cron jobs](#cron)
-30. [Logs](#logs)
+29. [Testing testing testing](#tests)
+30. [Suggested cron jobs](#cron)
+31. [Logs](#logs)
     1. [How ITagEnricher works](#itagprocess)
     2. [Setting up ITagEnricher](#setupitag)
     3. [Handling iTag errors](#handlingitagerrors)
@@ -965,6 +967,18 @@ The JRC Harvesting JRC Environmental Marine Information System will visit every 
 
 ### <a name="jrc_emis-settings"></a>JRC EMIS Settings
 JRC EMIS Harvester does not use any configuration currently so the configuration section be left blank.
+
+## <a name="harvesting-eu_odp"></a>Harvesting European Union Open Data Portal
+The EU ODP Harvester collects datasets from European's Union Open Data Portal (https://data.europa.eu/euodp/data)
+
+### <a name="eu_odp-settings"></a>EU ODP Settings
+An example of EU_ODP Harvester setting is following:
+{
+"start_date": "2017-01-01T00:00:00Z",
+"timeout": 10,
+"datasets_per_job": 100,
+"make_private": false
+}
 
 ## <a name="develop"></a>Developing new harvesters
 ### <a name="basicworkflow"></a>The basic harvester workflow

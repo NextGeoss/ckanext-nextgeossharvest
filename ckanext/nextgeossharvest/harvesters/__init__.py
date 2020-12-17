@@ -21,3 +21,4 @@ from ckanext.nextgeossharvest.harvesters.satcen_better import SatcenBetterHarves
 from ckanext.nextgeossharvest.harvesters.noa_groundsegment import NoaGroundsegmentHarvester
 from ckanext.nextgeossharvest.harvesters.jrc_emis import JrcEmisHarvester
 from ckanext.nextgeossharvest.harvesters.eurogoos_intaros import EurogoosIntarosHarvester
+from ckanext.nextgeossharvest.harvesters.eu_odp import EuOdpHarvester

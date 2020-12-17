@@ -104,6 +104,7 @@ setup(
         noa_groundsegment=ckanext.nextgeossharvest.harvesters:NoaGroundsegmentHarvester
         jrc_emis=ckanext.nextgeossharvest.harvesters:JrcEmisHarvester
         eurogoos_intaros=ckanext.nextgeossharvest.harvesters:EurogoosIntarosHarvester
+        eu_odp=ckanext.nextgeossharvest.harvesters:EuOdpHarvester
 
         [babel.extractors]
         ckan = ckan.lib.extract:extract_ckan
