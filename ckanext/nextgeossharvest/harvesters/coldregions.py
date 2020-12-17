@@ -47,7 +47,7 @@ def _organization_list(session, ckan_url, api_key):
         'Cache-Control': 'no-store'
     }
     group_rst = session.get(
-        ckan_url + '/api/action/organization_list', headers=headers)
+        ckan_url + '/api/action/organization_list', headers=headers, verify=False)
 
     return group_rst.json()['result']
 
