@@ -21,19 +21,27 @@ class EuOdpBaseHarvester(HarvesterBase):
         log.debug('check content')
         # log.debug(content)
         # dirty_name = content['result']['results']['dataset']['uri']
-        dirty_name = content['dataset']['uri']
+        dirty_name = content['dataset']['ckanName_dcatapop']['value_or_uri']
 
         name = self.get_clean_snakecase(dirty_name)
 
         item['name'] = name
-        item['title'] = name
-        item['identifier'] = name
 
-        # item['notes'] = content['notes']
-        item['notes'] = name
+        for titles in content['dataset']['title_dcterms']:
+            if titles['lang'] == 'en':
+                title = titles['value_or_uri']        
+        item['title'] = name
+
+        item['identifier'] = content['dataset']['identifier_dcterms'][0]['value_or_uri']
+
+        for note in content['dataset']['description_dcterms']:
+            if note['lang'] == 'en':
+                notes = note['value_or_uri']
+        
+        item['notes'] = notes
 
         # item['Organization'] = content['organization']['title']
-        item['Organization'] = name
+        # item['Organization'] = 'Organisation'
 
 
         return item
