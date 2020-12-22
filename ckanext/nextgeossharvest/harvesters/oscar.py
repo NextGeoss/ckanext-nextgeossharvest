@@ -248,10 +248,11 @@ class OSCARHarvester(NextGEOSSHarvester):
         start_date = self.source_config.get('start_date', None)
         self.update_all =  self.source_config.get('update_all', False)
 
-        last_token = self._get_last_harvesting_index(self.job.source_id, 'last_token')
-        next_token = self._get_last_harvesting_index(self.job.source_id, 'next_token')
+        last_token   = self._get_last_harvesting_index(self.job.source_id, 'last_token')
+        next_token   = self._get_last_harvesting_index(self.job.source_id, 'next_token')
         next_station = self._get_last_harvesting_index(self.job.source_id, 'next_station')
         restart_date = self._get_last_harvesting_index(self.job.source_id, 'restart_date')
+        restart_date = restart_date if last_token else None
     
         ids = []
         first_query = True
