@@ -225,101 +225,92 @@ class EnergyDataHarvester(EnergyDataBaseHarvester, NextGEOSSHarvester,
         ids = []
         new_counter = 0
 
-        while len(ids) < limit and harvest_url:
-            # We'll limit ourselves to one request per second
-            start_request = time.time()
-
-            # Make a request to the website
-            timestamp = str(datetime.utcnow())
-            log_message = '{:<12} | {} | {} | {}s'
-            try:
-                r = requests.get(harvest_url,
-                                 verify=False, timeout=timeout)
-            except Timeout as e:
-                self._save_gather_error('Request timed out: {}'.format(e), self.job)  # noqa: E501
-                status_code = 408
-                elapsed = 9999
-                if hasattr(self, 'provider_logger'):
-                    self.provider_logger.info(log_message.format(self.provider,
-                        timestamp, status_code, timeout))  # noqa: E128
-                return ids
-            if r.status_code != 200:
-                self._save_gather_error('{} error: {}'.format(r.status_code, r.text), self.job)  # noqa: E501
-                elapsed = 9999
-                if hasattr(self, 'provider_logger'):
-                    self.provider_logger.info(log_message.format(self.provider,
-                        timestamp, r.status_code, elapsed))  # noqa: E128
-                return ids
-
+        # Make a request to the website
+        timestamp = str(datetime.utcnow())
+        log_message = '{:<12} | {} | {} | {}s'
+        try:
+            r = requests.get(harvest_url,
+                                verify=False, timeout=timeout)
+        except Timeout as e:
+            self._save_gather_error('Request timed out: {}'.format(e), self.job)  # noqa: E501
+            status_code = 408
+            elapsed = 9999
             if hasattr(self, 'provider_logger'):
                 self.provider_logger.info(log_message.format(self.provider,
-                    timestamp, r.status_code, r.elapsed.total_seconds()))  # noqa: E128, E501
+                    timestamp, status_code, timeout))  # noqa: E128
+            return ids
+        if r.status_code != 200:
+            self._save_gather_error('{} error: {}'.format(r.status_code, r.text), self.job)  # noqa: E501
+            elapsed = 9999
+            if hasattr(self, 'provider_logger'):
+                self.provider_logger.info(log_message.format(self.provider,
+                    timestamp, r.status_code, elapsed))  # noqa: E128
+            return ids
 
-            soup = Soup(r.content, 'lxml')
-            json_content = json.loads(soup.text)
+        if hasattr(self, 'provider_logger'):
+            self.provider_logger.info(log_message.format(self.provider,
+                timestamp, r.status_code, r.elapsed.total_seconds()))  # noqa: E128, E501
 
-            # Get the URL for the next loop, or None to break the loop
-            log.debug(harvest_url)
-            harvest_url = self._get_next_url(harvest_url, json_content)
+        soup = Soup(r.content, 'lxml')
+        json_content = json.loads(soup.text)
 
-            # Get the entries from the results
-            entries = self._get_entries_from_results(json_content)
+        # Get the URL for the next loop, or None to break the loop
+        log.debug(harvest_url)
+        harvest_url = self._get_next_url(harvest_url, json_content)
 
-            # Create a harvest object for each entry
-            for entry in entries:
-                entry_guid = entry['guid']
-                entry_name = entry['identifier']
-                entry_restart_date = entry['restart_date']
+        # Get the entries from the results
+        entries = self._get_entries_from_results(json_content)
 
-                package = Session.query(Package) \
-                    .filter(Package.name == entry_name).first()
+        # Create a harvest object for each entry
+        for entry in entries:
+            entry_guid = entry['guid']
+            entry_name = entry['identifier']
+            entry_restart_date = entry['restart_date']
 
-                if package:
-                    # Meaning we've previously harvested this,
-                    # but we may want to reharvest it now.
-                    previous_obj = model.Session.query(HarvestObject) \
-                        .filter(HarvestObject.guid == entry_guid) \
-                        .filter(HarvestObject.current == True) \
-                        .first()  # noqa: E712
-                    if previous_obj:
-                        previous_obj.current = False
-                        previous_obj.save()
+            package = Session.query(Package) \
+                .filter(Package.name == entry_name).first()
 
-                    if self.update_all:
-                        log.debug('{} already exists and will be updated.'.format(entry_name))  # noqa: E501
-                        status = 'change'
-                    else:
-                        log.debug('{} will not be updated.'.format(entry_name))  # noqa: E501
-                        status = 'unchanged'
+            if package:
+                # Meaning we've previously harvested this,
+                # but we may want to reharvest it now.
+                previous_obj = model.Session.query(HarvestObject) \
+                    .filter(HarvestObject.guid == entry_guid) \
+                    .filter(HarvestObject.current == True) \
+                    .first()  # noqa: E712
+                if previous_obj:
+                    previous_obj.current = False
+                    previous_obj.save()
 
-                    obj = HarvestObject(guid=entry_guid, job=self.job,
-                                        extras=[HOExtra(key='status',
-                                                value=status),
-                                                HOExtra(key='restart_date',
-                                                value=entry_restart_date)])
-                    obj.content = json.dumps(entry['content'])
-                    obj.package = package
-                    obj.save()
-                    ids.append(obj.id)
+                if self.update_all:
+                    log.debug('{} already exists and will be updated.'.format(entry_name))  # noqa: E501
+                    status = 'change'
+                else:
+                    log.debug('{} will not be updated.'.format(entry_name))  # noqa: E501
+                    status = 'unchanged'
 
-                elif not package:
-                    # It's a product we haven't harvested before.
-                    log.debug('{} has not been harvested before. Creating a new harvest object.'.format(entry_name))  # noqa: E501
-                    obj = HarvestObject(guid=entry_guid, job=self.job,
-                                        extras=[HOExtra(key='status',
-                                                value='new'),
-                                                HOExtra(key='restart_date',
-                                                value=entry_restart_date)])
-                    new_counter += 1
-                    obj.content = json.dumps(entry['content'])
-                    obj.package = None
-                    obj.save()
-                    ids.append(obj.id)
+                obj = HarvestObject(guid=entry_guid, job=self.job,
+                                    extras=[HOExtra(key='status',
+                                            value=status),
+                                            HOExtra(key='restart_date',
+                                            value=entry_restart_date)])
+                obj.content = json.dumps(entry['content'])
+                obj.package = package
+                obj.save()
+                ids.append(obj.id)
 
-            end_request = time.time()
-            request_time = end_request - start_request
-            if request_time < 1.0:
-                time.sleep(1 - request_time)
+            elif not package:
+                # It's a product we haven't harvested before.
+                log.debug('{} has not been harvested before. Creating a new harvest object.'.format(entry_name))  # noqa: E501
+                obj = HarvestObject(guid=entry_guid, job=self.job,
+                                    extras=[HOExtra(key='status',
+                                            value='new'),
+                                            HOExtra(key='restart_date',
+                                            value=entry_restart_date)])
+                new_counter += 1
+                obj.content = json.dumps(entry['content'])
+                obj.package = None
+                obj.save()
+                ids.append(obj.id)
 
         harvester_msg = '{:<12} | {} | jobID:{} | {} | {}'
         if hasattr(self, 'harvester_logger'):
