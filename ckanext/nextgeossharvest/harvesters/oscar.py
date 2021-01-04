@@ -13,10 +13,7 @@ import mimetypes
 import stringcase
 import re
 import csv
-import pickle
 import shapely.geometry
-
-requests_cache.install_cache()
 
 from ckan.model import Session
 from ckan.model import Package
@@ -58,6 +55,13 @@ class StationInfo(object):
                 return True
         return False
 
+    def get_dict(self):
+        class_dict = {}
+        for attr, value in self.__dict__.items():
+            if attr != 'observations':
+                class_dict[attr] = value
+        return class_dict
+
 class ObservationInfo(object):
     listVars   = ['deployments']
     hrefVars   = ['affiliation']
@@ -77,6 +81,12 @@ class ObservationInfo(object):
     def get_deployments(self):
         return self.deployments
 
+    def get_dict(self):
+        class_dict = {}
+        for attr, value in self.__dict__.items():
+            if attr != 'deployments':
+                class_dict[attr] = value
+        return class_dict
 class DeploymentInfo(object):
     hrefVars   = ['variable', 'application', 'observation']
     path_lists = {
@@ -104,6 +114,12 @@ class DeploymentInfo(object):
         if not self.id or not self.variable or not self.t0:
             return False
         return True
+
+    def get_dict(self):
+        class_dict = {}
+        for attr, value in self.__dict__.items():
+            class_dict[attr] = value
+        return class_dict
 
 def get_field(path_list, json_obj, isList=False):
     for path in path_list:
@@ -296,26 +312,32 @@ class OSCARHarvester(NextGEOSSHarvester):
                             if station_info.isValid():
                                 station_info.id = station
                                 observation_list = station_info.get_observations()
+                                station_dict = station_info.get_dict()
+                                station_info = None
                                 for observation in observation_list:
                                     observation_info = ObservationInfo(session, observation)
                                     deployments_list = observation_info.get_deployments()
+                                    observation_dict = observation_info.get_dict()
+                                    observation_info = None
                                     for deployment in deployments_list:
                                         deployment_info = DeploymentInfo(session, deployment)
                                         if deployment_info.isValid():
+                                            deployment_dict = deployment_info.get_dict()
+                                            deployment_info = None
                                             valid_deployment = True
                                             if station_index+1 <= len(list_stations)-1:
                                                 next_station = list_stations[station_index+1]
                                             else:
                                                 next_station = None
                                             entry_guid = unicode(uuid.uuid4())
-                                            entry_id = '{}_{}'.format(station_info.id, deployment_info.id)
+                                            entry_id = '{}_{}'.format(station_dict['id'], deployment_dict['id'])
                                             entry_name = clean_snakecase(entry_id)
                                             self.log.debug('Gathering %s', entry_name)
 
                                             content = {}
-                                            content['station'] = station_info
-                                            content['observation'] = observation_info
-                                            content['deployment'] = deployment_info
+                                            content['station'] = station_dict
+                                            content['observation'] = observation_dict
+                                            content['deployment'] = deployment_dict
 
                                             package_query = Session.query(Package)
                                             query_filtered = package_query.filter(Package.name == entry_name)
@@ -358,7 +380,7 @@ class OSCARHarvester(NextGEOSSHarvester):
                                                     HOExtra(key='next_station', value=next_station),
                                                     HOExtra(key='restart_date', value=restart_date)
                                                 ])
-                                            obj.content = pickle.dumps(content)
+                                            obj.content = json.dumps(content)
                                             obj.package = None if status == 'new' else package
                                             obj.save()
                                             ids.append(obj.id)
@@ -384,7 +406,7 @@ class OSCARHarvester(NextGEOSSHarvester):
         Parse the entry content and return a dictionary using our standard
         metadata terms.
         """
-        content = pickle.loads(content)
+        content = json.loads(content)
         station = content['station']
         observation = content['observation']
         deployment = content['deployment']
@@ -394,38 +416,42 @@ class OSCARHarvester(NextGEOSSHarvester):
         item['collection_name'] = "WMO Integrated Observing System (surface-based part)"
         item['collection_description'] = "Metadata describing observations collected under the auspices of the WMO WIGOS covering atmosphere, land and ocean. Metadata are stored in OSCAR/Surface that refers to data hosted at different data centers distributed globally."
 
-        item['identifier'] = '{}_{}'.format(station.id, deployment.id)
+        item['identifier'] = '{}_{}'.format(station['id'], deployment['id'])
         item['title'] = item['identifier']
         item['name']       = clean_snakecase(item['identifier'])
 
         notes_tmp1 = "Dataset refers to metadata for the observed variable {variable}"
         notes_tmp2 = ", associated with the Network(s)/Program(s) \"{affiliation}\"."
         notes_tmp3 = " The observation was  primarily made for {application}."
-        notes1         = notes_tmp1.format(variable=deployment.variable)
-        notes2         = notes_tmp2.format(affiliation=observation.affiliation) if observation.affiliation else "."
-        notes3         = notes_tmp3.format(application=deployment.application) if deployment.application else ""
+        variable = deployment.get('variable')
+        affiliation = observation.get('affiliation')
+        application = deployment.get('application')
+        notes1         = notes_tmp1.format(variable=variable)
+        notes2         = notes_tmp2.format(affiliation=affiliation) if affiliation else "."
+        notes3         = notes_tmp3.format(application=application) if application else ""
         item['notes']  = notes1 + notes2 + notes3
         item['tags']   = []
 
-        item['timerange_start'] = deployment.t0
+        item['timerange_start'] = deployment.get('t0')
 
-        if deployment.tf:
-            item['timerange_end'] = deployment.tf
+        if deployment.get('tf'):
+            item['timerange_end'] = deployment.get('tf')
         
-        if deployment.spatial:
-            spatial = self.build_spatial(deployment.spatial)
+        if deployment.get('spatial'):
+            spatial = self.build_spatial(deployment.get('spatial'))
         else:
-            spatial = self.build_spatial(station.spatial)
+            spatial = self.build_spatial(station.get('spatial'))
         item['spatial'] = json.dumps(spatial)
 
         ####### OPTIONAL FIELDS ########
-        item['wigos_id'] = station.id
+        item['wigos_id'] = station.get('id')
 
-        if deployment.distance_value:
-            unit = deployment.distance_unit if deployment.distance_unit else ''
-            item['distance_from_reference_surface'] = deployment.distance_value + unit
-        if deployment.observation:
-            item['source_of_observation'] = deployment.observation
+        if deployment.get('distance_value'):
+            unit = deployment.get('distance_unit') if deployment.get('distance_unit') else ''
+            item['distance_from_reference_surface'] = deployment.get('distance_value') + unit
+
+        if deployment.get('observation') and deployment.get('observation') != 'unknown':
+            item['source_of_observation'] = deployment.get('observation')
         
         item['resource'] = self.parse_resources(item['wigos_id'])
         return item
