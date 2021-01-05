@@ -77,19 +77,22 @@ This extension contains harvester plugins for harvesting from sources used by Ne
 24. [Harvesting NOA GeObservatory products](#harvesting-noa_geob)
     1. [NOA GeObservatory Settings](#noa_geob-settings)
     2. [Running a NOA GeObservatory harvester](#running-noa_geob)
-25. [Developing new harvesters](#develop)
+25. [Harvesting Energy Data products](#harvesting-energydata)
+    1. [Energy Data Settings](#energydata-settings)
+    2. [Running an Energy Data harvester](#running-energydata)
+26. [Developing new harvesters](#develop)
     1. [The basic harvester workflow](#basicworkflow)
         1. [gather_stage](#gather_stage)
         2. [fetch_stage](#fetch_stage)
         3. [import_stage](#import_stage)
     2. [Example of an OpenSearch-based harvester](#opensearchexample)
-26. [iTag](#itag)
+27. [iTag](#itag)
     1. [How ITagEnricher works](#itagprocess)
     2. [Setting up ITagEnricher](#setupitag)
     3. [Handling iTag errors](#handlingitagerrors)
-27. [Testing testing testing](#tests)
-28. [Suggested cron jobs](#cron)
-29. [Logs](#logs)
+28. [Testing testing testing](#tests)
+29. [Suggested cron jobs](#cron)
+30. [Logs](#logs)
     1. [How ITagEnricher works](#itagprocess)
     2. [Setting up ITagEnricher](#setupitag)
     3. [Handling iTag errors](#handlingitagerrors)
@@ -985,6 +988,33 @@ The NOA GeObservatory harvester configuration contains the following options:
 4. Add a config as described above.
 5. Select `Manual` from the frequency options. 
 6. Run the harvester. It will programmatically create datasets.
+
+
+## <a name="harvesting-energydata"></a>Harvesting Energy Data products
+The Energy Data harvester harvests products from the Energy Data API
+
+### <a name="energydata-settings"></a>Energy Data Settings
+The Energy Data harvester has configuration as:
+1. `start_date`: (required, datetime string, if the harvester is new, or from the ingestion date of the most recently harvested product if it has been run before) determines the start of the date range for harvester queries. Example: "start_date": "2019-10-01T00:00:00Z". Note that the entire datetime string is required. `2019-10-01` is not valid. 
+2. `end_date`: (optional, datetime string, default is "NOW") determines the end of the date range for harvester queries. Example: "end_date": "2020-01-01T00:00:00Z". Note that the entire datetime string is required. `2020-01-01` is not valid.
+3. `datasets_per_job`: (optional, integer, defaults to 100) determines the maximum number of products that will be harvested during each job. 
+4. `timeout`: (optional, integer, defaults to 10) determines the number of seconds to wait before timing out a request.
+5. `make_private` (optional) determines whether the datasets created by the harvester will be private or public. The default is `false`, i.e., by default, all datasets created by the harvester will be public.
+
+#### Examples of Energy Data settings
+```
+{
+"start_date": "2017-10-01T00:00:00Z",
+"datasets_per_job": 100
+}
+```
+
+### <a name="running-energydata"></a>Running an Energy Data harvester
+1. Add `energydata` to the list of plugins in your .ini file.
+2. Create a new harvester via the harvester interface.
+3. Select `Energy Data Harvester` from the list of harvesters.
+4. Add a config as described above.
+5. Select `Manual` from the frequency options. 
 
 
 ## <a name="develop"></a>Developing new harvesters
