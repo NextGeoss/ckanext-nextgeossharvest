@@ -13,3 +13,4 @@ OWSLib==0.16
 stringcase
 boto3
 xmltodict
+requests_cache
