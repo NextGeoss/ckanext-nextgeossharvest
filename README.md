@@ -805,6 +805,8 @@ The Cold Regions harvester harvests the NERSC pilot outputs for the following co
     1. Sentinel-1 HH/HV based ice/water classification
     2. Sea ice and water classification in the Arctic for INTAROS 2018 field experiment
     3. Sea ice and water classification in the Arctic for CAATEX/INTAROS 2019 field experiment
+    4. Average sea ice drift in the Arctic for INTAROS 2018 field experiment
+    5. Average sea ice drift in the Arctic for CAATEX 2019 field experiment
 
 ### <a name="running-coldregions"></a>Running a Cold Regions Harvester
 The Cold Regions harvester will run one time per collection and it will collect all the cold regions datasets within the input collection(static data). In the command line run:
@@ -816,6 +818,8 @@ The following collection IDs are available:
 - S1_ARCTIC_SEAICEEDGE_CLASSIFICATION
 - S1_ARCTIC_SEAICEEDGE_CLASSIFICATION_INTAROS_2018
 - S1_ARCTIC_SEAICEEDGE_CLASSIFICATION_CAATEX_INTAROS_2019
+- S1_ARCTIC_SEAICEDRIFT_AVERAGE_INTAROS_2018
+- S1_ARCTIC_SEAICEDRIFT_AVERAGE_CAATEX_2019
 
 ## <a name="harvesting-landsat8"></a>Harvesting Landsat-8 products
 The Landsat-8 harvester collects the Level-1 data products generated from Landsat 8 Operational Land Imager (OLI)/Thermal Infrared Sensor (TIRS). The following collection 1 Tiers are harvested:
