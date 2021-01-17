@@ -34,8 +34,8 @@ class FaoBaseHarvester(HarvesterBase):
         item['timerange_start'] = content['date']
         item['timerange_end'] = content['date']
 
-        item['collection_id'] = 'FAO_Products'
-        item['collection_name'] = 'FAO Products'
+        item['collection_id'] = 'FAO_COLLECTION'
+        item['collection_name'] = 'FAO Collection'
         item['collection_description'] = """The Food and Agriculture Organization (FAO) is a specialized agency of the United Nations that leads international efforts to defeat hunger.
 Our goal is to achieve food security for all and make sure that people have regular access to enough high-quality food to lead active, healthy lives. 
 With over 194 member states, FAO works in over 130 countries worldwide."""
