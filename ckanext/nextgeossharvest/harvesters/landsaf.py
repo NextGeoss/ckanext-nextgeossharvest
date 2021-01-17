@@ -4,6 +4,8 @@ import logging
 import time
 import json
 import xmltodict
+import re
+import stringcase
 from datetime import datetime
 
 import requests
@@ -173,19 +175,10 @@ class LandsafHarvester(LandsafBaseHarvester, NextGEOSSHarvester,
         entries = []
 
         for entry in results:
-            # If there are any non ascii characters in the title,
-            # the dataset gets skipped
+            # Create identifier from Title and ID if they exist
             try:
-                # Replace all non supported characters and 
-                # append the datasets id to avoid having datasets with the same identifier
-                identifier = entry['title'].encode('utf-8')\
-                                    .replace(' ', '_').replace(',', '_').replace('.', '').replace('_(', '_')\
-                                    .replace('(', '_').replace(')', '').replace('/', '_').replace('~', '')\
-                                    .replace('%', '').replace('_-_', '_').replace(':', '_').replace('#', '')\
-                                    .replace('>', '').replace('<', '').replace(';', '').replace('\'', '')\
-                                    .replace('+', '').replace('&', '').replace('__', '_').lower()
-                identifier = identifier + "_" + entry['geonet:info']['id']['#text']
-            except (TypeError, UnicodeDecodeError):
+                identifier = self._create_identifier(entry['title'], entry['geonet:info']['id']['#text'])
+            except TypeError:
                 continue
 
             # Skip datasets with short vague names
@@ -325,3 +318,16 @@ class LandsafHarvester(LandsafBaseHarvester, NextGEOSSHarvester,
                                         timestamp, self.job.id, new_counter, 0))  # noqa: E128, E501
 
         return ids
+
+    def _create_identifier(self, og_identifier, og_id):
+        """ Creates identifier from title and ID.
+            Keeps only alphanumeric characters.
+        """
+
+        identifier = og_identifier + "_" + og_id
+
+        identifier = re.sub('[^0-9a-zA-Z]+', '_', identifier).lower()
+        sc_identifier = stringcase.snakecase(identifier).strip("_")
+        while "__" in sc_identifier:
+            sc_identifier = sc_identifier.replace("__", "_")
+        return sc_identifier
