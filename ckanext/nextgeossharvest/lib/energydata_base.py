@@ -83,7 +83,7 @@ and modern energy for all."""
 
         item['resource'] = self._parse_resources(content['resources'])
 
-        # Spatial Info. Entirety of Earth
+        # Spatial Information
         item['spatial'] = self._get_spatial_information(content)
 
         # Get timerange from different fields
