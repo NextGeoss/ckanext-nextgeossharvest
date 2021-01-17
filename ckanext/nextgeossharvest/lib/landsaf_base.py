@@ -34,8 +34,8 @@ class LandsafBaseHarvester(HarvesterBase):
         item['timerange_start'] = content['date']
         item['timerange_end'] = content['date']
 
-        item['collection_id'] = 'Landsaf_Products'
-        item['collection_name'] = 'Landsaf Products'
+        item['collection_id'] = 'LANDSAF_COLLECTION'
+        item['collection_name'] = 'Landsaf Collection'
         item['collection_description'] = """Eumetsat Land Cover Surface Analysis"""
 
         return item
