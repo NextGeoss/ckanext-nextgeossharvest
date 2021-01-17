@@ -2,6 +2,8 @@
 
 import logging
 import json
+import os
+import sys
 
 from ckanext.harvest.harvesters.base import HarvesterBase
 
@@ -125,33 +127,25 @@ and modern energy for all."""
         return content['metadata_created'], content['metadata_created']
 
     def _get_spatial_information(self, content):
-        if 'region' in content and content['region']:
-            # Africa
-            if content['region'][0] == "AFR":
-                wkt_poly = "POLYGON ((-20.91796 -36.17335, 54.49218 -36.17335, 54.49218 37.30027, -20.91796 37.30027, -20.91796 -36.17335))"
-            # Special administrative regions of China
-            elif content['region'][0] == "SAR":
-                wkt_poly = "POLYGON ((113.21685 21.61913, 114.84283 21.61913, 114.84283 22.86731, 113.21685 22.86731, 113.21685 21.61913))"
-            # Europe and Central Asia
-            elif content['region'][0] == "ECA":
-                wkt_poly = "POLYGON ((-24.25781 36.31512, 180 36.31512, 180 70.72897, -24.25781 70.72897, -24.25781 36.31512))"
-            # East Asia Pacific
-            elif content['region'][0] == "EAP":
-                wkt_poly = "POLYGON ((79.10156 -11.52308, 156.44531 -11.52308, 156.44531 51.83577, 79.10156 51.83577, 79.10156 -11.52308))"
-            # Latin America and Carribean
-            elif content['region'][0] == "LCR":
-                wkt_poly = "POLYGON ((-95.80078 -55.97379, -33.39843 -55.97379, -33.39843 23.72501, -95.80078 23.72501, -95.80078 -55.97379))"
-            #Middle East and North Africa
-            elif content['region'][0] == "MNA":
-                wkt_poly = "POLYGON ((-14.41406 9.79567, 69.60937 9.79567, 69.60937 35.31736, -14.41406 35.31736, -14.41406 9.79567))"
-            else:
-                # Globe
-                wkt_poly = "POLYGON((-180 -90, -180 90, 180 90, 180 -90, -180 -90))"
-        else:
-            # Globe
-            wkt_poly = "POLYGON((-180 -90, -180 90, 180 90, 180 -90, -180 -90))"
+        """
+        Get country borders from geojson file. ISO_A3 is used.
+        """
+        if 'country_code' in content and content['country_code']:
+            # Full path to geojson file
+            full_path = os.path.join(os.path.dirname(__file__), 'countries_iso_a3.geojson')
+
+            with open(full_path) as countries_file:
+                countries = json.load(countries_file)
+                
+                for country in countries:
+                    if content['country_code'][0] == country:
+                        return json.dumps(countries[country], ensure_ascii=False).encode('utf8')
             
-        return self._convert_to_geojson(wkt_poly)
+            # Country code was not found inside the file
+            return self._convert_to_geojson("POLYGON((-180 -90, -180 90, 180 90, 180 -90, -180 -90))")
+        else:
+            # API provided no country code
+            return self._convert_to_geojson("POLYGON((-180 -90, -180 90, 180 90, 180 -90, -180 -90))")
 
     def _get_resources(self, parsed_content):
         """Return a list of resource dicts."""
