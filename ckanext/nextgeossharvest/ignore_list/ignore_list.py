@@ -20,6 +20,7 @@ from meloa import MELOA_IGNORE_DICT
 from satcen_better import SATCEN_BETTER_IGNORE_DICT
 from fsscat import FSSCAT_IGNORE_DICT
 from oscar import OSCAR_IGNORE_DICT
+from vito_ignore_list import VITO_IGNORE_DICT
 
 IGNORE_LIST = {}
 
@@ -45,3 +46,4 @@ IGNORE_LIST.update(MELOA_IGNORE_DICT)
 IGNORE_LIST.update(SATCEN_BETTER_IGNORE_DICT)
 IGNORE_LIST.update(FSSCAT_IGNORE_DICT)
 IGNORE_LIST.update(OSCAR_IGNORE_DICT)
+IGNORE_LIST.update(VITO_IGNORE_DICT)
