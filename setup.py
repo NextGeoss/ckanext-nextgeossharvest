@@ -106,6 +106,7 @@ setup(
         noa_groundsegment=ckanext.nextgeossharvest.harvesters:NoaGroundsegmentHarvester
         noa_geobservatory=ckanext.nextgeossharvest.harvesters:NoaGeobservatoryHarvester
         oscar=ckanext.nextgeossharvest.harvesters:OSCARHarvester
+        vito=ckanext.nextgeossharvest.harvesters:VITO_Harvest
 
         [babel.extractors]
         ckan = ckan.lib.extract:extract_ckan
