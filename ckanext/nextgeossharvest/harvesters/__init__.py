@@ -23,3 +23,4 @@ from ckanext.nextgeossharvest.harvesters.satcen_better import SatcenBetterHarves
 from ckanext.nextgeossharvest.harvesters.noa_groundsegment import NoaGroundsegmentHarvester  # noqa: F401, E501
 from ckanext.nextgeossharvest.harvesters.noa_geobservatory import NoaGeobservatoryHarvester  # noqa: F401, E501
 from ckanext.nextgeossharvest.harvesters.oscar import OSCARHarvester   # noqa: F401, E501
+from ckanext.nextgeossharvest.harvesters.vito import VITO_Harvest  # noqa: F401, E501
