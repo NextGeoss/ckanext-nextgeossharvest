@@ -222,7 +222,7 @@ class FSSCATBase(HarvesterBase):
         resource = {
             "name": name,
             "description": description,
-            "url": url,
+            "url": url.replace('ftp://', 'ftp://public:public@'),
             "format": extension
         }
         if size:
