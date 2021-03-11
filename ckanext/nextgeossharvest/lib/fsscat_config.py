@@ -20,20 +20,12 @@ COLLECTION = {
         "collection_description": "GNSS-R Geolocated Reflection Delay-Doppler Maps"
     },
     ###################################################
-    ##############        Level 2        ##############
-    ###################################################
-    "GRF_L2__SIE": {
-        "collection_id": "FSSCAT_GRF_L2__SIE",
-        "collection_name": "FSSCAT GNSS Reflectometer L2 Ice Map",
-        "collection_description": "GNSS-R Detection Sea Ice Extent Map"
-    },
-    ###################################################
     ##############        Level 3        ##############
     ###################################################
-    "GRF_L3__ICM": {
-        "collection_id": "FSSCAT_GRF_L3__SIE",
-        "collection_name": "FSSCAT GNSS Reflectometer L3 Ice Map",
-        "collection_description": "GNSS-R Detection Sea Ice Extent Map Composite"
+    "GRF_L3__OBS": {
+        "collection_id": "FSSCAT_GRF_L3__OBS",
+        "collection_name": "FSSCAT GNSS Reflectometer L3 Observables",
+        "collection_description": "GNSS-R Reflectivity and DDM SNR Observables"
     },
     ###################################################
     ############## MWR Processors Config ##############
@@ -73,10 +65,15 @@ COLLECTION = {
     ###################################################
     ##############        Level 3        ##############
     ###################################################
+    "MWR_L3__CTB": {
+        "collection_id": "FSSCAT_MWR_L3__CTB",
+        "collection_name": "FSSCAT Microwave Radiometer L3 Raw Brightness Temperature",
+        "collection_description": "L-Band Ice/Land Brightness Temperature Map Composite from L1C"
+    },
     "MWR_L3__TB_": {
         "collection_id": "FSSCAT_MWR_L3__TB_",
         "collection_name": "FSSCAT Microwave Radiometer L3 Ice/Land Brightness Temperature",
-        "collection_description": "L-Band Ice/Land Brightness Temperature Map Composite"
+        "collection_description": "L-Band Ice/Land Brightness Temperature Map Composite from L2A"
     },
     "MWR_L3__SIT": {
         "collection_id": "FSSCAT_MWR_L3__SIT",
@@ -88,43 +85,75 @@ COLLECTION = {
         "collection_name": "FSSCAT Microwave Radiometer L3 Soil Moisture",
         "collection_description": "MWR L-Band Soil Moisture Map Composite"
     },
+
     ###################################################
-    ##############        Level 4        ##############
+    ##############        FMP SIT        ##############
     ###################################################
-    "MWR_L4__SM_": {
-        "collection_id": "FSSCAT_MWR_L4__SM_",
-        "collection_name": "FSSCAT Microwave Radiometer L4 Downscaled Soil Moisture",
-        "collection_description": "Soil Moisture from MWR+NDVI Downscaling"
+    "FMP_L2__SIT": {
+        "collection_id": "FSSCAT_FMP_L2__SIT",
+        "collection_name": "FSSCAT Neural Network L2 Sea Ice Thickness",
+        "collection_description": "FMPL-2 L2 Neural Network Sea Ice Thickness Maps"
+    },
+    "FMP_L3__SIT": {
+        "collection_id": "FSSCAT_FMP_L3__SIT",
+        "collection_name": "FSSCAT Neural Network L3 Sea Ice Thickness",
+        "collection_description": "FMPL-2 L3 Neural Network Sea Ice Thickness Maps"
+    },
+    "FMP_L4__SIT": {
+        "collection_id": "FSSCAT_FMP_L4__SIT",
+        "collection_name": "FSSCAT Neural Network L4 Sea Ice Thickness",
+        "collection_description": "FMPL-2 L4 Neural Network Sea Ice Thickness Maps"
     },
 
     ###################################################
-    ############## HPS Processors Config ##############
+    ##############        FMP SIC        ##############
     ###################################################
-    ##############        Level 1        ##############
-    ###################################################
-    "HPS_L1C_SCI": {
-        "collection_id": "FSSCAT_HPS_L1C_SCI",
-        "collection_name": "FSSCAT Hyperscout L1C Science",
-        "collection_description": "Hyperscout Calibrated & Geolocated  Radiances"
+    "FMP_L2__SIC": {
+        "collection_id": "FSSCAT_FMP_L2__SIC",
+        "collection_name": "FSSCAT Neural Network L2 Sea Ice Concentration",
+        "collection_description": "FMPL-2 L2 Neural Network Sea Ice Concentration Maps"
     },
-    ###################################################
-    #############         Level 2        ##############
-    ###################################################
-    "HPS_L2__RDI": {
-        "collection_id": "FSSCAT_HPS_L2__RDI",
-        "collection_name": "FSSCAT Hyperscout L2 Radiometric Indexes",
-        "collection_description": "Hyperscout Radiometric Indexes (NDVI)"
+    "FMP_L3__SIC": {
+        "collection_id": "FSSCAT_FMP_L3__SIC",
+        "collection_name": "FSSCAT Neural Network L3 Sea Ice Concentration",
+        "collection_description": "FMPL-2 L3 Neural Network Sea Ice Concentration Maps"
     },
 
     ###################################################
-    ############## SYN Processors Config ##############
+    ##############        FMP SIE        ##############
     ###################################################
-    ##############        Level 4        ##############
+    "FMP_L2__SIE": {
+        "collection_id": "FSSCAT_FMP_L2__SIE",
+        "collection_name": "FSSCAT Neural Network L2 Sea Ice Extent",
+        "collection_description": "FMPL-2 L2 Neural Network Sea Ice Extent Maps"
+    },
+    "FMP_L3__SIE": {
+        "collection_id": "FSSCAT_FMP_L3__SIE",
+        "collection_name": "FSSCAT Neural Network L3 Sea Ice Extent",
+        "collection_description": "FMPL-2 L3 Neural Network Sea Ice Extent Maps"
+    },
+    "FMP_L4__SIE": {
+        "collection_id": "FSSCAT_FMP_L4__SIE",
+        "collection_name": "FSSCAT Neural Network L4 Sea Ice Extent",
+        "collection_description": "FMPL-2 L4 Neural Network Sea Ice Extent Maps"
+    },
+
     ###################################################
-    "SYN_L4__SM_": {
-        "collection_id": "FSSCAT_SYN_L4__SM_",
-        "collection_name": "FSSCAT Synergy L4 Downscaled Soil Moisture",
-        "collection_description": "Soil Moisture from MWR+HPS Downscaling"
+    ##############        FMP SM_        ##############
+    ###################################################
+    "FMP_L2__SM_": {
+        "collection_id": "FSSCAT_FMP_L2__SM_",
+        "collection_name": "FSSCAT Neural Network L2 Soil Moisture",
+        "collection_description": "FMPL-2 L2 Neural Network Soil Moisture Maps"
+    },
+    "FMP_L3__SM_": {
+        "collection_id": "FSSCAT_FMP_L3__SM_",
+        "collection_name": "FSSCAT Neural Network L3 Soil Moisture",
+        "collection_description": "FMPL-2 L3 Neural Network Soil Moisture Maps"
+    },
+    "FMP_L4__SM_": {
+        "collection_id": "FSSCAT_FMP_L4__SM_",
+        "collection_name": "FSSCAT Neural Network L4 Soil Moisture",
+        "collection_description": "FMPL-2 L4 Neural Network Soil Moisture Maps"
     }
 }
-
