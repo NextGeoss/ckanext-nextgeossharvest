@@ -186,7 +186,7 @@ class CMEMSBase(HarvesterBase):
                                                            [-180, -90],
                                                            [-180, 90]])
 
-            thumbnail = ("http://nrt.cmems-du.eu/thredds/wms"
+            thumbnail = ("https://nrt.cmems-du.eu/thredds/wms"
                          "/METOFFICE-GLO-SST-L4-NRT-OBS-SST-V2"
                          "?request=GetMap"
                          "&version=1.3.0"
@@ -227,7 +227,7 @@ class CMEMSBase(HarvesterBase):
                             month +
                             day +
                             "1200.nc")
-            thumbnail = ("http://thredds.met.no/thredds/wms/" +
+            thumbnail = ("https://thredds.met.no/thredds/wms/" +
                          "sea_ice/SIW-OSISAF-GLO-SIT_SIE_SIC-OBS/" +
                          "ice_conc_north_aggregated" +
                          "?request=GetMap" +
@@ -269,7 +269,7 @@ class CMEMSBase(HarvesterBase):
                             month +
                             day +
                             "1200.nc")
-            thumbnail = ("http://thredds.met.no/thredds/wms/" +
+            thumbnail = ("https://thredds.met.no/thredds/wms/" +
                          "sea_ice/SIW-OSISAF-GLO-SIT_SIE_SIC-OBS/" +
                          "ice_conc_south_aggregated" +
                          "?request=GetMap" +
@@ -302,7 +302,7 @@ class CMEMSBase(HarvesterBase):
                                                            [-180, 63],
                                                            [-180, 90]])
 
-            thumbnail = ("http://thredds.met.no/thredds/wms/" +
+            thumbnail = ("https://thredds.met.no/thredds/wms/" +
                          "topaz/" +
                          "dataset-topaz4-arc-1hr-myoceanv2-be" +
                          "?request=GetMap" +
@@ -332,7 +332,7 @@ class CMEMSBase(HarvesterBase):
                                                            [-180, -90],
                                                            [-180, 90]])
 
-            thumbnail = ("http://nrt.cmems-du.eu/thredds/wms/" +
+            thumbnail = ("https://nrt.cmems-du.eu/thredds/wms/" +
                          "dataset-duacs-nrt-global-merged-allsat-phy-l4" +
                          "?request=GetMap" +
                          "&service=WMS" +
@@ -366,7 +366,7 @@ class CMEMSBase(HarvesterBase):
                                                            [-180, 90]])
 
             gpaf_date_start, gpaf_date_end = self._date_from_identifier_gpaf(content['identifier'])   # noqa E501
-            thumbnail = ("http://nrt.cmems-du.eu/thredds/wms/" +
+            thumbnail = ("https://nrt.cmems-du.eu/thredds/wms/" +
                          "global-analysis-forecast-phy-001-024-hourly-t-u-v-ssh" +
                          "?request=GetMap" +
                          "&service=WMS" +
@@ -404,7 +404,7 @@ class CMEMSBase(HarvesterBase):
                                                            [-180, -90],
                                                            [-180, 90]])
 
-            thumbnail = ("http://nrt.cmems-du.eu/thredds/wms/" +
+            thumbnail = ("https://nrt.cmems-du.eu/thredds/wms/" +
                          "dataset-uv-nrt-hourly" +
                          "?request=GetMap" +
                          "&service=WMS" +
