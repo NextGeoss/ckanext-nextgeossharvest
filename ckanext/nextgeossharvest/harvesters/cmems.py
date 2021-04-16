@@ -59,8 +59,9 @@ class CMEMSHarvester(NextGEOSSHarvester, CMEMSBase):
                                                         'ocn',
                                                         'slv',
                                                         'gpaf',
-                                                        'mog'}:
-                raise ValueError('harvester type is required and must be "sst" or "sic_north" or "sic_south" or "ocn" or "slv" or "gpaf" or "mog"')  # noqa: E501
+                                                        'mog',
+                                                        'bs_sst'}:
+                raise ValueError('harvester type is required and must be "sst" or "sic_north" or "sic_south" or "ocn" or "slv" or "gpaf" or "mog" or "bs_sst"')  # noqa: E501
             if 'start_date' in config_obj:
                 try:
                     start_date = config_obj['start_date']
@@ -125,6 +126,7 @@ class CMEMSHarvester(NextGEOSSHarvester, CMEMSBase):
             self._gather(harvest_job,
                          start_date, end_date, harvest_job.source_id, config)
         )
+        
         return ids
 
     def _gather(self, job, start_date, end_date, source_id, config):
@@ -148,6 +150,7 @@ class CMEMSHarvester(NextGEOSSHarvester, CMEMSBase):
             ids.append(self._gather_object(job,
                                            ftp_url, size,
                                            start_date, forecast_date))
+        
         return ids
 
     def fetch_stage(self, harvest_object):
@@ -349,6 +352,11 @@ FTP_SOURCE_CONF = {
         'path': 'Core/MULTIOBS_GLO_PHY_NRT_015_003/dataset-uv-nrt-hourly',
         'fname_pattern': r'dataset-uv-nrt-hourly_(?P<date>\d{8,8})T0000Z'
         '_P\d{8,8}T\d{4}.nc',
+    },
+    'bs_sst': {
+        'domain': 'my.cmems-du.eu',
+        'path': 'Core/SST_BS_SST_L4_REP_OBSERVATIONS_010_022/cmems_SST_BS_SST_L4_REP_OBSERVATIONS_010_022',
+        'fname_pattern': r'(?P<date>\d{8,8})000000-GOS-L4_GHRSST-SSTfnd-OISST_HR_REP-BLK-v02.0-fv03.0.nc',
     }
 
 }

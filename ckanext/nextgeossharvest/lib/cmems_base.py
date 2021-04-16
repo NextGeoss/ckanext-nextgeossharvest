@@ -127,6 +127,16 @@ class CMEMSBase(HarvesterBase):
                               {"name": "hourly"},
                               {"name": "eastward sea water velocity "},
                               {"name": "northward sea water velocity"}])
+        
+        
+        elif self.harvester_type == 'bs_sst':
+            tags_list.extend([{"name": "SST"},
+                              {"name": "sea surface temperature"},
+                              {"name": "sea ice area fraction"},
+                              {"name": "SIC"},
+                              {"name": "temperature"},
+                              {"name": "sea"},
+                              {"name": "observation"}])
         else:
             tags_list.extend([{"name": "sea ice"},
                               {"name": "ice"},
@@ -186,7 +196,7 @@ class CMEMSBase(HarvesterBase):
                                                            [-180, -90],
                                                            [-180, 90]])
 
-            thumbnail = ("http://nrt.cmems-du.eu/thredds/wms"
+            thumbnail = ("https://nrt.cmems-du.eu/thredds/wms"
                          "/METOFFICE-GLO-SST-L4-NRT-OBS-SST-V2"
                          "?request=GetMap"
                          "&version=1.3.0"
@@ -227,7 +237,7 @@ class CMEMSBase(HarvesterBase):
                             month +
                             day +
                             "1200.nc")
-            thumbnail = ("http://thredds.met.no/thredds/wms/" +
+            thumbnail = ("https://thredds.met.no/thredds/wms/" +
                          "sea_ice/SIW-OSISAF-GLO-SIT_SIE_SIC-OBS/" +
                          "ice_conc_north_aggregated" +
                          "?request=GetMap" +
@@ -269,7 +279,7 @@ class CMEMSBase(HarvesterBase):
                             month +
                             day +
                             "1200.nc")
-            thumbnail = ("http://thredds.met.no/thredds/wms/" +
+            thumbnail = ("https://thredds.met.no/thredds/wms/" +
                          "sea_ice/SIW-OSISAF-GLO-SIT_SIE_SIC-OBS/" +
                          "ice_conc_south_aggregated" +
                          "?request=GetMap" +
@@ -302,7 +312,7 @@ class CMEMSBase(HarvesterBase):
                                                            [-180, 63],
                                                            [-180, 90]])
 
-            thumbnail = ("http://thredds.met.no/thredds/wms/" +
+            thumbnail = ("https://thredds.met.no/thredds/wms/" +
                          "topaz/" +
                          "dataset-topaz4-arc-1hr-myoceanv2-be" +
                          "?request=GetMap" +
@@ -332,7 +342,7 @@ class CMEMSBase(HarvesterBase):
                                                            [-180, -90],
                                                            [-180, 90]])
 
-            thumbnail = ("http://nrt.cmems-du.eu/thredds/wms/" +
+            thumbnail = ("https://nrt.cmems-du.eu/thredds/wms/" +
                          "dataset-duacs-nrt-global-merged-allsat-phy-l4" +
                          "?request=GetMap" +
                          "&service=WMS" +
@@ -366,7 +376,7 @@ class CMEMSBase(HarvesterBase):
                                                            [-180, 90]])
 
             gpaf_date_start, gpaf_date_end = self._date_from_identifier_gpaf(content['identifier'])   # noqa E501
-            thumbnail = ("http://nrt.cmems-du.eu/thredds/wms/" +
+            thumbnail = ("https://nrt.cmems-du.eu/thredds/wms/" +
                          "global-analysis-forecast-phy-001-024-hourly-t-u-v-ssh" +
                          "?request=GetMap" +
                          "&service=WMS" +
@@ -404,7 +414,7 @@ class CMEMSBase(HarvesterBase):
                                                            [-180, -90],
                                                            [-180, 90]])
 
-            thumbnail = ("http://nrt.cmems-du.eu/thredds/wms/" +
+            thumbnail = ("https://nrt.cmems-du.eu/thredds/wms/" +
                          "dataset-uv-nrt-hourly" +
                          "?request=GetMap" +
                          "&service=WMS" +
@@ -424,10 +434,35 @@ class CMEMSBase(HarvesterBase):
             mog_date = self._date_from_identifier_mog(content['identifier'])
             metadata['timerange_start'] = '{}T00:00:00.000Z'.format(mog_date)  # noqa E501
             metadata['timerange_end'] = '{}T18:00:00.000Z'.format(mog_date)  # noqa E501
+	
+	if self.harvester_type == 'bs_sst':
+            metadata['collection_id'] = ('SST_BS_SST_L4_REP_OBSERVATIONS_010_022')
+            metadata['title'] = "Black Sea - High Resolution L4 Sea Surface Temperature Reprocessed"
+            metadata['notes'] = ("The CMEMS reprocessed Black Sea SST dataset provides 37 years of daily (nighttime) optimally interpolated (L4) satellite-based estimates of the foundation SST in the Black Sea over a 0.05° resolution grid, covering the period 1982-2018. This product is built from a consistent reprocessing of the level-3 (merged multi-sensor, L3) climate data record provided by the ESA Climate Change Initiative (CCI) and Copernicus Climate Change Service (C3S) initiatives, but also include in input an adjusted version of the AVHRR Pathfinder dataset version 5.3 to increase the input observation coverage.")
+            metadata['spatial'] = spatial_template.format([[26.37, 48.82],
+                                                           [42.38, 48.82],
+                                                           [42.38, 38.75],
+                                                           [26.37, 38.75],
+                                                           [26.37, 48.82]])
 
+            thumbnail = ("https://my.cmems-du.eu/thredds/wms"
+                         "/cmems_SST_BS_SST_L4_REP_OBSERVATIONS_010_022"
+                         "?request=GetMap"
+                         "&version=1.3.0"
+                         "&layers=analysed_sst"
+                         "&crs=CRS:84"
+                         "&bbox=26.37,38.75,42.38,48.82"
+                         "&WIDTH=800"
+                         "&HEIGHT=800"
+                         "&styles=boxfill/rainbow"
+                         "&format=image/png"
+                         "&time=" +
+                         start_date_string +
+                         "T00:00:00.000Z")
+	
         # Add common metadata
         metadata['identifier'] = content['identifier']
-        metadata['name'] = metadata['identifier'].lower()
+        metadata['name'] = metadata['identifier'].lower().replace('.','-')    #must be lower case and only '-' and '_' can be used
         if self.harvester_type not in ('slv', 'gpaf', 'mog'):
             metadata['timerange_start'] = '{}T00:00:00.000Z'.format(start_date_string)  # noqa E501
             metadata['timerange_end'] = self._make_stop_time(start_date)
@@ -443,7 +478,7 @@ class CMEMSBase(HarvesterBase):
 
         resources = []
 
-        if self.harvester_type in {'sst', 'ocn', 'slv', 'gpaf', 'mog'}:
+        if self.harvester_type in {'sst', 'ocn', 'slv', 'gpaf', 'mog', 'bs_sst'}:
             resources.append(self._make_resource(ftp_link,
                                                  'Product Download',
                                                  size))
