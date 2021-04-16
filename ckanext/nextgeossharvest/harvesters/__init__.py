@@ -24,3 +24,4 @@ from ckanext.nextgeossharvest.harvesters.noa_groundsegment import NoaGroundsegme
 from ckanext.nextgeossharvest.harvesters.noa_geobservatory import NoaGeobservatoryHarvester  # noqa: F401, E501
 from ckanext.nextgeossharvest.harvesters.oscar import OSCARHarvester   # noqa: F401, E501
 from ckanext.nextgeossharvest.harvesters.vito import VITO_Harvest  # noqa: F401, E501
+from ckanext.nextgeossharvest.harvesters.noa_epidemics import NoaEpidemicsHarvester  # noqa: F401, E501
