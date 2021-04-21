@@ -52,7 +52,7 @@ class CMEMSHarvester(NextGEOSSHarvester, CMEMSBase):
 
         try:
             config_obj = json.loads(config)
-
+	    
             if config_obj.get('harvester_type') not in {'sst',
                                                         'sic_north',
                                                         'sic_south',
@@ -71,8 +71,11 @@ class CMEMSHarvester(NextGEOSSHarvester, CMEMSBase):
                         start_date = self.convert_date_config(start_date)
                 except ValueError:
                     raise ValueError('start_date format must be yyyy-mm-dd')
+            
             else:
                 raise ValueError('start_date is required')
+            
+            	
             if 'end_date' in config_obj:
                 try:
                     end_date = config_obj['end_date']
@@ -82,6 +85,10 @@ class CMEMSHarvester(NextGEOSSHarvester, CMEMSBase):
                         end_date = self.convert_date_config(end_date)
                 except ValueError:
                     raise ValueError('end_date format must be yyyy-mm-dd')
+                
+           
+           
+            
             else:
                 end_date = self.convert_date_config('TODAY')
             if not end_date > start_date:
@@ -100,7 +107,7 @@ class CMEMSHarvester(NextGEOSSHarvester, CMEMSBase):
                 raise ValueError('update_all must be true or false')
         except ValueError as e:
             raise e
-
+        
         return config
 
     def gather_stage(self, harvest_job):
@@ -114,6 +121,8 @@ class CMEMSHarvester(NextGEOSSHarvester, CMEMSBase):
             start_date = last_product_date
         else:
             start_date = self._parse_date(config['start_date'])
+        
+        	
         end_date = min(start_date + self.interval,
                        datetime.now(),
                        self._parse_date(
@@ -122,11 +131,12 @@ class CMEMSHarvester(NextGEOSSHarvester, CMEMSBase):
                            else
                            self.convert_date_config(
                                'TODAY').strftime("%Y-%m-%d")))
+        #if config['harvester_type']=='bs_sst' and end_date > datetime.strptime('2019-12-31',"%Y-%m-%d"):
+        	#end_date = datetime.strptime('2019-12-31',"%Y-%m-%d")
         ids = (
             self._gather(harvest_job,
                          start_date, end_date, harvest_job.source_id, config)
         )
-        
         return ids
 
     def _gather(self, job, start_date, end_date, source_id, config):
@@ -190,7 +200,7 @@ class CMEMSHarvester(NextGEOSSHarvester, CMEMSBase):
     def _gather_object(self, job, url, size, start_date, forecast_date):
         filename = parse_filename(url)
         filename_id = (
-            filename.replace('-v02.0-fv02.0', '').replace('-fv02.0', '')
+            filename.replace('-v02.0-fv02.0', '').replace('-fv02.0', '').replace('-v02.0-fv03.0', '')
         )
 
         status, package = self._was_harvested(filename_id, self.update_all)
@@ -230,14 +240,19 @@ class FtpSource(object):
     def _get_ftp_urls(self, start_date, end_date, user, passwd):
         ftp_urls = set()
         ftp = FTP(self._get_ftp_domain(), user, passwd)
-        for directory in self._get_ftp_directories(start_date, end_date):
-            ftp.cwd('/{}/{}'.format(self._get_ftp_path(), directory))
-            ftp_urls |= set(self._ftp_url(directory, fname)
-                            for fname in ftp.nlst()
-                            if self.fname_pattern.match(
-                                fname) and self._to_harvest(
-                                    fname, start_date, end_date)
-                            )
+        directories_list=self._get_ftp_directories(start_date, end_date)
+        for directory in directories_list:
+            try:
+		    ftp.cwd('/{}/{}'.format(self._get_ftp_path(), directory))
+	    except:
+            	    directories_list.pop()
+	    ftp_urls |= set(self._ftp_url(directory, fname)
+	                    for fname in ftp.nlst()
+	                    if self.fname_pattern.match(
+	                        fname) and self._to_harvest(
+	                            fname, start_date, end_date)
+	                    )
+    
         return ftp_urls
 
     def _to_harvest(self, fname, start_date, end_date):

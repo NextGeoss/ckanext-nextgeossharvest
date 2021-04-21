@@ -132,8 +132,7 @@ class CMEMSBase(HarvesterBase):
         elif self.harvester_type == 'bs_sst':
             tags_list.extend([{"name": "SST"},
                               {"name": "sea surface temperature"},
-                              {"name": "sea ice area fraction"},
-                              {"name": "SIC"},
+                              {"name": "black sea"},
                               {"name": "temperature"},
                               {"name": "sea"},
                               {"name": "observation"}])
@@ -438,7 +437,7 @@ class CMEMSBase(HarvesterBase):
 	if self.harvester_type == 'bs_sst':
             metadata['collection_id'] = ('SST_BS_SST_L4_REP_OBSERVATIONS_010_022')
             metadata['title'] = "Black Sea - High Resolution L4 Sea Surface Temperature Reprocessed"
-            metadata['notes'] = ("The CMEMS reprocessed Black Sea SST dataset provides 37 years of daily (nighttime) optimally interpolated (L4) satellite-based estimates of the foundation SST in the Black Sea over a 0.05° resolution grid, covering the period 1982-2018. This product is built from a consistent reprocessing of the level-3 (merged multi-sensor, L3) climate data record provided by the ESA Climate Change Initiative (CCI) and Copernicus Climate Change Service (C3S) initiatives, but also include in input an adjusted version of the AVHRR Pathfinder dataset version 5.3 to increase the input observation coverage.")
+            metadata['notes'] = ("The CMEMS reprocessed Black Sea SST dataset provides daily (nighttime) optimally interpolated (L4) satellite-based estimates of the foundation SST in the Black Sea over a 0.05 degrees resolution grid. This product is built from a consistent reprocessing of the level-3 (merged multi-sensor, L3) climate data record provided by the ESA Climate Change Initiative (CCI) and Copernicus Climate Change Service (C3S) initiatives, but also include in input an adjusted version of the AVHRR Pathfinder dataset version 5.3 to increase the input observation coverage.")
             metadata['spatial'] = spatial_template.format([[26.37, 48.82],
                                                            [42.38, 48.82],
                                                            [42.38, 38.75],
@@ -459,11 +458,14 @@ class CMEMSBase(HarvesterBase):
                          "&time=" +
                          start_date_string +
                          "T00:00:00.000Z")
-	
+	    
+	    metadata['timerange_start'] = '{}T00:00:00.000Z'.format(start_date_string)
+	    metadata['timerange_end'] = '{}T07:00:00.000Z'.format(start_date_string)
+	     
         # Add common metadata
         metadata['identifier'] = content['identifier']
-        metadata['name'] = metadata['identifier'].lower().replace('.','-')    #must be lower case and only '-' and '_' can be used
-        if self.harvester_type not in ('slv', 'gpaf', 'mog'):
+        metadata['name'] = metadata['identifier'].lower()
+        if self.harvester_type not in ('slv', 'gpaf', 'mog', 'bs_sst'):
             metadata['timerange_start'] = '{}T00:00:00.000Z'.format(start_date_string)  # noqa E501
             metadata['timerange_end'] = self._make_stop_time(start_date)
 
