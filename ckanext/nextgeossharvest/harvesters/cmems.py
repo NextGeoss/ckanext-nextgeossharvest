@@ -244,14 +244,15 @@ class FtpSource(object):
         for directory in directories_list:
             try:
 		    ftp.cwd('/{}/{}'.format(self._get_ftp_path(), directory))
-	    except:
-            	    directories_list.pop()
-	    ftp_urls |= set(self._ftp_url(directory, fname)
+		    ftp_urls |= set(self._ftp_url(directory, fname)
 	                    for fname in ftp.nlst()
 	                    if self.fname_pattern.match(
 	                        fname) and self._to_harvest(
 	                            fname, start_date, end_date)
 	                    )
+	    except:
+            	    return ftp_urls
+	    
     
         return ftp_urls
 
