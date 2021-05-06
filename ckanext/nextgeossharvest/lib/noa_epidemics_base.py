@@ -56,7 +56,7 @@ class NoaEpidemicsBaseHarvester(HarvesterBase):
             'mimetype': "HTML"}]
 
         # Colection Information
-        item['collection_id'] = 'eywa_{}_products'.format(content['mosquito_type'])
+        item['collection_id'] = 'EYWA_{}_PRODUCTS'.format(content['mosquito_type'].upper())
         item['collection_name'] = 'EYWA (NOA-BEYOND) {} Products'.format(content['mosquito_type'].title())  # noqa: E501
         item['collection_description'] = """A 10-years’ time-series of environmental, meteorological and geomorphological data 
                                         for every mosquito-trap in five countries, regarding {} mosquitoes. 
