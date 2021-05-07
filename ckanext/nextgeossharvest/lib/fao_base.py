@@ -34,11 +34,12 @@ class FaoBaseHarvester(HarvesterBase):
         item['timerange_start'] = content['date']
         item['timerange_end'] = content['date']
 
-        item['collection_id'] = 'FAO_COLLECTION'
-        item['collection_name'] = 'FAO Collection'
-        item['collection_description'] = """The Food and Agriculture Organization (FAO) is a specialized agency of the United Nations that leads international efforts to defeat hunger.
-Our goal is to achieve food security for all and make sure that people have regular access to enough high-quality food to lead active, healthy lives. 
-With over 194 member states, FAO works in over 130 countries worldwide."""
+        item['collection_id'] = 'FAO_CORE_DATASETS_COLLECTION'
+        item['collection_name'] = 'FAO Core Datasets Collection'
+        item['collection_description'] = """FAO produces a large number of Geographic Information System (GIS) datasets for 
+monitoring, assessment and analysis of environmental and socio-economic factors causing poverty and food insecurity. 
+Particular relevance is given to malnutrition, farming systems and crops, livestock production systems, fishery and forestry sectors, agro-ecological zoning, 
+land and water resources management and climate related issues."""
 
         return item
 
