@@ -38,10 +38,8 @@ class EnergyDataBaseHarvester(HarvesterBase):
 
         """
 
-        collection_name = "EnergyData Collection"
-        item['collection_name'] = collection_name
-        collection_id = collection_name.replace('-', '_').replace(' ', '_')
-        item['collection_id'] = collection_id.upper()
+        item['collection_id'] = "ENERGYDATA_INFO_COLLECTION"
+        item['collection_name'] = "EnergyData Info Collection"
         item['collection_description'] = """ENERGYDATA.INFO is an open data platform providing access to datasets and data analytics 
 that are relevant to the energy sector. ENERGYDATA.INFO has been developed as a public good to share data and analytics that 
 can help achieving the United Nations’ Sustainable Development Goal 7 of ensuring access to affordable, reliable, sustainable 
