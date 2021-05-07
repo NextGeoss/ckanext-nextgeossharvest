@@ -6,7 +6,7 @@ import json
 import xmltodict
 import re
 import stringcase
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import requests
 from requests.exceptions import Timeout
@@ -111,6 +111,9 @@ class LandsafHarvester(LandsafBaseHarvester, NextGEOSSHarvester,
             try:
                 last_object = last_object[0]
                 restart_date = self._get_object_extra(last_object, 'restart_date', '*')
+                # Go one second back because "DateFrom" is exclusive
+                restart_date = datetime.strptime(restart_date, '%Y-%m-%dT%H:%M:%S') - timedelta(seconds=1)
+                restart_date = restart_date.strftime('%Y-%m-%dT%H:%M:%S')
             except IndexError:
                 restart_date = ''
         else:
