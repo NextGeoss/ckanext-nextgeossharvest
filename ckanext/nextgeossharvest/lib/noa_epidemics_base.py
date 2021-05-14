@@ -23,9 +23,7 @@ class NoaEpidemicsBaseHarvester(HarvesterBase):
         item['name'] = content['filename']
         item['title'] = content['filename']
         item['identifier'] = content['filename']
-        item['notes'] = """Environmental, meteorological and geomorphological data 
-                        for the {} mosquito-trap with ID: {}. For more information please visit: 
-                        http://beyond-eocenter.eu/index.php/web-services/eywa""".format(content['mosquito_type'].title(), content['station_id'])
+        item['notes'] = """Environmental, meteorological and geomorphological data for the {} mosquito-trap with ID: {}. For more information please visit: http://beyond-eocenter.eu/index.php/web-services/eywa""".format(content['mosquito_type'].title(), content['station_id']) # noqa: E501
 
         # Timerange
         if 'dt_corrected' in content:
@@ -52,17 +50,13 @@ class NoaEpidemicsBaseHarvester(HarvesterBase):
             'name': content['filename'],
             'description': "Access all the information regarding this dataset at the NOA Epidemics API.",
             'url': "http://epidemics.space.noa.gr/api_v2/{}/?station_id={}&dt_placement={}".format(content['mosquito_type'], content['station_id'], content['dt_placement']),
-            'format': "HTML",
-            'mimetype': "HTML"}]
+            'format': "JSON",
+            'mimetype': "application/json"}]
 
         # Colection Information
         item['collection_id'] = 'EYWA_{}_PRODUCTS'.format(content['mosquito_type'].upper())
         item['collection_name'] = 'EYWA (NOA-BEYOND) {} Products'.format(content['mosquito_type'].title())  # noqa: E501
-        item['collection_description'] = """A 10-years’ time-series of environmental, meteorological and geomorphological data 
-                                        for every mosquito-trap in five countries, regarding {} mosquitoes. 
-                                        Satellite indices created and opened by EYWA.
-                                        For more information please visit: 
-                                        http://beyond-eocenter.eu/index.php/web-services/eywa""".format(content['mosquito_type'].title())  # noqa: E501
+        item['collection_description'] = """A 10-years’ time-series of environmental, meteorological and geomorphological data for every mosquito-trap in five countries, regarding {} mosquitoes. Satellite indices created and opened by EYWA. For more information please visit: http://beyond-eocenter.eu/index.php/web-services/eywa""".format(content['mosquito_type'].title())  # noqa: E501
 
         return item
 
