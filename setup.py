@@ -97,6 +97,7 @@ setup(
         itag=ckanext.nextgeossharvest.harvesters:ITagEnricher
         ebvs=ckanext.nextgeossharvest.harvesters:EBVSHarvester
         cgss1=ckanext.nextgeossharvest.harvesters:CGSHarvester
+        fsscat=ckanext.nextgeossharvest.harvesters:FSSCATHarvester
         saeon=ckanext.nextgeossharvest.harvesters:SAEONHarvester
         scent=ckanext.nextgeossharvest.harvesters:SCENTHarvester
         landsat8=ckanext.nextgeossharvest.harvesters:Landsat8Harvester
@@ -105,6 +106,9 @@ setup(
         noa_groundsegment=ckanext.nextgeossharvest.harvesters:NoaGroundsegmentHarvester
         noa_geobservatory=ckanext.nextgeossharvest.harvesters:NoaGeobservatoryHarvester
         landsaf=ckanext.nextgeossharvest.harvesters:LandsafHarvester
+        oscar=ckanext.nextgeossharvest.harvesters:OSCARHarvester
+        vito=ckanext.nextgeossharvest.harvesters:VITO_Harvest
+        noa_epidemics=ckanext.nextgeossharvest.harvesters:NoaEpidemicsHarvester
 
         [babel.extractors]
         ckan = ckan.lib.extract:extract_ckan
