@@ -34,8 +34,8 @@ class LandsafBaseHarvester(HarvesterBase):
         item['timerange_start'] = content['date']
         item['timerange_end'] = content['date']
 
-        item['collection_id'] = 'EUMETSAT_LAND_COVER_SURFACE_ANALYSIS'
-        item['collection_name'] = 'Eumetsat Land Cover Surface Analysis'
+        item['collection_id'] = 'EUMETSAT_LAND_SURFACE_ANALYSIS'
+        item['collection_name'] = 'Eumetsat Land Surface Analysis'
         item['collection_description'] = """The LSA SAF (Satellite Application Facility on Land Surface Analysis) is 
 part of the distributed EUMETSAT (European Organization for the Exploitation of Meteorological Satellites) Application Ground Segment. 
 It is focused on the development and processing of satellite products that characterize the continental surfaces, such as radiation products, 
