@@ -105,6 +105,7 @@ setup(
         satcenbetter=ckanext.nextgeossharvest.harvesters:SatcenBetterHarvester
         noa_groundsegment=ckanext.nextgeossharvest.harvesters:NoaGroundsegmentHarvester
         noa_geobservatory=ckanext.nextgeossharvest.harvesters:NoaGeobservatoryHarvester
+        landsaf=ckanext.nextgeossharvest.harvesters:LandsafHarvester
         oscar=ckanext.nextgeossharvest.harvesters:OSCARHarvester
         vito=ckanext.nextgeossharvest.harvesters:VITO_Harvest
         noa_epidemics=ckanext.nextgeossharvest.harvesters:NoaEpidemicsHarvester
