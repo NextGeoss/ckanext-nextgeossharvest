@@ -127,6 +127,13 @@ class CMEMSBase(HarvesterBase):
                               {"name": "hourly"},
                               {"name": "eastward sea water velocity "},
                               {"name": "northward sea water velocity"}])
+        elif self.harvester_type == 'bs_chl':
+            tags_list.extend([{"name": "sea life"},
+                              {"name": "chlorophyll"},
+                              {"name": "Black Sea"},
+                              {"name": "sea"},
+                              {"name": "Observation"},
+                              {"name": "Sentinel-3 "}])
         else:
             tags_list.extend([{"name": "sea ice"},
                               {"name": "ice"},
@@ -424,7 +431,33 @@ class CMEMSBase(HarvesterBase):
             mog_date = self._date_from_identifier_mog(content['identifier'])
             metadata['timerange_start'] = '{}T00:00:00.000Z'.format(mog_date)  # noqa E501
             metadata['timerange_end'] = '{}T18:00:00.000Z'.format(mog_date)  # noqa E501
+	
+	elif self.harvester_type == 'bs_chl':
+            metadata['collection_id'] = 'OCEANCOLOUR_BS_CHL_L3_NRT_OBSERVATIONS_009_044'  # noqa E501
+            metadata['title'] = "Black Sea Surface Chlorophyll Concentration from Multi Satellite and Sentinel-3 OLCI observations"
+            metadata['notes'] = ("The Global Ocean Satellite monitoring and marine ecosystem study group (GOS) of the Italian National Research Council (CNR), in Rome, distributes surface chlorophyll concentration (mg m-3) derived from multi-sensor (MODIS-AQUA, NOAA20-VIIRS, NPP-VIIRS, Sentinel3A-OLCI at 300m of resolution) (at 1 km resolution) and Sentinel3A-OLCI (at 300m resolution) Rrs spectra. The chlorophyll (Chl) product of the Black Sea is obtained combining two different regional algorithms (BSAlg). The first is a band-ratio algorithm (B/R) (Zibordi et al., 2015) that computes Chl as a function of the slope of Rrs values at two wavelengths (490 and 555 nm) using a polynomial regression that captures the overall data trend. The second one is a Multilayer Perceptron (MLP) neural net based on Rrs values at three individual wavelengths (490, 510 and 555 nm) that features interpolation capabilities helpful to fit data nonlinearities. The merging scheme (Kajiyama et al., 2018) has been designed to use the B/R algorithm and the MLP neural net in waters exhibiting lower and higher optical complexity, respectively. For multi-sensor observations, single sensor Rrs fields are band-shifted, over the SeaWiFS native bands (using the QAAv6 model, Lee et al., 2002) and merged with a technique aimed at smoothing the differences among different sensors. The current day data temporal consistency is evaluated as Quality Index (QI):QI=(CurrentDataPixel-ClimatologyDataPixel)/STDDataPixelwhere QI is the difference between current data and the relevant climatological field as a signed multiple of climatological standard deviations (STDDataPixel).")
+            
+            metadata['spatial'] = spatial_template.format([[26.50, 48.00 ],
+                                                           [42.00, 48.00 ],
+                                                           [42.00, 40.00],
+                                                           [26.50, 40.00],
+                                                           [26.50, 48.00 ]])
 
+            thumbnail = ("https://nrt.cmems-du.eu/thredds/wms/dataset-oc-bs-chl-multi-l3-chl_1km_daily-rt-v02" +
+                         "?request=GetMap" +
+                         "&version=1.3.0" +
+                         "&layers=CHL" +
+                         "&CRS=CRS:84" +
+                         "&bbox=26.50,40.00,42.00,48.00" +
+                         "&WIDTH=800" +
+                         "&HEIGHT=800" +
+                         "&styles=boxfill/rainbow" +
+                         "&format=image/png" +
+                         "&time=" +
+                         start_date_string + "T00:00:00.000Z")
+	
+	
+	
         # Add common metadata
         metadata['identifier'] = content['identifier']
         metadata['name'] = metadata['identifier'].lower()
@@ -443,7 +476,7 @@ class CMEMSBase(HarvesterBase):
 
         resources = []
 
-        if self.harvester_type in {'sst', 'ocn', 'slv', 'gpaf', 'mog'}:
+        if self.harvester_type in {'sst', 'ocn', 'slv', 'gpaf', 'mog','bs_chl'}:
             resources.append(self._make_resource(ftp_link,
                                                  'Product Download',
                                                  size))
