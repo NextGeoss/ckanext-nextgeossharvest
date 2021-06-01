@@ -59,8 +59,9 @@ class CMEMSHarvester(NextGEOSSHarvester, CMEMSBase):
                                                         'ocn',
                                                         'slv',
                                                         'gpaf',
-                                                        'mog'}:
-                raise ValueError('harvester type is required and must be "sst" or "sic_north" or "sic_south" or "ocn" or "slv" or "gpaf" or "mog"')  # noqa: E501
+                                                        'mog',
+                                                        'bs_sst_006'}:
+                raise ValueError('harvester type is required and must be "sst" or "sic_north" or "sic_south" or "ocn" or "slv" or "gpaf" or "mog" or "bs_sst_006"')  # noqa: E501
             if 'start_date' in config_obj:
                 try:
                     start_date = config_obj['start_date']
@@ -349,6 +350,11 @@ FTP_SOURCE_CONF = {
         'path': 'Core/MULTIOBS_GLO_PHY_NRT_015_003/dataset-uv-nrt-hourly',
         'fname_pattern': r'dataset-uv-nrt-hourly_(?P<date>\d{8,8})T0000Z'
         '_P\d{8,8}T\d{4}.nc',
+    },
+    'bs_sst_006': {
+        'domain': 'nrt.cmems-du.eu',
+        'path': 'Core/SST_BS_SST_L4_NRT_OBSERVATIONS_010_006/SST_BS_SST_L4_NRT_OBSERVATIONS_010_006_c_V2',
+        'fname_pattern': r'(?P<date>\d{8,8})000000-GOS-L4_GHRSST-SSTfnd-OISST_UHR_NRT-BLK-v02.0-fv02.0.nc',
     }
 
 }

@@ -127,6 +127,13 @@ class CMEMSBase(HarvesterBase):
                               {"name": "hourly"},
                               {"name": "eastward sea water velocity "},
                               {"name": "northward sea water velocity"}])
+        elif self.harvester_type == 'bs_sst_006':
+            tags_list.extend([{"name": "SST"},
+                              {"name": "sea surface temperature"},
+                              {"name": "Black Sea"},
+                              {"name": "temperature"},
+                              {"name": "sea"},
+                              {"name": "observation"}])
         else:
             tags_list.extend([{"name": "sea ice"},
                               {"name": "ice"},
@@ -424,7 +431,32 @@ class CMEMSBase(HarvesterBase):
             mog_date = self._date_from_identifier_mog(content['identifier'])
             metadata['timerange_start'] = '{}T00:00:00.000Z'.format(mog_date)  # noqa E501
             metadata['timerange_end'] = '{}T18:00:00.000Z'.format(mog_date)  # noqa E501
+	
+	
+	if self.harvester_type == 'bs_sst_006':
+            metadata['collection_id'] = ('SST_BS_SST_L4_NRT_OBSERVATIONS_010_006')
+            metadata['title'] = "Black Sea High Resolution and Ultra High Resolution Sea Surface Temperature Analysis"
+            metadata['notes'] = ("For the Black Sea (BS), the CNR BS Sea Surface Temperature (SST) processing chain providess daily gap-free (L4) maps at high (HR 0.0625 deg) and ultra-high (UHR 0.01 deg) spatial resolution over the Black Sea. Remotely-sensed L4 SST datasets are operationally produced and distributed in near-real time by the Consiglio Nazionale delle Ricerche - Gruppo di Oceanografia da Satellite (CNR-GOS). These SST products are based on the nighttime images collected by the infrared sensors mounted on different satellite platforms, and cover the Southern European Seas. The CNR-GOS processing chain includes several modules, from the data extraction and preliminary quality control, to cloudy pixel removal and satellite images collating/merging. A two-step algorithm finally allows to interpolate SST data at high (HR 0.0625 deg) and ultra-high (UHR 0.01 deg) spatial resolution, applying statistical techniques. These L4 data are also used to estimate the SST anomaly with respect to a pentad climatology. The basic design and the main algorithms used are described in the following papers.")
+            metadata['spatial'] = spatial_template.format([[26.37, 48.82],
+                                                           [42.38, 48.82],
+                                                           [42.38, 38.75],
+                                                           [26.37, 38.75],
+                                                           [26.37, 48.82]])
 
+            thumbnail = ("https://nrt.cmems-du.eu/thredds/wms/SST_BS_SST_L4_NRT_OBSERVATIONS_010_006_c_V2"
+                         "?request=GetMap"
+                         "&version=1.3.0"
+                         "&layers=analysed_sst"
+                         "&crs=CRS:84"
+                         "&bbox=26.37,38.75,42.38,48.82"
+                         "&WIDTH=800"
+                         "&HEIGHT=800"
+                         "&styles=boxfill/rainbow"
+                         "&format=image/png"
+                         "&time=" +
+                         start_date_string +
+                         "T00:00:00.000Z")
+                         
         # Add common metadata
         metadata['identifier'] = content['identifier']
         metadata['name'] = metadata['identifier'].lower()
@@ -443,7 +475,7 @@ class CMEMSBase(HarvesterBase):
 
         resources = []
 
-        if self.harvester_type in {'sst', 'ocn', 'slv', 'gpaf', 'mog'}:
+        if self.harvester_type in {'sst', 'ocn', 'slv', 'gpaf', 'mog','bs_sst_006'}:
             resources.append(self._make_resource(ftp_link,
                                                  'Product Download',
                                                  size))
