@@ -127,6 +127,15 @@ class CMEMSBase(HarvesterBase):
                               {"name": "hourly"},
                               {"name": "eastward sea water velocity "},
                               {"name": "northward sea water velocity"}])
+        
+        elif self.harvester_type == 'bs_phy_l4':
+            tags_list.extend([{"name": "PHY"},
+                              {"name": "sea anomalies"},
+                              {"name": "Black Sea"},
+                              {"name": "sea observation"},
+                              {"name": "sea"},
+                              {"name": "observation"}])
+        
         else:
             tags_list.extend([{"name": "sea ice"},
                               {"name": "ice"},
@@ -425,6 +434,31 @@ class CMEMSBase(HarvesterBase):
             metadata['timerange_start'] = '{}T00:00:00.000Z'.format(mog_date)  # noqa E501
             metadata['timerange_end'] = '{}T18:00:00.000Z'.format(mog_date)  # noqa E501
 
+        elif self.harvester_type == 'bs_phy_l4':
+            metadata['collection_id'] = ('SEALEVEL_BS_PHY_L4_REP_OBSERVATIONS_008_042')
+            metadata['title'] = "BLACK SEA GRIDDED L4 SEA LEVEL ANOMALIES AND DERIVED VARIABLES REPROCESSED (1993-ONGOING)"
+            metadata['notes'] = ("Altimeter satellite gridded Sea Level Anomalies (SLA) computed with respect to a twenty-year 2012 mean. The SLA is estimated by Optimal Interpolation, merging the measurement from the different altimeter missions available (see QUID document or http://duacs.cls.fr [1] pages for processing details). The product gives additional variables (i.e. geostrophic currents (anomalies)).This product is processed by the DUACS multimission altimeter data processing system. It serves in near-real time the main operational oceanography and climate forecasting centers in Europe and worldwide. It processes data from all altimeter missions: Jason-3, Sentinel-3A, HY-2A, Saral/AltiKa, Cryosat-2, Jason-2, Jason-1, T/P, ENVISAT, GFO, ERS1/2. It provides a consistent and homogeneous catalogue of products for varied applications, both for near real time applications and offline studies. To produce maps of Sea Level Anomalies (SLA) in delayed-time (REPROCESSED), the system uses the along-track altimeter missions from products called SEALEVEL_PHY_L3_REP_OBSERVATIONS_008_. Finally an Optimal Interpolation is made merging all the flying satellites in order to compute gridded SLA. The geostrophic currents are derived from sla (geostrophic velocities anomalies, ugosa and vgosa variables). Note that the gridded products can be visualized on the LAS (Live Access Data) Aviso+ web page (http://www.aviso.altimetry.fr/en/data/data-access/las-live-access-server.html [2])")
+            metadata['spatial'] = spatial_template.format([[27.00, 47.00],
+                                                           [42.00, 47.00],
+                                                           [42.00, 40.00],
+                                                           [27.00, 40.00],
+                                                           [27.00, 47.00]])
+
+            thumbnail = ("https://my.cmems-du.eu/thredds/wms/dataset-duacs-rep-blacksea-merged-allsat-phy-l4"
+                         "?request=GetMap"
+                         "&version=1.3.0"
+                         "&layers=err"
+                         "&crs=CRS:84"
+                         "&bbox=27.00,40.00,42.00,47.00"
+                         "&WIDTH=800"
+                         "&HEIGHT=800"
+                         "&styles=boxfill/rainbow"
+                         "&format=image/png"
+                         "&time=" +
+                         start_date_string +
+                         "T00:00:00.000Z")
+        
+        
         # Add common metadata
         metadata['identifier'] = content['identifier']
         metadata['name'] = metadata['identifier'].lower()
@@ -443,7 +477,7 @@ class CMEMSBase(HarvesterBase):
 
         resources = []
 
-        if self.harvester_type in {'sst', 'ocn', 'slv', 'gpaf', 'mog'}:
+        if self.harvester_type in {'sst', 'ocn', 'slv', 'gpaf', 'mog','bs_phy_l4'}:
             resources.append(self._make_resource(ftp_link,
                                                  'Product Download',
                                                  size))

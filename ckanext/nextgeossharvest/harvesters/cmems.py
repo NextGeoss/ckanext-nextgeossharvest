@@ -59,8 +59,9 @@ class CMEMSHarvester(NextGEOSSHarvester, CMEMSBase):
                                                         'ocn',
                                                         'slv',
                                                         'gpaf',
-                                                        'mog'}:
-                raise ValueError('harvester type is required and must be "sst" or "sic_north" or "sic_south" or "ocn" or "slv" or "gpaf" or "mog"')  # noqa: E501
+                                                        'mog',
+                                                        'bs_phy_l4'}:
+                raise ValueError('harvester type is required and must be "sst" or "sic_north" or "sic_south" or "ocn" or "slv" or "gpaf" or "mog" or "bs_phy_l4"')  # noqa: E501
             if 'start_date' in config_obj:
                 try:
                     start_date = config_obj['start_date']
@@ -349,6 +350,11 @@ FTP_SOURCE_CONF = {
         'path': 'Core/MULTIOBS_GLO_PHY_NRT_015_003/dataset-uv-nrt-hourly',
         'fname_pattern': r'dataset-uv-nrt-hourly_(?P<date>\d{8,8})T0000Z'
         '_P\d{8,8}T\d{4}.nc',
+    },
+    'bs_phy_l4': {
+        'domain': 'my.cmems-du.eu',
+        'path': 'Core/SEALEVEL_BS_PHY_L4_REP_OBSERVATIONS_008_042/dataset-duacs-rep-blacksea-merged-allsat-phy-l4',
+        'fname_pattern': r'dt_blacksea_allsat_phy_l4_(?P<date>\d{8,8})_(?P<forecast_date>\d{8,8}).nc',
     }
 
 }
