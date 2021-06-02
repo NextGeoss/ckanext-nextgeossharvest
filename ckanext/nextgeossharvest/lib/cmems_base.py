@@ -453,8 +453,8 @@ class CMEMSBase(HarvesterBase):
                          "&bbox=26.50,40.00,42.00,48.00" +
                          "&WIDTH=800" +
                          "&HEIGHT=800" +
-                         "&styles=fancyvec/alg" +
-                         "&format=image/gif" +
+                         "&styles=boxfill/occam" +
+                         "&format=image/png" +
                          "&&time=" + start_date_string +
                          "T00:00:00.000Z")
         
