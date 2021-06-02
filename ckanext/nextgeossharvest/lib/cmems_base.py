@@ -127,6 +127,14 @@ class CMEMSBase(HarvesterBase):
                               {"name": "hourly"},
                               {"name": "eastward sea water velocity "},
                               {"name": "northward sea water velocity"}])
+        
+        elif self.harvester_type == 'bs_opt':
+            tags_list.extend([{"name": "Black Sea"},
+                              {"name": "Remote sensing"},
+                              {"name": "sentinel-3"},
+                              {"name": "observation"},
+                              {"name": "sea"}])
+        
         else:
             tags_list.extend([{"name": "sea ice"},
                               {"name": "ice"},
@@ -425,6 +433,31 @@ class CMEMSBase(HarvesterBase):
             metadata['timerange_start'] = '{}T00:00:00.000Z'.format(mog_date)  # noqa E501
             metadata['timerange_end'] = '{}T18:00:00.000Z'.format(mog_date)  # noqa E501
 
+        
+        elif self.harvester_type == 'bs_opt':
+            metadata['collection_id'] = 'OCEANCOLOUR_BS_OPTICS_L3_NRT_OBSERVATIONS_009_042'  # noqa E501
+            metadata['title'] = "Black Sea Remote Sensing Reflectances and Attenuation Coefficient at 490nm from Multi Satellite and Sentinel-3 OLCI observations"   # noqa E501
+            metadata['notes'] = ("The Global Ocean Satellite monitoring and marine ecosystem study group (GOS) of the Italian National Research Council (CNR), in Rome, distributes Remote Sensing Reflectances (Rrs), and diffuse attenuation coefficient of light at 490 nm (kd490) for multi-sensor (MODIS-AQUA, NOAA20-VIIRS, NPP-VIIRS, Sentinel3A-OLCI at 300m of resolution) (at 1 km resolution) and Sentinel3A-OLCI observations (at 300m resolution). Exclusively for multi-sensor also the absorption of phytoplankton (aph443), Gelbstoff material (adg443), and the particulate backscattering (bbp443) coefficients at 443 nm are provided. Rrs is defined as the ratio of upwelling radiance and downwelling irradiance at any wavelength (412, 443, 490, 555, and 670 nm for multi-sensor, and 400, 412, 443, 490, 510, 560, 620, 665, 674, 681 and 709 nm for OLCI) and can also be expressed as the ratio of normalized water leaving Radiance (nLw) and the extra-terrestrial solar irradiance (F0). Kd490 is defined as the diffuse attenuation coefficient of light at 490 nm, and is a measure of the turbidity of the water column. It is related to the presence of scattering particles via the ratio between Rrs at 490 and 555 nm (490 and 560 nm for OLCI). The current day data temporal consistency is evaluated as Quality Index (QI):QI=(CurrentDataPixel-ClimatologyDataPixel)/STDDataPixelwhere QI is the difference between current data and the relevant climatological field as a signed multiple of climatological standard deviations (STDDataPixel).Inherent Optical Properties (aph443, adg443 and bbp443 at 443nm) are derived via QAAv6 model.")  # noqa E501
+            metadata['spatial'] = spatial_template.format([[26.50, 48.00],
+                                                           [42.00, 48.00],
+                                                           [42.00, 40.00],
+                                                           [26.50, 40.00],
+                                                           [26.50, 48.00]])
+
+            thumbnail = ("https://nrt.cmems-du.eu/thredds/wms/dataset-oc-bs-opt-multi-l3-adg443_1km_daily-rt-v02" +
+                         "?request=GetMap" +
+                         "&service=WMS" +
+                         "&version=1.3.0" +
+                         "&layers=ADG443" +
+                         "&crs=CRS:84" +
+                         "&bbox=26.50,40.00,42.00,48.00" +
+                         "&WIDTH=800" +
+                         "&HEIGHT=800" +
+                         "&styles=fancyvec/alg" +
+                         "&format=image/gif" +
+                         "&&time=" + start_date_string +
+                         "T00:00:00.000Z")
+        
         # Add common metadata
         metadata['identifier'] = content['identifier']
         metadata['name'] = metadata['identifier'].lower()
@@ -443,7 +476,7 @@ class CMEMSBase(HarvesterBase):
 
         resources = []
 
-        if self.harvester_type in {'sst', 'ocn', 'slv', 'gpaf', 'mog'}:
+        if self.harvester_type in {'sst', 'ocn', 'slv', 'gpaf', 'mog','bs_opt'}:
             resources.append(self._make_resource(ftp_link,
                                                  'Product Download',
                                                  size))
