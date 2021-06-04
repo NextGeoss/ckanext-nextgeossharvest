@@ -59,8 +59,9 @@ class CMEMSHarvester(NextGEOSSHarvester, CMEMSBase):
                                                         'ocn',
                                                         'slv',
                                                         'gpaf',
-                                                        'mog'}:
-                raise ValueError('harvester type is required and must be "sst" or "sic_north" or "sic_south" or "ocn" or "slv" or "gpaf" or "mog"')  # noqa: E501
+                                                        'mog',
+                                                        'bs_bio'}:
+                raise ValueError('harvester type is required and must be "sst" or "sic_north" or "sic_south" or "ocn" or "slv" or "gpaf" or "mog" or "bs_bio"')  # noqa: E501
             if 'start_date' in config_obj:
                 try:
                     start_date = config_obj['start_date']
@@ -187,7 +188,7 @@ class CMEMSHarvester(NextGEOSSHarvester, CMEMSBase):
     def _gather_object(self, job, url, size, start_date, forecast_date):
         filename = parse_filename(url)
         filename_id = (
-            filename.replace('-v02.0-fv02.0', '').replace('-fv02.0', '')
+            filename.replace('-v02.0-fv02.0', '').replace('-fv02.0', '').replace('-sv09.00','')
         )
 
         status, package = self._was_harvested(filename_id, self.update_all)
@@ -349,6 +350,11 @@ FTP_SOURCE_CONF = {
         'path': 'Core/MULTIOBS_GLO_PHY_NRT_015_003/dataset-uv-nrt-hourly',
         'fname_pattern': r'dataset-uv-nrt-hourly_(?P<date>\d{8,8})T0000Z'
         '_P\d{8,8}T\d{4}.nc',
+    },
+    'bs_bio': {
+        'domain': 'nrt.cmems-du.eu',
+        'path': 'Core/BLKSEA_ANALYSIS_FORECAST_BIO_007_010/bs-ulg-pft-an-fc-d',
+        'fname_pattern': r'(?P<date>\d{8,8})_d-ULg--PFTC-nemo_bamhbi-BS-b(?P<forecast_date>\d{8,8})_an-sv09.00.nc',
     }
 
 }
