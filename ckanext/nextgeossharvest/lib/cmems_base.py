@@ -127,6 +127,14 @@ class CMEMSBase(HarvesterBase):
                               {"name": "hourly"},
                               {"name": "eastward sea water velocity "},
                               {"name": "northward sea water velocity"}])
+        elif self.harvester_type == 'bs_wav':
+            tags_list.extend([{"name": "Waves"},
+                              {"name": "Forecast"},
+                              {"name": "Black Sea"},
+                              {"name": "Analysis"},
+                              {"name": "sea"},
+                              {"name": "observation"}])
+        
         else:
             tags_list.extend([{"name": "sea ice"},
                               {"name": "ice"},
@@ -425,6 +433,31 @@ class CMEMSBase(HarvesterBase):
             metadata['timerange_start'] = '{}T00:00:00.000Z'.format(mog_date)  # noqa E501
             metadata['timerange_end'] = '{}T18:00:00.000Z'.format(mog_date)  # noqa E501
 
+        elif self.harvester_type == 'bs_wav':
+            metadata['collection_id'] = ('BLKSEA_ANALYSISFORECAST_WAV_007_003')
+            metadata['title'] = "Black Sea Waves Analysis and Forecast"
+            metadata['notes'] = ("The third generation spectral wave model WAM Cycle 6 has been adapted to the Black Sea area und runs successfully on the Cluster at HZG. The shallow water version is implemented on a spherical grid with a spatial resolution of about 3 km (133 * 100 sec) with 24 directional and 30 frequency bins. The number of active wave model grid points is 44699. The model takes into account depth refraction and wave breaking and provides currently a ten days forecast with one-hourly output once a day. The atmospheric forcing is taken from ECMWF in NetCDF and locally (on HZG server) transformed into WAM format forcing. Surface currents from BLKSEA_ANALYSIS_FORECAST_PHYS_007_001 are one-way coupled and taken into account in WAM. ")
+            metadata['spatial'] = spatial_template.format([[27.32, 46.80],
+                                                           [41.96, 46.80],
+                                                           [41.96, 40.86],
+                                                           [27.32, 40.86],
+                                                           [27.32, 46.80]])
+
+            thumbnail = ("https://nrt.cmems-du.eu/thredds/wms/bs-hzg-wav-an-fc-h"
+                         "?request=GetMap"
+                         "&version=1.3.0"
+                         "&layers=VHM0"
+                         "&crs=CRS:84"
+                         "&bbox=27.32,40.86,41.96,46.80"
+                         "&WIDTH=800"
+                         "&HEIGHT=800"
+                         "&styles=boxfill/rainbow"
+                         "&format=image/png"
+                         "&time=" +
+                         start_date_string +
+                         "T12:00:00.000Z")
+        
+        
         # Add common metadata
         metadata['identifier'] = content['identifier']
         metadata['name'] = metadata['identifier'].lower()
@@ -443,7 +476,7 @@ class CMEMSBase(HarvesterBase):
 
         resources = []
 
-        if self.harvester_type in {'sst', 'ocn', 'slv', 'gpaf', 'mog'}:
+        if self.harvester_type in {'sst', 'ocn', 'slv', 'gpaf', 'mog','bs_wav'}:
             resources.append(self._make_resource(ftp_link,
                                                  'Product Download',
                                                  size))
