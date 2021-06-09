@@ -135,7 +135,7 @@ class CMEMSBase(HarvesterBase):
                               {"name": "northward sea water velocity"}])
         
         elif self.harvester_type == 'med_phy':
-            tags_list.extend([{"name": "salt"},
+            tags_list.extend([{"name": "salinity"},
                               {"name": "sea level"},
                               {"name": "currents"},
                               {"name": "depth"},
@@ -473,7 +473,7 @@ class CMEMSBase(HarvesterBase):
                          "&WIDTH=800&HEIGHT=400&styles=boxfill/rainbow&format=image/png&time=" +start_date_string +"T12:00:00.000Z")
             thumbnail_ssh = ("https://my.cmems-du.eu/thredds/wms/med-cmcc-ssh-rean-d?request=GetMap&version=1.3.0&layers=zos&crs=CRS:84&bbox=-6.00,30.18,36.30,45.98"
                          "&WIDTH=800&HEIGHT=400&styles=boxfill/rainbow&format=image/png&time=" +start_date_string +"T12:00:00.000Z")
-            thumbnail_tem = ("https://my.cmems-du.eu/thredds/wms/med-cmcc-tem-rean-d?request=GetMap&version=1.3.0&layers=thetao&crs=CRS:84&bbox=-6.00,30.18,36.30,45.98"
+            thumbnail_tem = ("https://my.cmems-du.eu/thredds/wms/med-cmcc-tem-rean-d?request=GetMap&version=1.3.0&layers=bottomT&crs=CRS:84&bbox=-6.00,30.18,36.30,45.98"
                          "&WIDTH=800&HEIGHT=400&styles=boxfill/rainbow&format=image/png&time=" +start_date_string +"T12:00:00.000Z")
             
 	
