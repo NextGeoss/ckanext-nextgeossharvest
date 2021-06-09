@@ -146,13 +146,12 @@ class CMEMSBase(HarvesterBase):
                               
         elif self.harvester_type == 'med_bio':
             tags_list.extend([{"name": "co2"},
-            			{"name": "bio"},
-            			{"name": "carbon dioxide"},
-            			{"name": "nitrate"},
-            			{"name": "phosphate"},
+            		       {"name": "bio"},
+            		       {"name": "carbon dioxide"},
+            		       {"name": "nitrate"},
+            		       {"name": "phosphate"},
                               {"name": "Biogeochemistry"},
                               {"name": "mediterranean"},
-                              {"name": ""},
                               {"name": "sea"},
                               {"name": "observation"}])
         
