@@ -444,6 +444,8 @@ class CMEMSBase(HarvesterBase):
                                                            [27.00, 40.00],
                                                            [27.00, 47.00]])
 
+            metadata['ForecastDate'] = datetime.strftime(forecast_date,
+                                                         '%Y-%m-%d')
             thumbnail = ("https://my.cmems-du.eu/thredds/wms/dataset-duacs-rep-blacksea-merged-allsat-phy-l4"
                          "?request=GetMap"
                          "&version=1.3.0"
