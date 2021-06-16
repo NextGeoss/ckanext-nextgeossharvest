@@ -442,7 +442,9 @@ class CMEMSBase(HarvesterBase):
                                                            [41.96, 40.86],
                                                            [27.32, 40.86],
                                                            [27.32, 46.80]])
-
+                                                           	    
+            metadata['ForecastDate'] = datetime.strftime(forecast_date,
+                                                         '%Y-%m-%d')
             thumbnail = ("https://nrt.cmems-du.eu/thredds/wms/bs-hzg-wav-an-fc-h"
                          "?request=GetMap"
                          "&version=1.3.0"
