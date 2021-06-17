@@ -60,9 +60,8 @@ class CMEMSHarvester(NextGEOSSHarvester, CMEMSBase):
                                                         'slv',
                                                         'gpaf',
                                                         'mog',
-                                                        'med_phy',
-                                                        'med_bio'}:
-                raise ValueError('harvester type is required and must be "sst" or "sic_north" or "sic_south" or "ocn" or "slv" or "gpaf" or "mog" or "med_phy" or "med_bio"')  # noqa: E501
+                                                        'bs_phy'}:
+                raise ValueError('harvester type is required and must be "sst" or "sic_north" or "sic_south" or "ocn" or "slv" or "gpaf" or "mog" or "bs_phy"')  # noqa: E501
             if 'start_date' in config_obj:
                 try:
                     start_date = config_obj['start_date']
@@ -132,7 +131,8 @@ class CMEMSHarvester(NextGEOSSHarvester, CMEMSBase):
                            else
                            self.convert_date_config(
                                'TODAY').strftime("%Y-%m-%d")))
-        
+        #if config['harvester_type']=='bs_sst' and end_date > datetime.strptime('2019-12-31',"%Y-%m-%d"):
+        	#end_date = datetime.strptime('2019-12-31',"%Y-%m-%d")
         ids = (
             self._gather(harvest_job,
                          start_date, end_date, harvest_job.source_id, config)
@@ -200,7 +200,7 @@ class CMEMSHarvester(NextGEOSSHarvester, CMEMSBase):
     def _gather_object(self, job, url, size, start_date, forecast_date):
         filename = parse_filename(url)
         filename_id = (
-            filename.replace('-v02.0-fv02.0', '').replace('-fv02.0', '').replace('-sv01.00','').replace('-sv05.00','')
+            filename.replace('-v02.0-fv02.0', '').replace('-fv02.0', '').replace('-sv10.00', '')
         )
 
         status, package = self._was_harvested(filename_id, self.update_all)
@@ -369,15 +369,10 @@ FTP_SOURCE_CONF = {
         'fname_pattern': r'dataset-uv-nrt-hourly_(?P<date>\d{8,8})T0000Z'
         '_P\d{8,8}T\d{4}.nc',
     },
-    'med_phy': {
-        'domain': 'my.cmems-du.eu',
-        'path': 'Core/MEDSEA_MULTIYEAR_PHY_006_004/med-cmcc-cur-rean-d',
-        'fname_pattern': r'(?P<date>\d{8,8})_d-CMCC--RFVL-MFSe3r1-MED-b20200901_re-sv01.00.nc',
-    },
-    'med_bio': {
-        'domain': 'my.cmems-du.eu',
-        'path': 'Core/MEDSEA_MULTIYEAR_BGC_006_008/med-ogs-bio-rean-d',
-        'fname_pattern': r'(?P<date>\d{8,8})_d-OGS--BIOL-MedBFM3-MED-b20210323_re-sv05.00.nc',
+    'bs_phy': {
+        'domain': 'nrt.cmems-du.eu',
+        'path': 'Core/BLKSEA_ANALYSISFORECAST_PHY_007_001/bs-cmcc-cur-an-fc-d',
+        'fname_pattern': r'(?P<date>\d{8,8})_d-CMCC--RFVL-BSeas4-BS-b(?P<forecast_date>\d{8,8})_an-sv10.00.nc',
     }
 
 }
