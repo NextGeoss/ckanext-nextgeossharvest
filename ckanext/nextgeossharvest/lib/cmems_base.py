@@ -133,7 +133,10 @@ class CMEMSBase(HarvesterBase):
                               {"name": "Black Sea"},
                               {"name": "Analysis"},
                               {"name": "sea"},
-                              {"name": "observation"}])
+                              {"name": "significant height"},
+                              {"name": "mean period"},
+                              {"name": "swell"},
+                              {"name": "wave"}])
         
         else:
             tags_list.extend([{"name": "sea ice"},
@@ -442,13 +445,11 @@ class CMEMSBase(HarvesterBase):
                                                            [41.96, 40.86],
                                                            [27.32, 40.86],
                                                            [27.32, 46.80]])
-                                                           	    
-            metadata['ForecastDate'] = datetime.strftime(forecast_date,
-                                                         '%Y-%m-%d')
+            
             thumbnail = ("https://nrt.cmems-du.eu/thredds/wms/bs-hzg-wav-an-fc-h"
                          "?request=GetMap"
                          "&version=1.3.0"
-                         "&layers=VHM0"
+                         "&layers=VTM10"
                          "&crs=CRS:84"
                          "&bbox=27.32,40.86,41.96,46.80"
                          "&WIDTH=800"
