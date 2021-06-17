@@ -128,8 +128,7 @@ class CMEMSBase(HarvesterBase):
                               {"name": "eastward sea water velocity "},
                               {"name": "northward sea water velocity"}])
         elif self.harvester_type == 'bs_chl':
-            tags_list.extend([{"name": "sea life"},
-                              {"name": "chlorophyll"},
+            tags_list.extend([{"name": "chlorophyll"},
                               {"name": "Black Sea"},
                               {"name": "sea"},
                               {"name": "Observation"},
