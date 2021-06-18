@@ -38,8 +38,8 @@ class EnergyDataBaseHarvester(HarvesterBase):
 
         """
 
-        item['collection_id'] = "ENERGYDATA_INFO_COLLECTION"
-        item['collection_name'] = "EnergyData Info Collection"
+        item['collection_id'] = "ENERGYDATA_INFO"
+        item['collection_name'] = "EnergyData Info"
         item['collection_description'] = """ENERGYDATA.INFO is an open data platform providing access to datasets and data analytics 
 that are relevant to the energy sector. ENERGYDATA.INFO has been developed as a public good to share data and analytics that 
 can help achieving the United Nations’ Sustainable Development Goal 7 of ensuring access to affordable, reliable, sustainable 
@@ -143,6 +143,19 @@ and modern energy for all."""
             return self._convert_to_geojson("POLYGON((-180 -90, -180 90, 180 90, 180 -90, -180 -90))")
         else:
             # API provided no country code
+            # Check for region data
+            if 'region' in content and content['region']:
+                # Full path to geojson file
+                full_path = os.path.join(os.path.dirname(__file__), 'countries_iso_a3.geojson')
+
+                with open(full_path) as countries_file:
+                    countries = json.load(countries_file)
+                    
+                    for country in countries:
+                        if content['region'][0] == country:
+                            return json.dumps(countries[country], ensure_ascii=False).encode('utf8')
+
+            # API provided no country code/region code
             return self._convert_to_geojson("POLYGON((-180 -90, -180 90, 180 90, 180 -90, -180 -90))")
 
     def _get_resources(self, parsed_content):

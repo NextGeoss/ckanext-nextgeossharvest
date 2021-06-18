@@ -176,6 +176,12 @@ class EnergyDataHarvester(EnergyDataBaseHarvester, NextGEOSSHarvester,
         entries = []
 
         for entry in json_result['result']['results']:
+
+            # Skip entries that only have resource links of type "Other"
+            # Reason: When the links are opened a 404 error is almost always returned
+            if all(resource_entry['format'] == 'Other' for resource_entry in entry['resources']):
+                continue
+
             content = entry
             identifier = entry['name']
             guid = entry['id']
@@ -263,6 +269,7 @@ class EnergyDataHarvester(EnergyDataBaseHarvester, NextGEOSSHarvester,
 
         # Create a harvest object for each entry
         for entry in entries:
+
             entry_guid = entry['guid']
             entry_name = entry['identifier']
             entry_restart_date = entry['restart_date']
