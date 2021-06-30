@@ -679,6 +679,8 @@ class CMEMSBase(HarvesterBase):
             resources.append(self._make_resource(ftp_link,
                                                  'Product Download',
                                                  size))
+	    resources.append(self._make_resource(thumbnail,
+                                             'Thumbnail Link'))
         
         elif self.harvester_type=='bs_phy':
             ftp_link_cur = ftp_link
@@ -701,8 +703,7 @@ class CMEMSBase(HarvesterBase):
             resources.append(self._make_resource(polstere_url,
                                                  'Product Download (Polar Stereographic)'))  # noqa: E501
 
-        resources.append(self._make_resource(thumbnail,
-                                             'Thumbnail Link'))
+        
         metadata['resource'] = resources
 
         return metadata
