@@ -718,7 +718,7 @@ class CMEMSBase(HarvesterBase):
         resource_dict = {}
         resource_dict['name'] = name
         resource_dict['url'] = url
-        if name == 'Thumbnail Link':
+        if 'Thumbnail' in name:
             resource_dict['format'] = 'png'
             resource_dict['mimetype'] = 'image/png'
         else:
