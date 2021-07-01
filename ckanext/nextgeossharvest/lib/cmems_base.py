@@ -73,6 +73,12 @@ class CMEMSBase(HarvesterBase):
         date_str = identifier_parts[1]
         date = datetime.strptime(date_str, '%Y%m%dT%fZ')
         return date.strftime('%Y-%m-%d')
+        
+    def _bulletin_date_medeos(self, identifier):
+    	identifier_parts = identifier.split('-')
+    	date_str = identifier_parts[6].replace('b','').replace('_re','')
+    	date = datetime.strptime(date_str, '%Y%m%d')
+    	return date.strftime('%Y-%m-%d')
 
     def _create_tags(self):
         """Create a list of tags based on the type of harvester."""
@@ -127,6 +133,28 @@ class CMEMSBase(HarvesterBase):
                               {"name": "hourly"},
                               {"name": "eastward sea water velocity "},
                               {"name": "northward sea water velocity"}])
+        
+        elif self.harvester_type == 'med_phy':
+            tags_list.extend([{"name": "salinity"},
+                              {"name": "sea level"},
+                              {"name": "currents"},
+                              {"name": "depth"},
+                              {"name": "mediterranean"},
+                              {"name": "temperature"},
+                              {"name": "sea"},
+                              {"name": "observation"}])
+                              
+        elif self.harvester_type == 'med_bio':
+            tags_list.extend([{"name": "co2"},
+            		       {"name": "bio"},
+            		       {"name": "carbon dioxide"},
+            		       {"name": "nitrate"},
+            		       {"name": "phosphate"},
+                              {"name": "Biogeochemistry"},
+                              {"name": "mediterranean"},
+                              {"name": "sea"},
+                              {"name": "observation"}])
+        
         elif self.harvester_type == 'bs_sst_006':
             tags_list.extend([{"name": "SST"},
                               {"name": "sea surface temperature"},
@@ -249,7 +277,7 @@ class CMEMSBase(HarvesterBase):
                                                            [-180, -90],
                                                            [-180, 90]])
 
-            thumbnail = ("http://nrt.cmems-du.eu/thredds/wms"
+            thumbnail = ("https://nrt.cmems-du.eu/thredds/wms"
                          "/METOFFICE-GLO-SST-L4-NRT-OBS-SST-V2"
                          "?request=GetMap"
                          "&version=1.3.0"
@@ -290,7 +318,7 @@ class CMEMSBase(HarvesterBase):
                             month +
                             day +
                             "1200.nc")
-            thumbnail = ("http://thredds.met.no/thredds/wms/" +
+            thumbnail = ("https://thredds.met.no/thredds/wms/" +
                          "sea_ice/SIW-OSISAF-GLO-SIT_SIE_SIC-OBS/" +
                          "ice_conc_north_aggregated" +
                          "?request=GetMap" +
@@ -332,7 +360,7 @@ class CMEMSBase(HarvesterBase):
                             month +
                             day +
                             "1200.nc")
-            thumbnail = ("http://thredds.met.no/thredds/wms/" +
+            thumbnail = ("https://thredds.met.no/thredds/wms/" +
                          "sea_ice/SIW-OSISAF-GLO-SIT_SIE_SIC-OBS/" +
                          "ice_conc_south_aggregated" +
                          "?request=GetMap" +
@@ -365,7 +393,7 @@ class CMEMSBase(HarvesterBase):
                                                            [-180, 63],
                                                            [-180, 90]])
 
-            thumbnail = ("http://thredds.met.no/thredds/wms/" +
+            thumbnail = ("https://thredds.met.no/thredds/wms/" +
                          "topaz/" +
                          "dataset-topaz4-arc-1hr-myoceanv2-be" +
                          "?request=GetMap" +
@@ -395,7 +423,7 @@ class CMEMSBase(HarvesterBase):
                                                            [-180, -90],
                                                            [-180, 90]])
 
-            thumbnail = ("http://nrt.cmems-du.eu/thredds/wms/" +
+            thumbnail = ("https://nrt.cmems-du.eu/thredds/wms/" +
                          "dataset-duacs-nrt-global-merged-allsat-phy-l4" +
                          "?request=GetMap" +
                          "&service=WMS" +
@@ -429,7 +457,7 @@ class CMEMSBase(HarvesterBase):
                                                            [-180, 90]])
 
             gpaf_date_start, gpaf_date_end = self._date_from_identifier_gpaf(content['identifier'])   # noqa E501
-            thumbnail = ("http://nrt.cmems-du.eu/thredds/wms/" +
+            thumbnail = ("https://nrt.cmems-du.eu/thredds/wms/" +
                          "global-analysis-forecast-phy-001-024-hourly-t-u-v-ssh" +
                          "?request=GetMap" +
                          "&service=WMS" +
@@ -467,7 +495,7 @@ class CMEMSBase(HarvesterBase):
                                                            [-180, -90],
                                                            [-180, 90]])
 
-            thumbnail = ("http://nrt.cmems-du.eu/thredds/wms/" +
+            thumbnail = ("https://nrt.cmems-du.eu/thredds/wms/" +
                          "dataset-uv-nrt-hourly" +
                          "?request=GetMap" +
                          "&service=WMS" +
@@ -488,8 +516,54 @@ class CMEMSBase(HarvesterBase):
             metadata['timerange_start'] = '{}T00:00:00.000Z'.format(mog_date)  # noqa E501
             metadata['timerange_end'] = '{}T18:00:00.000Z'.format(mog_date)  # noqa E501
 	
+	elif self.harvester_type == 'med_phy':
+            metadata['collection_id'] = ('MEDSEA_MULTIYEAR_PHY_006_004')
+            metadata['title'] = "Mediterranean Sea Physics Reanalysis"
+            metadata['notes'] = ("The Med MFC physical reanalysis product is generated by a numerical system composed of an hydrodynamic model, supplied by the Nucleous for European Modelling of the Ocean (NEMO) and a variational data assimilation scheme (OceanVAR) for temperature and salinity vertical profiles and satellite Sea Level Anomaly along track data. The model horizontal grid resolution is 1/24 deg (ca. 4-5 km) and the unevenly spaced vertical levels are 141. ")
+            metadata['spatial'] = spatial_template.format([[-6.00, 45.98],
+                                                           [36.30, 45.98],
+                                                           [36.30, 30.18],
+                                                           [-6.00, 30.18],
+                                                           [-6.00, 45.98]])
+		
+            metadata['BulletinDate'] = self._bulletin_date_medeos(content['identifier'])
+            
+            thumbnail_cur = ("https://my.cmems-du.eu/thredds/wms/med-cmcc-cur-rean-d?request=GetMap&version=1.3.0&layers=vo&crs=CRS:84&bbox=-6.00,30.18,36.30,45.98"
+                         "&WIDTH=800&HEIGHT=400&styles=boxfill/rainbow&format=image/png&time=" +start_date_string +"T12:00:00.000Z")
+            thumbnail_mld = ("https://my.cmems-du.eu/thredds/wms/med-cmcc-mld-rean-d?request=GetMap&version=1.3.0&layers=mlotst&crs=CRS:84&bbox=-6.00,30.18,36.30,45.98"
+                         "&WIDTH=800&HEIGHT=400&styles=boxfill/rainbow&format=image/png&time=" +start_date_string +"T12:00:00.000Z")
+            thumbnail_sal = ("https://my.cmems-du.eu/thredds/wms/med-cmcc-sal-rean-d?request=GetMap&version=1.3.0&layers=so&crs=CRS:84&bbox=-6.00,30.18,36.30,45.98"
+                         "&WIDTH=800&HEIGHT=400&styles=boxfill/rainbow&format=image/png&time=" +start_date_string +"T12:00:00.000Z")
+            thumbnail_ssh = ("https://my.cmems-du.eu/thredds/wms/med-cmcc-ssh-rean-d?request=GetMap&version=1.3.0&layers=zos&crs=CRS:84&bbox=-6.00,30.18,36.30,45.98"
+                         "&WIDTH=800&HEIGHT=400&styles=boxfill/rainbow&format=image/png&time=" +start_date_string +"T12:00:00.000Z")
+            thumbnail_tem = ("https://my.cmems-du.eu/thredds/wms/med-cmcc-tem-rean-d?request=GetMap&version=1.3.0&layers=bottomT&crs=CRS:84&bbox=-6.00,30.18,36.30,45.98"
+                         "&WIDTH=800&HEIGHT=400&styles=boxfill/rainbow&format=image/png&time=" +start_date_string +"T12:00:00.000Z")
+            
 	
-	if self.harvester_type == 'bs_sst_006':
+	elif self.harvester_type == 'med_bio':
+            metadata['collection_id'] = ('MEDSEA_MULTIYEAR_BGC_006_008')
+            metadata['title'] = "Mediterranean Sea Biogechemistry Reanalysis"
+            metadata['notes'] = ("The Mediterranean Sea biogeochemical reanalysis at 1/24 deg of horizontal resolution (ca. 4 km) covers the period 1999-2019 and is produced by means of the MedBFM3 model system. MedBFM3, which is run by OGS (IT), includes the transport model OGSTM v4.0 coupled with the biogeochemical flux model BFM v5 and the variational data assimilation module 3DVAR-BIO v2.1 for surface chlorophyll. MedBFM3 is offline coupled with the physical reanalysis (MEDSEA_MULTIYEAR_PHY_006_004 product run by CMCC) that provides daily forcing fields (i.e., currents, temperature, salinity, diffusivities, wind and solar radiation). The ESA-CCI database of surface chlorophyll concentration (CMEMS-OCTAC REP product) is assimilated with a weekly frequency.")
+            metadata['spatial'] = spatial_template.format([[-5.54, 45.98],
+                                                           [36.30, 45.98],
+                                                           [36.30, 30.18],
+                                                           [-5.54, 30.18],
+                                                           [-5.54, 45.98]])
+                                                           
+            metadata['BulletinDate'] = self._bulletin_date_medeos(content['identifier'])
+            
+            thumbnail_bio = ("https://my.cmems-du.eu/thredds/wms/med-ogs-bio-rean-d?request=GetMap&version=1.3.0&layers=o2&crs=CRS:84&bbox=-5.54,30.18,36.30,45.98"
+                         "&WIDTH=800&HEIGHT=400&styles=boxfill/rainbow&format=image/png&time=" +start_date_string +"T12:00:00.000Z")
+            thumbnail_car = ("https://my.cmems-du.eu/thredds/wms/med-ogs-car-rean-d?request=GetMap&version=1.3.0&layers=ph&crs=CRS:84&bbox=-5.54,30.18,36.30,45.98"
+                         "&WIDTH=800&HEIGHT=400&styles=boxfill/rainbow&format=image/png&time=" +start_date_string +"T12:00:00.000Z")
+            thumbnail_co2 = ("https://my.cmems-du.eu/thredds/wms/med-ogs-co2-rean-d?request=GetMap&version=1.3.0&layers=fpco2&crs=CRS:84&bbox=-5.54,30.18,36.30,45.98"
+                         "&WIDTH=800&HEIGHT=400&styles=boxfill/rainbow&format=image/png&time=" +start_date_string +"T12:00:00.000Z")
+            thumbnail_nut = ("https://my.cmems-du.eu/thredds/wms/med-ogs-nut-rean-d?request=GetMap&version=1.3.0&layers=no3&crs=CRS:84&bbox=-5.54,30.18,36.30,45.98"
+                         "&WIDTH=800&HEIGHT=400&styles=boxfill/rainbow&format=image/png&time=" +start_date_string +"T12:00:00.000Z")
+            thumbnail_pft = ("https://my.cmems-du.eu/thredds/wms/med-ogs-pft-rean-d?request=GetMap&version=1.3.0&layers=phyc&crs=CRS:84&bbox=-5.54,30.18,36.30,45.98"
+                         "&WIDTH=800&HEIGHT=400&styles=boxfill/rainbow&format=image/png&time=" +start_date_string +"T12:00:00.000Z")
+                         
+        elif self.harvester_type == 'bs_sst_006':
             metadata['collection_id'] = ('SST_BS_SST_L4_NRT_OBSERVATIONS_010_006')
             metadata['title'] = "Black Sea High Resolution and Ultra High Resolution Sea Surface Temperature Analysis"
             metadata['notes'] = ("For the Black Sea (BS), the CNR BS Sea Surface Temperature (SST) processing chain providess daily gap-free (L4) maps at high (HR 0.0625 deg) and ultra-high (UHR 0.01 deg) spatial resolution over the Black Sea. Remotely-sensed L4 SST datasets are operationally produced and distributed in near-real time by the Consiglio Nazionale delle Ricerche - Gruppo di Oceanografia da Satellite (CNR-GOS). These SST products are based on the nighttime images collected by the infrared sensors mounted on different satellite platforms, and cover the Southern European Seas. The CNR-GOS processing chain includes several modules, from the data extraction and preliminary quality control, to cloudy pixel removal and satellite images collating/merging. A two-step algorithm finally allows to interpolate SST data at high (HR 0.0625 deg) and ultra-high (UHR 0.01 deg) spatial resolution, applying statistical techniques. These L4 data are also used to estimate the SST anomaly with respect to a pentad climatology.")
@@ -657,9 +731,10 @@ class CMEMSBase(HarvesterBase):
                          start_date_string +
                          "T12:00:00.000Z")
         
+                              
         # Add common metadata
         metadata['identifier'] = content['identifier']
-        metadata['name'] = metadata['identifier'].lower()
+        metadata['name'] = metadata['identifier'].lower().replace('.','_')
         if self.harvester_type not in ('slv', 'gpaf', 'mog'):
             metadata['timerange_start'] = '{}T00:00:00.000Z'.format(start_date_string)  # noqa E501
             metadata['timerange_end'] = self._make_stop_time(start_date)
@@ -679,9 +754,42 @@ class CMEMSBase(HarvesterBase):
             resources.append(self._make_resource(ftp_link,
                                                  'Product Download',
                                                  size))
-            resources.append(self._make_resource(thumbnail,
-                                             'Thumbnail Link'))
+            resources.append(self._make_resource(thumbnail,'Thumbnail Link'))       
         
+        elif self.harvester_type=='med_bio':
+            ftp_link_bio = ftp_link
+            ftp_link_car = ftp_link.replace('bio','car').replace('BIOL','CARB')
+            ftp_link_co2 = ftp_link.replace('bio','co2').replace('BIOL','CO2F')
+            ftp_link_nut = ftp_link.replace('bio','nut').replace('BIOL','NUTR')
+            ftp_link_pft = ftp_link.replace('bio','pft').replace('BIOL','PFTC')
+            resources.append(self._make_resource(ftp_link_bio,'Product Download (bio-rean-d)',size))
+            resources.append(self._make_resource(ftp_link_car,'Product Download (car-rean-d)',size))
+            resources.append(self._make_resource(ftp_link_co2,'Product Download (co2-rean-d)',size))
+            resources.append(self._make_resource(ftp_link_nut,'Product Download (nut-rean-d)',size))
+            resources.append(self._make_resource(ftp_link_pft,'Product Download (pft-rean-d)',size))
+            resources.append(self._make_resource(thumbnail_bio,'Thumbnail Link (bio-rean-d)'))
+            resources.append(self._make_resource(thumbnail_car,'Thumbnail Link (car-rean-d)'))
+            resources.append(self._make_resource(thumbnail_co2,'Thumbnail Link (co2-rean-d)'))
+            resources.append(self._make_resource(thumbnail_nut,'Thumbnail Link (nut-rean-d)'))
+            resources.append(self._make_resource(thumbnail_pft,'Thumbnail Link (pft-rean-d)'))
+        
+        elif self.harvester_type=='med_phy':
+            ftp_link_cur = ftp_link
+            ftp_link_mld = ftp_link.replace('cur','mld').replace('RFVL','AMXL')
+            ftp_link_sal = ftp_link.replace('cur','sal').replace('RFVL','PSAL')
+            ftp_link_ssh = ftp_link.replace('cur','ssh').replace('RFVL','ASLV')
+            ftp_link_tem = ftp_link.replace('cur','tem').replace('RFVL','TEMP')
+            resources.append(self._make_resource(ftp_link_cur,'Product Download (cur-rean-d)',size))
+            resources.append(self._make_resource(ftp_link_mld,'Product Download (mld-rean-d)',size))
+            resources.append(self._make_resource(ftp_link_sal,'Product Download (sal-rean-d)',size))
+            resources.append(self._make_resource(ftp_link_ssh,'Product Download (ssh-rean-d)',size))
+            resources.append(self._make_resource(ftp_link_tem,'Product Download (tem-rean-d)',size))
+            resources.append(self._make_resource(thumbnail_cur,'Thumbnail Link (cur-rean-d)'))
+            resources.append(self._make_resource(thumbnail_mld,'Thumbnail Link (mld-rean-d)'))
+            resources.append(self._make_resource(thumbnail_sal,'Thumbnail Link (sal-rean-d)'))
+            resources.append(self._make_resource(thumbnail_ssh,'Thumbnail Link (ssh-rean-d)'))
+            resources.append(self._make_resource(thumbnail_tem,'Thumbnail Link (tem-rean-d)'))
+            
         elif self.harvester_type=='bs_phy':
             ftp_link_cur = ftp_link
             ftp_link_sal = ftp_link.replace('cur','sal').replace('RFVL','PSAL')
@@ -702,7 +810,7 @@ class CMEMSBase(HarvesterBase):
                                                  size))
             resources.append(self._make_resource(polstere_url,
                                                  'Product Download (Polar Stereographic)'))  # noqa: E501
-
+	    resources.append(self._make_resource(thumbnail,'Thumbnail Link'))
         
         metadata['resource'] = resources
 
@@ -718,7 +826,7 @@ class CMEMSBase(HarvesterBase):
         resource_dict = {}
         resource_dict['name'] = name
         resource_dict['url'] = url
-        if name == 'Thumbnail Link':
+        if name.split(' ')[0] == 'Thumbnail':
             resource_dict['format'] = 'png'
             resource_dict['mimetype'] = 'image/png'
         else:

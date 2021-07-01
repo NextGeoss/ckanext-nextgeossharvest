@@ -52,7 +52,7 @@ class CMEMSHarvester(NextGEOSSHarvester, CMEMSBase):
 
         try:
             config_obj = json.loads(config)
-
+	    
             if config_obj.get('harvester_type') not in {'sst',
                                                         'sic_north',
                                                         'sic_south',
@@ -60,6 +60,8 @@ class CMEMSHarvester(NextGEOSSHarvester, CMEMSBase):
                                                         'slv',
                                                         'gpaf',
                                                         'mog',
+                                                        'med_phy',
+                                                        'med_bio',
                                                         'bs_sst_006',
                                                         'bs_chl',
                                                         'bs_opt',
@@ -67,7 +69,7 @@ class CMEMSHarvester(NextGEOSSHarvester, CMEMSBase):
                                                         'bs_phy',
                                                         'bs_bio',
                                                         'bs_wav'}:
-                raise ValueError('harvester type is required and must be "sst" or "sic_north" or "sic_south" or "ocn" or "slv" or "gpaf" or "mog" or "bs_sst_006" or "bs_chl" or "bs_opt" or "bs_phy_l4" or "bs_phy" or "bs_bio" or "bs_wav"')  # noqa: E501
+                raise ValueError('harvester type is required and must be "sst" or "sic_north" or "sic_south" or "ocn" or "slv" or "gpaf" or "mog" or "med_phy" or "med_bio" or "bs_sst_006" or "bs_chl" or "bs_opt" or "bs_phy_l4" or "bs_phy" or "bs_bio" or "bs_wav"')  # noqa: E501
             if 'start_date' in config_obj:
                 try:
                     start_date = config_obj['start_date']
@@ -77,8 +79,11 @@ class CMEMSHarvester(NextGEOSSHarvester, CMEMSBase):
                         start_date = self.convert_date_config(start_date)
                 except ValueError:
                     raise ValueError('start_date format must be yyyy-mm-dd')
+            
             else:
                 raise ValueError('start_date is required')
+            
+            	
             if 'end_date' in config_obj:
                 try:
                     end_date = config_obj['end_date']
@@ -88,6 +93,10 @@ class CMEMSHarvester(NextGEOSSHarvester, CMEMSBase):
                         end_date = self.convert_date_config(end_date)
                 except ValueError:
                     raise ValueError('end_date format must be yyyy-mm-dd')
+                
+           
+           
+            
             else:
                 end_date = self.convert_date_config('TODAY')
             if not end_date > start_date:
@@ -106,7 +115,7 @@ class CMEMSHarvester(NextGEOSSHarvester, CMEMSBase):
                 raise ValueError('update_all must be true or false')
         except ValueError as e:
             raise e
-
+        
         return config
 
     def gather_stage(self, harvest_job):
@@ -120,6 +129,8 @@ class CMEMSHarvester(NextGEOSSHarvester, CMEMSBase):
             start_date = last_product_date
         else:
             start_date = self._parse_date(config['start_date'])
+        
+        	
         end_date = min(start_date + self.interval,
                        datetime.now(),
                        self._parse_date(
@@ -128,6 +139,7 @@ class CMEMSHarvester(NextGEOSSHarvester, CMEMSBase):
                            else
                            self.convert_date_config(
                                'TODAY').strftime("%Y-%m-%d")))
+        
         ids = (
             self._gather(harvest_job,
                          start_date, end_date, harvest_job.source_id, config)
@@ -155,6 +167,7 @@ class CMEMSHarvester(NextGEOSSHarvester, CMEMSBase):
             ids.append(self._gather_object(job,
                                            ftp_url, size,
                                            start_date, forecast_date))
+        
         return ids
 
     def fetch_stage(self, harvest_object):
@@ -194,7 +207,7 @@ class CMEMSHarvester(NextGEOSSHarvester, CMEMSBase):
     def _gather_object(self, job, url, size, start_date, forecast_date):
         filename = parse_filename(url)
         filename_id = (
-            filename.replace('-v02.0-fv02.0', '').replace('-fv02.0', '').replace('-v02','').replace('-sv10.00', '').replace('-sv09.00','').replace('-sv07.00','')
+            filename.replace('-v02.0-fv02.0', '').replace('-fv02.0', '').replace('-sv01.00','').replace('-sv05.00','').replace('-v02','').replace('-sv10.00', '').replace('-sv09.00','').replace('-sv07.00','')
         )
 
         status, package = self._was_harvested(filename_id, self.update_all)
@@ -234,14 +247,20 @@ class FtpSource(object):
     def _get_ftp_urls(self, start_date, end_date, user, passwd):
         ftp_urls = set()
         ftp = FTP(self._get_ftp_domain(), user, passwd)
-        for directory in self._get_ftp_directories(start_date, end_date):
-            ftp.cwd('/{}/{}'.format(self._get_ftp_path(), directory))
-            ftp_urls |= set(self._ftp_url(directory, fname)
-                            for fname in ftp.nlst()
-                            if self.fname_pattern.match(
-                                fname) and self._to_harvest(
-                                    fname, start_date, end_date)
-                            )
+        directories_list=self._get_ftp_directories(start_date, end_date)
+        for directory in directories_list:
+            try:
+		    ftp.cwd('/{}/{}'.format(self._get_ftp_path(), directory))
+		    ftp_urls |= set(self._ftp_url(directory, fname)
+	                    for fname in ftp.nlst()
+	                    if self.fname_pattern.match(
+	                        fname) and self._to_harvest(
+	                            fname, start_date, end_date)
+	                    )
+	    except:
+            	    return ftp_urls
+	    
+    
         return ftp_urls
 
     def _to_harvest(self, fname, start_date, end_date):
@@ -356,6 +375,16 @@ FTP_SOURCE_CONF = {
         'path': 'Core/MULTIOBS_GLO_PHY_NRT_015_003/dataset-uv-nrt-hourly',
         'fname_pattern': r'dataset-uv-nrt-hourly_(?P<date>\d{8,8})T0000Z'
         '_P\d{8,8}T\d{4}.nc',
+    },
+    'med_phy': {
+        'domain': 'my.cmems-du.eu',
+        'path': 'Core/MEDSEA_MULTIYEAR_PHY_006_004/med-cmcc-cur-rean-d',
+        'fname_pattern': r'(?P<date>\d{8,8})_d-CMCC--RFVL-MFSe3r1-MED-b20200901_re-sv01.00.nc',
+    },
+    'med_bio': {
+        'domain': 'my.cmems-du.eu',
+        'path': 'Core/MEDSEA_MULTIYEAR_BGC_006_008/med-ogs-bio-rean-d',
+        'fname_pattern': r'(?P<date>\d{8,8})_d-OGS--BIOL-MedBFM3-MED-b20210323_re-sv05.00.nc',
     },
     'bs_sst_006': {
         'domain': 'nrt.cmems-du.eu',
