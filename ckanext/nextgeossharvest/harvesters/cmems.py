@@ -61,8 +61,15 @@ class CMEMSHarvester(NextGEOSSHarvester, CMEMSBase):
                                                         'gpaf',
                                                         'mog',
                                                         'med_phy',
-                                                        'med_bio'}:
-                raise ValueError('harvester type is required and must be "sst" or "sic_north" or "sic_south" or "ocn" or "slv" or "gpaf" or "mog" or "med_phy" or "med_bio"')  # noqa: E501
+                                                        'med_bio',
+                                                        'bs_sst_006',
+                                                        'bs_chl',
+                                                        'bs_opt',
+                                                        'bs_phy_l4',
+                                                        'bs_phy',
+                                                        'bs_bio',
+                                                        'bs_wav'}:
+                raise ValueError('harvester type is required and must be "sst" or "sic_north" or "sic_south" or "ocn" or "slv" or "gpaf" or "mog" or "med_phy" or "med_bio" or "bs_sst_006" or "bs_chl" or "bs_opt" or "bs_phy_l4" or "bs_phy" or "bs_bio" or "bs_wav"')  # noqa: E501
             if 'start_date' in config_obj:
                 try:
                     start_date = config_obj['start_date']
@@ -200,7 +207,7 @@ class CMEMSHarvester(NextGEOSSHarvester, CMEMSBase):
     def _gather_object(self, job, url, size, start_date, forecast_date):
         filename = parse_filename(url)
         filename_id = (
-            filename.replace('-v02.0-fv02.0', '').replace('-fv02.0', '').replace('-sv01.00','').replace('-sv05.00','')
+            filename.replace('-v02.0-fv02.0', '').replace('-fv02.0', '').replace('-sv01.00','').replace('-sv05.00','').replace('-v02','').replace('-sv10.00', '').replace('-sv09.00','').replace('-sv07.00','')
         )
 
         status, package = self._was_harvested(filename_id, self.update_all)
@@ -378,6 +385,41 @@ FTP_SOURCE_CONF = {
         'domain': 'my.cmems-du.eu',
         'path': 'Core/MEDSEA_MULTIYEAR_BGC_006_008/med-ogs-bio-rean-d',
         'fname_pattern': r'(?P<date>\d{8,8})_d-OGS--BIOL-MedBFM3-MED-b20210323_re-sv05.00.nc',
+    },
+    'bs_sst_006': {
+        'domain': 'nrt.cmems-du.eu',
+        'path': 'Core/SST_BS_SST_L4_NRT_OBSERVATIONS_010_006/SST_BS_SST_L4_NRT_OBSERVATIONS_010_006_c_V2',
+        'fname_pattern': r'(?P<date>\d{8,8})000000-GOS-L4_GHRSST-SSTfnd-OISST_UHR_NRT-BLK-v02.0-fv02.0.nc',
+    },
+    'bs_chl': {
+        'domain': 'nrt.cmems-du.eu',
+        'path': 'Core/OCEANCOLOUR_BS_CHL_L3_NRT_OBSERVATIONS_009_044/dataset-oc-bs-chl-multi-l3-chl_1km_daily-rt-v02',
+        'fname_pattern': r'(?P<date>\d{8,8})_d-OC_CNR-L3-CHL-BSAlg_MULTI_1KM-BS-DT-v02.nc',
+    },
+    'bs_opt': {
+        'domain': 'nrt.cmems-du.eu',
+        'path': 'Core/OCEANCOLOUR_BS_OPTICS_L3_NRT_OBSERVATIONS_009_042/dataset-oc-bs-opt-multi-l3-adg443_1km_daily-rt-v02',
+        'fname_pattern': r'(?P<date>\d{8,8})_d-OC_CNR-L3-ADG443-BSAlg_MULTI_1KM-BS-DT-v02.nc',
+    },
+    'bs_phy_l4': {
+        'domain': 'my.cmems-du.eu',
+        'path': 'Core/SEALEVEL_BS_PHY_L4_REP_OBSERVATIONS_008_042/dataset-duacs-rep-blacksea-merged-allsat-phy-l4',
+        'fname_pattern': r'dt_blacksea_allsat_phy_l4_(?P<date>\d{8,8})_(?P<forecast_date>\d{8,8}).nc',
+    },
+    'bs_phy': {
+        'domain': 'nrt.cmems-du.eu',
+        'path': 'Core/BLKSEA_ANALYSISFORECAST_PHY_007_001/bs-cmcc-cur-an-fc-d',
+        'fname_pattern': r'(?P<date>\d{8,8})_d-CMCC--RFVL-BSeas4-BS-b(?P<forecast_date>\d{8,8})_an-sv10.00.nc',
+    },
+    'bs_bio': {
+        'domain': 'nrt.cmems-du.eu',
+        'path': 'Core/BLKSEA_ANALYSIS_FORECAST_BIO_007_010/bs-ulg-pft-an-fc-d',
+        'fname_pattern': r'(?P<date>\d{8,8})_d-ULg--PFTC-nemo_bamhbi-BS-b(?P<forecast_date>\d{8,8})_an-sv09.00.nc',
+    },
+    'bs_wav': {
+        'domain': 'nrt.cmems-du.eu',
+        'path': 'Core/BLKSEA_ANALYSISFORECAST_WAV_007_003/bs-hzg-wav-an-fc-h',
+        'fname_pattern': r'(?P<date>\d{8,8})_h-HZG--WAVES-BSeas3-BS-b(?P<forecast_date>\d{8,8})_sm-sv07.00.nc',
     }
 
 }
