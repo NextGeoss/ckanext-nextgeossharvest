@@ -215,7 +215,7 @@ class FSSCATBase(HarvesterBase):
         filename = parse_filename(url)
         extension = parse_file_extension(url).strip('.').upper()
         description_template = ("Download {} from FSSCAT FTP.",
-                                "NOTE: DOWNLOAD REQUIRES LOGIN")
+                                "")
         description_template = " ".join(description_template)
         description = description_template.format(filename)
         
