@@ -34,8 +34,8 @@ class FaoBaseHarvester(HarvesterBase):
         item['timerange_start'] = content['date']
         item['timerange_end'] = content['date']
 
-        item['collection_id'] = 'FAO_CORE_DATASETS_COLLECTION'
-        item['collection_name'] = 'FAO Core Datasets Collection'
+        item['collection_id'] = 'FAO_CORE_DATASETS'
+        item['collection_name'] = 'FAO Core Datasets'
         item['collection_description'] = """FAO produces a large number of Geographic Information System (GIS) datasets for 
 monitoring, assessment and analysis of environmental and socio-economic factors causing poverty and food insecurity. 
 Particular relevance is given to malnutrition, farming systems and crops, livestock production systems, fishery and forestry sectors, agro-ecological zoning, 
@@ -116,8 +116,11 @@ land and water resources management and climate related issues."""
         Return a thumbnail resource dictionary depending on the harvest source.
         """
 
-        if url.startswith('/geonetwork/srv/en'):
-            url = 'http://www.fao.org' + url
+        # if url.startswith('/geonetwork/srv/en'):
+        #     url = 'http://www.fao.org' + url
+
+        if url.startswith('/map/catalog/srv/eng'):
+            url = 'https://data.apps.fao.org' + url
 
         resource = {'name': name,
                     'description': 'Product preview in PNG format',
@@ -145,6 +148,15 @@ land and water resources management and climate related issues."""
         if ".jpg" in url:
             mimetype = 'JPG'
             description = 'Download product from FAO catalog'
+        if ".kml" in url:
+            mimetype = 'KML'
+            description = 'Download product from FAO catalog'
+        if "wms" in url:
+            mimetype = 'WMS'
+            description = 'View product on FAO OGC Service'
+        if "/ows/" in url:
+            mimetype = 'HTML'
+            description = 'View product'
 
 
         resource = {'name': name,

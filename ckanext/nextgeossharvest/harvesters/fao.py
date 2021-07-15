@@ -130,9 +130,17 @@ class FaoHarvester(FaoBaseHarvester, NextGEOSSHarvester,
 
         limit = self.source_config.get('datasets_per_job', 100)
 
-        base_url = 'http://www.fao.org'
+        # Old URL
+        # base_url = 'http://www.fao.org'
 
-        url_template = ('{base_url}/geonetwork/srv/en/xml.search?' +
+        # url_template = ('{base_url}/geonetwork/srv/en/xml.search?' +
+        #                 '{time_query}' +
+        #                 '&from=1&to={limit}' +
+        #                 '&sortBy=changeDate&sortOrder=reverse&fast=false')
+
+        base_url = 'https://data.apps.fao.org'
+
+        url_template = ('{base_url}/map/catalog/srv/eng/xml.search?' +
                         '{time_query}' +
                         '&from=1&to={limit}' +
                         '&sortBy=changeDate&sortOrder=reverse&fast=false')
@@ -158,11 +166,34 @@ class FaoHarvester(FaoBaseHarvester, NextGEOSSHarvester,
 
         self.provider = 'Fao'
 
+        ids = []
+        limit_to = 1
+        limit = int(limit)
         # This can be a hook
-        ids = self._crawl_results(harvest_url, timeout, limit)
+        if limit <= 100:
+            ids = self._crawl_results(harvest_url, timeout, limit)
+        else:
+            while limit-limit_to > 0:
+                url_template = ('{base_url}/map/catalog/srv/eng/xml.search?' +
+                    '{time_query}' +
+                    '&from={limit_to}&to={limit}' +
+                    '&sortBy=changeDate&sortOrder=reverse&fast=false')
+
+                harvest_url = url_template.format(base_url=base_url,
+                                                time_query=time_query,
+                                                limit_to=limit_to,
+                                                limit=limit)
+
+                try:
+                    ids.append(self._crawl_results(harvest_url, timeout, limit))
+                except KeyError:
+                    break
+
+                limit_to += 100
         # This can be a hook
 
-        return ids
+        # Flatten list and return
+        return [item for sublist in ids for item in sublist]
 
     def fetch_stage(self, harvest_object):
         """Fetch was completed during gather."""
