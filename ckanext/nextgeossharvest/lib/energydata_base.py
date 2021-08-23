@@ -101,10 +101,16 @@ and modern energy for all."""
                 _format = "ZIP"
                 mimetype = "ZIP"
 
+            # Set product URL
+            url = resource['url']
+            if "globalwindatlas.info/downloads/" in resource['url']:
+                # globalwindatlas.info/downloads/ returns 404 
+                # for every product so we have to change it
+                url = "https://globalwindatlas.info"
 
             parsed_resource = {'name': resource['name'],
                         'description': resource['description'],
-                        'url': resource['url'],
+                        'url': url,
                         'format': _format,
                         'mimetype': mimetype}
 
