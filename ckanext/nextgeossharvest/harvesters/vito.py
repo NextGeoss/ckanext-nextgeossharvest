@@ -72,17 +72,16 @@ class VITO_Harvest(NextGEOSSHarvester, AuxHarvester):
     def gather_stage(self, harvest_job):
         self.log = logging.getLogger(__file__)
         self.log.debug('VITO Harvester gather_stage for job: %r', harvest_job)
-
+        
         self.job = harvest_job
         self.source_config = self._get_config(harvest_job)
         self.update_all = self.source_config.get('update_all', False)
         interface = INTERFACE(self.source_config, COLLECTION)
-
         last_product_index = (
             self._get_last_harvesting_index(harvest_job.source_id, interface)
         )
         interface.update_index(last_product_index)
-        interface.build_url()
+        interface.build_url_v()
         
         path_to_entries = interface.get_entries_path()
 
