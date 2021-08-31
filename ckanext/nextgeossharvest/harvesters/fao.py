@@ -185,15 +185,17 @@ class FaoHarvester(FaoBaseHarvester, NextGEOSSHarvester,
                                                 limit=limit)
 
                 try:
-                    ids.append(self._crawl_results(harvest_url, timeout, limit))
+                    results = self._crawl_results(harvest_url, timeout, limit)
+                    ids.extend(results)
+                # No products found
                 except KeyError:
                     break
 
                 limit_to += 100
         # This can be a hook
 
-        # Flatten list and return
-        return [item for sublist in ids for item in sublist]
+        # Return products
+        return [item for item in ids]
 
     def fetch_stage(self, harvest_object):
         """Fetch was completed during gather."""

@@ -28,7 +28,12 @@ class FaoBaseHarvester(HarvesterBase):
             item['title'] = content['title'][85:] + "_" + dataset_id
 
         item['name'] = item['title']
-        item['identifier'] = 'fao-' + item['title'] 
+
+        if item['title'].startswith('fao'):
+            item['identifier'] = item['title']
+        else:
+            item['identifier'] = 'fao_' + item['title']
+        
         item['notes'] = content['description']
 
         item['timerange_start'] = content['date']
@@ -105,6 +110,18 @@ land and water resources management and climate related issues."""
                 url = product['@href']
                 mimetype = product['@type']
 
+                # Fix broken WMS urls
+                if '/geoserver/wms/' in url and not 'request=GetCapabilities' in url and not 'service=WMS' in url:
+                    url += '&request=GetCapabilities&service=WMS'
+
+                if '/map/gsrv/gsrv1/' in url and '/wms' in url and not 'request=GetCapabilities' in url and not 'service=WMS' in url:
+                    url += '?request=GetCapabilities&service=WMS'
+
+                # Skip images with www:download-1.0-http--download mimetype
+                # due to them not working most of the time
+                if mimetype == 'WWW:DOWNLOAD-1.0-http--download':
+                    continue
+
                 parsed_resource = self._make_product_resource(url, name, mimetype)
 
                 resources.append(parsed_resource)
@@ -115,12 +132,6 @@ land and water resources management and climate related issues."""
         """
         Return a thumbnail resource dictionary depending on the harvest source.
         """
-
-        # if url.startswith('/geonetwork/srv/en'):
-        #     url = 'http://www.fao.org' + url
-
-        if url.startswith('/map/catalog/srv/eng'):
-            url = 'https://data.apps.fao.org' + url
 
         resource = {'name': name,
                     'description': 'Product preview in PNG format',
@@ -142,7 +153,7 @@ land and water resources management and climate related issues."""
         if mimetype.endswith('xml') or 'XML' in name or 'request=GetFeature' in url:
             mimetype = 'XML'
             description = 'View product on FAO OGC Service'
-        if ".zip" in url:
+        if ".zip" in url or "=SHAPE-ZIP" in url:
             mimetype = 'ZIP'
             description = 'Download product from FAO catalog'
         if ".jpg" in url:
@@ -158,6 +169,9 @@ land and water resources management and climate related issues."""
             mimetype = 'HTML'
             description = 'View product'
 
+
+        if url.endswith('?SERVICE=WMS'):
+            url += '&request=GetCapabilities'
 
         resource = {'name': name,
                     'description': description,
