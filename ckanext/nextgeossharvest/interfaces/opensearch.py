@@ -1,6 +1,7 @@
 import json
 import xmltodict
 import requests
+import datetime
 from requests.auth import HTTPBasicAuth
 
 class OPENSEARCH():
@@ -19,6 +20,7 @@ class OPENSEARCH():
         self.username = config.get('username', None)
         self.password = config.get('password', None)
         self.collection_keyword = config.get('collection_keyword', None)
+        self.start_date=config.get('start_date','2015-01-01T00:00:00')
         if self.collection_keyword:
             self.collection_search = self._collection["collection_search"]
         
@@ -83,6 +85,40 @@ class OPENSEARCH():
                 query_components[i] = '{}={}'.format(self.page_size_keyword, str(self.max_dataset))
             elif component.startswith(self.page_start_keyword):
                 query_components[i] = '{}={}'.format(self.page_start_keyword, str(self.start_index))
+            elif self.collection_keyword and component.startswith(self.collection_keyword):
+                query_components[i] = '{}={}'.format(self.collection_keyword, self.collection_search)
+
+        query = '&'.join(query_components)
+        self.current_url = '{}?{}'.format(base_url, query)
+        
+    def build_url_date(self):
+        if '?' in self.current_url:
+            base_url, query = self.current_url.split('?')
+        else:
+            base_url = self.current_url
+            query = ""
+
+        if self.collection_keyword and self.collection_keyword not in query:
+            query += '&{}={}'.format(self.collection_keyword, self.collection_search)
+        if self.page_start_keyword not in query:
+            query += '&{}={}'.format(self.page_start_keyword, str(self.start_index))
+        
+        if self.start_date not in query:
+            query += '&{}={}'.format('start', self.start_date)
+        '''datetime.datetime.strftime(datetime.datetime.strptime(self.start_date,'%Y-%m-%dT%H:%M:%S')+datetime.timedelta(days=self.start_index),'%Y-%m-%dT%H:%M:%S')'''
+        
+        if self.page_size_keyword not in query:
+            query += '&{}={}'.format(self.page_size_keyword, str(self.max_dataset))
+    
+        query_components = query.split('&')
+        for i, component in enumerate(query_components):
+            if component.startswith(self.page_size_keyword):
+                query_components[i] = '{}={}'.format(self.page_size_keyword, str(self.max_dataset))
+            elif component.startswith(self.page_start_keyword):
+                query_components[i] = '{}={}'.format(self.page_start_keyword, str(self.start_index))
+            elif component.startswith('start'):
+                query_components[i] = '{}={}'.format('start', self.start_date)  
+            
             elif self.collection_keyword and component.startswith(self.collection_keyword):
                 query_components[i] = '{}={}'.format(self.collection_keyword, self.collection_search)
 
