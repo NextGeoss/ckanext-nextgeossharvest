@@ -91,7 +91,7 @@ class OPENSEARCH():
         query = '&'.join(query_components)
         self.current_url = '{}?{}'.format(base_url, query)
         
-    def build_url_v(self):
+    def build_url_date(self):
         if '?' in self.current_url:
             base_url, query = self.current_url.split('?')
         else:

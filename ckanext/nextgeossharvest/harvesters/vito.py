@@ -81,7 +81,7 @@ class VITO_Harvest(NextGEOSSHarvester, AuxHarvester):
             self._get_last_harvesting_index(harvest_job.source_id, interface)
         )
         interface.update_index(last_product_index)
-        interface.build_url_v()
+        interface.build_url_date()
         
         path_to_entries = interface.get_entries_path()
 
