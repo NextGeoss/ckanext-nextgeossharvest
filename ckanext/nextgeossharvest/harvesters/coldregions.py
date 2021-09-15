@@ -47,7 +47,7 @@ def _organization_list(session, ckan_url, api_key):
         'Cache-Control': 'no-store'
     }
     group_rst = session.get(
-        ckan_url + '/api/action/organization_list', headers=headers)
+        ckan_url + '/api/action/organization_list', headers=headers, verify=False)
 
     return group_rst.json()['result']
 
@@ -121,7 +121,7 @@ def upload_to_catalogue(session, files, ckan_url, api_key, owner_org, collection
         date_format_new = "%Y-%m-%dT%H:%M:%S.000Z"
 
         for layer in soup.find_all(queryable = "1"):
-            if layer.find_all("name")[0].text == "ice" or layer.find_all("name")[0].text == "ice_water":
+            if layer.find_all("name")[0].text == "ice" or layer.find_all("name")[0].text == "ice_water" or layer.find_all("name")[0].text == "icedrift":
                 coordinates = layer.find_all("boundingbox")[0]
                 lon_min = coordinates['minx']
                 lon_max = coordinates['maxx']
@@ -135,6 +135,7 @@ def upload_to_catalogue(session, files, ckan_url, api_key, owner_org, collection
                     contributor_name = "Mohamed Babiker, Anton Korosov, Jeong-Won Park, Torill Hamre, Asuka Yamakawa"
                     creator_name = "Mohamed Babiker"
                     contributor_email = "mohamed.babiker@nersc.no, anton.korosov@nersc.no, jeong-won.park@nersc.no, torill.hamre@nersc.no, asuka.yamakawa@nersc.no"
+                    processing_level = "Level 3"
                 elif layer.find_all("name")[0].text == "ice_water":
                     start_time = filename.split('_')[4]
                     identifier = "NERSC_ARCTIC_SEAICEEDGE_" + start_time
@@ -145,10 +146,27 @@ def upload_to_catalogue(session, files, ckan_url, api_key, owner_org, collection
                     contributor_name = "Frode Monsen, Torill Hamre, Mohamed Babiker, Anton Korosov, Jeong-Won Park"
                     creator_name = "Frode Monsen"
                     contributor_email = "frode.monsen@nersc.no, torill.hamre@nersc.no, mohamed.babiker@nersc.no, anton.korosov@nersc.no, jeong-won.park@nersc.no"
+                    processing_level = "Level 3"
+                elif layer.find_all("name")[0].text == "icedrift":
+                    start_time = filename.split('_')[1]
+                    start_time = datetime.strptime(start_time, date_format_orig).strftime(date_format_new)
+                    stop_time = filename.split('_')[2]
+                    stop_time = datetime.strptime(stop_time, date_format_orig).strftime(date_format_new)
+                    date_for_id = filename.split('_')[1].split('T')[0]
+                    date_for_id = date_for_id[:4] + '-' + date_for_id[4:6] + '-' + date_for_id[6:]
+                    identifier = "NERSC_ARCTIC_SEAICEDRIFT_" + date_for_id + '_' + filename.split('_')[3].split('.')[0]
+                    layer_name = "icedrift"
+                    contributor_name = "Frode Monsen, Torill Hamre, Stefan Muckenhuber, Stein Sandven"
+                    creator_name = "Frode Monsen"
+                    contributor_email = "frode.monsen@nersc.no, torill.hamre@nersc.no, stefan.muckenhuber@gmail.com, stein.sandven@nersc.no"
+                    processing_level = "Level 2"
 
                 thumbnail_url = "http://thredds.nersc.no/thredds/wms/" + nc_file + "?service=WMS&version=1.3.0&request=GetMap&layers=" + layer_name + "&CRS=CRS:84&BBOX=" + lon_min + "," + lat_min + "," + lon_max + "," + lat_max + "&width=2048&height=2048&styles=boxfill/ncview&format=image/png"
 
-                extras_dict = {'collection_name': collection[0], 'collection_id': collection[1], 'collection_description': collection[2], 'spatial': '{"type":"Polygon", "coordinates":[[[' + lon_min + ', ' + lat_max + '], [' + lon_max + ', ' + lat_max + '], [' + lon_max + ', ' + lat_min + '], [' + lon_min + ', ' + lat_min + '], [' + lon_min + ', ' + lat_max + ']]]}', 'timerange_start': start_time, 'timerange_end': stop_time, 'identifier': identifier, 'filename': filename, 'iso_topic_category': 'oceans', 'institution': 'Nansen Environmental and Remote Sensing Center (NERSC)', 'contributor_name': contributor_name, 'creator_name': creator_name, 'contributor_email': contributor_email, 'source': 'satellite remote sensing', 'satellite': 'Sentinel-1', 'sensor': 'SAR', 'processing_level': 'Level 3', 'groups': [{"name":"cold_regions"}], 'is_output': True}
+                if layer.find_all("name")[0].text == "icedrift":
+                    thumbnail_url += "&COLORSCALERANGE=0,255"
+
+                extras_dict = {'collection_name': collection[0], 'collection_id': collection[1], 'collection_description': collection[2], 'spatial': '{"type":"Polygon", "coordinates":[[[' + lon_min + ', ' + lat_max + '], [' + lon_max + ', ' + lat_max + '], [' + lon_max + ', ' + lat_min + '], [' + lon_min + ', ' + lat_min + '], [' + lon_min + ', ' + lat_max + ']]]}', 'timerange_start': start_time, 'timerange_end': stop_time, 'identifier': identifier, 'filename': filename, 'iso_topic_category': 'oceans', 'institution': 'Nansen Environmental and Remote Sensing Center (NERSC)', 'contributor_name': contributor_name, 'creator_name': creator_name, 'contributor_email': contributor_email, 'source': 'satellite remote sensing', 'satellite': 'Sentinel-1', 'sensor': 'SAR', 'processing_level': processing_level, 'groups': [{"name":"cold_regions"}], 'is_output': True}
 
                 package_dict = {}
                 package_dict['name'] = extras_dict['identifier'].lower()
@@ -234,6 +252,17 @@ if __name__ == "__main__":
         harvest_url = 'http://thredds.nersc.no/thredds/catalog/nextgeoss/Sea_ice_and_water_classification_in_the_Arctic_for_CAATEX_INTAROS_2019_field_experiment/catalog.xml'
         collection_name = 'Sea ice and water classification in the Arctic for CAATEX/INTAROS 2019 field experiment'
         collection_description = 'Sea ice and water classification in the Arctic, for CAATEX/INTAROS 2019 field experiment, using Sentinel-1 SAR. Extended Wide (EW) swath images at medium resolution (GRDM). Prior to classification, a thermal noise reduction algorithm is applied. A machine learning algorithm is then used to classify sea ice and open water in the noise corrected images. This data is made freely available by NERSC. User must display this citation in any publication or product using data: "These data were produced with support from the Horizon 2020 NextGEOSS project (Grant Agreement No 730329), and made freely available by NERSC (ref. Frode Monsen, Torill Hamre and Mohamed Babiker at NERSC)."'
+    elif collection_id == 'S1_ARCTIC_SEAICEDRIFT_AVERAGE_INTAROS_2018':
+        harvest_url = 'http://thredds.nersc.no/thredds/catalog/nextgeoss/Average_sea_ice_drift_in_the_Arctic_for_INTAROS_2018_field_experiment/catalog.xml'
+        collection_name = 'Average sea ice drift in the Arctic for INTAROS 2018 field experiment'
+        collection_description = 'Sea ice drift in the Arctic, for INTAROS 2018 field experiment, estimated using Sentinel-1 SAR, Extended Wide (EW) swath images at medium resolution (GRDM). The ice drift is based on a combination of feature tracking and pattern matching techniques (https://doi.org/10.5194/tc-11-1835-2017). This data is made freely available by NERSC. User must display this citation in any publication or product using data: "These data were produced with support from the Horizon 2020 NextGEOSS project (Grant Agreement No 730329), and made freely available by NERSC.”'
+    elif collection_id == 'S1_ARCTIC_SEAICEDRIFT_AVERAGE_CAATEX_2019':
+        harvest_url = 'http://thredds.nersc.no/thredds/catalog/nextgeoss/Average_sea_ice_drift_in_the_Arctic_for_CAATEX_2019_field_experiment/catalog.xml'
+        collection_name = 'Average sea ice drift in the Arctic for CAATEX 2019 field experiment'
+        collection_description = 'Sea ice drift in the Arctic, for CAATEX 2019 field experiment, estimated using Sentinel-1 SAR, Extended Wide (EW) swath images at medium resolution (GRDM). The ice drift is based on a combination of feature tracking and pattern matching techniques (https://doi.org/10.5194/tc-11-1835-2017). This data is made freely available by NERSC. User must display this citation in any publication or product using data: "These data were produced with support from the Horizon 2020 NextGEOSS project (Grant Agreement No 730329), and made freely available by NERSC.”'
+    else:
+        print "Collection provided does not exist.\n"
+        sys.exit()
 
     collection = [collection_name, collection_id, collection_description]
 
