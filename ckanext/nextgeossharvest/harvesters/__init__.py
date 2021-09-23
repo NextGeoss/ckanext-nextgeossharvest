@@ -27,3 +27,4 @@ from ckanext.nextgeossharvest.harvesters.landsaf import LandsafHarvester # noqa:
 from ckanext.nextgeossharvest.harvesters.oscar import OSCARHarvester   # noqa: F401, E501
 from ckanext.nextgeossharvest.harvesters.vito import VITO_Harvest  # noqa: F401, E501
 from ckanext.nextgeossharvest.harvesters.noa_epidemics import NoaEpidemicsHarvester  # noqa: F401, E501
+from ckanext.nextgeossharvest.harvesters.creodias import CREODIASHarvester  # noqa: F401, E501
