@@ -110,7 +110,7 @@ setup(
         oscar=ckanext.nextgeossharvest.harvesters:OSCARHarvester
         vito=ckanext.nextgeossharvest.harvesters:VITO_Harvest
         noa_epidemics=ckanext.nextgeossharvest.harvesters:NoaEpidemicsHarvester
-
+        creodias=ckanext.nextgeossharvest.harvesters:CREODIASHarvester
 
         [babel.extractors]
         ckan = ckan.lib.extract:extract_ckan
