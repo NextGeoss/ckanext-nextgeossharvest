@@ -33,6 +33,7 @@ class AuxHarvester():
             return [json_dict]
         else:
             tag = field_path.pop(0)
+            #print('___________',tag['key'])
             if tag["key"] not in json_dict:
                 return None
             elif self.check_attributes(json_dict, tag["fixed_attributes"]):

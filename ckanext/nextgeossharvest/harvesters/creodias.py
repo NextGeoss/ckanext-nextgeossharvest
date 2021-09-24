@@ -7,7 +7,7 @@ from ckanext.harvest.model import HarvestObjectExtra as HOExtra
 from ckanext.nextgeossharvest.lib.nextgeoss_base import NextGEOSSHarvester
 from ckanext.nextgeossharvest.lib.aux_harvest import AuxHarvester
 
-from ckanext.nextgeossharvest.collection_description.vito_collection import COLLECTION
+from ckanext.nextgeossharvest.collection_description.creodias_collection import COLLECTION
 #from ckanext.nextgeossharvest.interfaces.opensearch import OPENSEARCH as INTERFACE
 
 from sqlalchemy import desc
@@ -39,7 +39,7 @@ class CREODIASHarvester(NextGEOSSHarvester, AuxHarvester):
             return config
 
         try:
-            INTERFACE.validate_config(config, COLLECTION)
+            INTERFACE.validate_config(config)
         except ValueError as e:
             raise e
         return config 
@@ -81,7 +81,7 @@ class CREODIASHarvester(NextGEOSSHarvester, AuxHarvester):
             self._get_last_harvesting_index(harvest_job.source_id, interface)
         )
         interface.update_index(last_product_index)
-        interface.build_url_date()
+        interface.build_url()
         
         path_to_entries = interface.get_entries_path()
 
@@ -167,6 +167,7 @@ class CREODIASHarvester(NextGEOSSHarvester, AuxHarvester):
         mandatory_fields = interface.get_mandatory_fields()
         parsed_content = {}
         parsed_content.update(interface.get_collection_info())
+        
         for key, descriptor in mandatory_fields.items():
             field_value = []
             if "spatial" == key:
@@ -176,8 +177,9 @@ class CREODIASHarvester(NextGEOSSHarvester, AuxHarvester):
                                                    descriptor["parsing_function"])
             else:
                 field_value = self.get_field(content, descriptor["path"][:])
-
+                #print('--------------------------', field_value)
                 if "timerange_start" in key:
+                    
                     field_value = self.temporal_parsing(field_value[0],
                                                         descriptor["parsing_function"],
                                                         0)
@@ -231,16 +233,16 @@ class INTERFACE():
         self.username = config.get('username', None)
         self.password = config.get('password', None)
         self.collection = config.get('collection', 'Sentinel1')
-        self.current_url = 'https://finder.creodias.eu/resto/api/collections/Sentinel1/search.json?productType=SLC&startDate=2021-01-01T23:59:59'
+        self.current_url = 'https://finder.creodias.eu/resto/api/collections/{}/search.json?productType=SLC&startDate=2021-01-01T23:59:59'.format(self.collection)
         
         self.start_date=config.get('start_date','2021-01-01T00:00:00')
-        self._collection_id = config.get('collection')
+        self._collection_id = self.collection
         self._collection = COLLECTION[self._collection_id]
         
         self.build_url()
     
     def get_pagination_mechanism(self):
-        return self.page_start_keyword
+        return 'index'
 
     def get_minimum_pagination_value(self):
         return 1

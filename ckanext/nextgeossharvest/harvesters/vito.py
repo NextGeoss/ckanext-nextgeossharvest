@@ -163,6 +163,7 @@ class VITO_Harvest(NextGEOSSHarvester, AuxHarvester):
         metadata terms.
         """
         content = json.loads(content)
+        print('+++++++++++++++++++++++++++', content)
         interface = INTERFACE(self.source_config, COLLECTION)
         mandatory_fields = interface.get_mandatory_fields()
         parsed_content = {}
