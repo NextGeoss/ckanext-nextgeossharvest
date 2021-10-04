@@ -177,7 +177,6 @@ class CREODIASHarvester(NextGEOSSHarvester, AuxHarvester):
                                                    descriptor["parsing_function"])
             else:
                 field_value = self.get_field(content, descriptor["path"][:])
-                #print('--------------------------', field_value)
                 if "timerange_start" in key:
                     
                     field_value = self.temporal_parsing(field_value[0],
@@ -232,13 +231,19 @@ class INTERFACE():
         self.timeout = config.get('timeout', 10)
         self.username = config.get('username', None)
         self.password = config.get('password', None)
-        self.collection = config.get('collection', 'Sentinel1')
-        self.current_url = 'https://finder.creodias.eu/resto/api/collections/{}/search.json?productType=SLC&startDate=2021-01-01T23:59:59'.format(self.collection)
+        self.productType = config.get('productType')
+        if self.productType in "SLC OCN GRD":
+            self.collection = 'Sentinel1'
+        elif self.productType in "L1C L2A":
+            self.collection = 'Sentinel2'
+        else:
+            self.collection = "Sentinel5P"
+
+        self.current_url = 'https://finder.creodias.eu/resto/api/collections/{}/search.json?productType={}&startDate=2021-01-01T23:59:59&maxRecords=100'.format(self.collection,self.productType)
         
         self.start_date=config.get('start_date','2021-01-01T00:00:00')
         self._collection_id = self.collection
         self._collection = COLLECTION[self._collection_id]
-        
         self.build_url()
     
     def get_pagination_mechanism(self):
@@ -251,12 +256,33 @@ class INTERFACE():
     def validate_config(config):
         config_obj = json.loads(config)
 
-        if 'collection' not in config_obj:
-            raise ValueError('The parameter collection is required(Sentinel1, Sentinel2, Sentinel5p)')
-
         if 'start_date' not in config_obj:
             raise ValueError('The parameter start_date is required')
-        
+        if 'productType' not in config_obj:
+            raise ValueError('The parameter productType is required')
+        if config_obj.get('productType') not in {'SLC','OCN', 'GRD', 'L2A', 'L1C',
+                                                                            'L1B',
+                                                                            'L1B_RA_BD1',#
+                                                                            'L1B_RA_BD2',#
+                                                                            'L1B_RA_BD3',#
+                                                                            'L1B_RA_BD4',#
+                                                                            'L1B_RA_BD5',#
+                                                                            'L1B_RA_BD6',#
+                                                                            'L1B_RA_BD7',#
+                                                                            'L1B_RA_BD8',#
+                                                                            'L2__AER_AI',#
+                                                                            'L2__CH4___',#
+                                                                            'L2__CLOUD_',#
+                                                                            'L2__CO____',#
+                                                                            'L2__HCHO__',#
+                                                                            'L2__NO2___',#
+                                                                            'L2__NP_BD3',#
+                                                                            'L2__NP_BD6',#
+                                                                            'L2__NP_BD7',#
+                                                                            'L2__O3____',#
+                                                                            'L2__SO2___'#
+                                                                            }:
+            raise ValueError('Product type has to be SLC, OCN, GRD, L2A or L1C')
 
         if type(config_obj.get('max_dataset', 100)) != int:
             raise ValueError('max_dataset must be an integer')
