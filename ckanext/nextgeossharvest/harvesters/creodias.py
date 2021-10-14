@@ -163,6 +163,7 @@ class CREODIASHarvester(NextGEOSSHarvester, AuxHarvester):
         metadata terms.
         """
         content = json.loads(content)
+        #print('__________________',content,'---------------')
         interface = INTERFACE(self.source_config, COLLECTION)
         mandatory_fields = interface.get_mandatory_fields()
         parsed_content = {}
@@ -231,15 +232,38 @@ class INTERFACE():
         self.timeout = config.get('timeout', 10)
         self.username = config.get('username', None)
         self.password = config.get('password', None)
-        self.productType = config.get('productType')
-        if self.productType in "SLC OCN GRD":
-            self.collection = 'Sentinel1'
-        elif self.productType in "L1C L2A":
-            self.collection = 'Sentinel2'
-        else:
-            self.collection = "Sentinel5P"
 
-        self.current_url = 'https://finder.creodias.eu/resto/api/collections/{}/search.json?productType={}&startDate=2021-01-01T23:59:59&maxRecords=100'.format(self.collection,self.productType)
+        self.collection = config.get('collection')
+        self.collection_dict={
+            "Sentinel-1 Level-1 (SLC)":['Sentinel1','SLC'],
+            "Sentinel-1 Level-1 (GRD)":['Sentinel1','GRD'],
+            "Sentinel-1 Level-2 (OCN)":['Sentinel1','OCN'],
+            "Sentinel-2 Level-2A":['Sentinel2','L2A'],
+            "Sentinel-2 Level-1C":['Sentinel2','L1C'],
+            "Sentinel-5P Level-1B":['Sentinel5P','L1B'],
+            "Sentinel-5P Level-1B (RA_BD1)":['Sentinel5P','L1B_RA_BD1'],
+            "Sentinel-5P Level-1B (RA_BD2)":['Sentinel5P','L1B_RA_BD2'],
+            "Sentinel-5P Level-1B (RA_BD3)":['Sentinel5P','L1B_RA_BD3'],
+            "Sentinel-5P Level-1B (RA_BD4)":['Sentinel5P','L1B_RA_BD4'],
+            "Sentinel-5P Level-1B (RA_BD5)":['Sentinel5P','L1B_RA_BD5'],
+            "Sentinel-5P Level-1B (RA_BD6)":['Sentinel5P','L1B_RA_BD6'],
+            "Sentinel-5P Level-1B (RA_BD7)":['Sentinel5P','L1B_RA_BD7'],
+            "Sentinel-5P Level-1B (RA_BD8)":['Sentinel5P','L1B_RA_BD8'],
+            "Sentinel-5P Level-2 (L2 AER AI)":['Sentinel5P','L2_AER_AI'],
+            "Sentinel-5P Level-2 (L2 CH4)":['Sentinel5P','L2__CH4___'],
+            "Sentinel-5P Level-2 (L2 CLOUD)":['Sentinel5P','L2__CLOUD_'],
+            "Sentinel-5P Level-2 (L2 CO)":['Sentinel5P','L2__CO____'],
+            "Sentinel-5P Level-2 (L2 HCHO)":['Sentinel5P','L2__HCHO__'],
+            "Sentinel-5P Level-2 (L2 NO2)":['Sentinel5P','L2__NO2___'],
+            "Sentinel-5P Level-2 (L2 NP BD3)":['Sentinel5P','L2__NP_BD3'],
+            "Sentinel-5P Level-2 (L2 NP BD6)":['Sentinel5P','L2__NP_BD6'],
+            "Sentinel-5P Level-2 (L2 NP BD7)":['Sentinel5P','L2__NP_BD7'],
+            "Sentinel-5P Level-2 (L2 O3)":['Sentinel5P','L2__O3____'],
+            "Sentinel-5P Level-2 (L2 SO2)":['Sentinel5P','L2__SO2___']      
+        }
+        self.sentinel=self.collection_dict[self.collection][0]
+        self.productType=self.collection_dict[self.collection][1]
+        self.current_url = 'https://finder.creodias.eu/resto/api/collections/{}/search.json?productType={}&startDate=2021-01-01T23:59:59&maxRecords=100'.format(self.sentinel,self.productType)
         
         self.start_date=config.get('start_date','2021-01-01T00:00:00')
         self._collection_id = self.collection
@@ -258,9 +282,12 @@ class INTERFACE():
 
         if 'start_date' not in config_obj:
             raise ValueError('The parameter start_date is required')
-        if 'productType' not in config_obj:
-            raise ValueError('The parameter productType is required')
-        if config_obj.get('productType') not in {'SLC','OCN', 'GRD', 'L2A', 'L1C',
+        if 'collection' not in config_obj:
+            raise ValueError('The parameter collection is required')
+        if config_obj.get('collection') not in {'Sentinel-1 Level-1 (SLC)','Sentinel-1 Level-2 (OCN)', 
+                                                                            'Sentinel-1 Level-1 (GRD)', 
+                                                                            'Sentinel-2 Level-2A', 
+                                                                            'Sentinel-2 Level-1C',
                                                                             'L1B',
                                                                             'L1B_RA_BD1',#
                                                                             'L1B_RA_BD2',#
@@ -282,7 +309,7 @@ class INTERFACE():
                                                                             'L2__O3____',#
                                                                             'L2__SO2___'#
                                                                             }:
-            raise ValueError('Product type has to be SLC, OCN, GRD, L2A or L1C')
+            raise ValueError('Collection has to be SSentinel-1 Level-1 (SLC), Sentinel-1 Level-2 (OCN), Sentinel-1 Level-1 (GRD), Sentinel-2 Level-2A, Sentinel-2 Level-1C')
 
         if type(config_obj.get('max_dataset', 100)) != int:
             raise ValueError('max_dataset must be an integer')
