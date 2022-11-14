@@ -99,9 +99,12 @@ class NoaEpidemicsBaseHarvester(HarvesterBase):
                                                         e.g. value = 14680*0.02 = 293.6 | 293.6 - 273.15 = 20.45 º Celsius"""
         
         # Wind
-        item['Max wind speed [m/s]'] = str(content['max_wind']) + " (max_wind)"
-        item['Min wind speed [m/s]'] = str(content['min_wind']) + " (min_wind)"
-        item['Mean wind speed [m/s]'] = str(content['mean_wind']) + " (mean_wind)"
+        if "max_wind" in content:
+            item['Max wind speed [m/s]'] = str(content['max_wind']) + " (max_wind)"
+        if "min_wind" in content:
+            item['Min wind speed [m/s]'] = str(content['min_wind']) + " (min_wind)"
+        if "mean_wind" in content:
+            item['Mean wind speed [m/s]'] = str(content['mean_wind']) + " (mean_wind)"
 
         # Other
         item['Breeding sites within 1km'] = str(content['sp_cnt_1km']) + " (sp_cnt_1km)"
