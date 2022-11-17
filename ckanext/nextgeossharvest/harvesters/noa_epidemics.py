@@ -8,6 +8,7 @@ import itertools
 import re
 import stringcase
 from datetime import datetime
+import random, string
 
 import requests
 from requests.exceptions import Timeout
@@ -149,11 +150,11 @@ class NoaEpidemicsHarvester(NoaEpidemicsBaseHarvester, NextGEOSSHarvester,
             time_query = ''
 
         # URL with mosquito type and time query
-        base_url = 'http://epidemics.space.noa.gr/api_v2'
+        base_url = 'http://epidemics.space.noa.gr:8082/api_v2'
 
         harvest_url = "{}/{}?{}".format(base_url, mosquito_type, time_query)
 
-        log.debug('Harvest URL: {}'.format(harvest_url))
+        # log.debug('Harvest URL: {}'.format(harvest_url))
 
         # Set the limit for the maximum number of results per job.
         # Since the new harvester jobs will be created on a rolling basis
@@ -249,10 +250,7 @@ class NoaEpidemicsHarvester(NoaEpidemicsBaseHarvester, NextGEOSSHarvester,
             # Apply limit on product number
             products = itertools.islice(products, limit)
 
-            # Add spatial information to every product
-            product_list = self._get_spatial_info(req, products)
-
-            return product_list
+            return products
 
         except Timeout as e:
             self._save_gather_error('Request timed out: {}'.format(e), self.job)  # noqa: E501
@@ -262,6 +260,7 @@ class NoaEpidemicsHarvester(NoaEpidemicsBaseHarvester, NextGEOSSHarvester,
                 self.provider_logger.info(log_message.format(self.provider,
                     timestamp, status_code, "timeout"))  # noqa: E128
             return
+        
         if status_code != 200:
             self._save_gather_error('{} error'.format(status_code), self.job)  # noqa: E501
             elapsed = 9999
@@ -299,9 +298,27 @@ class NoaEpidemicsHarvester(NoaEpidemicsBaseHarvester, NextGEOSSHarvester,
             # Sanitize filename
             filename = self._sanitize_filename(filename)
 
-            # Add coast_mean on aedes for uniqueness
-            if mosquito_type == 'aedes':
-                filename = filename + '_' + str(int(entry['coast_mean_dist_1000']))
+            # Add geometry from Lat/Long
+            latitude = entry['y']
+            longitude = entry['x']
+
+            # Points to Polygon
+            # The accuracy of the Points has already been reduced for safety reasons
+            # We need to create a Polygon to map a wider area
+            spatial_wkt = "POLYGON(({} {}, {} {}, {} {}, {} {}, {} {}))".format(
+                longitude - 0.05, latitude + 0.05, 
+                longitude - 0.05, latitude - 0.05, 
+                longitude + 0.05, latitude - 0.05, 
+                longitude + 0.05, latitude + 0.05,
+                longitude - 0.05, latitude + 0.05
+            )
+        
+            # WKT to geojson
+            spatial_geojson = self._convert_to_geojson(spatial_wkt)
+            entry["spatial"] = spatial_geojson
+
+            # Add 4 random characters on filename/id for uniqueness (act as id)
+            filename = filename + '_' + ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(4))
 
             entry_guid = filename
             entry_name = filename
@@ -363,42 +380,6 @@ class NoaEpidemicsHarvester(NoaEpidemicsBaseHarvester, NextGEOSSHarvester,
 
         return ids
 
-    def _get_spatial_info(self, req, products):
-        """
-        Gets the spatial information for every product
-        """
-
-        product_list = []
-
-        reception_url = 'http://epidemics.space.noa.gr/api_v2/locations/?station_id='
-
-        # Add spatial data for every product
-        # Requires new call to API
-        for product in products:
-            
-            # Api call for geometry (Latitude, Longitude)
-            spatial_info = (req.get(reception_url + product['station_id'])).json()['results'][0]
-            latitude = spatial_info['latitude']
-            longitude = spatial_info['longitude']
-
-            # Points to Polygon
-            # The accuracy of the Points has already been reduced for safety reasons
-            # We need to create a Polygon to map a wider area
-            spatial_wkt = "POLYGON(({} {}, {} {}, {} {}, {} {}, {} {}))".format(
-                longitude - 0.05, latitude + 0.05, 
-                longitude - 0.05, latitude - 0.05, 
-                longitude + 0.05, latitude - 0.05, 
-                longitude + 0.05, latitude + 0.05,
-                longitude - 0.05, latitude + 0.05
-            )
-        
-            # WKT to geojson
-            spatial_geojson = self._convert_to_geojson(spatial_wkt)
-            product["spatial"] = spatial_geojson
-
-            product_list.append(product)
-
-        return product_list
 
     def _sanitize_filename(self, filename):
         """ Sanitizes filename/identifier.
