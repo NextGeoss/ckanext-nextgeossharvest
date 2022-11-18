@@ -49,7 +49,7 @@ class NoaEpidemicsBaseHarvester(HarvesterBase):
         item['resource'] = [{
             'name': content['filename'],
             'description': "Access all the information regarding this dataset at the NOA Epidemics API.",
-            'url': "http://epidemics.space.noa.gr/api_v2/{}/?station_id={}&dt_placement={}".format(content['mosquito_type'], content['station_id'], content['dt_placement']),
+            'url': "http://epidemics.space.noa.gr:8082/api_v2/{}/?station_id={}&dt_placement={}".format(content['mosquito_type'], content['station_id'], content['dt_placement']),
             'format': "JSON",
             'mimetype': "application/json"}]
 
